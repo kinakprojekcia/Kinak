@@ -1,0 +1,2 @@
+# Kinak
+Liturgický projekčný program
