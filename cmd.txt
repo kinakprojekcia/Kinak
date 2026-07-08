@@ -1,0 +1,38 @@
+Spustenie projektu
+
+cd C:\Kinak
+python Kinak.py
+
+Keďže súbor má názov Kinak.py, konfigurácia sa automaticky ukladá do:
+C:\Users\root\AppData\Local\Kinak\config.json
+
+
+
+Vytvorenie EXE súboru
+Jednoduchý build
+
+C:\Kinak>python -m PyInstaller --onefile --add-data "icons;icons" --add-data "piesne;piesne" Kinak.py
+
+Build s ikonou a čistením
+
+C:\Kinak>python -m PyInstaller --onefile --clean --name Kinak --icon icons\Kinak32.ico Kinak.py
+
+Spustenie výsledného EXE:
+
+C:\Kinak\dist>Kinak.exe
+
+Čistý build (vymazanie starých výstupov)
+
+rmdir /s /q build
+rmdir /s /q dist
+python -m PyInstaller Kinak.spec
+
+Ak by build zlyhal: 
+
+python -m PyInstaller --clean Kinak.spec
+
+
+- Výsledný Kinak.exe bude mať zadanú ikonu v Prieskumníkovi aj na paneli úloh.
+
+- Súbor direktorium.json bude pribalený priamo do EXE, pretože je tak definované v Kinak.spec.
+
