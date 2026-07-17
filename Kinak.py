@@ -1,21 +1,5 @@
 # -*- coding: utf-8 -*-
-
-# Kinak – projekčný program pre liturgiu
-# Copyright (C) 2026  Katarína Trokšiarová (kinak.projekcia@gmail.com)
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+from __future__ import annotations   # Aby testy bežali aj na Python 3.9
 
 import sys
 import os
@@ -29,16 +13,32 @@ import html
 import unicodedata
 import time
 import threading  # Pre plynulý chod GUI pri sťahovaní
+from concurrent.futures import ThreadPoolExecutor
+import atexit
+import random
+import logging
+from functools import lru_cache
+from logging.handlers import RotatingFileHandler
 import socket
 from pathlib import Path
 from datetime import datetime, date, timedelta
-from typing import cast, Callable
+from typing import cast, Callable, Any
 
 # Knižnice tretích strán
 try:
     import requests
 except ImportError:
     requests = None
+
+try:
+    from requests.adapters import HTTPAdapter
+except ImportError:
+    HTTPAdapter = None  # type: ignore
+
+try:
+    from urllib3.util.retry import Retry
+except ImportError:
+    Retry = None  # type: ignore
 
 try:
     from bs4 import BeautifulSoup
@@ -61,8 +61,27 @@ except ImportError:
 # ==========================================================
 # ZÁKLADNÉ NASTAVENIA
 # ==========================================================
-KINAK_VERSION = "2.9"
+KINAK_VERSION = "3.0"
 ENABLE_DIAGNOSTICS = False
+
+GREGORIANSKY_MIN_ROK = 1583
+GREGORIANSKY_MAX_ROK = 9999
+
+def _over_gregoriansky_rok(rok: int) -> None:
+    if not isinstance(rok, int):
+        raise TypeError(f"rok musí byť int, zadané: {type(rok).__name__}")
+    if not GREGORIANSKY_MIN_ROK <= rok <= GREGORIANSKY_MAX_ROK:
+        raise ValueError(
+            f"Liturgický kalendár je presne vypočítateľný iba pre gregoriánsky kalendár "
+            f"v rozsahu {GREGORIANSKY_MIN_ROK}-{GREGORIANSKY_MAX_ROK}. Zadaný rok: {rok}"
+        )
+
+def _over_gregoriansky_datum(datum) -> None:
+    try:
+        rok = datum.year
+    except AttributeError:
+        raise TypeError(f"očakáva sa datetime.date, zadané: {type(datum).__name__}")
+    _over_gregoriansky_rok(rok)
 
 def vypocitaj_liturgicky_rok(dnes: date | None = None) -> str:
     """
@@ -95,15 +114,36 @@ def vypocitaj_liturgicky_rok(dnes: date | None = None) -> str:
     return ["A", "B", "C"][rok_cyklu % 3]
 
 
+@lru_cache(maxsize=None)
 def prva_adventna_nedela(rok: int) -> date:
-    """Prvá adventná nedeľa = nedeľa v týždni s 3. decembrom."""
+    """
+    Prvá adventná nedeľa = nedeľa v týždni s 3. decembrom.
+
+    Cachované cez @lru_cache: čistá funkcia jedného celočíselného
+    parametra, volaná opakovane pre ten istý rok (napr. z
+    vypocitaj_datum_pohyblivych_slaveni aj priamo z GUI).
+    """
+    _over_gregoriansky_rok(rok)
     dec3 = date(rok, 12, 3)
     days_back = (dec3.weekday() + 1) % 7   # weekday(): Po=0 … Ne=6
     return dec3 - timedelta(days=days_back)
 
 
+@lru_cache(maxsize=None)
 def velkonocna_nedela(rok: int) -> date:
-    """Vypočíta dátum Veľkonočnej nedele pre gregoriánsky kalendár."""
+    """
+    Vypočíta dátum Veľkonočnej nedele pre gregoriánsky kalendár.
+    Pre výpočet sa používa Meeus-Jones-Butcher algoritmus (Anonymous Gregorian).
+
+    Cachované cez @lru_cache: v súbore sa volá opakovane (desiatky krát)
+    pre ten istý rok z mnohých ďalších funkcií (presuny sviatkov,
+    prednosť, žaltár...), preto sa oplatí výsledok si zapamätať.
+    """
+    # Validácia rozsahu (algoritmus platí len pre gregoriánsky kalendár, rok
+    # 1583-9999) je centralizovaná v _over_gregoriansky_rok, aby nevznikali
+    # dve nezávislé miesta s rovnakým pravidlom, ktoré sa môžu časom rozísť.
+    _over_gregoriansky_rok(rok)
+
     a = rok % 19
     b = rok // 100
     c = rok % 100
@@ -136,6 +176,7 @@ def nedela_zaciatku_tyzdna(datum: date) -> date:
 
 def krst_krista_pana(rok: int) -> date:
     """Krst Krista Pána: nedeľa po Zjavení Pána (6. januári)."""
+    _over_gregoriansky_rok(rok)
     return najblizsia_nedela_po_dni(date(rok, 1, 6))
 
 
@@ -145,6 +186,7 @@ def datum_svatej_rodiny(rok: int) -> date:
     Narodení Pána (25. XII.), alebo 30. XII., ak Narodenie Pána pripadne
     práve na nedeľu.
     """
+    _over_gregoriansky_rok(rok)
     narodenie_pana = date(rok, 12, 25)
     if narodenie_pana.weekday() == 6:
         return date(rok, 12, 30)
@@ -155,17 +197,32 @@ def datum_zvestovania_pana(rok: int) -> date:
     """
     Zvestovanie Pána: pevný dátum 25. marca, ale s pravidlom presunutia.
 
-    Podľa liturgických noriem: ak 25. marca padne na niektorý deň
-    Veľkého týždňa (Kvetná nedeľa až Biela sobota) alebo na niektorý
-    deň Veľkonočnej oktávy (Veľkonočná nedeľa až Nedeľa Božieho
-    milosrdenstva vrátane), slávnosť sa presúva na pondelok
-    bezprostredne nasledujúci po Nedeli Božieho milosrdenstva
-    (t. j. prvý deň po skončení veľkonočnej oktávy).
+    Podľa čl. 5 Všeobecných smerníc o liturgickom roku a o kalendári
+    (porov. breviar.kbs.sk/docs/smernice_lrk.htm) majú nedele adventné,
+    pôstne a veľkonočné prednosť pred všetkými slávnosťami a sviatkami
+    Pána. Slávnosti, ktoré na tieto nedele pripadnú, sa preto presúvajú
+    na nasledujúci pondelok — s jedinou výnimkou, ak ide o kolíziu
+    s Kvetnou nedeľou alebo Veľkonočnou nedeľou; tá sa rieši osobitne
+    cez Veľkonočnú oktávu.
+
+    Rozlišujú sa teda dva prípady presunu:
+      1. 25. marca padne na niektorý deň Veľkého týždňa (Kvetná nedeľa
+         až Biela sobota) alebo na niektorý deň Veľkonočnej oktávy
+         (Veľkonočná nedeľa až Nedeľa Božieho milosrdenstva vrátane)
+         → presun na pondelok bezprostredne nasledujúci po Nedeli
+         Božieho milosrdenstva (t. j. prvý deň po skončení oktávy).
+      2. 25. marca padne na inú (bežnú) adventnú, pôstnu alebo
+         veľkonočnú nedeľu, mimo Veľkého týždňa a oktávy
+         → presun na najbližší nasledujúci pondelok (26. marca).
 
     Príklady rokov s presunutím:
-        2016 – 25.3. = Veľký piatok  → presun na 4.4.
-        2035 – 25.3. = Kvetná nedeľa → presun na 2.4.
+        2016 – 25.3. = Veľký piatok        → presun na 4.4. (prípad 1)
+        2035 – 25.3. = Kvetná nedeľa       → presun na 2.4. (prípad 1)
+        2007 – 25.3. = 5. pôstna nedeľa    → presun na 26.3. (prípad 2)
+        2012 – 25.3. = 5. pôstna nedeľa    → presun na 26.3. (prípad 2)
+        2057 – 25.3. = pôstna nedeľa       → presun na 26.3. (prípad 2)
     """
+    _over_gregoriansky_rok(rok)
     zv = date(rok, 3, 25)
     velka_noc = velkonocna_nedela(rok)
 
@@ -178,26 +235,32 @@ def datum_zvestovania_pana(rok: int) -> date:
         # Presun na prvý pondelok po skončení oktávy
         return oktava_koniec + timedelta(days=1)
 
+    if zv.weekday() == 6:
+        # Bežná (nie Kvetná) adventná/pôstna/veľkonočná nedeľa
+        # má prednosť → slávnosť sa presúva na najbližší pondelok.
+        return zv + timedelta(days=1)
+
     return zv
 
+@lru_cache(maxsize=None)
 def vypocitaj_datum_pohyblivych_slaveni(rok: int) -> dict:
     """
     Vypočíta konkrétne dátumy všetkých pohyblivých slávení pre daný rok.
     Vracia slovník: {názov slávenia: date}
+
+    Cachované cez @lru_cache. POZOR: volajúci kód nesmie vrátený slovník
+    meniť "in place" (napr. priradením kľúča alebo .update/.pop) — všetky
+    volania v tomto súbore ho už dnes len čítajú (.get/.items/`in`), takže
+    cachovanie je bezpečné; pri budúcich úpravách zachovaj tento kontrakt,
+    prípadne si pred mutáciou spravte plytkú kópiu (dict(...)).
     """
     velka_noc   = velkonocna_nedela(rok)
     turice      = velka_noc + timedelta(days=49)
     prva_advent = prva_adventna_nedela(rok)
     krista_krala = prva_advent - timedelta(days=7)
 
-    # Svätá rodina: nedeľa po Narodení Pána; ak 25.XII. = nedeľa,
-    # slávi sa 30.XII. bez ohľadu na deň týždňa.
-    narodenie = date(rok, 12, 25)
-    svata_rodina = (
-        date(rok, 12, 30)
-        if narodenie.weekday() == 6
-        else najblizsia_nedela_po_dni(narodenie)
-    )
+    # Svätá rodina - jediný zdroj pravdy: datum_svatej_rodiny()
+    svata_rodina = datum_svatej_rodiny(rok)
 
     return {
         "Prvá adventná nedeľa (začína nový liturgický rok)": prva_advent,
@@ -220,30 +283,58 @@ def vypocitaj_datum_pohyblivych_slaveni(rok: int) -> dict:
         "Krista Kráľa":                                      krista_krala,
     }
 
+# Pohyblivé "slávnosti Pána" – podľa Všeobecných noriem liturgického roka
+# (č. 60) majú prednosť pred pevnou slávnosťou svätca rovnakého stupňa
+# tabuľky liturgických dní. Narodenie sv. Jána Krstiteľa (24.6., pevná
+# slávnosť svätca) sa preto pri kolízii s ktoroukoľvek z nich vynúteno
+# presúva. Zoznam je zámerne širší než matematicky nutné pre 24.6. (v praxi
+# ho tam vie zasiahnuť len Najsvätejšie Kristovo Telo a Krv a Najsvätejšie
+# Srdce Ježišovo) – ak sa kalendár v budúcnosti rozšíri o ďalšiu pohyblivú
+# slávnosť Pána, stačí ju doplniť sem namiesto úpravy logiky nižšie.
+POHYBLIVE_SLAVNOSTI_PANA: tuple[str, ...] = (
+    "Nanebovstúpenie Pána",
+    "Nedeľa zoslania Ducha Svätého (Turíce)",
+    "Pána Ježiša Krista, najvyššieho a večného kňaza",
+    "Najsvätejšej Trojice",
+    "Najsvätejšieho Kristovho Tela a Krvi",
+    "Najsvätejšieho Srdca Ježišovho",
+)
+
+
 def datum_narodenia_jana_krstitela(rok: int) -> date:
-    """Narodenie sv. Jána Krstiteľa; pri kolízii s vyššou slávnosťou sa presúva na 23.6."""
+    """Narodenie sv. Jána Krstiteľa; pri kolízii s pohyblivou slávnosťou Pána sa presúva na 23.6."""
+    _over_gregoriansky_rok(rok)
     povodny_datum = date(rok, 6, 24)
     pohyblive = vypocitaj_datum_pohyblivych_slaveni(rok)
-    prekazajuce_slavnosti = {
-        pohyblive.get("Najsvätejšieho Kristovho Tela a Krvi"),
-        pohyblive.get("Najsvätejšieho Srdca Ježišovho"),
-    }
+    prekazajuce_slavnosti = {pohyblive.get(nazov) for nazov in POHYBLIVE_SLAVNOSTI_PANA}
     if povodny_datum in prekazajuce_slavnosti:
         return date(rok, 6, 23)
     return povodny_datum
 
 def je_neposkvrnene_srdce_pm_prekazane(datum: date) -> bool:
-    """NSPM je spomienka; pri kolízii so slávnosťou sa vynechá, nepresúva."""
+    """NSPM je spomienka; pri kolízii so slávnosťou/sviatkom sa vynechá, nepresúva."""
     pohyblive = vypocitaj_datum_pohyblivych_slaveni(datum.year)
     datum_nspm = pohyblive.get("Nepoškvrnené Srdce Panny Márie")
     if datum != datum_nspm:
         return False
 
-    prekazajuce_slavnosti = {
-        datum_narodenia_jana_krstitela(datum.year),
-        date(datum.year, 6, 29),
-    }
-    return datum in prekazajuce_slavnosti
+    if datum == datum_narodenia_jana_krstitela(datum.year):
+        return True
+    if datum == date(datum.year, 6, 29):  # Sv. Petra a Pavla, apoštolov (slávnosť)
+        return True
+
+    # Extrémne zriedkavý okrajový prípad: NSPM (Turíce+20) sa počíta zo dňa
+    # Veľkej noci, takže keď Veľká noc pripadne na svoj najneskorší možný
+    # dátum (25.4.), NSPM vyjde až na 2.–3. júla, kde už koliduje s pevnými
+    # sviatkami z PEVNE_SLAVENIA_S_VLASTNYM_KODOM (napr. Návšteva Panny
+    # Márie 2.7., Sv. Tomáš apoštol 3.7.). Stalo sa to v roku 2011 a stane sa
+    # znova v rokoch 2038 a 2095. Namiesto pridávania ďalších natvrdo
+    # napísaných dátumov kontrolujeme priamo voči existujúcej tabuľke, aby
+    # akékoľvek jej budúce rozšírenie bolo automaticky pokryté aj tu.
+    if najdi_pevne_slavenie_s_vlastnym_kodom(datum) is not None:
+        return True
+
+    return False
 
 
 def je_sv_ondrej_prekazany(datum: date) -> bool:
@@ -269,31 +360,41 @@ def je_sv_filip_jakub_prekazany(datum: date) -> bool:
     return False
 
 
+def _je_pevny_sviatok_v_oktave_prekazany(datum: date, mesiac: int, den: int) -> bool:
+    """
+    Spoločné pravidlo pre pevné sviatky v Oktáve Narodenia Pána (26.-28.12.):
+    ak zadaný dátum pripadne presne na deň {mesiac}.{den}. A ZÁROVEŇ ide o
+    nedeľu, má prednosť Svätá rodina a sviatok sa v danom roku vynechá
+    (nepresúva sa na iný deň).
+
+    Jedna spoločná implementácia pre je_sv_stefan_prekazany,
+    je_sv_jana_prekazany a je_sv_neviniatka_prekazane – ak by sa pravidlo
+    v budúcnosti menilo, stačí upraviť len tu.
+    """
+    if datum != date(datum.year, mesiac, den):
+        return False
+    return datum.weekday() == 6
+
+
 def je_sv_stefan_prekazany(datum: date) -> bool:
     """Sv. Štefan, prvý mučeník (26.12.) je sviatok; ak pripadne na nedeľu,
     nedeľa v Oktáve Narodenia Pána (Svätej rodiny) má prednosť a sviatok sa
     v danom roku vynechá (nepresúva sa)."""
-    if datum != date(datum.year, 12, 26):
-        return False
-    return datum.weekday() == 6
+    return _je_pevny_sviatok_v_oktave_prekazany(datum, 12, 26)
 
 
 def je_sv_neviniatka_prekazane(datum: date) -> bool:
     """Sv. Neviniatka, mučeníci (28.12.) je sviatok; ak pripadne na nedeľu,
     nedeľa v Oktáve Narodenia Pána (Svätej rodiny) má prednosť a sviatok sa
     v danom roku vynechá (nepresúva sa)."""
-    if datum != date(datum.year, 12, 28):
-        return False
-    return datum.weekday() == 6
+    return _je_pevny_sviatok_v_oktave_prekazany(datum, 12, 28)
 
 
 def je_sv_jana_prekazany(datum: date) -> bool:
     """Sv. Ján, apoštol a evanjelista (27.12.) je sviatok; ak pripadne na
     nedeľu, nedeľa v Oktáve Narodenia Pána (Svätej rodiny) má prednosť a
     sviatok sa v danom roku vynechá (nepresúva sa)."""
-    if datum != date(datum.year, 12, 27):
-        return False
-    return datum.weekday() == 6
+    return _je_pevny_sviatok_v_oktave_prekazany(datum, 12, 27)
 
 
 def je_svata_rodina_presunuta_na_pdr(datum: date) -> bool:
@@ -343,7 +444,22 @@ def datum_sv_jozefa_zenicha(rok: int) -> date:
     return povodny_datum
 
 def datum_neposkvrneneho_pocatia(rok: int) -> date:
-    """Nepoškvrnené počatie; ak 8.12. padne na adventnú nedeľu, presúva sa na 9.12."""
+    """
+    Nepoškvrnené počatie; ak 8.12. padne na nedeľu, presúva sa na 9.12.
+
+    POZOR pred "opravou" na zložitejšiu kontrolu (overenie adventnej nedele +
+    kolízie s vyššími slávnosťami) – nie je potrebná, aj keď sa tak na prvý
+    pohľad javí:
+    1. 8.12. môže byť nedeľou len ako 2. adventná nedeľa – 1. adventná nedeľa
+       je vždy v rozsahu 27.11.–3.12., takže 2. adventná nedeľa je vždy
+       v rozsahu 4.12.–10.12., do ktorého 8.12. vždy spadá. Iná možnosť
+       (napr. cezročná nedeľa) nastať nemôže.
+    2. 9.12. nemá v rímskom ani slovenskom kalendári žiadnu vyššie postavenú
+       fixnú slávnosť/sviatok, takže "najbližší voľný deň" (GNLYC č. 60) je
+       vždy nasledujúci deň.
+    Overené aj priamo oproti lc.kbs.sk a kbs.sk/tkkbs.sk pre roky 2019 a 2024
+    (oba roky mali 8.12. v nedeľu) – slávnosť sa reálne slávila 9.12.
+    """
     povodny_datum = date(rok, 12, 8)
     if povodny_datum.weekday() == 6:
         return povodny_datum + timedelta(days=1)
@@ -545,39 +661,52 @@ PEVNE_SLAVENIA_S_VLASTNYM_KODOM = [
     # Mapa slúži najmä pri hlavičke a upozornení "nedeľa má prednosť pred...",
     # aj keď sa odporúčané piesne môžu brať z všeobecnejšieho direktóriového
     # záznamu. Napr. VPLB zobrazujeme ako konkrétne Výročie posvätenia
-    # Lateránskej baziliky, ale piesne sa mapujú cez "Výročie posviacky chrámu".    
-    (3, 19, "3L", "SV. JOZEFA, ŽENÍCHA", "Slávnosť"),
-    
-    (4, 25, "4L", "SV. MARKA, EVANJELISTU", "Sviatok"),
-    (4, 29, "4L", "SV. KATARÍNY SIENSKEJ, PANNY A UČITEĽKY CIRKVI, PATRÓNKY EURÓPY", "Sviatok"),
-    
-    (5, 3, "FJ", "SV. FILIPA A JAKUBA, APOŠTOLOV", "Sviatok"),
-    
-    (6, 24, "NJK", "NARODENIE SV. JÁNA KRSTITEĽA", "Slávnosť"),
-    (7, 2, "NAVPM", "NÁVŠTEVA PREBLAHOSLAVENEJ PANNY MÁRIE", "Sviatok"),
-    (7, 11, "BEN", "SV. BENEDIKTA, OPÁTA, PATRÓNA EURÓPY", "Sviatok"),
-    (7, 23, "BRI", "SV. BRIGITY, REHOĽNÍČKY, PATRÓNKY EURÓPY", "Sviatok"),
-    (8, 6, "PREM", "PREMENENIE PÁNA", "Sviatok"),
-    (8, 10, "VAV", "SV. VAVRINCA, DIAKONA A MUČENÍKA", "Sviatok"),
-    (8, 24, "BAR", "SV. BARTOLOMEJA, APOŠTOLA", "Sviatok"),
-    
-    (7, 3, "7L", "SV. TOMÁŠA, APOŠTOLA", "Sviatok"),
-    (7, 22, "7L", "SV. MÁRIE MAGDALÉNY", "Sviatok"),
-    (7, 25, "7L", "SV. JAKUBA, APOŠTOLA", "Sviatok"), 
-        
-    
-    (9, 8, "NPMAR", "NARODENIE PANNY MÁRIE", "Sviatok"),
-    (9, 14, "PSK", "POVÝŠENIE SVÄTÉHO KRÍŽA", "Sviatok"),
-    (9, 21, "MATE", "SV. MATÚŠA, APOŠTOLA A EVANJELISTU", "Sviatok"),
-    (9, 29, "MGR", "SV. MICHALA, GABRIELA A RAFAELA, ARCHANJELI", "Sviatok"),
-    
-    (10, 18, "10L", "SV. LUKÁŠA, EVANJELISTU", "Sviatok"),
-    (10, 28, "10L", "SV. ŠIMONA A JÚDU, APOŠTOLOV", "Sviatok"),
-    
-    (11, 2, "ZOS", "SPOMIENKA NA VŠETKÝCH ZOSNULÝCH VERIACICH", "Spomienka"),
-    (11, 9, "VPLB", "VÝROČIE POSVIACKY LATERÁNSKEJ BAZILIKY", "Sviatok"),
-    (11, 30, "OND", "SV. ONDREJA, APOŠTOLA", "Sviatok"),
-    (12, 8, "12L", "NEPOŠKVRNENÉ POČATIE PANNY MÁRIE", "Slávnosť"),
+    # Lateránskej baziliky, ale piesne sa mapujú cez "Výročie posviacky chrámu".
+    #
+    # Posledné pole (date_fn) je None pre bežné pevné dátumy (mesiac/deň platí
+    # každý rok rovnako). Tri slávnosti (3L, NJK, 12L) sa v niektorých rokoch
+    # posúvajú na iný deň (kolízia s nedeľou/Veľkým týždňom) – pre tie je tu
+    # namiesto None funkcia date_fn(rok), ktorá vráti skutočný dátum slávenia
+    # v danom roku; najdi_pevne_slavenie_s_vlastnym_kodom() ju použije namiesto
+    # pevného mesiac/deň.
+    (3, 19, "3L", "SV. JOZEFA, ŽENÍCHA", "Slávnosť", datum_sv_jozefa_zenicha),
+
+    (4, 25, "4L", "SV. MARKA, EVANJELISTU", "Sviatok", None),
+    (4, 29, "4L", "SV. KATARÍNY SIENSKEJ, PANNY A UČITEĽKY CIRKVI, PATRÓNKY EURÓPY", "Sviatok", None),
+
+    (5, 3, "FJ", "SV. FILIPA A JAKUBA, APOŠTOLOV", "Sviatok", None),
+
+    (6, 24, "NJK", "NARODENIE SV. JÁNA KRSTITEĽA", "Slávnosť", datum_narodenia_jana_krstitela),
+    (7, 2, "NAVPM", "NÁVŠTEVA PREBLAHOSLAVENEJ PANNY MÁRIE", "Sviatok", None),
+    # CMV bol donedávna vynechaný z tejto tabuľky a ošetrený len samostatným
+    # if-om vo vypocitaj_kod_liturgickej_casti (kód/názov/stupeň nižšie sú s ním
+    # zámerne v súlade) – doplnené, aby o ňom vedeli aj ostatné funkcie, ktoré
+    # túto tabuľku používajú na detekciu kolízií (napr.
+    # je_neposkvrnene_srdce_pm_prekazane).
+    (7, 5, "CMV", "SV. CYRILA A METODA, SLOVANSKÝCH VIEROZVESTOV", "Slávnosť", None),
+    (7, 11, "BEN", "SV. BENEDIKTA, OPÁTA, PATRÓNA EURÓPY", "Sviatok", None),
+    (7, 23, "BRI", "SV. BRIGITY, REHOĽNÍČKY, PATRÓNKY EURÓPY", "Sviatok", None),
+    (8, 6, "PREM", "PREMENENIE PÁNA", "Sviatok", None),
+    (8, 10, "VAV", "SV. VAVRINCA, DIAKONA A MUČENÍKA", "Sviatok", None),
+    (8, 24, "BAR", "SV. BARTOLOMEJA, APOŠTOLA", "Sviatok", None),
+
+    (7, 3, "7L", "SV. TOMÁŠA, APOŠTOLA", "Sviatok", None),
+    (7, 22, "7L", "SV. MÁRIE MAGDALÉNY", "Sviatok", None),
+    (7, 25, "7L", "SV. JAKUBA, APOŠTOLA", "Sviatok", None),
+
+
+    (9, 8, "NPMAR", "NARODENIE PANNY MÁRIE", "Sviatok", None),
+    (9, 14, "PSK", "POVÝŠENIE SVÄTÉHO KRÍŽA", "Sviatok", None),
+    (9, 21, "MATE", "SV. MATÚŠA, APOŠTOLA A EVANJELISTU", "Sviatok", None),
+    (9, 29, "MGR", "SV. MICHALA, GABRIELA A RAFAELA, ARCHANJELI", "Sviatok", None),
+
+    (10, 18, "10L", "SV. LUKÁŠA, EVANJELISTU", "Sviatok", None),
+    (10, 28, "10L", "SV. ŠIMONA A JÚDU, APOŠTOLOV", "Sviatok", None),
+
+    (11, 2, "ZOS", "SPOMIENKA NA VŠETKÝCH ZOSNULÝCH VERIACICH", "Spomienka", None),
+    (11, 9, "VPLB", "VÝROČIE POSVIACKY LATERÁNSKEJ BAZILIKY", "Sviatok", None),
+    (11, 30, "OND", "SV. ONDREJA, APOŠTOLA", "Sviatok", None),
+    (12, 8, "12L", "NEPOŠKVRNENÉ POČATIE PANNY MÁRIE", "Slávnosť", datum_neposkvrneneho_pocatia),
 ]
 
 # Mapovanie kódov na liturgické dni pre prepojenie s direktóriom
@@ -815,19 +944,14 @@ def najdi_presny_datum_v_direktoriu(
 
 def najdi_pevne_slavenie_s_vlastnym_kodom(datum: date) -> tuple[str, str, str] | None:
     """Vráti pevné slávenie evidované mimo dátumového riadku direktória."""
-    if datum == datum_sv_jozefa_zenicha(datum.year):
-        return "3L", "SV. JOZEFA, ŽENÍCHA", "Slávnosť"
-
-    if datum == datum_narodenia_jana_krstitela(datum.year):
-        return "NJK", "NARODENIE SV. JÁNA KRSTITEĽA", "Slávnosť"
-
-    if datum == datum_neposkvrneneho_pocatia(datum.year):
-        return "12L", "NEPOŠKVRNENÉ POČATIE PANNY MÁRIE", "Slávnosť"
-
-    for mesiac, den, kod, nazov, stupen in PEVNE_SLAVENIA_S_VLASTNYM_KODOM:
-        if kod in ("3L", "NJK", "12L"):
-            continue
-        if datum.month == mesiac and datum.day == den:
+    for mesiac, den, kod, nazov, stupen, date_fn in PEVNE_SLAVENIA_S_VLASTNYM_KODOM:
+        if date_fn is not None:
+            # Slávnosť sa môže v niektorých rokoch posunúť na iný deň
+            # (kolízia s nedeľou/Veľkým týždňom) – skutočný dátum zisťujeme
+            # cez date_fn(rok) namiesto pevného mesiac/deň.
+            if datum == date_fn(datum.year):
+                return kod, nazov, stupen
+        elif datum.month == mesiac and datum.day == den:
             return kod, nazov, stupen
     return None
 
@@ -970,9 +1094,8 @@ def vypocitaj_kod_liturgickej_casti(dnes: date | None = None) -> str:
     krst_pana = krst_krista_pana(dnes.year)
 
     if dnes >= date(dnes.year, 12, 25):
-        narodenie_pana = date(dnes.year, 12, 25)
-        prva_nedela_po_narodeni = najblizsia_nedela_po_dni(narodenie_pana)
-        svata_rodina = date(dnes.year, 12, 30) if narodenie_pana.weekday() == 6 else prva_nedela_po_narodeni
+        # Svätá rodina - jediný zdroj pravdy
+        svata_rodina = datum_svatej_rodiny(dnes.year)
         if dnes == svata_rodina:
             return "SR"
         return "1VI"
@@ -1021,15 +1144,16 @@ def vypocitaj_kod_liturgickej_casti(dnes: date | None = None) -> str:
     if velka_noc < dnes < velka_noc + timedelta(days=7):
         return "VOKT"
 
-    # Zvestovanie Pána presunuté na pondelok po veľkonočnej oktáve
-    # (nastáva keď 25.3. padne do Veľkého týždňa alebo oktávy)
-    if dnes == datum_zvestovania_pana(dnes.year) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "ZV", "Zvestovanie Pána", "Slávnosť"):
-        return "ZV"
-
-    # Pôvodne tu bola kontrola "if dnes == nanebovstupenie: return 'NP'", ale
-    # presunula sa vyššie (pred lookup pevných slávení s vlastným kódom), aby
-    # Nanebovstúpenie Pána nemohlo byť prekryté kolidujúcim pevným dátumom
-    # (napr. Sv. Filip a Jakub, 3.5., v rokoch 2035 a 2046).
+    # POZNÁMKA: Kontrola presunutého Zvestovania Pána (pondelok po veľkonočnej
+    # oktáve) sa tu úmyselne NEOPAKUJE – rovnaká podmienka
+    # (dnes == datum_zvestovania_pana(dnes.year) + rovnaká kontrola prednosti)
+    # sa vyhodnocuje už úplne na začiatku tejto funkcie a je tam s rovnakým
+    # `dnes` vždy deterministicky rovnaká, takže druhé vyhodnotenie na tomto
+    # mieste by bolo nedosiahnuteľné (dead code) – pôvodne tu bola aj kontrola
+    # Nanebovstúpenia Pána, tá sa z rovnakého dôvodu presunula úplne na
+    # začiatok funkcie (pred lookup pevných slávení s vlastným kódom), aby ju
+    # nemohol prekryť kolidujúci pevný dátum (napr. Sv. Filip a Jakub, 3.5.,
+    # v rokoch 2035 a 2046).
 
     if velka_noc + timedelta(days=7) <= dnes < turice:
         tyzden = ((dnes - velka_noc).days // 7) + 1
@@ -1097,43 +1221,70 @@ def vypocitaj_aktualnu_liturgicku_cast(dnes: date | None = None) -> str:
 
     return nazov_liturgickej_casti_podla_kodu(kod_dna)
 
+PRESUNUTE_SLAVNOSTI = [
+    # Slávnosti/sviatky s pevným kalendárnym dátumom, ktoré sa v niektorých
+    # rokoch (kolízia s nedeľou/Veľkým týždňom a pod.) presúvajú na iný deň.
+    # Jedna spoločná tabuľka pre popis_presunu_slavnosti() aj
+    # zostav_text_status_baru() – predtým mala každá funkcia vlastnú (takmer
+    # identickú) kópiu tohto vzoru pre každú zo 4 slávností zvlášť.
+    #
+    # kod                    – kód liturgickej časti pridelený skutočnému dňu slávenia
+    # povodny_mesiac/den     – pôvodný (bežný) kalendárny dátum
+    # skutocny_datum_fn(rok) – funkcia vracajúca skutočný (prípadne presunutý) dátum
+    # genitiv_povodneho_datumu – text pre popis_presunu_slavnosti, napr. "25. marca"
+    # na_sablona             – text do status baru, keď sme na PÔVODNOM dátume
+    #                          a slávenie sa presunulo inam ({den}/{mesiac}/{rok}
+    #                          zodpovedajú skutočnému dátumu)
+    # z_text                 – text do status baru, keď sme na SKUTOČNOM
+    #                          (presunutom) dátume
+    {
+        "kod": "ZV",
+        "povodny_mesiac": 3, "povodny_den": 25,
+        "skutocny_datum_fn": datum_zvestovania_pana,
+        "genitiv_povodneho_datumu": "25. marca",
+        "na_sablona": "Zvestovanie Pána sa presúva na {den}.{mesiac}.{rok}",
+        "z_text": "Zvestovanie Pána sa presúva z 25.3.",
+    },
+    {
+        "kod": "3L",
+        "povodny_mesiac": 3, "povodny_den": 19,
+        "skutocny_datum_fn": datum_sv_jozefa_zenicha,
+        "genitiv_povodneho_datumu": "19. marca",
+        "na_sablona": "Sv. Jozef, ženích sa presúva na {den}.{mesiac}.{rok}",
+        "z_text": "Sv. Jozef, ženích sa presúva z 19.3.",
+    },
+    {
+        "kod": "NJK",
+        "povodny_mesiac": 6, "povodny_den": 24,
+        "skutocny_datum_fn": datum_narodenia_jana_krstitela,
+        "genitiv_povodneho_datumu": "24. júna",
+        "na_sablona": "Narodenie Jána Krstiteľa sa presúva na {den}.{mesiac}.{rok}",
+        "z_text": "Narodenie Jána Krstiteľa sa presúva z 24.6.",
+    },
+    {
+        "kod": "12L",
+        "povodny_mesiac": 12, "povodny_den": 8,
+        "skutocny_datum_fn": datum_neposkvrneneho_pocatia,
+        "genitiv_povodneho_datumu": "8. decembra",
+        "na_sablona": "Nepoškvrnené počatie Panny Márie sa presúva na {den}.{mesiac}.{rok}",
+        "z_text": "Nepoškvrnené počatie Panny Márie sa presúva z 8.12.",
+    },
+]
+
+
 def popis_presunu_slavnosti(dnes: date | None = None) -> str | None:
     """Vráti krátky popis pôvodného dátumu, ak je dnešná slávnosť presunutá."""
     dnes = dnes or date.today()
     kod_dna = vypocitaj_kod_liturgickej_casti(dnes)
 
-    povodne_zvestovanie = date(dnes.year, 3, 25)
-    if (
-        kod_dna == "ZV"
-        and dnes == datum_zvestovania_pana(dnes.year)
-        and dnes != povodne_zvestovanie
-    ):
-        return "presunutá z 25. marca"
-
-    povodny_jozef = date(dnes.year, 3, 19)
-    if (
-        kod_dna == "3L"
-        and dnes == datum_sv_jozefa_zenicha(dnes.year)
-        and dnes != povodny_jozef
-    ):
-        return "presunutá z 19. marca"
-
-    povodny_jan = date(dnes.year, 6, 24)
-    if (
-        kod_dna == "NJK"
-        and dnes == datum_narodenia_jana_krstitela(dnes.year)
-        and dnes != povodny_jan
-    ):
-        return "presunutá z 24. júna"
-
-    povodne_neposkvrnene = date(dnes.year, 12, 8)
-    if (
-        kod_dna == "12L"
-        and dnes == datum_neposkvrneneho_pocatia(dnes.year)
-        and dnes != povodne_neposkvrnene
-    ):
-        return "presunutá z 8. decembra"
-
+    for polozka in PRESUNUTE_SLAVNOSTI:
+        povodny_datum = date(dnes.year, polozka["povodny_mesiac"], polozka["povodny_den"])
+        if (
+            kod_dna == polozka["kod"]
+            and dnes == polozka["skutocny_datum_fn"](dnes.year)
+            and dnes != povodny_datum
+        ):
+            return f"presunutá z {polozka['genitiv_povodneho_datumu']}"
     return None
 
 def get_parnost_roka(datum: date) -> int:
@@ -1248,66 +1399,33 @@ def zostav_text_status_baru(
     if vynechane:
         casti.append(vynechane)
 
-    # Doplnenie informácie o presunutí Zvestovania Pána
-    if dnes.month == 3 and dnes.day == 25:
-        # ak je 25.3. ale nie je to Zvestovanie (bolo presunuté)
-        if datum_zvestovania_pana(dnes.year) != dnes:
-            presunuty = datum_zvestovania_pana(dnes.year)
-            casti.append(f"Zvestovanie Pána presunuté na {presunuty.day}.{presunuty.month}.")
-    else:
-        # ak sme na presunutý dátum, informuj odkiaľ
-        if dnes == datum_zvestovania_pana(dnes.year) and dnes != date(dnes.year, 3, 25):
-            casti.append("Zvestovanie Pána presunuté z 25.3.")
-
-    # Doplnenie informácie o presunutí Narodenia sv. Jána Krstiteľa
-    if dnes.month == 6 and dnes.day == 24:
-        # ak je 24.6. ale nie je to Narodenie Jána Krstiteľa (bolo presunuté)
-        if datum_narodenia_jana_krstitela(dnes.year) != dnes:
-            presunuty = datum_narodenia_jana_krstitela(dnes.year)
-            casti.append(
-                f"Narodenie Jána Krstiteľa sa presúva na {presunuty.day}.{presunuty.month}.{presunuty.year}"
-            )
-    else:
-        # ak sme na presunutý dátum, informuj odkiaľ
-        if dnes == datum_narodenia_jana_krstitela(dnes.year) and dnes != date(dnes.year, 6, 24):
-            casti.append("Narodenie Jána Krstiteľa sa presúva z 24.6.")
+    # Doplnenie informácie o presune pevných slávností/sviatkov (Zvestovanie
+    # Pána, sv. Jozef ženích, Narodenie Jána Krstiteľa, Nepoškvrnené počatie)
+    # – spoločná tabuľka PRESUNUTE_SLAVNOSTI, pozri jej definíciu vyššie.
+    for polozka in PRESUNUTE_SLAVNOSTI:
+        povodny_datum = date(dnes.year, polozka["povodny_mesiac"], polozka["povodny_den"])
+        skutocny_datum = polozka["skutocny_datum_fn"](dnes.year)
+        if dnes == povodny_datum:
+            # sme na pôvodnom dátume, ale slávenie sa naň nepripadá (presunuté inam)
+            if skutocny_datum != dnes:
+                casti.append(polozka["na_sablona"].format(
+                    den=skutocny_datum.day, mesiac=skutocny_datum.month, rok=skutocny_datum.year
+                ))
+        else:
+            # sme na presunutom dátume, informuj odkiaľ
+            if dnes == skutocny_datum and dnes != povodny_datum:
+                casti.append(polozka["z_text"])
 
     # Doplnenie informácie o presunutí Svätej rodiny na 31.12.
     # (zrkadlovo k poznámke v popis_vynechaneho_slavenia, ktorá sa zobrazuje
     # 30.12.; tu informujeme v deň, kde by Sv. rodina bežne bola, prečo tam nie je)
+    # Nie je súčasťou PRESUNUTE_SLAVNOSTI – iná podmienka (kolízia s nedeľou
+    # Narodenia Pána), nie pevný dátum s funkciou skutočného dátumu.
     if dnes.month == 12 and dnes.day == 31:
         if je_svata_rodina_presunuta_na_pdr(date(dnes.year, 12, 30)):
             casti.append(
                 "Sviatok Svätej rodiny presunutý na 30.12. (Narodenie Pána pripadlo na nedeľu)"
             )
-
-    # Doplnenie informácie o presunutí (alebo anticipácii) sv. Jozefa, ženícha
-    povodny_jozef = date(dnes.year, 3, 19)
-    skutocny_jozef = datum_sv_jozefa_zenicha(dnes.year)
-    if dnes == povodny_jozef:
-        # ak je 19.3. ale nie je to sv. Jozef (bol presunutý/anticipovaný)
-        if skutocny_jozef != dnes:
-            casti.append(
-                f"Sv. Jozef, ženích sa presúva na {skutocny_jozef.day}.{skutocny_jozef.month}.{skutocny_jozef.year}"
-            )
-    else:
-        # ak sme na presunutom/anticipovanom dátume, informuj odkiaľ
-        if dnes == skutocny_jozef and dnes != povodny_jozef:
-            casti.append("Sv. Jozef, ženích sa presúva z 19.3.")
-
-    # Doplnenie informácie o presunutí Nepoškvrneného počatia Panny Márie
-    povodne_npm = date(dnes.year, 12, 8)
-    skutocne_npm = datum_neposkvrneneho_pocatia(dnes.year)
-    if dnes == povodne_npm:
-        # ak je 8.12. ale nie je to Nepoškvrnené počatie (bolo presunuté)
-        if skutocne_npm != dnes:
-            casti.append(
-                f"Nepoškvrnené počatie Panny Márie sa presúva na {skutocne_npm.day}.{skutocne_npm.month}.{skutocne_npm.year}"
-            )
-    else:
-        # ak sme na presunutom dátume, informuj odkiaľ
-        if dnes == skutocne_npm and dnes != povodne_npm:
-            casti.append("Nepoškvrnené počatie Panny Márie sa presúva z 8.12.")
 
     if vigilia is None:
         vigilia = zostavit_casove_vztahy_titulku(dnes)["vigilia"]
@@ -1715,55 +1833,75 @@ APP_ICON = ICONS_DIR / "Kinak32.ico"
 ICON_PNG = ICONS_DIR / "Kinak_128r.png"
 
 # ==========================================================
-# DIAGNOSTIKA / LOGOVANIE
+# DIAGNOSTIKA / LOGOVANIE - s rotaciou
 # ==========================================================
-def _log(level: str, message: str, exc: Exception | None = None) -> None:
-    """
-    Spoločné jadro logovania. Otvorí LOG_PATH v režime append, zapíše
-    riadok a pri level=='ERROR' doplní aj traceback výnimky.
-    Pri zlyhaní zápisu sa pokúsi vypísať chybu na stderr.
+LOG_MAX_BYTES = 5000000  # 5 MB
+LOG_BACKUP_COUNT = 3
+_kinak_logger = None
 
-    Volá sa výhradne cez verejné funkcie log_exception / log_info / log_debug.
-    """
+def _get_kinak_logger():
+    global _kinak_logger
+    if _kinak_logger is not None:
+        return _kinak_logger
+    logger = logging.getLogger("Kinak")
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
     try:
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with LOG_PATH.open("a", encoding="utf-8") as f:
-            prefix = "\n" if level == "ERROR" else ""
-            f.write(f"{prefix}[{level}] {now} | {message}\n")
-            if exc is not None:
-                traceback.print_exception(type(exc), exc, exc.__traceback__, file=f)
+        if logger.handlers:
+            logger.handlers.clear()
+    except Exception:
+        pass
+    try:
+        LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        handler = RotatingFileHandler(
+            filename=str(LOG_PATH),
+            maxBytes=LOG_MAX_BYTES,
+            backupCount=LOG_BACKUP_COUNT,
+            encoding="utf-8"
+        )
+        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    except Exception as e:
+        try:
+            print(f"[LOGGING SETUP ERROR] {e}", file=sys.stderr)
+        except Exception:
+            pass
+    _kinak_logger = logger
+    return logger
+
+def _log(level, message, exc=None):
+    if not ENABLE_DIAGNOSTICS:
+        return
+    try:
+        logger = _get_kinak_logger()
+        lvl = getattr(logging, level.upper(), logging.INFO)
+        if exc is not None:
+            logger.log(lvl, message, exc_info=(type(exc), exc, exc.__traceback__))
+        else:
+            logger.log(lvl, message)
     except Exception as logging_error:
         try:
-            detail = (
-                f"Nepodarilo sa zapísať log pre: {message} | Chyba: {logging_error}"
-                if level == "ERROR"
-                else str(logging_error)
-            )
-            sys.stderr.write(f"[LOGGING ERROR] {detail}\n")
+            print(f"[LOGGING ERROR] {message} | {logging_error}", file=sys.stderr)
         except Exception:
-            # Posledná poistka – už nie je kam zapisovať
             pass
 
-
-def log_exception(context: str, exc: Exception) -> None:
-    """Zaloguje chybu vrátane tracebacku (úroveň ERROR)."""
+def log_exception(context, exc):
     if not ENABLE_DIAGNOSTICS:
         return
     _log("ERROR", context, exc)
 
-
-def log_info(message: str) -> None:
-    """Zaloguje bežnú prevádzkovú informáciu (úroveň INFO)."""
+def log_info(message):
     if not ENABLE_DIAGNOSTICS:
         return
     _log("INFO", message)
 
-
-def log_debug(message: str) -> None:
-    """Zaloguje detailnú vývojársku informáciu (úroveň DEBUG)."""
+def log_debug(message):
     if not ENABLE_DIAGNOSTICS:
         return
     _log("DEBUG", message)
+
+
 
 
 def update_progress(
@@ -1820,14 +1958,34 @@ def zobraz_chybu_chybajucich_kniznic_pre_stahovanie() -> bool:
     return True
 
 
-def je_internet_dostupny(timeout: float = 2.0) -> bool:
-    """Rýchla kontrola internetu – vráti True ak je pripojenie, inak zobrazí chybu."""
+_INTERNET_KONTROLA_HOST = ("1.1.1.1", 53)
+
+def _over_internet_socket(timeout: float = 2.0) -> bool:
+    """
+    Čistá kontrola internetového pripojenia bez akýchkoľvek GUI vedľajších
+    účinkov (žiadny messagebox) – vďaka tomu je BEZPEČNÉ volať ju aj
+    z pozadového (worker) vlákna, na rozdiel od je_internet_dostupny().
+    """
     try:
-        socket.create_connection(("1.1.1.1", 53), timeout=timeout)
+        socket.create_connection(_INTERNET_KONTROLA_HOST, timeout=timeout)
         return True
     except OSError:
-        messagebox.showerror("Žiadne internetové pripojenie", "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.")
         return False
+
+
+def je_internet_dostupny(timeout: float = 2.0) -> bool:
+    """
+    Rýchla kontrola internetu – vráti True ak je pripojenie, inak zobrazí chybu.
+
+    POZOR – táto funkcia volá messagebox, takže je bezpečné ju volať LEN
+    z hlavného (GUI) vlákna. Zo sťahovacieho worker vlákna (kde by messagebox
+    z iného než hlavného vlákna bol nekorektný voči Tkinter) použite priamo
+    _over_internet_socket(), ktorá je čisto informatívna bez vedľajších účinkov.
+    """
+    if _over_internet_socket(timeout):
+        return True
+    messagebox.showerror("Žiadne internetové pripojenie", "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.")
+    return False
 
 
 def zobraz_chybu_stahovania(nazov: str, zdroj: str):
@@ -3240,8 +3398,9 @@ def spustit_startovaciu_diagnostiku() -> None:
 # LC.KBS.SK - STIAHNUTIE ČÍTANÍ Z KONFERENCIE BISKUPOV SLOVENSKA
 # ==========================================================
 
-def _zapis_text_atomicky(cesta: Path, text: str, encoding: str = "utf-8") -> None:
+def _zapis_text_atomicky(cesta: Path | str, text: str, encoding: str = "utf-8") -> None:
     """Zapise text tak, aby povodny subor ostal zachovany pri zlyhani zapisu."""
+    cesta = Path(cesta)
     cesta.parent.mkdir(parents=True, exist_ok=True)
     temp_path = None
     fd, temp_str = tempfile.mkstemp(
@@ -3296,16 +3455,73 @@ LC_KBS_REFRENY_MAX_POKUSOV = 3
 LC_KBS_REFRENY_RETRY_DELAY_S = 1.5
 LC_KBS_DOCASNE_HTTP_STATUSY = {429, 500, 502, 503, 504}
 
+LC_KBS_USER_AGENTS: list[str] = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
+]
+
+def _validuj_rok_pre_gui(hodnota: object) -> int:
+    try:
+        rok = int(str(hodnota).strip())
+    except Exception:
+        raise ValueError(f"Rok musí byť celé číslo, zadané: {hodnota!r}")
+    _over_gregoriansky_rok(rok)
+    return rok
+
+def zisti_vlastnosti_roku(rok: int) -> dict:
+    try:
+        rok = _validuj_rok_pre_gui(rok)
+    except (ValueError, TypeError) as e:
+        return {"chyba": str(e), "rozsah": f"{GREGORIANSKY_MIN_ROK}-{GREGORIANSKY_MAX_ROK}"}
+    try:
+        vianocny_den = date(rok, 12, 25).weekday()
+        return {"rok": rok, "vianocny_den": vianocny_den}
+    except ValueError as e:
+        return {"chyba": f"Zlyhalo spracovanie dátumu: {e}"}
+
+
+def _vyber_user_agent() -> str:
+    try:
+        base = random.choice(LC_KBS_USER_AGENTS)
+    except Exception:
+        base = LC_KBS_USER_AGENTS[0]
+    return f"{base} Kinak/{KINAK_VERSION}"
+
+def _vytvor_lc_kbs_session() -> Any:
+    if requests is None:
+        return None
+    try:
+        session = requests.Session()
+    except Exception:
+        return None
+    if HTTPAdapter is not None and Retry is not None:
+        try:
+            retry = Retry(
+                total=LC_KBS_REFRENY_MAX_POKUSOV,
+                connect=LC_KBS_REFRENY_MAX_POKUSOV,
+                read=LC_KBS_REFRENY_MAX_POKUSOV,
+                backoff_factor=LC_KBS_REFRENY_RETRY_DELAY_S,
+                status_forcelist=tuple(LC_KBS_DOCASNE_HTTP_STATUSY),
+                allowed_methods=frozenset(["GET", "HEAD"]),
+                raise_on_status=False,
+            )
+            adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
+            session.mount("https://", adapter)
+            session.mount("http://", adapter)
+        except Exception:
+            pass
+    return session
+
+
 
 def _lc_kbs_headers(ucel: str = "") -> dict:
-    user_agent_suffix = f" {ucel}" if ucel else ""
+    suffix = f" {ucel}" if ucel else ""
+    ua = _vyber_user_agent()
+    if suffix and suffix not in ua:
+        ua = f"{ua}{suffix}"
     return {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/122.0.0.0 Safari/537.36 "
-            f"Kinak/{KINAK_VERSION}{user_agent_suffix}"
-        ),
+        "User-Agent": ua,
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "sk-SK,sk;q=0.9,en;q=0.8",
         "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -3314,11 +3530,50 @@ def _lc_kbs_headers(ucel: str = "") -> dict:
     }
 
 
-def _stiahni_lc_kbs_soup(datum: date, timeout=(5, 20)):
-    """Stiahne HTML z lc.kbs.sk pre konkrétny dátum a vráti BeautifulSoup."""
+def _stiahni_lc_kbs_soup(datum: date, timeout: tuple[int, int] = (5, 20)) -> Any | None:
+    _over_gregoriansky_datum(datum)
     if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie preskočené: chýbajú requests alebo beautifulsoup4.")
         return None
+    requests_module = requests
+    beautiful_soup = BeautifulSoup
+    assert requests_module is not None and beautiful_soup is not None
+    datum_str = datum.strftime("%Y-%m-%d")
+    session = _vytvor_lc_kbs_session()
+    req_exc = getattr(requests_module, "RequestException", Exception)
+    http_exc = getattr(requests_module, "HTTPError", req_exc)
+    for pokus in range(1, LC_KBS_REFRENY_MAX_POKUSOV + 1):
+        url = f"https://lc.kbs.sk/?den={datum_str}&_={int(time.time())}"
+        try:
+            headers = _lc_kbs_headers("refreny-zalmov")
+            resp = session.get(url, headers=headers, timeout=timeout) if session else requests_module.get(url, headers=headers, timeout=timeout)
+            resp.raise_for_status()
+            resp.encoding = resp.apparent_encoding or "utf-8"
+            if not resp.encoding or resp.encoding.lower() in ("iso-8859-1", "latin-1"):
+                resp.encoding = "utf-8"
+            return beautiful_soup(resp.text, "html.parser")
+        except http_exc as e:
+            sc = getattr(getattr(e, "response", None), "status_code", None)
+            if sc in LC_KBS_DOCASNE_HTTP_STATUSY and pokus < LC_KBS_REFRENY_MAX_POKUSOV:
+                time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                continue
+            return None
+        except req_exc:
+            if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
+                time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                continue
+            return None
+        finally:
+            if pokus >= LC_KBS_REFRENY_MAX_POKUSOV and session is not None:
+                try:
+                    session.close()
+                except Exception:
+                    pass
+    if session is not None:
+        try:
+            session.close()
+        except Exception:
+            pass
+    return None
 
     requests_module = requests
     beautiful_soup = BeautifulSoup
@@ -3520,134 +3775,124 @@ def _stiahni_prvy_refren_lc_kbs(datum: date) -> str | None:
 
 
 def stiahni_cezrocne_tyzdenne_refreny_pre_rok(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
-    """
-    Stiahne cezročné týždne pre danú párnosť roka.
-
-    Výstupom je 34 súborov:
-      nepárny rok -> 1C1.txt až 34C1.txt
-      párny rok   -> 1C2.txt až 34C2.txt
-
-    Každý súbor obsahuje nedeľné refrény cyklu A/B/C a feriálne refrény
-    pondelok až sobota podľa ročného cyklu 1/2.
-    """
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie cezročných týždňov preskočené: chýbajú knižnice.")
-        return {"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None}
-
-    vystup_priecinok = Path(vystup_priecinok)
-    vystup_priecinok.mkdir(parents=True, exist_ok=True)
+    ctx_or = _priprav_kontext_alebo_vrat_chybu(
+        rok, vystup_priecinok, "backup_cezrocne", progress_callback,
+        "[LC-KBS] Sťahovanie cezročných týždňov preskočené: chýbajú knižnice."
+    )
+    if isinstance(ctx_or, dict):
+        return ctx_or
+    ctx: _RefrenyKontext = ctx_or
 
     parita = 2 if rok % 2 == 0 else 1
     parita_roka = rok % 2
     parita_text = "párny" if parita == 2 else "nepárny"
-    suborove_kody = [f"{tyzden}C{parita}" for tyzden in range(1, 35)]
+    kody = [f"{t}C{parita}" for t in range(1, 35)]
 
-    zaloha_priecinok = vystup_priecinok / f"backup_cezrocne_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    zaloha_vytvorena = False
-    for kod in suborove_kody:
-        povodny = vystup_priecinok / f"{kod}.txt"
-        if povodny.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(povodny, zaloha_priecinok / povodny.name)
-            zaloha_vytvorena = True
+    ctx.zalohuj_kody(kody)
+    celkovo = 34 * (len(CEZROCNE_NEDIELNE_CYKLY) + len(CEZROCNE_DNI_TYZDNA))
+    spracuj_slot = ctx.vytvor_spracuj_slot(celkovo, pocitaj_datumy_nezistene=True)
 
-    celkovo_slotov = 34 * (len(CEZROCNE_NEDIELNE_CYKLY) + len(CEZROCNE_DNI_TYZDNA))
-    aktualny_slot = 0
-    chyby = 0
-    datumy_nezistene = 0
-    zapisane_subory = []
-    chybne_kody: list[str] = []
-    aktualny_subor = ""
+    ctx.progress(f"Začínam sťahovanie cezročných týždňov pre rok {rok}.", 0, celkovo)
 
-    def spracuj_slot(label: str, datum: date | None) -> str:
-        nonlocal aktualny_slot, chyby, datumy_nezistene
-        aktualny_slot += 1
-        if datum is None:
-            datumy_nezistene += 1
-            chyby += 1
-            if aktualny_subor and aktualny_subor not in chybne_kody:
-                chybne_kody.append(aktualny_subor)
-            update_progress(progress_callback, f"{label}: dátum sa nepodarilo nájsť.", aktualny_slot, celkovo_slotov)
-            return "[dátum sa nepodarilo nájsť]"
-
-        update_progress(progress_callback, f"{label}: sťahujem {datum.strftime('%d.%m.%Y')}...", aktualny_slot, celkovo_slotov)
-        refren = _stiahni_prvy_refren_lc_kbs(datum)
-        time.sleep(REFRENY_DELAY_S)
-        if refren:
-            return refren
-
-        chyby += 1
-        if aktualny_subor and aktualny_subor not in chybne_kody:
-            chybne_kody.append(aktualny_subor)
-        return "[refrén sa nepodarilo stiahnuť]"
-
-    update_progress(progress_callback, f"Začínam sťahovanie cezročných týždňov pre rok {rok}.", 0, celkovo_slotov)
-
-    for tyzden in range(1, 35):
-        aktualny_subor = f"{tyzden}C{parita}"
-        bloky = [f"{tyzden}. TÝŽDEŇ CEZROČNÉHO OBDOBIA ({parita_text} rok)"]
-
-        for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-            datum = _najdi_datum_cezrocnej_nedele(tyzden, cyklus, rok)
-            refren = spracuj_slot(f"{tyzden}C{parita} {cyklus}", datum)
-            bloky.append(f"{cyklus}: {refren}")
-
-        for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-            datum = _najdi_datum_cezrocneho_vs_dna(tyzden, den_index, parita_roka, rok)
-            refren = spracuj_slot(f"{tyzden}C{parita} deň {cislo_dna}", datum)
-            bloky.append(f"{cislo_dna}. {refren}")
-
-        cesta = vystup_priecinok / f"{tyzden}C{parita}.txt"
-        obsah = "\n" + "\n\n".join(bloky) + "\n"
-        _zapis_text_atomicky(cesta, obsah, encoding="utf-8")
-        zapisane_subory.append(str(cesta))
+    try:
+        for tyzden in range(1, 35):
+            ctx.aktualny_subor = f"{tyzden}C{parita}"
+            bloky = [f"{tyzden}. TÝŽDEŇ CEZROČNÉHO OBDOBIA ({parita_text} rok)"]
+            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
+                datum = _najdi_datum_cezrocnej_nedele(tyzden, cyklus, rok)
+                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}C{parita} {cyklus}', datum)}")
+            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
+                datum = _najdi_datum_cezrocneho_vs_dna(tyzden, den_index, parita_roka, rok)
+                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}C{parita} deň {cislo_dna}', datum)}")
+            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
+    except _PredcasneUkoncenieStahovania as e:
+        log_info(f"[LC-KBS] Cezročné týždenné refrény {rok}: predčasne ukončené – {e}")
 
     log_info(
         f"[LC-KBS] Cezročné týždenné refrény {rok} – súhrn: "
-        f"spracovaných položiek {aktualny_slot}/{celkovo_slotov}, chyby {chyby}"
-        + (f" ({', '.join(chybne_kody)})" if chybne_kody else "")
-        + "."
+        f"spracovaných položiek {ctx.pocitadlo.aktualny_slot}/{celkovo}, chyby {ctx.pocitadlo.chyby}"
+        + (f" ({', '.join(ctx.chybne_kody)})" if ctx.chybne_kody else "") + "."
     )
-
-    update_progress(progress_callback, f"Hotovo. Spracovaných položiek: {aktualny_slot}, chyby: {chyby}.", aktualny_slot, celkovo_slotov)
+    ctx.progress(f"Hotovo. Spracovaných položiek: {ctx.pocitadlo.aktualny_slot}, chyby: {ctx.pocitadlo.chyby}.", ctx.pocitadlo.aktualny_slot, celkovo)
 
     return {
-        "uspech": (aktualny_slot - chyby) > 0,
-        "celkovo": aktualny_slot,
-        "chyby": chyby,
-        "chybne_kody": chybne_kody,
-        "datumy_nezistene": datumy_nezistene,
-        "subory": zapisane_subory,
-        "zaloha": str(zaloha_priecinok) if zaloha_vytvorena else None,
+        "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        "celkovo": ctx.pocitadlo.aktualny_slot,
+        "chyby": ctx.pocitadlo.chyby,
+        "chybne_kody": ctx.chybne_kody,
+        "datumy_nezistene": ctx.datumy_nezistene,
+        "subory": ctx.zapisane,
+        "zaloha": ctx.backup.retazec_alebo_none,
         "parita": parita,
     }
 
 
-def _najdi_datum_postnej_nedele(tyzden: int, cyklus: str, preferovany_rok: int) -> "date | None":
-    """Nájde reprezentatívny dátum pôstnej nedele pre daný týždeň (1–5) a cyklus A/B/C."""
+def _najdi_datum_nedele_v_obdobi(
+    tyzden: int,
+    cyklus: str,
+    preferovany_rok: int,
+    zaciatok_obdobia_fn: Callable[[int], date],
+) -> "date | None":
+    """
+    Spoločná logika pre _najdi_datum_postnej_nedele, _najdi_datum_veľkonocnej_nedele
+    a _najdi_datum_adventnej_nedele: nájde nedeľu n-tého týždňa liturgického obdobia
+    (počítaného od zaciatok_obdobia_fn(rok)) v požadovanom cykle A/B/C.
+
+    Ak by bolo pri budúcej úprave treba zmeniť túto logiku, stačí upraviť len tu –
+    predtým mala každá z troch funkcií vlastnú (identickú) kópiu tohto cyklu.
+    """
     cyklus = cyklus.upper()
     for rok in _roky_podla_blizkosti(preferovany_rok):
-        velka_noc = velkonocna_nedela(rok)
-        prva_postna = velka_noc - timedelta(days=42)
-        # n-tá pôstna nedeľa = (tyzden-1)*7 dní po prvej pôstnej nedeli
-        kandidat = prva_postna + timedelta(weeks=tyzden - 1)
+        zaciatok = zaciatok_obdobia_fn(rok)
+        kandidat = zaciatok + timedelta(weeks=tyzden - 1)
         if kandidat.weekday() == 6 and vypocitaj_liturgicky_rok(kandidat) == cyklus:
             return kandidat
     return None
 
 
-def _najdi_datum_postneho_vs_dna(tyzden: int, den_index: int, preferovany_rok: int) -> "date | None":
-    """Nájde reprezentatívny feriálny dátum pôstneho týždňa (1–5) a dňa (Po=0..So=5)."""
+def _najdi_datum_vs_dna_v_obdobi(
+    tyzden: int,
+    den_index: int,
+    preferovany_rok: int,
+    zaciatok_obdobia_fn: Callable[[int], date],
+    je_spravny_kod_fn: Callable[[str], bool],
+) -> "date | None":
+    """
+    Spoločná logika pre _najdi_datum_postneho_vs_dna, _najdi_datum_veľkonocneho_vs_dna
+    a _najdi_datum_adventneho_vs_dna: nájde feriálny deň (Po=0..So=5) v n-tom týždni
+    liturgického obdobia a overí, že vypočítaný liturgický kód zodpovedá očakávanému
+    (predikát `je_spravny_kod_fn`, lebo veľkonočný variant má výnimku pre NP).
+    """
     for rok in _roky_podla_blizkosti(preferovany_rok):
-        velka_noc = velkonocna_nedela(rok)
-        prva_postna = velka_noc - timedelta(days=42)
-        # Pondelok 1. pôstneho týždňa = prva_postna + 1 deň
-        zaciatok_tyzdna = prva_postna + timedelta(weeks=tyzden - 1)
+        zaciatok = zaciatok_obdobia_fn(rok)
+        zaciatok_tyzdna = zaciatok + timedelta(weeks=tyzden - 1)
         kandidat = zaciatok_tyzdna + timedelta(days=den_index + 1)
         kod = vypocitaj_kod_liturgickej_casti(kandidat)
-        if kod == f"{tyzden}P":
+        if je_spravny_kod_fn(kod):
             return kandidat
     return None
+
+
+def _zaciatok_postneho_obdobia(rok: int) -> date:
+    """Prvá pôstna nedeľa (Veľká noc – 42 dní), spoločný začiatok pre pôstne funkcie."""
+    return velkonocna_nedela(rok) - timedelta(days=42)
+
+
+def _najdi_datum_postnej_nedele(tyzden: int, cyklus: str, preferovany_rok: int) -> "date | None":
+    """Nájde reprezentatívny dátum pôstnej nedele pre daný týždeň (1–5) a cyklus A/B/C."""
+    return _najdi_datum_nedele_v_obdobi(
+        tyzden, cyklus, preferovany_rok, zaciatok_obdobia_fn=_zaciatok_postneho_obdobia
+    )
+
+
+def _najdi_datum_postneho_vs_dna(tyzden: int, den_index: int, preferovany_rok: int) -> "date | None":
+    """Nájde reprezentatívny feriálny dátum pôstneho týždňa (1–5) a dňa (Po=0..So=5)."""
+    ocakavany = f"{tyzden}P"
+    return _najdi_datum_vs_dna_v_obdobi(
+        tyzden, den_index, preferovany_rok,
+        zaciatok_obdobia_fn=_zaciatok_postneho_obdobia,
+        je_spravny_kod_fn=lambda kod: kod == ocakavany,
+    )
 
 
 def _najdi_datum_pps_dna(posun_dni: int, preferovany_rok: int) -> "date | None":
@@ -3668,56 +3913,36 @@ def _najdi_datum_pps_dna(posun_dni: int, preferovany_rok: int) -> "date | None":
 
 def _najdi_datum_veľkonocnej_nedele(tyzden: int, cyklus: str, preferovany_rok: int) -> "date | None":
     """Nájde reprezentatívny dátum veľkonočnej nedele pre daný týždeň (1–7) a cyklus A/B/C."""
-    cyklus = cyklus.upper()
-    for rok in _roky_podla_blizkosti(preferovany_rok):
-        velka_noc = velkonocna_nedela(rok)
-        if tyzden == 1:
-            kandidat = velka_noc
-        else:
-            kandidat = velka_noc + timedelta(weeks=tyzden - 1)
-        if kandidat.weekday() == 6 and vypocitaj_liturgicky_rok(kandidat) == cyklus:
-            return kandidat
-    return None
+    return _najdi_datum_nedele_v_obdobi(
+        tyzden, cyklus, preferovany_rok, zaciatok_obdobia_fn=velkonocna_nedela
+    )
 
 
 def _najdi_datum_veľkonocneho_vs_dna(tyzden: int, den_index: int, preferovany_rok: int) -> "date | None":
     """Nájde feriálny dátum veľkonočného týždňa (2–7) a dňa (Po=0..So=5)."""
-    for rok in _roky_podla_blizkosti(preferovany_rok):
-        velka_noc = velkonocna_nedela(rok)
-        if tyzden == 1:
-            # Veľkonočná oktáva: Po=VN+1 .. So=VN+6
-            kandidat = velka_noc + timedelta(days=den_index + 1)
-        else:
-            nedela_tyzdna = velka_noc + timedelta(weeks=tyzden - 1)
-            kandidat = nedela_tyzdna + timedelta(days=den_index + 1)
-        kod = vypocitaj_kod_liturgickej_casti(kandidat)
-        ocakavany = "VOKT" if tyzden == 1 else f"{tyzden}VN"
-        if kod == ocakavany or (tyzden == 6 and den_index == 3 and kod == "NP"):
-            return kandidat
-    return None
+    ocakavany = "VOKT" if tyzden == 1 else f"{tyzden}VN"
+    return _najdi_datum_vs_dna_v_obdobi(
+        tyzden, den_index, preferovany_rok,
+        zaciatok_obdobia_fn=velkonocna_nedela,
+        je_spravny_kod_fn=lambda kod: kod == ocakavany or (tyzden == 6 and den_index == 3 and kod == "NP"),
+    )
 
 
 def _najdi_datum_adventnej_nedele(tyzden: int, cyklus: str, preferovany_rok: int) -> "date | None":
     """Nájde reprezentatívny dátum adventnej nedele pre daný týždeň (1–4) a cyklus A/B/C."""
-    cyklus = cyklus.upper()
-    for rok in _roky_podla_blizkosti(preferovany_rok):
-        prva_advent = prva_adventna_nedela(rok)
-        kandidat = prva_advent + timedelta(weeks=tyzden - 1)
-        if kandidat.weekday() == 6 and vypocitaj_liturgicky_rok(kandidat) == cyklus:
-            return kandidat
-    return None
+    return _najdi_datum_nedele_v_obdobi(
+        tyzden, cyklus, preferovany_rok, zaciatok_obdobia_fn=prva_adventna_nedela
+    )
 
 
 def _najdi_datum_adventneho_vs_dna(tyzden: int, den_index: int, preferovany_rok: int) -> "date | None":
     """Nájde feriálny dátum adventného týždňa (1–4) a dňa (Po=0..So=5)."""
-    for rok in _roky_podla_blizkosti(preferovany_rok):
-        prva_advent = prva_adventna_nedela(rok)
-        nedela_tyzdna = prva_advent + timedelta(weeks=tyzden - 1)
-        kandidat = nedela_tyzdna + timedelta(days=den_index + 1)
-        kod = vypocitaj_kod_liturgickej_casti(kandidat)
-        if kod == f"{tyzden}AD":
-            return kandidat
-    return None
+    ocakavany = f"{tyzden}AD"
+    return _najdi_datum_vs_dna_v_obdobi(
+        tyzden, den_index, preferovany_rok,
+        zaciatok_obdobia_fn=prva_adventna_nedela,
+        je_spravny_kod_fn=lambda kod: kod == ocakavany,
+    )
 
 
 # Hlavičky pre pôstne súbory
@@ -3750,169 +3975,104 @@ _ADVENTNE_NAZVY = {
 
 
 def stiahni_liturgicke_tyzdne_refreny(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
-    """
-    Stiahne refrény žalmov pre pôstne (1P–5P), Veľký týždeň (VT),
-    veľkonočné (1VN–7VN) a adventné (1AD–4AD) týždne.
-
-    Každý súbor obsahuje nedeľné refrény cyklov A/B/C a feriálne refrény
-    Po–So (pri VT: Kvetná nedeľa, Po, Ut, St – Zelený štvrtok/VP/Vigília majú vlastné kódy).
-    """
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie liturgických týždňov preskočené: chýbajú knižnice.")
-        return {"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None}
-
-    vystup_priecinok = Path(vystup_priecinok)
-    vystup_priecinok.mkdir(parents=True, exist_ok=True)
-
-    # Zoznam všetkých kódov súborov, ktoré budú vytvorené/prepísané
-    vsetky_kody = (
-        [f"{t}P" for t in range(1, 6)]
-        + ["VT"]
-        + [f"{t}VN" for t in range(1, 8)]
-        + [f"{t}AD" for t in range(1, 5)]
-    )  # celkom 17 súborov
-
-    # Záloha existujúcich súborov
-    zaloha_priecinok = vystup_priecinok / f"backup_lit_tyzdne_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    zaloha_vytvorena = False
-    for kod in vsetky_kody:
-        povodny = vystup_priecinok / f"{kod}.txt"
-        if povodny.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(povodny, zaloha_priecinok / povodny.name)
-            zaloha_vytvorena = True
-
-    # Počítame sloty: každý pôstny/veľkonočný/adventný týždeň má 3 nedeľné cykly (A/B/C) + 6 feriálnych dní.
-    # VT (Veľký týždeň) má 6 slotov – ide o skutočné dátumy daného roka (Kvetná nedeľa, Po, Ut, St,
-    # Zelený štvrtok, Veľký piatok), nie krížové hľadanie cyklov A/B/C ako pri ostatných týždňoch.
-    # Súčet: pôstnych 5*(3+6)=45, VT=6, veľkonočných 7*(3+6)=63, adventných 4*(3+6)=36 → spolu 150.
-    celkovo_slotov = 5 * (3 + 6) + 6 + 7 * (3 + 6) + 4 * (3 + 6)
-    aktualny_slot = 0
-    chyby = 0
-    zapisane_subory = []
-
-    def spracuj_slot(label, datum):
-        nonlocal aktualny_slot, chyby
-        aktualny_slot += 1
-        if datum is None:
-            chyby += 1
-            update_progress(progress_callback, f"{label}: dátum sa nepodarilo nájsť.", aktualny_slot, celkovo_slotov)
-            return "[dátum sa nepodarilo nájsť]"
-        update_progress(progress_callback, f"{label}: sťahujem {datum.strftime('%d.%m.%Y')}...", aktualny_slot, celkovo_slotov)
-        refren = _stiahni_prvy_refren_lc_kbs(datum)
-        time.sleep(REFRENY_DELAY_S)
-        if refren:
-            return refren
-        chyby += 1
-        return "[refrén sa nepodarilo stiahnuť]"
-
-    update_progress(progress_callback, f"Začínam sťahovanie liturgických týždňov pre rok {rok}.", 0, celkovo_slotov)
-
-    # ── PÔSTNE TÝŽDNE (1P–5P) ────────────────────────────────────────────────
-    for tyzden in range(1, 6):
-        nadpis = _POSTNE_NAZVY[tyzden]
-        bloky = [nadpis]
-        for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-            datum = _najdi_datum_postnej_nedele(tyzden, cyklus, rok)
-            refren = spracuj_slot(f"{tyzden}P {cyklus}", datum)
-            bloky.append(f"{cyklus}: {refren}")
-        for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-            datum = _najdi_datum_postneho_vs_dna(tyzden, den_index, rok)
-            refren = spracuj_slot(f"{tyzden}P deň {cislo_dna}", datum)
-            bloky.append(f"{cislo_dna}. {refren}")
-        cesta = vystup_priecinok / f"{tyzden}P.txt"
-        _zapis_text_atomicky(cesta, "\n" + "\n\n".join(bloky) + "\n", encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        log_info(f"[LC-KBS] {tyzden}P ({rok}): uložené do {cesta}.")
-
-    # ── VEĽKÝ TÝŽDEŇ (VT) ────────────────────────────────────────────────────
-    # Skutočné dátumy pre daný rok (nie krížové hľadanie cyklov A/B/C) –
-    # rovnaký princíp ako pri 1VI/2VI: pre každý deň sa stiahnu všetky
-    # refrény, ktoré sa na stránke nájdu.
-    nedela_kvetna = velkonocna_nedela(rok) - timedelta(days=7)
-    pondelok_vt = velkonocna_nedela(rok) - timedelta(days=6)
-    utorok_vt = velkonocna_nedela(rok) - timedelta(days=5)
-    streda_vt = velkonocna_nedela(rok) - timedelta(days=4)
-    stvrtok_vt = velkonocna_nedela(rok) - timedelta(days=3)
-    piatok_vt = velkonocna_nedela(rok) - timedelta(days=2)
-
-    polozky_vt: list[tuple[date, str]] = [
-        (nedela_kvetna, "PALMOVÁ (KVETNÁ) NEDEĽA – NEDEĽA UTRPENIA PÁNA"),
-        (pondelok_vt, "PONDELOK VEĽKÉHO TÝŽDŇA"),
-        (utorok_vt, "UTOROK VEĽKÉHO TÝŽDŇA"),
-        (streda_vt, "STREDA VEĽKÉHO TÝŽDŇA"),
-        (stvrtok_vt, "ZELENÝ ŠTVRTOK"),
-        (piatok_vt, "VEĽKÝ PIATOK"),
-    ]
-
-    bloky_vt: list[str] = ["VEĽKÝ TÝŽDEŇ (SVÄTÝ TÝŽDEŇ)"]
-    for datum_vt, nazov_vt in polozky_vt:
-        aktualny_slot += 1
-        update_progress(progress_callback, f"VT – {nazov_vt}: sťahujem {datum_vt.strftime('%d.%m.%Y')}...", aktualny_slot, celkovo_slotov)
-        soup_vt = _stiahni_lc_kbs_soup(datum_vt)
-        refreny_vt = _extrahuj_refreny_zalmov_lc_kbs(soup_vt)
-        time.sleep(REFRENY_DELAY_S)
-        if not refreny_vt:
-            chyby += 1
-            bloky_vt.append(nazov_vt + "\n\n1. [refrén sa nepodarilo stiahnuť]")
-            continue
-        if len(refreny_vt) == 1:
-            riadky_vt = [f"1. {refreny_vt[0]}"]
-        else:
-            riadky_vt = [f"{i}. {r}" for i, r in enumerate(refreny_vt, start=1)]
-        bloky_vt.append(nazov_vt + "\n\n" + "\n\n".join(riadky_vt))
-
-    cesta_vt = vystup_priecinok / "VT.txt"
-    _zapis_text_atomicky(cesta_vt, "\n" + "\n\n\n".join(bloky_vt) + "\n", encoding="utf-8")
-    zapisane_subory.append(str(cesta_vt))
-    log_info(f"[LC-KBS] VT ({rok}): uložené do {cesta_vt}.")
-
-    # ── VEĽKONOČNÉ TÝŽDNE (1VN–7VN) ──────────────────────────────────────────
-    for tyzden in range(1, 8):
-        nadpis = _VEĽKONOCNE_NAZVY[tyzden]
-        bloky = [nadpis]
-        for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-            datum = _najdi_datum_veľkonocnej_nedele(tyzden, cyklus, rok)
-            refren = spracuj_slot(f"{tyzden}VN {cyklus}", datum)
-            bloky.append(f"{cyklus}: {refren}")
-        for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-            datum = _najdi_datum_veľkonocneho_vs_dna(tyzden, den_index, rok)
-            refren = spracuj_slot(f"{tyzden}VN deň {cislo_dna}", datum)
-            bloky.append(f"{cislo_dna}. {refren}")
-        cesta = vystup_priecinok / f"{tyzden}VN.txt"
-        _zapis_text_atomicky(cesta, "\n" + "\n\n".join(bloky) + "\n", encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        log_info(f"[LC-KBS] {tyzden}VN ({rok}): uložené do {cesta}.")
-
-    # ── ADVENTNÉ TÝŽDNE (1AD–4AD) ─────────────────────────────────────────────
-    for tyzden in range(1, 5):
-        nadpis = _ADVENTNE_NAZVY[tyzden]
-        bloky = [nadpis]
-        for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-            datum = _najdi_datum_adventnej_nedele(tyzden, cyklus, rok)
-            refren = spracuj_slot(f"{tyzden}AD {cyklus}", datum)
-            bloky.append(f"{cyklus}: {refren}")
-        for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-            datum = _najdi_datum_adventneho_vs_dna(tyzden, den_index, rok)
-            refren = spracuj_slot(f"{tyzden}AD deň {cislo_dna}", datum)
-            bloky.append(f"{cislo_dna}. {refren}")
-        cesta = vystup_priecinok / f"{tyzden}AD.txt"
-        _zapis_text_atomicky(cesta, "\n" + "\n\n".join(bloky) + "\n", encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-
-    log_info(
-        f"[LC-KBS] Liturgické týždne {rok} – súhrn: "
-        f"spracovaných položiek {aktualny_slot}/{celkovo_slotov}, chyby {chyby}."
+    ctx_or = _priprav_kontext_alebo_vrat_chybu(
+        rok, vystup_priecinok, "backup_lit_tyzdne", progress_callback,
+        "[LC-KBS] Sťahovanie liturgických týždňov preskočené: chýbajú knižnice."
     )
+    if isinstance(ctx_or, dict):
+        return ctx_or
+    ctx: _RefrenyKontext = ctx_or
 
-    update_progress(progress_callback, f"Hotovo. Spracovaných položiek: {aktualny_slot}, chyby: {chyby}.", aktualny_slot, celkovo_slotov)
+    kody = [f"{t}P" for t in range(1, 6)] + ["VT"] + [f"{t}VN" for t in range(1, 8)] + [f"{t}AD" for t in range(1, 5)]
+    ctx.zalohuj_kody(kody)
+
+    celkovo = 5 * (3 + 6) + 6 + 7 * (3 + 6) + 4 * (3 + 6)
+    spracuj_slot = ctx.vytvor_spracuj_slot(celkovo)
+    ctx.progress(f"Začínam sťahovanie liturgických týždňov pre rok {rok}.", 0, celkovo)
+
+    try:
+        # Pôstne
+        for tyzden in range(1, 6):
+            ctx.aktualny_subor = f"{tyzden}P"
+            bloky = [_POSTNE_NAZVY[tyzden]]
+            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
+                datum = _najdi_datum_postnej_nedele(tyzden, cyklus, rok)
+                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}P {cyklus}', datum)}")
+            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
+                datum = _najdi_datum_postneho_vs_dna(tyzden, den_index, rok)
+                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}P deň {cislo_dna}', datum)}")
+            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
+            log_info(f"[LC-KBS] {tyzden}P ({rok}): uložené.")
+
+        # Veľký týždeň – špeciálne (viac refrénov na deň)
+        ctx.aktualny_subor = "VT"
+        nedela_kvetna = velkonocna_nedela(rok) - timedelta(days=7)
+        pondelok_vt = velkonocna_nedela(rok) - timedelta(days=6)
+        utorok_vt = velkonocna_nedela(rok) - timedelta(days=5)
+        streda_vt = velkonocna_nedela(rok) - timedelta(days=4)
+        stvrtok_vt = velkonocna_nedela(rok) - timedelta(days=3)
+        piatok_vt = velkonocna_nedela(rok) - timedelta(days=2)
+        polozky_vt = [
+            (nedela_kvetna, "PALMOVÁ (KVETNÁ) NEDEĽA – NEDEĽA UTRPENIA PÁNA"),
+            (pondelok_vt, "PONDELOK VEĽKÉHO TÝŽDŇA"),
+            (utorok_vt, "UTOROK VEĽKÉHO TÝŽDŇA"),
+            (streda_vt, "STREDA VEĽKÉHO TÝŽDŇA"),
+            (stvrtok_vt, "ZELENÝ ŠTVRTOK"),
+            (piatok_vt, "VEĽKÝ PIATOK"),
+        ]
+        bloky_vt = ["VEĽKÝ TÝŽDEŇ (SVÄTÝ TÝŽDEŇ)"]
+        for datum_vt, nazov_vt in polozky_vt:
+            ctx.pocitadlo.aktualny_slot += 1
+            ctx.progress(f"VT – {nazov_vt}: sťahujem {datum_vt.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
+            soup_vt = _stiahni_lc_kbs_soup(datum_vt)
+            refreny_vt = _extrahuj_refreny_zalmov_lc_kbs(soup_vt)
+            time.sleep(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny_vt))
+            if not refreny_vt:
+                ctx.pocitadlo.chyby += 1
+                bloky_vt.append(nazov_vt + "\n\n1. [refrén sa nepodarilo stiahnuť]")
+                continue
+            riadky = [f"1. {refreny_vt[0]}"] if len(refreny_vt) == 1 else [f"{i}. {r}" for i, r in enumerate(refreny_vt, start=1)]
+            bloky_vt.append(nazov_vt + "\n\n" + "\n\n".join(riadky))
+        ctx.zapis_bloky("VT", bloky_vt, oddelovac="\n\n\n")
+        log_info(f"[LC-KBS] VT ({rok}): uložené.")
+
+        # Veľkonočné
+        for tyzden in range(1, 8):
+            ctx.aktualny_subor = f"{tyzden}VN"
+            bloky = [_VEĽKONOCNE_NAZVY[tyzden]]
+            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
+                datum = _najdi_datum_veľkonocnej_nedele(tyzden, cyklus, rok)
+                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}VN {cyklus}', datum)}")
+            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
+                datum = _najdi_datum_veľkonocneho_vs_dna(tyzden, den_index, rok)
+                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}VN deň {cislo_dna}', datum)}")
+            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
+            log_info(f"[LC-KBS] {tyzden}VN ({rok}): uložené.")
+
+        # Adventné
+        for tyzden in range(1, 5):
+            ctx.aktualny_subor = f"{tyzden}AD"
+            bloky = [_ADVENTNE_NAZVY[tyzden]]
+            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
+                datum = _najdi_datum_adventnej_nedele(tyzden, cyklus, rok)
+                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}AD {cyklus}', datum)}")
+            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
+                datum = _najdi_datum_adventneho_vs_dna(tyzden, den_index, rok)
+                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}AD deň {cislo_dna}', datum)}")
+            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
+    except _PredcasneUkoncenieStahovania as e:
+        log_info(f"[LC-KBS] Liturgické týždne {rok}: predčasne ukončené – {e}")
+
+    log_info(f"[LC-KBS] Liturgické týždne {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, chyby {ctx.pocitadlo.chyby}.")
+    ctx.progress(f"Hotovo. Spracovaných položiek: {ctx.pocitadlo.aktualny_slot}, chyby: {ctx.pocitadlo.chyby}.", ctx.pocitadlo.aktualny_slot, celkovo)
 
     return {
-        "uspech": (aktualny_slot - chyby) > 0,
-        "celkovo": aktualny_slot,
-        "chyby": chyby,
-        "subory": zapisane_subory,
-        "zaloha": str(zaloha_priecinok) if zaloha_vytvorena else None,
+        "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        "celkovo": ctx.pocitadlo.aktualny_slot,
+        "chyby": ctx.pocitadlo.chyby,
+        "subory": ctx.zapisane,
+        "zaloha": ctx.backup.retazec_alebo_none,
     }
 
 
@@ -3931,7 +4091,7 @@ class _PocitadloSlotov:
         self.chyby = 0
 
 
-def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_slotov, progress_callback):
+def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_slotov, progress_callback, na_vysledok=None):
     """
     Vytvorí funkciu spracuj_slot(label, datum) používanú pri sťahovaní
     jednotlivých dátumových "slotov" (nedele/férie) v
@@ -3946,6 +4106,10 @@ def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_
       `lambda: aktualny_subor`, keďže hodnota tejto premennej sa v jeho
       slučke priebežne mení pred každým novým týždňom/dňom.
     - celkovo_slotov, progress_callback: pozri `update_progress`.
+    - na_vysledok: voliteľný callback(uspech: bool) – circuit breaker
+      (pozri _RefrenyKontext.zaznamenaj_vysledok). Volá sa iba pri
+      skutočnom sieťovom pokuse, nie keď `datum` nebolo vôbec nájdené
+      (to je zlyhanie vyhľadávacej logiky, nie servera).
     """
     def spracuj_slot(label, datum):
         pocitadlo.aktualny_slot += 1
@@ -3962,333 +4126,377 @@ def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_
         refren = _stiahni_prvy_refren_lc_kbs(datum)
         time.sleep(REFRENY_DELAY_S)
         if refren:
+            if na_vysledok:
+                na_vysledok(True)
             return refren
         pocitadlo.chyby += 1
         if aktualny_subor and aktualny_subor not in chybne_kody:
             chybne_kody.append(aktualny_subor)
+        if na_vysledok:
+            na_vysledok(False)
         return "[refrén sa nepodarilo stiahnuť]"
 
     return spracuj_slot
 
 
-def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
-    """
-    Stiahne refrény žalmov pre pôstne (1P–5P), Veľký týždeň (VT),
-    veľkonočné (1VN–7VN) týždne, Popolcovú stredu a dni po nej (PS),
-    a jednodenné špeciálne slávenia (ZV, ZST, VP, VG, VPON, NP).
-    """
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie pôstnych/veľkonočných týždňov preskočené: chýbajú knižnice.")
-        return {"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None}
+# ==========================================================
+# KONSOLIDOVANÁ INFRAŠTRUKTÚRA PRE HROMADNÉ SŤAHOVANIE REFRÉNOV
+# ==========================================================
+# Deväť funkcií stiahni_*_pre_rok malo identickú kostru:
+#   - kontrola knižníc
+#   - mkdir vystup_priecinok
+#   - backup priečinok + kopírovanie existujúcich .txt
+#   - počítadlo slotov / chyby / preskočené / zapisane_subory
+#   - spracuj_slot (progress + sleep + chybové hlásenie)
+#   - zápis súboru cez _zapis_text_atomicky
+#   - log_info súhrn + update_progress Hotovo + return dict
+#
+# Nasledujúce tri pomocné triedy/funkcie túto kostru zjednocujú,
+# aby jednotlivé stiahni_* funkcie obsahovali už len svoju špecifickú
+# logiku (aké kódy, ako nájsť dátum, ako poskladať bloky).
+# Všetky pôvodné návratové kľúče zostávajú zachované pre GUI vrstvu.
 
-    vystup_priecinok = Path(vystup_priecinok)
-    vystup_priecinok.mkdir(parents=True, exist_ok=True)
+class _BackupManager:
+    """Spravuje backup priečinok pre hromadné sťahovanie."""
 
-    vsetky_kody = (
-        [f"{t}P" for t in range(1, 6)]
-        + ["VT"]
-        + [f"{t}VN" for t in range(1, 8)]
-    )  # celkom 13 súborov
+    def __init__(self, vystup_priecinok: Path, prefix: str, rok: int):
+        self.vystup = Path(vystup_priecinok)
+        self.vystup.mkdir(parents=True, exist_ok=True)
+        self.cesta = self.vystup / f"{prefix}_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self._vytvorena = False
 
-    # Jednodenné špeciálne slávenia s vlastným kódom
-    # (PS – Popolcová streda – sa spracúva samostatne nižšie spolu s dňami po nej)
-    JEDNODENNÉ_KODY: list[tuple[str, str]] = [
-        ("ZV",   "Zvestovanie Pána"),
-        ("ZST",  "Zelený štvrtok"),
-        ("VP",   "Veľký piatok"),
-        ("VG",   "Veľkonočná vigília"),
-        ("VPON", "Pondelok vo Veľkonočnej oktáve"),
-        ("NP",   "Nanebovstúpenie Pána"),
-    ]
-
-    zaloha_priecinok = vystup_priecinok / f"backup_postne_velkonocne_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    zaloha_vytvorena = False
-    for kod in vsetky_kody + ["PS"] + [k for k, _ in JEDNODENNÉ_KODY]:
-        povodny = vystup_priecinok / f"{kod}.txt"
+    def zalohuj(self, kod: str) -> None:
+        povodny = self.vystup / f"{kod}.txt"
         if povodny.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(povodny, zaloha_priecinok / povodny.name)
-            zaloha_vytvorena = True
+            self.cesta.mkdir(parents=True, exist_ok=True)
+            try:
+                shutil.copy2(povodny, self.cesta / povodny.name)
+            except Exception as e:
+                log_exception(f"_BackupManager.zalohuj {kod}", e)
+            else:
+                self._vytvorena = True
 
-    celkovo_slotov = 5 * (3 + 6) + 6 + 7 * (3 + 6) + 4 + len(JEDNODENNÉ_KODY)
-    zapisane_subory = []
-    chybne_kody: list[str] = []
-    preskocených = 0
-    preskocene_kody: list[str] = []
-    aktualny_subor = ""
+    def zalohuj_zoznam(self, kody) -> None:
+        for k in kody:
+            self.zalohuj(k)
 
-    pocitadlo = _PocitadloSlotov()
-    spracuj_slot = _vytvor_spracuj_slot(
-        pocitadlo, chybne_kody, lambda: aktualny_subor, celkovo_slotov, progress_callback
-    )
+    @property
+    def retazec_alebo_none(self) -> str | None:
+        return str(self.cesta) if self._vytvorena else None
 
-    update_progress(progress_callback, f"Začínam sťahovanie pôstnych a veľkonočných týždňov pre rok {rok}.", 0, celkovo_slotov)
 
-    # ── PÔSTNE TÝŽDNE (1P–5P) ────────────────────────────────────────────────
-    for tyzden in range(1, 6):
-        aktualny_subor = f"{tyzden}P"
-        nadpis = _POSTNE_NAZVY[tyzden]
-        bloky = [nadpis]
-        for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-            datum = _najdi_datum_postnej_nedele(tyzden, cyklus, rok)
-            refren = spracuj_slot(f"{tyzden}P {cyklus}", datum)
-            bloky.append(f"{cyklus}: {refren}")
-        for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-            datum = _najdi_datum_postneho_vs_dna(tyzden, den_index, rok)
-            refren = spracuj_slot(f"{tyzden}P deň {cislo_dna}", datum)
-            bloky.append(f"{cislo_dna}. {refren}")
-        cesta = vystup_priecinok / f"{tyzden}P.txt"
-        _zapis_text_atomicky(cesta, "\n" + "\n\n".join(bloky) + "\n", encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        log_info(f"[LC-KBS] {tyzden}P ({rok}): uložené do {cesta}.")
+class _PredcasneUkoncenieStahovania(Exception):
+    """
+    Interná výnimka (circuit breaker): vyhodí sa, keď za sebou zlyhá príliš
+    veľa sťahovaní jednotlivých dátumov (server zjavne neodpovedá).
 
-    # ── VEĽKÝ TÝŽDEŇ (VT) ────────────────────────────────────────────────────
-    # Skutočné dátumy pre daný rok (nie krížové hľadanie cyklov A/B/C) –
-    # rovnaký princíp ako pri 1VI/2VI: pre každý deň sa stiahnu všetky
-    # refrény, ktoré sa na stránke nájdu.
-    aktualny_subor = "VT"
-    nedela_kvetna = velkonocna_nedela(rok) - timedelta(days=7)
-    pondelok_vt = velkonocna_nedela(rok) - timedelta(days=6)
-    utorok_vt = velkonocna_nedela(rok) - timedelta(days=5)
-    streda_vt = velkonocna_nedela(rok) - timedelta(days=4)
-    stvrtok_vt = velkonocna_nedela(rok) - timedelta(days=3)
-    piatok_vt = velkonocna_nedela(rok) - timedelta(days=2)
+    Bez tejto poistky by veľké sťahovanie (napr. cezročné týždne = ~300
+    samostatných dátumov) muselo pri výpadku lc.kbs.sk nechať KAŽDÝ jeden
+    dátum nezávisle vyčerpať celý retry cyklus (3 pokusy × timeout (5,20)s
+    + rastúce oneskorenia ≈ 80 s na dátum) – teoreticky až rádovo hodiny na
+    jedno kliknutie. Táto výnimka preruší zvyšok slučky hneď po niekoľkých
+    zlyhaniach za sebou namiesto márneho opakovania toho istého zlyhania.
+    """
+    pass
 
-    polozky_vt: list[tuple[date, str]] = [
-        (nedela_kvetna, "PALMOVÁ (KVETNÁ) NEDEĽA – NEDEĽA UTRPENIA PÁNA"),
-        (pondelok_vt, "PONDELOK VEĽKÉHO TÝŽDŇA"),
-        (utorok_vt, "UTOROK VEĽKÉHO TÝŽDŇA"),
-        (streda_vt, "STREDA VEĽKÉHO TÝŽDŇA"),
-        (stvrtok_vt, "ŠTVRTOK VEĽKÉHO TÝŽDŇA – ZELENÝ ŠTVRTOK"),
-        (piatok_vt, "VEĽKÝ PIATOK"),
-    ]
 
-    bloky_vt: list[str] = ["VEĽKÝ TÝŽDEŇ (SVÄTÝ TÝŽDEŇ)"]
-    for datum_vt, nazov_vt in polozky_vt:
-        pocitadlo.aktualny_slot += 1
-        update_progress(progress_callback, f"VT – {nazov_vt}: sťahujem {datum_vt.strftime('%d.%m.%Y')}...", pocitadlo.aktualny_slot, celkovo_slotov)
-        soup_vt = _stiahni_lc_kbs_soup(datum_vt)
-        refreny_vt = _extrahuj_refreny_zalmov_lc_kbs(soup_vt)
-        time.sleep(REFRENY_DELAY_S)
-        if not refreny_vt:
-            pocitadlo.chyby += 1
-            if "VT" not in chybne_kody:
-                chybne_kody.append("VT")
-            bloky_vt.append(nazov_vt + "\n\n1. [refrén sa nepodarilo stiahnuť]")
-            continue
-        if len(refreny_vt) == 1:
-            riadky_vt = [f"1. {refreny_vt[0]}"]
-        else:
-            riadky_vt = [f"{i}. {r}" for i, r in enumerate(refreny_vt, start=1)]
-        bloky_vt.append(nazov_vt + "\n\n" + "\n\n".join(riadky_vt))
+MAX_PO_SEBE_ZLYHANI_STAHOVANIA = 5
 
-    cesta_vt = vystup_priecinok / "VT.txt"
-    _zapis_text_atomicky(cesta_vt, "\n" + "\n\n\n".join(bloky_vt) + "\n", encoding="utf-8")
-    zapisane_subory.append(str(cesta_vt))
-    log_info(f"[LC-KBS] VT ({rok}): uložené do {cesta_vt}.")
 
-    # ── VEĽKONOČNÉ TÝŽDNE (1VN–7VN) ──────────────────────────────────────────
-    for tyzden in range(1, 8):
-        aktualny_subor = f"{tyzden}VN"
-        nadpis = _VEĽKONOCNE_NAZVY[tyzden]
-        bloky = [nadpis]
-        for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-            datum = _najdi_datum_veľkonocnej_nedele(tyzden, cyklus, rok)
-            refren = spracuj_slot(f"{tyzden}VN {cyklus}", datum)
-            bloky.append(f"{cyklus}: {refren}")
-        for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-            datum = _najdi_datum_veľkonocneho_vs_dna(tyzden, den_index, rok)
-            refren = spracuj_slot(f"{tyzden}VN deň {cislo_dna}", datum)
-            bloky.append(f"{cislo_dna}. {refren}")
-        cesta = vystup_priecinok / f"{tyzden}VN.txt"
-        _zapis_text_atomicky(cesta, "\n" + "\n\n".join(bloky) + "\n", encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        log_info(f"[LC-KBS] {tyzden}VN ({rok}): uložené do {cesta}.")
+class _RefrenyKontext:
+    """
+    Zdieľaný kontext pre všetky hromadné sťahovania refrénov.
+    Drží počítadlá, zoznamy chýb, backup manažér a progress callback.
+    """
 
-    # ── POPOLCOVÁ STREDA A DNI PO NEJ (PS) ───────────────────────────────────
-    # Súbor PS.txt obsahuje Popolcovú stredu aj nasledujúce dni (štvrtok,
-    # piatok, sobota) pred 1. pôstnou nedeľou, číslované podľa poradia dňa
-    # v týždni (Po=1 … Ne=7): streda=3, štvrtok=4, piatok=5, sobota=6.
-    aktualny_subor = "PS"
-    bloky_ps = ["POPOLCOVÁ STREDA A DNI PO NEJ"]
+    def __init__(self, rok: int, vystup_priecinok: Path, backup_prefix: str, progress_callback=None):
+        self.rok = rok
+        self.vystup = Path(vystup_priecinok)
+        self.vystup.mkdir(parents=True, exist_ok=True)
+        self.backup = _BackupManager(self.vystup, backup_prefix, rok)
+        self.progress_callback = progress_callback
 
-    datum_streda = _zistí_datum_sviatku("PS", rok)
-    refren_streda = spracuj_slot("PS – Popolcová streda", datum_streda)
-    bloky_ps.append(f"3. {refren_streda}")
+        self.pocitadlo = _PocitadloSlotov()
+        self.chybne_kody: list[str] = []
+        self.preskocene_kody: list[str] = []
+        self.zapisane: list[str] = []
+        self.datumy_nezistene = 0
+        self.preskocenych = 0
+        self._aktualny_subor = ""
 
-    for cislo_dna, posun, nazov_dna in ((4, 1, "štvrtok"), (5, 2, "piatok"), (6, 3, "sobota")):
-        datum_pps = _najdi_datum_pps_dna(posun, rok)
-        refren_pps = spracuj_slot(f"PS – {nazov_dna} po Popolcovej strede", datum_pps)
-        bloky_ps.append(f"{cislo_dna}. {refren_pps}")
+        # Circuit breaker proti kaskádovému zlyhaniu pri výpadku servera.
+        self.po_sebe_zlyhani = 0
+        self.predcasne_ukoncene = False
 
-    cesta_ps = vystup_priecinok / "PS.txt"
-    _zapis_text_atomicky(cesta_ps, "\n" + "\n\n".join(bloky_ps) + "\n", encoding="utf-8")
-    zapisane_subory.append(str(cesta_ps))
-    log_info(f"[LC-KBS] PS ({datum_streda.strftime('%Y-%m-%d') if datum_streda else str(rok)}): uložené do {cesta_ps}.")
+    @property
+    def aktualny_subor(self) -> str:
+        return self._aktualny_subor
 
-    # ── JEDNODENNÉ ŠPECIÁLNE SLÁVENIA (ZV, ZST, VP, VG, VPON, NP) ──────────────
-    for kod, popis in JEDNODENNÉ_KODY:
-        aktualny_subor = kod
-        pocitadlo.aktualny_slot += 1
-        update_progress(progress_callback, f"{kod} – {popis}...", pocitadlo.aktualny_slot, celkovo_slotov)
+    @aktualny_subor.setter
+    def aktualny_subor(self, hodnota: str) -> None:
+        self._aktualny_subor = hodnota
 
-        datum = _zistí_datum_sviatku(kod, rok)
+    def zalohuj_kody(self, kody) -> None:
+        self.backup.zalohuj_zoznam(kody)
 
-        if datum is None:
-            preskocených += 1
-            if kod not in preskocene_kody:
-                preskocene_kody.append(kod)
-            update_progress(progress_callback, f"{kod}: v roku {rok} sa neslávi, súbor zostáva.", pocitadlo.aktualny_slot, celkovo_slotov)
-            log_info(f"[LC-KBS] {kod}: vynechaný v roku {rok}, súbor neaktualizujem.")
-            continue
+    def zaznamenaj_vysledok(self, uspech: bool) -> None:
+        """
+        Zaznamená výsledok jedného sťahovacieho pokusu (jeden konkrétny
+        dátum). Ak zlyhá MAX_PO_SEBE_ZLYHANI_STAHOVANIA-krát za sebou (bez
+        prerušenia úspechom), vyhodí _PredcasneUkoncenieStahovania – server
+        je pravdepodobne nedostupný a ďalšie márne skúšanie nemá zmysel.
+        """
+        if uspech:
+            self.po_sebe_zlyhani = 0
+            return
+        self.po_sebe_zlyhani += 1
+        if self.po_sebe_zlyhani >= MAX_PO_SEBE_ZLYHANI_STAHOVANIA:
+            self.predcasne_ukoncene = True
+            raise _PredcasneUkoncenieStahovania(
+                f"{self.po_sebe_zlyhani} sťahovaní za sebou zlyhalo – server pravdepodobne neodpovedá."
+            )
 
-        update_progress(progress_callback, f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", pocitadlo.aktualny_slot, celkovo_slotov)
+    def vytvor_spracuj_slot(self, celkovo_slotov: int, pocitaj_datumy_nezistene: bool = False):
+        """Vráti spracuj_slot uzavretý nad týmto kontextom."""
+        zaklad = _vytvor_spracuj_slot(
+            self.pocitadlo,
+            self.chybne_kody,
+            lambda: self._aktualny_subor,
+            celkovo_slotov,
+            self.progress_callback,
+            na_vysledok=self.zaznamenaj_vysledok,
+        )
 
-        soup = _stiahni_lc_kbs_soup(datum)
-        refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-        time.sleep(REFRENY_DELAY_S)
+        if not pocitaj_datumy_nezistene:
+            return zaklad
 
-        if not refreny:
-            pocitadlo.chyby += 1
-            if kod not in chybne_kody:
-                chybne_kody.append(kod)
-            update_progress(progress_callback, f"{kod}: refrén sa nepodarilo stiahnuť.", pocitadlo.aktualny_slot, celkovo_slotov)
-            log_info(f"[LC-KBS] {kod} ({datum}): refrén nenájdený.")
-            continue
+        def wrapper(label, datum):
+            if datum is None:
+                self.datumy_nezistene += 1
+            return zaklad(label, datum)
 
-        nazov = vypocitaj_aktualnu_liturgicku_cast(datum)
-        if len(refreny) == 1:
-            obsah = f"\n{nazov}\n\n1. {refreny[0]}\n"
-        else:
-            riadky = [nazov]
-            for i, r in enumerate(refreny, start=1):
-                riadky.append(f"\n{i}. {r}")
-            obsah = "\n" + "\n".join(riadky) + "\n"
+        return wrapper
 
-        cesta = vystup_priecinok / f"{kod}.txt"
-        if cesta.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(cesta, zaloha_priecinok / cesta.name)
-            zaloha_vytvorena = True
+    def zapis_bloky(self, kod: str, bloky: list[str], oddelovac: str = "\n\n") -> Path:
+        """Zapíše bloky do {kod}.txt a eviduje súbor."""
+        cesta = self.vystup / f"{kod}.txt"
+        obsah = "\n" + oddelovac.join(bloky) + "\n"
         _zapis_text_atomicky(cesta, obsah, encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        log_info(f"[LC-KBS] {kod} ({datum}): uložené do {cesta}.")
+        self.zapisane.append(str(cesta))
+        return cesta
+
+    def zapis_obsah(self, kod: str, obsah: str) -> Path:
+        cesta = self.vystup / f"{kod}.txt"
+        _zapis_text_atomicky(cesta, obsah, encoding="utf-8")
+        self.zapisane.append(str(cesta))
+        return cesta
+
+    def progress(self, sprava: str, aktualne: int, celkovo: int) -> None:
+        update_progress(self.progress_callback, sprava, aktualne, celkovo)
+
+
+def _priprav_kontext_alebo_vrat_chybu(rok: int, vystup_priecinok: Path, backup_prefix: str, progress_callback, log_sprava: str) -> _RefrenyKontext | dict:
+    """Spoločný vstupný bod: kontrola knižníc + vytvorenie kontextu. Pri chybe vráti dict."""
+    if chybaju_kniznice_pre_stahovanie():
+        log_info(log_sprava)
+        return {"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None}
+    return _RefrenyKontext(rok, vystup_priecinok, backup_prefix, progress_callback)
+
+
+def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
+    ctx_or = _priprav_kontext_alebo_vrat_chybu(
+        rok, vystup_priecinok, "backup_postne_velkonocne", progress_callback,
+        "[LC-KBS] Sťahovanie pôstnych/veľkonočných týždňov preskočené: chýbajú knižnice."
+    )
+    if isinstance(ctx_or, dict):
+        return ctx_or
+    ctx: _RefrenyKontext = ctx_or
+
+    vsetky_kody = [f"{t}P" for t in range(1, 6)] + ["VT"] + [f"{t}VN" for t in range(1, 8)]
+    JEDNODENNE = [
+        ("ZV", "Zvestovanie Pána"),
+        ("ZST", "Zelený štvrtok"),
+        ("VP", "Veľký piatok"),
+        ("VG", "Veľkonočná vigília"),
+        ("VPON", "Pondelok vo Veľkonočnej oktáve"),
+        ("NP", "Nanebovstúpenie Pána"),
+    ]
+    ctx.zalohuj_kody(vsetky_kody + ["PS"] + [k for k, _ in JEDNODENNE])
+
+    celkovo = 5 * (3 + 6) + 6 + 7 * (3 + 6) + 4 + len(JEDNODENNE)
+    spracuj_slot = ctx.vytvor_spracuj_slot(celkovo)
+    ctx.progress(f"Začínam sťahovanie pôstnych a veľkonočných týždňov pre rok {rok}.", 0, celkovo)
+
+    try:
+        for tyzden in range(1, 6):
+            ctx.aktualny_subor = f"{tyzden}P"
+            bloky = [_POSTNE_NAZVY[tyzden]]
+            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
+                datum = _najdi_datum_postnej_nedele(tyzden, cyklus, rok)
+                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}P {cyklus}', datum)}")
+            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
+                datum = _najdi_datum_postneho_vs_dna(tyzden, den_index, rok)
+                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}P deň {cislo_dna}', datum)}")
+            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
+            log_info(f"[LC-KBS] {tyzden}P ({rok}): uložené.")
+
+        # VT
+        ctx.aktualny_subor = "VT"
+        nedela_kvetna = velkonocna_nedela(rok) - timedelta(days=7)
+        pondelok_vt = velkonocna_nedela(rok) - timedelta(days=6)
+        utorok_vt = velkonocna_nedela(rok) - timedelta(days=5)
+        streda_vt = velkonocna_nedela(rok) - timedelta(days=4)
+        stvrtok_vt = velkonocna_nedela(rok) - timedelta(days=3)
+        piatok_vt = velkonocna_nedela(rok) - timedelta(days=2)
+        polozky_vt = [
+            (nedela_kvetna, "PALMOVÁ (KVETNÁ) NEDEĽA – NEDEĽA UTRPENIA PÁNA"),
+            (pondelok_vt, "PONDELOK VEĽKÉHO TÝŽDŇA"),
+            (utorok_vt, "UTOROK VEĽKÉHO TÝŽDŇA"),
+            (streda_vt, "STREDA VEĽKÉHO TÝŽDŇA"),
+            (stvrtok_vt, "ŠTVRTOK VEĽKÉHO TÝŽDŇA – ZELENÝ ŠTVRTOK"),
+            (piatok_vt, "VEĽKÝ PIATOK"),
+        ]
+        bloky_vt = ["VEĽKÝ TÝŽDEŇ (SVÄTÝ TÝŽDEŇ)"]
+        for datum_vt, nazov_vt in polozky_vt:
+            ctx.pocitadlo.aktualny_slot += 1
+            ctx.progress(f"VT – {nazov_vt}: sťahujem {datum_vt.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
+            soup_vt = _stiahni_lc_kbs_soup(datum_vt)
+            refreny_vt = _extrahuj_refreny_zalmov_lc_kbs(soup_vt)
+            time.sleep(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny_vt))
+            if not refreny_vt:
+                ctx.pocitadlo.chyby += 1
+                if "VT" not in ctx.chybne_kody:
+                    ctx.chybne_kody.append("VT")
+                bloky_vt.append(nazov_vt + "\n\n1. [refrén sa nepodarilo stiahnuť]")
+                continue
+            riadky = [f"1. {refreny_vt[0]}"] if len(refreny_vt) == 1 else [f"{i}. {r}" for i, r in enumerate(refreny_vt, start=1)]
+            bloky_vt.append(nazov_vt + "\n\n" + "\n\n".join(riadky))
+        ctx.zapis_bloky("VT", bloky_vt, oddelovac="\n\n\n")
+        log_info(f"[LC-KBS] VT ({rok}): uložené.")
+
+        for tyzden in range(1, 8):
+            ctx.aktualny_subor = f"{tyzden}VN"
+            bloky = [_VEĽKONOCNE_NAZVY[tyzden]]
+            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
+                datum = _najdi_datum_veľkonocnej_nedele(tyzden, cyklus, rok)
+                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}VN {cyklus}', datum)}")
+            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
+                datum = _najdi_datum_veľkonocneho_vs_dna(tyzden, den_index, rok)
+                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}VN deň {cislo_dna}', datum)}")
+            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
+            log_info(f"[LC-KBS] {tyzden}VN ({rok}): uložené.")
+
+        # PS
+        ctx.aktualny_subor = "PS"
+        bloky_ps = ["POPOLCOVÁ STREDA A DNI PO NEJ"]
+        datum_streda = _zistí_datum_sviatku("PS", rok)
+        bloky_ps.append(f"3. {spracuj_slot('PS – Popolcová streda', datum_streda)}")
+        for cislo_dna, posun, nazov_dna in ((4, 1, "štvrtok"), (5, 2, "piatok"), (6, 3, "sobota")):
+            datum_pps = _najdi_datum_pps_dna(posun, rok)
+            bloky_ps.append(f"{cislo_dna}. {spracuj_slot(f'PS – {nazov_dna} po Popolcovej strede', datum_pps)}")
+        ctx.zapis_bloky("PS", bloky_ps)
+        log_info(f"[LC-KBS] PS ({datum_streda.strftime('%Y-%m-%d') if datum_streda else str(rok)}): uložené.")
+
+        # Jednodenné
+        for kod, popis in JEDNODENNE:
+            ctx.aktualny_subor = kod
+            ctx.pocitadlo.aktualny_slot += 1
+            ctx.progress(f"{kod} – {popis}...", ctx.pocitadlo.aktualny_slot, celkovo)
+            datum = _zistí_datum_sviatku(kod, rok)
+            if datum is None:
+                ctx.preskocenych += 1
+                if kod not in ctx.preskocene_kody:
+                    ctx.preskocene_kody.append(kod)
+                ctx.progress(f"{kod}: v roku {rok} sa neslávi, súbor zostáva.", ctx.pocitadlo.aktualny_slot, celkovo)
+                log_info(f"[LC-KBS] {kod}: vynechaný v roku {rok}.")
+                continue
+            ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
+            soup = _stiahni_lc_kbs_soup(datum)
+            refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
+            time.sleep(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny))
+            if not refreny:
+                ctx.pocitadlo.chyby += 1
+                if kod not in ctx.chybne_kody:
+                    ctx.chybne_kody.append(kod)
+                ctx.progress(f"{kod}: refrén sa nepodarilo stiahnuť.", ctx.pocitadlo.aktualny_slot, celkovo)
+                continue
+            nazov = vypocitaj_aktualnu_liturgicku_cast(datum)
+            obsah = f"\n{nazov}\n\n1. {refreny[0]}\n" if len(refreny) == 1 else "\n" + "\n".join([nazov] + [f"\n{i}. {r}" for i, r in enumerate(refreny, start=1)]) + "\n"
+            ctx.zapis_obsah(kod, obsah)
+            log_info(f"[LC-KBS] {kod} ({datum}): uložené.")
+    except _PredcasneUkoncenieStahovania as e:
+        log_info(f"[LC-KBS] Pôstne/veľkonočné refrény {rok}: predčasne ukončené – {e}")
 
     log_info(
-        f"[LC-KBS] Pôstne/veľkonočné refrény {rok} – súhrn: "
-        f"spracovaných položiek {pocitadlo.aktualny_slot}/{celkovo_slotov}, "
-        f"preskočených {preskocených}"
-        + (f" ({', '.join(preskocene_kody)})" if preskocene_kody else "")
-        + f", chyby {pocitadlo.chyby}"
-        + (f" ({', '.join(chybne_kody)})" if chybne_kody else "")
-        + "."
+        f"[LC-KBS] Pôstne/veľkonočné refrény {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, "
+        f"preskočených {ctx.preskocenych}" + (f" ({', '.join(ctx.preskocene_kody)})" if ctx.preskocene_kody else "") +
+        f", chyby {ctx.pocitadlo.chyby}" + (f" ({', '.join(ctx.chybne_kody)})" if ctx.chybne_kody else "") + "."
     )
-
-    update_progress(progress_callback, f"Hotovo. Spracovaných položiek: {pocitadlo.aktualny_slot}, chyby: {pocitadlo.chyby}.", pocitadlo.aktualny_slot, celkovo_slotov)
+    ctx.progress(f"Hotovo. Spracovaných položiek: {ctx.pocitadlo.aktualny_slot}, chyby: {ctx.pocitadlo.chyby}.", ctx.pocitadlo.aktualny_slot, celkovo)
 
     return {
-        "uspech": (pocitadlo.aktualny_slot - pocitadlo.chyby) > 0,
-        "celkovo": pocitadlo.aktualny_slot,
-        "chyby": pocitadlo.chyby,
-        "chybne_kody": chybne_kody,
-        "preskocených": preskocených,
-        "preskocene_kody": preskocene_kody,
-        "subory": zapisane_subory,
-        "zaloha": str(zaloha_priecinok) if zaloha_vytvorena else None,
+        "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        "celkovo": ctx.pocitadlo.aktualny_slot,
+        "chyby": ctx.pocitadlo.chyby,
+        "chybne_kody": ctx.chybne_kody,
+        "preskocených": ctx.preskocenych,
+        "preskocene_kody": ctx.preskocene_kody,
+        "subory": ctx.zapisane,
+        "zaloha": ctx.backup.retazec_alebo_none,
     }
 
 
 def stiahni_adventne_vianocne_refreny(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
-    """
-    Stiahne refrény žalmov pre adventné (1AD–4AD) týždne.
-    (Vianočné obdobie má vlastné kódy – OND, NJK a pod. – v liturgických sviatkoch.)
-    """
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie adventných týždňov preskočené: chýbajú knižnice.")
-        return {"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None}
-
-    vystup_priecinok = Path(vystup_priecinok)
-    vystup_priecinok.mkdir(parents=True, exist_ok=True)
-
-    vsetky_kody = [f"{t}AD" for t in range(1, 5)]  # celkom 4 súbory
-
-    zaloha_priecinok = vystup_priecinok / f"backup_adventne_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    zaloha_vytvorena = False
-    for kod in vsetky_kody:
-        povodny = vystup_priecinok / f"{kod}.txt"
-        if povodny.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(povodny, zaloha_priecinok / povodny.name)
-            zaloha_vytvorena = True
-
-    celkovo_slotov = 4 * (3 + 6)
-    zapisane_subory = []
-    chybne_kody: list[str] = []
-    aktualny_subor = ""
-
-    pocitadlo = _PocitadloSlotov()
-    spracuj_slot = _vytvor_spracuj_slot(
-        pocitadlo, chybne_kody, lambda: aktualny_subor, celkovo_slotov, progress_callback
+    ctx_or = _priprav_kontext_alebo_vrat_chybu(
+        rok, vystup_priecinok, "backup_adventne", progress_callback,
+        "[LC-KBS] Sťahovanie adventných týždňov preskočené: chýbajú knižnice."
     )
+    if isinstance(ctx_or, dict):
+        return ctx_or
+    ctx: _RefrenyKontext = ctx_or
 
-    update_progress(progress_callback, f"Začínam sťahovanie adventných týždňov pre rok {rok}.", 0, celkovo_slotov)
+    kody = [f"{t}AD" for t in range(1, 5)]
+    ctx.zalohuj_kody(kody)
+    celkovo = 4 * (3 + 6)
+    spracuj_slot = ctx.vytvor_spracuj_slot(celkovo)
+    ctx.progress(f"Začínam sťahovanie adventných týždňov pre rok {rok}.", 0, celkovo)
 
-    # ── ADVENTNÉ TÝŽDNE (1AD–4AD) ─────────────────────────────────────────────
-    # Poznámka: na rozdiel od jednodenných slávení (napr. ZV, VP, NP) sa adventné
-    # týždne 1AD–4AD v žiadnom roku "nevynechávajú" – Prvá až Štvrtá adventná
-    # nedeľa aj ich férie existujú každý rok, preto tu nie je (a nemá byť)
-    # počítadlo "preskočených" slávení ako pri stiahni_postne_velkonocne_refreny.
-    # Namiesto toho sledujeme aspoň to, pri ktorých konkrétnych týždňoch (1AD–4AD)
-    # nastala chyba sťahovania, aby to bolo vidieť v súhrnnom hlásení.
-    for tyzden in range(1, 5):
-        aktualny_subor = f"{tyzden}AD"
-        nadpis = _ADVENTNE_NAZVY[tyzden]
-        bloky = [nadpis]
-        for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-            datum = _najdi_datum_adventnej_nedele(tyzden, cyklus, rok)
-            refren = spracuj_slot(f"{tyzden}AD {cyklus}", datum)
-            bloky.append(f"{cyklus}: {refren}")
-        for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-            datum = _najdi_datum_adventneho_vs_dna(tyzden, den_index, rok)
-            refren = spracuj_slot(f"{tyzden}AD deň {cislo_dna}", datum)
-            bloky.append(f"{cislo_dna}. {refren}")
-        cesta = vystup_priecinok / f"{tyzden}AD.txt"
-        _zapis_text_atomicky(cesta, "\n" + "\n\n".join(bloky) + "\n", encoding="utf-8")
-        zapisane_subory.append(str(cesta))
+    try:
+        for tyzden in range(1, 5):
+            ctx.aktualny_subor = f"{tyzden}AD"
+            bloky = [_ADVENTNE_NAZVY[tyzden]]
+            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
+                datum = _najdi_datum_adventnej_nedele(tyzden, cyklus, rok)
+                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}AD {cyklus}', datum)}")
+            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
+                datum = _najdi_datum_adventneho_vs_dna(tyzden, den_index, rok)
+                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}AD deň {cislo_dna}', datum)}")
+            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
+    except _PredcasneUkoncenieStahovania as e:
+        log_info(f"[LC-KBS] Adventné/vianočné refrény {rok}: predčasne ukončené – {e}")
 
     log_info(
-        f"[LC-KBS] Adventné/vianočné refrény {rok} – súhrn: "
-        f"spracovaných položiek {pocitadlo.aktualny_slot}/{celkovo_slotov}, chyby {pocitadlo.chyby}"
-        + (f" ({', '.join(chybne_kody)})" if chybne_kody else "")
-        + "."
+        f"[LC-KBS] Adventné/vianočné refrény {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, chyby {ctx.pocitadlo.chyby}"
+        + (f" ({', '.join(ctx.chybne_kody)})" if ctx.chybne_kody else "") + "."
     )
-
-    update_progress(progress_callback, f"Hotovo. Spracovaných položiek: {pocitadlo.aktualny_slot}, chyby: {pocitadlo.chyby}.", pocitadlo.aktualny_slot, celkovo_slotov)
+    ctx.progress(f"Hotovo. Spracovaných položiek: {ctx.pocitadlo.aktualny_slot}, chyby: {ctx.pocitadlo.chyby}.", ctx.pocitadlo.aktualny_slot, celkovo)
 
     return {
-        "uspech": (pocitadlo.aktualny_slot - pocitadlo.chyby) > 0,
-        "celkovo": pocitadlo.aktualny_slot,
-        "chyby": pocitadlo.chyby,
-        "chybne_kody": chybne_kody,
-        "subory": zapisane_subory,
-        "zaloha": str(zaloha_priecinok) if zaloha_vytvorena else None,
+        "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        "celkovo": ctx.pocitadlo.aktualny_slot,
+        "chyby": ctx.pocitadlo.chyby,
+        "chybne_kody": ctx.chybne_kody,
+        "subory": ctx.zapisane,
+        "zaloha": ctx.backup.retazec_alebo_none,
     }
 
 
 # ── TURÍCE A SVIATKY NADVÄZUJÚCE NA VEĽKÚ NOC (1TS–7TS) ─────────────────────
 
-# Kódy, ktoré majú vlastné refrény pre každý liturgický cyklus A/B/C
-# (súbor obsahuje tri riadky "A:", "B:", "C:") – ide o (bývalé) nedele
-# a slávnosti Pána s trojročným čítacím cyklom.
 _TS_CYKLICKE_KODY: tuple[str, ...] = ("1TS", "4TS", "5TS", "6TS")
-
-# Kódy s jediným, cyklicky nezávislým refrénom (spomienky/sviatky s vlastným,
-# nemenným formulárom) – súbor obsahuje číslovaný zoznam "1.", prípadne viac,
-# ak stránka vráti viac refrénov.
 _TS_JEDNORAZOVE_KODY: tuple[str, ...] = ("2TS", "3TS", "7TS")
-
-# Posun v dňoch od nedele Turíc (Zoslania Ducha Svätého) pre jednotlivé kódy –
-# rovnaké hodnoty ako v `specialne_po_turiciach` vo `vypocitaj_kod_liturgickej_casti`.
 _TS_POSUN_OD_TURIC: dict[str, int] = {
     "1TS": 0,
     "2TS": 1,
@@ -4320,234 +4528,131 @@ def _najdi_datum_turickeho_sviatku(kod: str, cyklus: str, preferovany_rok: int) 
 
 
 def stiahni_turicne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
-    """
-    Stiahne refrény žalmov pre Turíce a sviatky bezprostredne po nich (1TS–7TS):
-
-    - 1TS (Turíce), 4TS (Najsvätejšia Trojica), 5TS (Najsvätejšieho Kristovho
-      Tela a Krvi) a 6TS (Najsvätejšieho Srdca Ježišovho) majú vlastné refrény
-      pre každý liturgický cyklus A/B/C.
-    - 2TS (Panny Márie, Matky Cirkvi), 3TS (Pána Ježiša Krista, najvyššieho
-      a večného kňaza) a 7TS (Nepoškvrnené Srdce Panny Márie) majú jediný,
-      cyklicky nezávislý refrén.
-
-    Existujúce súbory, ktoré budú prepísané, sa pred zápisom zálohujú.
-    """
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie Turíc a nadväzujúcich sviatkov preskočené: chýbajú knižnice.")
-        return {"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None}
-
-    vystup_priecinok = Path(vystup_priecinok)
-    vystup_priecinok.mkdir(parents=True, exist_ok=True)
-
-    vsetky_kody = list(_TS_CYKLICKE_KODY) + list(_TS_JEDNORAZOVE_KODY)
-
-    zaloha_priecinok = vystup_priecinok / f"backup_turice_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    zaloha_vytvorena = False
-    for kod in vsetky_kody:
-        povodny = vystup_priecinok / f"{kod}.txt"
-        if povodny.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(povodny, zaloha_priecinok / povodny.name)
-            zaloha_vytvorena = True
-
-    celkovo_slotov = len(_TS_CYKLICKE_KODY) * 3 + len(_TS_JEDNORAZOVE_KODY)
-    zapisane_subory: list[str] = []
-    chybne_kody: list[str] = []
-    preskocených = 0
-    preskocene_kody: list[str] = []
-    aktualny_subor = ""
-
-    pocitadlo = _PocitadloSlotov()
-    spracuj_slot = _vytvor_spracuj_slot(
-        pocitadlo, chybne_kody, lambda: aktualny_subor, celkovo_slotov, progress_callback
+    ctx_or = _priprav_kontext_alebo_vrat_chybu(
+        rok, vystup_priecinok, "backup_turice", progress_callback,
+        "[LC-KBS] Sťahovanie Turíc a nadväzujúcich sviatkov preskočené: chýbajú knižnice."
     )
+    if isinstance(ctx_or, dict):
+        return ctx_or
+    ctx: _RefrenyKontext = ctx_or
 
-    update_progress(
-        progress_callback,
-        f"Začínam sťahovanie Turíc a nadväzujúcich sviatkov pre rok {rok}.",
-        0, celkovo_slotov,
-    )
+    kody = list(_TS_CYKLICKE_KODY) + list(_TS_JEDNORAZOVE_KODY)
+    ctx.zalohuj_kody(kody)
+    celkovo = len(_TS_CYKLICKE_KODY) * 3 + len(_TS_JEDNORAZOVE_KODY)
+    spracuj_slot = ctx.vytvor_spracuj_slot(celkovo)
+    ctx.progress(f"Začínam sťahovanie Turíc a nadväzujúcich sviatkov pre rok {rok}.", 0, celkovo)
 
-    # ── SVIATKY S CYKLAMI A/B/C (1TS, 4TS, 5TS, 6TS) ─────────────────────────
-    for kod in _TS_CYKLICKE_KODY:
-        aktualny_subor = kod
-        nazov = LITURGICKE_CASTI_PODLA_KODU.get(kod, kod)
-        bloky = [nazov]
-        for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-            datum = _najdi_datum_turickeho_sviatku(kod, cyklus, rok)
-            refren = spracuj_slot(f"{kod} {cyklus}", datum)
-            bloky.append(f"{cyklus}: {refren}")
+    try:
+        for kod in _TS_CYKLICKE_KODY:
+            ctx.aktualny_subor = kod
+            nazov = LITURGICKE_CASTI_PODLA_KODU.get(kod, kod)
+            bloky = [nazov]
+            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
+                datum = _najdi_datum_turickeho_sviatku(kod, cyklus, rok)
+                bloky.append(f"{cyklus}: {spracuj_slot(f'{kod} {cyklus}', datum)}")
+            ctx.zapis_bloky(kod, bloky)
+            log_info(f"[LC-KBS] {kod} ({rok}): uložené.")
 
-        cesta = vystup_priecinok / f"{kod}.txt"
-        if cesta.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(cesta, zaloha_priecinok / cesta.name)
-            zaloha_vytvorena = True
-        _zapis_text_atomicky(cesta, "\n" + "\n\n".join(bloky) + "\n", encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        log_info(f"[LC-KBS] {kod} ({rok}): uložené do {cesta}.")
-
-    # ── JEDNORAZOVÉ SLÁVENIA BEZ CYKLU (2TS, 3TS, 7TS) ───────────────────────
-    for kod in _TS_JEDNORAZOVE_KODY:
-        aktualny_subor = kod
-        pocitadlo.aktualny_slot += 1
-        update_progress(progress_callback, f"{kod}...", pocitadlo.aktualny_slot, celkovo_slotov)
-
-        datum = _zistí_datum_sviatku(kod, rok)
-
-        if datum is None:
-            preskocených += 1
-            if kod not in preskocene_kody:
-                preskocene_kody.append(kod)
-            update_progress(progress_callback, f"{kod}: v roku {rok} sa neslávi, súbor zostáva.", pocitadlo.aktualny_slot, celkovo_slotov)
-            log_info(f"[LC-KBS] {kod}: vynechaný v roku {rok}, súbor neaktualizujem.")
-            continue
-
-        update_progress(progress_callback, f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", pocitadlo.aktualny_slot, celkovo_slotov)
-
-        soup = _stiahni_lc_kbs_soup(datum)
-        refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-        time.sleep(REFRENY_DELAY_S)
-
-        if not refreny:
-            pocitadlo.chyby += 1
-            if kod not in chybne_kody:
-                chybne_kody.append(kod)
-            update_progress(progress_callback, f"{kod}: refrén sa nepodarilo stiahnuť.", pocitadlo.aktualny_slot, celkovo_slotov)
-            log_info(f"[LC-KBS] {kod} ({datum}): refrén nenájdený.")
-            continue
-
-        nazov = vypocitaj_aktualnu_liturgicku_cast(datum)
-        if len(refreny) == 1:
-            obsah = f"\n{nazov}\n\n1. {refreny[0]}\n"
-        else:
-            riadky = [nazov]
-            for i, r in enumerate(refreny, start=1):
-                riadky.append(f"\n{i}. {r}")
-            obsah = "\n" + "\n".join(riadky) + "\n"
-
-        cesta = vystup_priecinok / f"{kod}.txt"
-        if cesta.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(cesta, zaloha_priecinok / cesta.name)
-            zaloha_vytvorena = True
-        _zapis_text_atomicky(cesta, obsah, encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        log_info(f"[LC-KBS] {kod} ({datum}): uložené do {cesta}.")
+        for kod in _TS_JEDNORAZOVE_KODY:
+            ctx.aktualny_subor = kod
+            ctx.pocitadlo.aktualny_slot += 1
+            ctx.progress(f"{kod}...", ctx.pocitadlo.aktualny_slot, celkovo)
+            datum = _zistí_datum_sviatku(kod, rok)
+            if datum is None:
+                ctx.preskocenych += 1
+                if kod not in ctx.preskocene_kody:
+                    ctx.preskocene_kody.append(kod)
+                ctx.progress(f"{kod}: v roku {rok} sa neslávi.", ctx.pocitadlo.aktualny_slot, celkovo)
+                log_info(f"[LC-KBS] {kod}: vynechaný v roku {rok}.")
+                continue
+            ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
+            soup = _stiahni_lc_kbs_soup(datum)
+            refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
+            time.sleep(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny))
+            if not refreny:
+                ctx.pocitadlo.chyby += 1
+                if kod not in ctx.chybne_kody:
+                    ctx.chybne_kody.append(kod)
+                ctx.progress(f"{kod}: refrén sa nepodarilo stiahnuť.", ctx.pocitadlo.aktualny_slot, celkovo)
+                continue
+            nazov = vypocitaj_aktualnu_liturgicku_cast(datum)
+            obsah = f"\n{nazov}\n\n1. {refreny[0]}\n" if len(refreny) == 1 else "\n" + "\n".join([nazov] + [f"\n{i}. {r}" for i, r in enumerate(refreny, start=1)]) + "\n"
+            ctx.zapis_obsah(kod, obsah)
+            log_info(f"[LC-KBS] {kod} ({datum}): uložené.")
+    except _PredcasneUkoncenieStahovania as e:
+        log_info(f"[LC-KBS] Turíce a nadväzujúce sviatky {rok}: predčasne ukončené – {e}")
 
     log_info(
-        f"[LC-KBS] Turíce a nadväzujúce sviatky {rok} – súhrn: "
-        f"spracovaných položiek {pocitadlo.aktualny_slot}/{celkovo_slotov}, "
-        f"preskočených {preskocených}"
-        + (f" ({', '.join(preskocene_kody)})" if preskocene_kody else "")
-        + f", chyby {pocitadlo.chyby}"
-        + (f" ({', '.join(chybne_kody)})" if chybne_kody else "")
-        + "."
+        f"[LC-KBS] Turíce a nadväzujúce sviatky {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, "
+        f"preskočených {ctx.preskocenych}" + (f" ({', '.join(ctx.preskocene_kody)})" if ctx.preskocene_kody else "") +
+        f", chyby {ctx.pocitadlo.chyby}" + (f" ({', '.join(ctx.chybne_kody)})" if ctx.chybne_kody else "") + "."
     )
-
-    update_progress(
-        progress_callback,
-        f"Hotovo. Spracovaných položiek: {pocitadlo.aktualny_slot}, chyby: {pocitadlo.chyby}.",
-        pocitadlo.aktualny_slot, celkovo_slotov,
-    )
+    ctx.progress(f"Hotovo. Spracovaných položiek: {ctx.pocitadlo.aktualny_slot}, chyby: {ctx.pocitadlo.chyby}.", ctx.pocitadlo.aktualny_slot, celkovo)
 
     return {
-        "uspech": (pocitadlo.aktualny_slot - pocitadlo.chyby) > 0,
-        "celkovo": pocitadlo.aktualny_slot,
-        "chyby": pocitadlo.chyby,
-        "chybne_kody": chybne_kody,
-        "preskocených": preskocených,
-        "preskocene_kody": preskocene_kody,
-        "subory": zapisane_subory,
-        "zaloha": str(zaloha_priecinok) if zaloha_vytvorena else None,
+        "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        "celkovo": ctx.pocitadlo.aktualny_slot,
+        "chyby": ctx.pocitadlo.chyby,
+        "chybne_kody": ctx.chybne_kody,
+        "preskocených": ctx.preskocenych,
+        "preskocene_kody": ctx.preskocene_kody,
+        "subory": ctx.zapisane,
+        "zaloha": ctx.backup.retazec_alebo_none,
     }
 
 
 def stiahni_refreny_zalmov_pre_rok(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
-    """
-    Stiahne refrény responzóriových žalmov pre celý rok a uloží ich do 1L.txt až 12L.txt.
-    Existujúce mesačné súbory pred prepísaním zálohuje.
-    """
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie refrénov preskočené: chýbajú knižnice.")
-        return {"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None}
+    ctx_or = _priprav_kontext_alebo_vrat_chybu(
+        rok, vystup_priecinok, "backup_refreny", progress_callback,
+        "[LC-KBS] Sťahovanie refrénov preskočené: chýbajú knižnice."
+    )
+    if isinstance(ctx_or, dict):
+        return ctx_or
+    ctx: _RefrenyKontext = ctx_or
 
-    vystup_priecinok = Path(vystup_priecinok)
-    vystup_priecinok.mkdir(parents=True, exist_ok=True)
-
-    zaloha_priecinok = vystup_priecinok / f"backup_refreny_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    zaloha_vytvorena = False
-    for kod in REFRENY_MESIACE_SUBORY.values():
-        povodny = vystup_priecinok / f"{kod}.txt"
-        if povodny.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(povodny, zaloha_priecinok / povodny.name)
-            zaloha_vytvorena = True
-
+    ctx.zalohuj_kody(REFRENY_MESIACE_SUBORY.values())
     dni = _vsetky_dni_roka(rok)
-    po_mesiacoch: dict[int, list[date]] = {m: [] for m in range(1, 13)}
-    for d in dni:
-        po_mesiacoch[d.month].append(d)
-
-    vysledky: dict[int, list[str]] = {
-        mesiac: [f"{REFRENY_MESIACE_SK[mesiac]} {rok}"]
-        for mesiac in range(1, 13)
-    }
-    celkovo = 0
+    celkovo = len(dni)
     chyby = 0
+    vysledky: dict[int, list[str]] = {m: [] for m in range(1, 13)}
 
-    update_progress(progress_callback, f"Začínam sťahovanie refrénov pre rok {rok}.", 0, len(dni))
+    ctx.progress(f"Začínam sťahovanie refrénov pre rok {rok}.", 0, celkovo)
 
-    for mesiac in range(1, 13):
-        for datum in po_mesiacoch[mesiac]:
-            celkovo += 1
-            update_progress(progress_callback, f"Sťahujem {datum.strftime('%d.%m.%Y')}...", celkovo, len(dni))
-
+    try:
+        for idx, datum in enumerate(dni, start=1):
+            ctx.progress(f"{datum.strftime('%d.%m.%Y')}: sťahujem...", idx, celkovo)
             soup = _stiahni_lc_kbs_soup(datum)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-
-            if len(refreny) == 1:
-                vysledky[mesiac].append(f"{datum.day}. {refreny[0]}")
-            elif len(refreny) > 1:
-                for i, refren in enumerate(refreny, start=1):
-                    vysledky[mesiac].append(f"{datum.day}.{i} {refren}")
+            time.sleep(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny))
+            if refreny:
+                text_refrenu = refreny[0]
             else:
                 chyby += 1
-                vysledky[mesiac].append(f"{datum.day}. [refrén sa nepodarilo stiahnuť]")
+                text_refrenu = "[refrén sa nepodarilo stiahnuť]"
+            vysledky[datum.month].append(f"{datum.day}. {text_refrenu}")
+    except _PredcasneUkoncenieStahovania as e:
+        log_info(f"[LC-KBS] Refrény {rok}: predčasne ukončené – {e}")
 
-            time.sleep(REFRENY_DELAY_S)
-
-    zapisane_subory = []
     for mesiac in range(1, 13):
         kod = REFRENY_MESIACE_SUBORY[mesiac]
-        cesta = vystup_priecinok / f"{kod}.txt"
-        obsah = "\n" + "\n\n".join(vysledky[mesiac]) + "\n"
-        _zapis_text_atomicky(cesta, obsah, encoding="utf-8")
-        zapisane_subory.append(str(cesta))
+        obsah = f"\n{mesiac}. MESIAC – REFRÉNY ŽALMOV PRE ROK {rok}\n\n" + "\n\n".join(vysledky[mesiac]) + "\n"
+        ctx.zapis_obsah(kod, obsah)
 
-    update_progress(progress_callback, f"Hotovo. Spracovaných dní: {celkovo}, bez refrénu: {chyby}.", celkovo, len(dni))
-
-    log_info(
-        f"[LC-KBS] Mesačné refrény žalmov {rok} – súhrn: "
-        f"spracovaných položiek {celkovo}/{len(dni)}, chyby {chyby}."
-    )
+    log_info(f"[LC-KBS] Refrény {rok} – súhrn: spracovaných {celkovo}, bez refrénu {chyby}.")
+    ctx.progress(f"Hotovo. Spracovaných dní: {celkovo}, bez refrénu: {chyby}.", celkovo, celkovo)
 
     return {
         "uspech": (celkovo - chyby) > 0,
         "celkovo": celkovo,
         "chyby": chyby,
-        "subory": zapisane_subory,
-        "zaloha": str(zaloha_priecinok) if zaloha_vytvorena else None,
+        "subory": ctx.zapisane,
+        "zaloha": ctx.backup.retazec_alebo_none,
     }
 
 
-# Zoznam sviatkov pre stiahnutie liturgických refrénov sviatkov.
-# Každý záznam: (kod, mesiac, den) pre pevné sviatky alebo (kod, callable) pre pohyblivé.
-# callable(rok) -> date alebo None; None znamená vynechaný (nechaj pôvodný súbor).
-
-# Zoznam všetkých stiahnuteľných sviatkov v poradí ako sú v pomocníkovi. Tento zoznam slúži iba na stiahnutie z lc.kbs.sk
-# Pohyblivé sviatky (závislé od Veľkej noci) sa riešia samostatne v GUI dialógu.
-LITURGICKE_SVIATKY_KODY: list[tuple[str, str]] = [        
+LITURGICKE_SVIATKY_KODY: list[tuple[str, str]] = [
     # Cezročné sviatky
     ("FJ",   "Sv. Filipa a Jakuba, apoštolov (3. V.)"),
     ("NJK",  "Narodenie sv. Jána Krstiteľa (24. VI.)"),
@@ -4571,9 +4676,6 @@ LITURGICKE_SVIATKY_KODY: list[tuple[str, str]] = [
     #("12L",  "Nepoškvrnené počatie Panny Márie (8. XII.)"),
 ]
 
-# Zoznam vianočných sviatkov pre stiahnutie liturgických refrénov (VIANOČNÉ OBDOBIE).
-# Ide o dni vianočnej oktávy a bezprostredne nadväzujúce sviatky, ktoré majú
-# vlastný súbor len vtedy, keď nepadnú na nedeľu (vtedy ich nahrádza nedeľný formulár).
 VIANOCNE_SVIATKY_KODY: list[tuple[str, str]] = [
     ("SR",   "Svätej rodiny Ježiša, Márie a Jozefa – nedeľa po Narodení Pána "
               "(alebo 30. XII., ak Narodenie Pána pripadne na nedeľu)"),
@@ -4586,18 +4688,6 @@ VIANOCNE_SVIATKY_KODY: list[tuple[str, str]] = [
     ("KKP",  "Krst Krista Pána"),
 ]
 
-# Pohyblivé sviatky – dátum závisí od Veľkej noci, určujeme cez format_skratky alebo vypocitaj_datum_pohyblivych_slaveni
-_POHYBLIVE_KODY = {
-    "1AD", "2AD", "3AD", "4AD",
-    "SR", "KKP",
-    "PS", "1P", "2P", "3P", "4P", "5P", "ZV",
-    "VT", "ZST", "VP",
-    "VG", "1VN", "VPON", "2VN", "3VN", "4VN", "5VN", "6VN", "NP", "7VN",
-    "1TS", "2TS", "3TS", "4TS", "5TS", "6TS", "7TS",
-    "NJK",
-}
-
-# Pevné sviatky – určujeme dátum priamo podľa mesiaca/dňa
 _PEVNE_KODY: dict[str, tuple[int, int]] = {
     "1VI":   (12, 25),
     "STEF":  (12, 26),
@@ -4628,6 +4718,20 @@ _PEVNE_KODY: dict[str, tuple[int, int]] = {
     "12L":   (12, 8),
     "2VI":   (1,  2),   # reprezentatívny deň 2. vianočného obdobia
 }
+
+_OKTAVA_NAZVY_PODLA_DNA: dict[int, str] = {
+    25: "NARODENIE PÁNA (1. deň oktávy)",
+    26: "SV. ŠTEFANA, PRVÉHO MUČENÍKA (2. deň oktávy)",
+    27: "SV. JÁNA, APOŠTOLA A EVANJELISTU (3. deň oktávy)",
+    28: "SV. NEVINIATOK, MUČENÍKOV (4. deň oktávy)",
+    29: "PIATY DEŇ OKTÁVY",
+    30: "ŠIESTY DEŇ OKTÁVY",
+    31: "SIEDMY DEŇ OKTÁVY",
+}
+
+_NAZOV_NEDELE_SVATEJ_RODINY = (
+    "PRVÁ NEDEĽA PO NARODENÍ PÁNA (NEDEĽA SVÄTEJ RODINY - JEŽIŠA, MÁRIE A JOZEFA)"
+)
 
 
 def _zistí_datum_sviatku(kod: str, rok: int) -> "date | None":
@@ -4681,142 +4785,80 @@ def _zistí_datum_sviatku(kod: str, rok: int) -> "date | None":
     return None
 
 
-def stiahni_liturgicke_sviatky_pre_rok(
-    rok: int,
-    vystup_priecinok: Path,
-    progress_callback=None,
-) -> dict:
-    """
-    Stiahne refrény žalmov pre všetky liturgické sviatky daného roku.
-
-    Pre každý kód zo zoznamu LITURGICKE_SVIATKY_KODY:
-    - Ak sa sviatok v danom roku slávi → stiahne refrén a zapíše/prepíše súbor.
-    - Ak sa neslávi (vynechaný, prekrytý) → pôvodný súbor zostane bez zmeny.
-
-    Existujúce súbory, ktoré budú prepísané, sa pred zápisom zálohujú.
-    """
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie sviatkov preskočené: chýbajú knižnice.")
-        return {"uspech": False, "celkovo": 0, "stiahnutych": 0, "chyby": 0,
-                "preskocených": 0, "subory": [], "zaloha": None}
-
-    vystup_priecinok = Path(vystup_priecinok)
-    vystup_priecinok.mkdir(parents=True, exist_ok=True)
-
-    # Záloha existujúcich súborov, ktoré budú prepísané
-    zaloha_priecinok = vystup_priecinok / f"backup_sviatky_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    zaloha_vytvorena = False
+def stiahni_liturgicke_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
+    ctx_or = _priprav_kontext_alebo_vrat_chybu(
+        rok, vystup_priecinok, "backup_sviatky", progress_callback,
+        "[LC-KBS] Sťahovanie sviatkov preskočené: chýbajú knižnice."
+    )
+    if isinstance(ctx_or, dict):
+        return ctx_or
+    ctx: _RefrenyKontext = ctx_or
 
     celkovo = len(LITURGICKE_SVIATKY_KODY)
+    # POZOR: "stiahnutych"/"chyby" tu nie sú to isté ako ctx.pocitadlo –
+    # počítajú len skutočne úspešne/neúspešne stiahnuté položky (nie
+    # spracované sloty), preto ostávajú vlastné lokálne premenné a
+    # ctx.pocitadlo sa v tejto funkcii nepoužíva.
     stiahnutych = 0
     chyby = 0
-    preskocených = 0
-    preskocene_kody: list[str] = []
-    chybne_kody: list[str] = []
-    zapisane_subory = []
+    ctx.progress(f"Začínam sťahovanie sviatkov pre rok {rok}.", 0, celkovo)
 
-    update_progress(progress_callback, f"Začínam sťahovanie sviatkov pre rok {rok}.", 0, celkovo)
-
-    for idx, (kod, popis) in enumerate(LITURGICKE_SVIATKY_KODY, start=1):
-        update_progress(progress_callback, f"{kod} – {popis}...", idx, celkovo)
-
-
-        datum = _zistí_datum_sviatku(kod, rok)
-
-        if datum is None:
-            preskocených += 1
-            preskocene_kody.append(kod)
-            update_progress(progress_callback, f"{kod}: v roku {rok} sa neslávi, súbor zostáva.", idx, celkovo)
-            log_info(f"[LC-KBS] {kod}: vynechaný v roku {rok}, súbor neaktualizujem.")
-            continue
-
-        update_progress(progress_callback, f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", idx, celkovo)
-
-        # Záloha pôvodného súboru pred prepísaním
-        cesta = vystup_priecinok / f"{kod}.txt"
-        if cesta.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(cesta, zaloha_priecinok / cesta.name)
-            zaloha_vytvorena = True
-
-        soup = _stiahni_lc_kbs_soup(datum)
-        refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-        time.sleep(REFRENY_DELAY_S)
-
-        if not refreny:
-            chyby += 1
-            chybne_kody.append(kod)
-            update_progress(progress_callback, f"{kod}: refrén sa nepodarilo stiahnuť.", idx, celkovo)
-            log_info(f"[LC-KBS] {kod} ({datum}): refrén nenájdený.")
-            continue
-
-        nazov = vypocitaj_aktualnu_liturgicku_cast(datum)
-
-        if len(refreny) == 1:
-            obsah = f"\n{nazov}\n\n1. {refreny[0]}\n"
-        else:
-            riadky = [nazov]
-            for i, r in enumerate(refreny, start=1):
-                riadky.append(f"\n{i}. {r}")
-            obsah = "\n" + "\n".join(riadky) + "\n"
-
-        _zapis_text_atomicky(cesta, obsah, encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        stiahnutych += 1
-        log_info(f"[LC-KBS] {kod} ({datum.strftime('%Y-%m-%d')}): uložené do {cesta}.")
+    try:
+        for idx, (kod, popis) in enumerate(LITURGICKE_SVIATKY_KODY, start=1):
+            ctx.aktualny_subor = kod
+            ctx.progress(f"{kod} – {popis}...", idx, celkovo)
+            datum = _zistí_datum_sviatku(kod, rok)
+            if datum is None:
+                ctx.preskocenych += 1
+                ctx.preskocene_kody.append(kod)
+                ctx.progress(f"{kod}: v roku {rok} sa neslávi.", idx, celkovo)
+                continue
+            ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", idx, celkovo)
+            ctx.backup.zalohuj(kod)
+            soup = _stiahni_lc_kbs_soup(datum)
+            refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
+            time.sleep(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny))
+            if not refreny:
+                chyby += 1
+                ctx.chybne_kody.append(kod)
+                ctx.progress(f"{kod}: refrén sa nepodarilo stiahnuť.", idx, celkovo)
+                continue
+            nazov = vypocitaj_aktualnu_liturgicku_cast(datum)
+            obsah = f"\n{nazov}\n\n1. {refreny[0]}\n" if len(refreny) == 1 else "\n" + "\n".join([nazov] + [f"\n{i}. {r}" for i, r in enumerate(refreny, start=1)]) + "\n"
+            ctx.zapis_obsah(kod, obsah)
+            stiahnutych += 1
+    except _PredcasneUkoncenieStahovania as e:
+        log_info(f"[LC-KBS] Liturgické sviatky {rok}: predčasne ukončené – {e}")
 
     log_info(
-        f"[LC-KBS] Liturgické sviatky {rok} – súhrn: "
-        f"stiahnutých {stiahnutych}/{celkovo}, "
-        f"preskočených {preskocených}"
-        + (f" ({', '.join(preskocene_kody)})" if preskocene_kody else "")
-        + f", chyby {chyby}"
-        + (f" ({', '.join(chybne_kody)})" if chybne_kody else "")
-        + "."
+        f"[LC-KBS] Liturgické sviatky {rok} – súhrn: stiahnutých {stiahnutych}/{celkovo}, preskočených {ctx.preskocenych}"
+        + (f" ({', '.join(ctx.preskocene_kody)})" if ctx.preskocene_kody else "") + f", chyby {chyby}" + (f" ({', '.join(ctx.chybne_kody)})" if ctx.chybne_kody else "") + "."
     )
-
-    update_progress(
-        progress_callback,
-        f"Hotovo. Stiahnutých: {stiahnutych}, preskočených: {preskocených}, chyby: {chyby}.",
-        celkovo, celkovo,
-    )
+    ctx.progress(f"Hotovo. Stiahnutých: {stiahnutych}, preskočených: {ctx.preskocenych}, chyby: {chyby}.", celkovo, celkovo)
 
     return {
         "uspech": stiahnutych > 0,
         "celkovo": celkovo,
         "stiahnutych": stiahnutych,
         "chyby": chyby,
-        "chybne_kody": chybne_kody,
-        "preskocených": preskocených,
-        "preskocene_kody": preskocene_kody,
-        "subory": zapisane_subory,
-        "zaloha": str(zaloha_priecinok) if zaloha_vytvorena else None,
+        "chybne_kody": ctx.chybne_kody,
+        "preskocených": ctx.preskocenych,
+        "preskocene_kody": ctx.preskocene_kody,
+        "subory": ctx.zapisane,
+        "zaloha": ctx.backup.retazec_alebo_none,
     }
 
 
-# Pevné názvy jednotlivých dní vianočnej oktávy (25.–31. XII.) pre kompilovaný
-# súbor 1VI.txt. Ak niektorý z týchto dní pripadne na Nedeľu Svätej rodiny,
-# jeho názov sa v danom roku nahradí názvom nedele (pozri nižšie).
-_OKTAVA_NAZVY_PODLA_DNA: dict[int, str] = {
-    25: "NARODENIE PÁNA (1. deň oktávy)",
-    26: "SV. ŠTEFANA, PRVÉHO MUČENÍKA (2. deň oktávy)",
-    27: "SV. JÁNA, APOŠTOLA A EVANJELISTU (3. deň oktávy)",
-    28: "SV. NEVINIATOK, MUČENÍKOV (4. deň oktávy)",
-    29: "PIATY DEŇ OKTÁVY",
-    30: "ŠIESTY DEŇ OKTÁVY",
-    31: "SIEDMY DEŇ OKTÁVY",
-}
-_NAZOV_NEDELE_SVATEJ_RODINY = (
-    "PRVÁ NEDEĽA PO NARODENÍ PÁNA (NEDEĽA SVÄTEJ RODINY - JEŽIŠA, MÁRIE A JOZEFA)"
-)
-
-
-def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]]) -> tuple[str, int, int]:
+def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]], na_vysledok=None) -> tuple[str, int, int]:
     """
     Zostaví text kompilovaného viacdňového súboru (napr. 1VI.txt, 2VI.txt)
     z už vopred pripravených dvojíc (dátum, názov). Po sebe idúce dni s
     rovnakým názvom sa zoskupia pod jeden spoločný nadpis; refrény sa
     označia číslom dňa v mesiaci (napr. "25.1", "25.2", "26.", ...).
+
+    na_vysledok: voliteľný callback(uspech: bool) – circuit breaker (pozri
+    _RefrenyKontext.zaznamenaj_vysledok), volaný po každom stiahnutom dni.
 
     Vráti (obsah, počet úspešne stiahnutých dní, počet dní s chybou).
     """
@@ -4837,6 +4879,8 @@ def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]]) -> tuple[s
         soup = _stiahni_lc_kbs_soup(datum)
         refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
         time.sleep(REFRENY_DELAY_S)
+        if na_vysledok:
+            na_vysledok(bool(refreny))
 
         if nazov != aktualny_nazov:
             uzavri_blok()
@@ -4859,368 +4903,223 @@ def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]]) -> tuple[s
     return obsah, stiahnutych, chyby
 
 
-def stiahni_vianocne_sviatky_pre_rok(
-    rok: int,
-    vystup_priecinok: Path,
-    progress_callback=None,
-) -> dict:
-    """
-    Stiahne refrény žalmov pre vianočné sviatky daného roku (SR, STEF, NEV,
-    PDR, PMB, NMJ, KKP) a naviac zostaví dva kompilované viacdňové súbory:
+def stiahni_vianocne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
+    ctx_or = _priprav_kontext_alebo_vrat_chybu(
+        rok, vystup_priecinok, "backup_vianocne", progress_callback,
+        "[LC-KBS] Sťahovanie vianočných sviatkov preskočené: chýbajú knižnice."
+    )
+    if isinstance(ctx_or, dict):
+        return ctx_or
+    ctx: _RefrenyKontext = ctx_or
 
-    - 1VI.txt – Narodenie Pána (25. XII.) a celá vianočná oktáva, deň po
-      dni, až po Slávnosť Panny Márie Bohorodičky (1. I. roku `rok + 1`)
-      vrátane – spolu 8 dní oktávy.
-    - 2VI.txt – od 2. nedele po Narodení Pána (ak v roku `rok + 1` pripadne
-      pred Zjavením Pána, inak od 2. januára) až po Krst Krista Pána
-      (obe v roku `rok + 1`) vrátane, deň po dni.
-
-    Pre každý kód zo zoznamu VIANOCNE_SVIATKY_KODY:
-    - Ak sa sviatok v danom roku slávi (nepadne na nedeľu a pod.) → stiahne
-      refrén a zapíše/prepíše súbor.
-    - Ak sa neslávi (napr. padol na nedeľu, nahradený iným slávením) → pôvodný
-      súbor zostane bez zmeny.
-
-    Existujúce súbory, ktoré budú prepísané, sa pred zápisom zálohujú.
-    """
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Sťahovanie vianočných sviatkov preskočené: chýbajú knižnice.")
-        return {"uspech": False, "celkovo": 0, "stiahnutych": 0, "chyby": 0,
-                "preskocených": 0, "subory": [], "zaloha": None}
-
-    vystup_priecinok = Path(vystup_priecinok)
-    vystup_priecinok.mkdir(parents=True, exist_ok=True)
-
-    # Záloha existujúcich súborov, ktoré budú prepísané
-    zaloha_priecinok = vystup_priecinok / f"backup_vianocne_{rok}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    zaloha_vytvorena = False
-
-    celkovo = len(VIANOCNE_SVIATKY_KODY) + 2  # +2: kompilované súbory 1VI a 2VI
+    celkovo = len(VIANOCNE_SVIATKY_KODY) + 2
+    # POZOR: "stiahnutych"/"chyby" tu (rovnako ako v stiahni_liturgicke_sviatky_pre_rok)
+    # nie sú to isté ako ctx.pocitadlo – ctx.pocitadlo sa v tejto funkcii nepoužíva.
     stiahnutych = 0
     chyby = 0
-    preskocených = 0
-    preskocene_kody: list[str] = []
-    chybne_kody: list[str] = []
-    zapisane_subory = []
+    ctx.progress(f"Začínam sťahovanie vianočných sviatkov pre rok {rok}.", 0, celkovo)
 
-    update_progress(progress_callback, f"Začínam sťahovanie vianočných sviatkov pre rok {rok}.", 0, celkovo)
-
-    # Kódy, ktoré patria do januárovej časti toho istého vianočného obdobia
-    # (t. j. patria k Vianociam z 25.12. roku `rok`, ale kalendárne spadajú
-    # už do nasledujúceho roka `rok + 1`) – ide o prelom kalendárnych rokov.
     _JANUAROVE_KODY = {"PMB", "NMJ", "KKP"}
 
-    for idx, (kod, popis) in enumerate(VIANOCNE_SVIATKY_KODY, start=1):
-        update_progress(progress_callback, f"{kod} – {popis}...", idx, celkovo)
+    try:
+        for idx, (kod, popis) in enumerate(VIANOCNE_SVIATKY_KODY, start=1):
+            ctx.aktualny_subor = kod
+            ctx.progress(f"{kod} – {popis}...", idx, celkovo)
+            rok_sviatku = rok + 1 if kod in _JANUAROVE_KODY else rok
+            datum = _zistí_datum_sviatku(kod, rok_sviatku)
+            if datum is None:
+                ctx.preskocenych += 1
+                ctx.preskocene_kody.append(kod)
+                ctx.progress(f"{kod}: v roku {rok_sviatku} sa neslávi.", idx, celkovo)
+                continue
+            ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", idx, celkovo)
+            ctx.backup.zalohuj(kod)
+            soup = _stiahni_lc_kbs_soup(datum)
+            refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
+            time.sleep(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny))
+            if not refreny:
+                chyby += 1
+                ctx.chybne_kody.append(kod)
+                ctx.progress(f"{kod}: refrén sa nepodarilo stiahnuť.", idx, celkovo)
+                continue
+            nazov = vypocitaj_aktualnu_liturgicku_cast(datum)
+            obsah = f"\n{nazov}\n\n1. {refreny[0]}\n" if len(refreny) == 1 else "\n" + "\n".join([nazov] + [f"\n{i}. {r}" for i, r in enumerate(refreny, start=1)]) + "\n"
+            ctx.zapis_obsah(kod, obsah)
+            stiahnutych += 1
+            log_info(f"[LC-KBS] {kod} ({datum.strftime('%Y-%m-%d')}): uložené.")
 
-        rok_sviatku = rok + 1 if kod in _JANUAROVE_KODY else rok
-        datum = _zistí_datum_sviatku(kod, rok_sviatku)
-
-        if datum is None:
-            preskocených += 1
-            preskocene_kody.append(kod)
-            update_progress(progress_callback, f"{kod}: v roku {rok_sviatku} sa neslávi, súbor zostáva.", idx, celkovo)
-            log_info(f"[LC-KBS] {kod}: vynechaný v roku {rok_sviatku}, súbor neaktualizujem.")
-            continue
-
-        update_progress(progress_callback, f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", idx, celkovo)
-
-        # Záloha pôvodného súboru pred prepísaním
-        cesta = vystup_priecinok / f"{kod}.txt"
-        if cesta.exists():
-            zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(cesta, zaloha_priecinok / cesta.name)
-            zaloha_vytvorena = True
-
-        soup = _stiahni_lc_kbs_soup(datum)
-        refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-        time.sleep(REFRENY_DELAY_S)
-
-        if not refreny:
+        # 1VI
+        idx = len(VIANOCNE_SVIATKY_KODY) + 1
+        ctx.aktualny_subor = "1VI"
+        ctx.progress("1VI – Narodenie Pána a oktáva...", idx, celkovo)
+        polozky_1vi: list[tuple[date, str]] = []
+        for den in range(25, 32):
+            datum_dna = date(rok, 12, den)
+            nazov_dna = _NAZOV_NEDELE_SVATEJ_RODINY if datum_dna == datum_svatej_rodiny(rok) else _OKTAVA_NAZVY_PODLA_DNA[den]
+            polozky_1vi.append((datum_dna, nazov_dna))
+        polozky_1vi.append((date(rok + 1, 1, 1), "SLÁVNOSŤ PANNY MÁRIE BOHORODIČKY (8. deň oktávy)"))
+        ctx.backup.zalohuj("1VI")
+        obsah_1vi, ok_1vi, chyby_1vi = _zostav_text_kompilovaneho_useku(polozky_1vi, na_vysledok=ctx.zaznamenaj_vysledok)
+        ctx.zapis_obsah("1VI", obsah_1vi)
+        if ok_1vi > 0:
+            stiahnutych += 1
+        if chyby_1vi > 0:
             chyby += 1
-            chybne_kody.append(kod)
-            update_progress(progress_callback, f"{kod}: refrén sa nepodarilo stiahnuť.", idx, celkovo)
-            log_info(f"[LC-KBS] {kod} ({datum}): refrén nenájdený.")
-            continue
+            ctx.chybne_kody.append("1VI")
 
-        nazov = vypocitaj_aktualnu_liturgicku_cast(datum)
-
-        if len(refreny) == 1:
-            obsah = f"\n{nazov}\n\n1. {refreny[0]}\n"
-        else:
-            riadky = [nazov]
-            for i, r in enumerate(refreny, start=1):
-                riadky.append(f"\n{i}. {r}")
-            obsah = "\n" + "\n".join(riadky) + "\n"
-
-        _zapis_text_atomicky(cesta, obsah, encoding="utf-8")
-        zapisane_subory.append(str(cesta))
-        stiahnutych += 1
-        log_info(f"[LC-KBS] {kod} ({datum.strftime('%Y-%m-%d')}): uložené do {cesta}.")
-
-
-    # ── 1VI: NARODENIE PÁNA A CELÁ OKTÁVA (25.–31. XII. vrátane) ────────────
-    idx = len(VIANOCNE_SVIATKY_KODY) + 1
-    update_progress(progress_callback, "1VI – Narodenie Pána a oktáva...", idx, celkovo)
-
-    polozky_1vi: list[tuple[date, str]] = []
-    for den in range(25, 32):
-        datum_dna = date(rok, 12, den)
-        if datum_dna == datum_svatej_rodiny(rok):
-            nazov_dna = _NAZOV_NEDELE_SVATEJ_RODINY
-        else:
-            nazov_dna = _OKTAVA_NAZVY_PODLA_DNA[den]
-        polozky_1vi.append((datum_dna, nazov_dna))
-
-    # 8. deň oktávy – Slávnosť Panny Márie Bohorodičky (1.1.), pozor: už v
-    # nasledujúcom kalendárnom roku `rok + 1` (deň hneď po 31.12. roku `rok`).
-    polozky_1vi.append(
-        (date(rok + 1, 1, 1), "SLÁVNOSŤ PANNY MÁRIE BOHORODIČKY (8. deň oktávy)")
-    )
-
-    cesta_1vi = vystup_priecinok / "1VI.txt"
-    if cesta_1vi.exists():
-        zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(cesta_1vi, zaloha_priecinok / cesta_1vi.name)
-        zaloha_vytvorena = True
-
-    obsah_1vi, ok_1vi, chyby_1vi = _zostav_text_kompilovaneho_useku(polozky_1vi)
-    _zapis_text_atomicky(cesta_1vi, obsah_1vi, encoding="utf-8")
-    zapisane_subory.append(str(cesta_1vi))
-    if ok_1vi > 0:
-        stiahnutych += 1
-    if chyby_1vi > 0:
-        chyby += 1
-        chybne_kody.append("1VI")
-    log_info(f"[LC-KBS] 1VI ({rok}): uložené do {cesta_1vi} ({ok_1vi} dní OK, {chyby_1vi} chýb).")
-
-    # ── 2VI: OD 2. NEDELE PO NARODENÍ PÁNA PO KRST KRISTA PÁNA (vrátane) ────
-    # Pozor: január tohto istého vianočného obdobia patrí už do
-    # nasledujúceho kalendárneho roka (rok + 1) – Narodenie Pána 25.12.
-    # roku `rok` pokračuje 2VI obdobím v januári roku `rok + 1`.
-    idx = len(VIANOCNE_SVIATKY_KODY) + 2
-    rok_januara = rok + 1
-    update_progress(progress_callback, f"2VI – 2. vianočné obdobie ({rok}/{rok_januara})...", idx, celkovo)
-
-    druha_nedela = najblizsia_nedela_po_dni(date(rok_januara, 1, 1))
-    zaciatok_2vi = druha_nedela if druha_nedela < date(rok_januara, 1, 6) else date(rok_januara, 1, 2)
-    koniec_2vi = krst_krista_pana(rok_januara)
-
-    polozky_2vi: list[tuple[date, str]] = []
-    if koniec_2vi >= zaciatok_2vi:
-        pocet_dni_2vi = (koniec_2vi - zaciatok_2vi).days + 1
-        for i in range(pocet_dni_2vi):
-            datum_dna = zaciatok_2vi + timedelta(days=i)
-            nazov_dna = vypocitaj_aktualnu_liturgicku_cast(datum_dna)
-            polozky_2vi.append((datum_dna, nazov_dna))
-
-    cesta_2vi = vystup_priecinok / "2VI.txt"
-    if cesta_2vi.exists():
-        zaloha_priecinok.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(cesta_2vi, zaloha_priecinok / cesta_2vi.name)
-        zaloha_vytvorena = True
-
-    obsah_2vi, ok_2vi, chyby_2vi = _zostav_text_kompilovaneho_useku(polozky_2vi)
-    _zapis_text_atomicky(cesta_2vi, obsah_2vi, encoding="utf-8")
-    zapisane_subory.append(str(cesta_2vi))
-    if ok_2vi > 0:
-        stiahnutych += 1
-    if chyby_2vi > 0:
-        chyby += 1
-        chybne_kody.append("2VI")
-    log_info(f"[LC-KBS] 2VI ({rok}/{rok_januara}): uložené do {cesta_2vi} ({ok_2vi} dní OK, {chyby_2vi} chýb).")
+        # 2VI
+        idx = len(VIANOCNE_SVIATKY_KODY) + 2
+        rok_januara = rok + 1
+        ctx.aktualny_subor = "2VI"
+        ctx.progress(f"2VI – 2. vianočné obdobie ({rok}/{rok_januara})...", idx, celkovo)
+        druha_nedela = najblizsia_nedela_po_dni(date(rok_januara, 1, 1))
+        zaciatok_2vi = druha_nedela if druha_nedela < date(rok_januara, 1, 6) else date(rok_januara, 1, 2)
+        koniec_2vi = krst_krista_pana(rok_januara)
+        polozky_2vi: list[tuple[date, str]] = []
+        if koniec_2vi >= zaciatok_2vi:
+            for i in range((koniec_2vi - zaciatok_2vi).days + 1):
+                d = zaciatok_2vi + timedelta(days=i)
+                polozky_2vi.append((d, vypocitaj_aktualnu_liturgicku_cast(d)))
+        ctx.backup.zalohuj("2VI")
+        obsah_2vi, ok_2vi, chyby_2vi = _zostav_text_kompilovaneho_useku(polozky_2vi, na_vysledok=ctx.zaznamenaj_vysledok)
+        ctx.zapis_obsah("2VI", obsah_2vi)
+        if ok_2vi > 0:
+            stiahnutych += 1
+        if chyby_2vi > 0:
+            chyby += 1
+            ctx.chybne_kody.append("2VI")
+    except _PredcasneUkoncenieStahovania as e:
+        log_info(f"[LC-KBS] Vianočné obdobie {rok}/{rok + 1}: predčasne ukončené – {e}")
 
     log_info(
-        f"[LC-KBS] Vianočné obdobie {rok}/{rok + 1} – súhrn: "
-        f"stiahnutých {stiahnutych}/{celkovo}, "
-        f"preskočených {preskocených}"
-        + (f" ({', '.join(preskocene_kody)})" if preskocene_kody else "")
-        + f", chyby {chyby}"
-        + (f" ({', '.join(chybne_kody)})" if chybne_kody else "")
-        + "."
+        f"[LC-KBS] Vianočné obdobie {rok}/{rok + 1} – súhrn: stiahnutých {stiahnutych}/{celkovo}, preskočených {ctx.preskocenych}"
+        + (f" ({', '.join(ctx.preskocene_kody)})" if ctx.preskocene_kody else "") + f", chyby {chyby}" + (f" ({', '.join(ctx.chybne_kody)})" if ctx.chybne_kody else "") + "."
     )
-
-    update_progress(
-        progress_callback,
-        f"Hotovo. Stiahnutých: {stiahnutych}, preskočených: {preskocených}, chyby: {chyby}.",
-        celkovo, celkovo,
-    )
+    ctx.progress(f"Hotovo. Stiahnutých: {stiahnutych}, preskočených: {ctx.preskocenych}, chyby: {chyby}.", celkovo, celkovo)
 
     return {
         "uspech": stiahnutych > 0,
         "celkovo": celkovo,
         "stiahnutych": stiahnutych,
         "chyby": chyby,
-        "chybne_kody": chybne_kody,
-        "preskocených": preskocených,
-        "preskocene_kody": preskocene_kody,
-        "subory": zapisane_subory,
-        "zaloha": str(zaloha_priecinok) if zaloha_vytvorena else None,
+        "chybne_kody": ctx.chybne_kody,
+        "preskocených": ctx.preskocenych,
+        "preskocene_kody": ctx.preskocene_kody,
+        "subory": ctx.zapisane,
+        "zaloha": ctx.backup.retazec_alebo_none,
     }
 
 
-def stiahni_citania_z_lc_kbs(datum, vystup_cesta):
+def _zisti_http_kodovanie(response, kontext: str, fallback: str) -> str:
     """
-    Stiahne liturgické čítania z lc.kbs.sk (Konferencia biskupov Slovenska)
-    a uloží do TXT súboru. Cache je úplne vypnutá.
+    Spoľahlivo zistí kódovanie HTTP odpovede namiesto slepého spoliehania sa
+    na `response.apparent_encoding` (heuristika, ktorá pri stredoeurópskom
+    texte s diakritikou býva nespoľahlivá).
+
+    Zdieľaná pre stiahni_citania_z_lc_kbs aj stiahni_vespery_z_breviar –
+    predtým mala každá funkcia svoj vlastný, navzájom nekonzistentný
+    fallback (jedna 'utf-8', druhá 'windows-1250') riešený len ad-hoc.
+
+    Poradie priorít:
+    1. Ak HTTP hlavička Content-Type sama obsahuje charset, je to
+       najspoľahlivejší zdroj – requests ho už automaticky použil.
+    2. Inak sa skúsi nájsť <meta charset="..."> priamo v HTML tele
+       odpovede (druhý najspoľahlivejší zdroj).
+    3. Až keď ani jedno nevyjde, použije sa apparent_encoding – ale ak
+       hádže typický falošný odhad iso-8859-1/latin-1 pre stredoeurópsky
+       text, použije sa `fallback` špecifický pre danú stránku (líši sa
+       medzi lc.kbs.sk a breviar.kbs.sk – nie je isté, že obe stránky
+       skutočne používajú rovnaké kódovanie).
     """
-    url = None
-
-    if chybaju_kniznice_pre_stahovanie():
-        log_info("[LC-KBS] Stahovanie preskocene: chybaju requests alebo beautifulsoup4.")
-        return False
-
-    requests_module = requests
-    beautiful_soup = BeautifulSoup
-    assert requests_module is not None
-    assert beautiful_soup is not None
+    header_ct = response.headers.get("Content-Type", "")
+    if "charset=" in header_ct.lower():
+        log_debug(f"[{kontext}] Kódovanie z HTTP hlavičky: {response.encoding}")
+        return response.encoding or fallback
 
     try:
-        log_info(f"[LC-KBS] Začínam sťahovanie pre dátum: {datum.isoformat()}")
-
-        datum_str = datum.strftime("%Y-%m-%d")
-        cache_buster = int(time.time())
-        url = f"https://lc.kbs.sk/?den={datum_str}&_={cache_buster}"
-
-        log_info(f"[LC-KBS] URL s cache-busterom: {url}")
-
-        headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/122.0.0.0 Safari/537.36 "
-                f"Kinak/{KINAK_VERSION}"
-            ),
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "sk-SK,sk;q=0.9,en;q=0.8",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0",
-        }
-
-        log_info("[LC-KBS] Odosielam HTTP požiadavku...")
-
-        response = requests_module.get(url, headers=headers, timeout=(5, 15))
-        response.raise_for_status()
-
-        log_info(f"[LC-KBS] HTTP odpoveď OK, status {response.status_code}")
-
-        response.encoding = response.apparent_encoding or "utf-8"
-
-        # poistka proti chybnému odhadu
-        if not response.encoding or response.encoding.lower() in ("iso-8859-1", "latin-1"):
-            response.encoding = "utf-8"
-            
-        soup = beautiful_soup(response.text, 'html.parser')
-
-        vystup = [
-            "=" * 60,
-            "ČÍTANIA NA SVÄTÚ OMŠU",
-            f"{datum.strftime('%d.%m.%Y')}",
-            "=" * 60,
-            ""
-        ]
-
-        log_info("[LC-KBS] Extrahujem názov dňa a liturgickú farbu...")
-        nazov_info = _extrahovaj_info_dna_lc_kbs(soup, datum)
-
-        if nazov_info:
-            log_info(f"[LC-KBS] Nájdené info dňa: {nazov_info}")
-            # čistenie názvu dňa (vrátane zátvoriek, medzier, úvodzoviek…)
-            vystup.extend(_vycisti_text_lc_kbs(riadok) for riadok in nazov_info)
-            vystup.append("")
-        else:
-            log_info("[LC-KBS] Info dňa sa nenašlo!")
-
-
-        log_info("[LC-KBS] Extrahujem čítania...")
-        citania_texty = _extrahovaj_vsetky_citania_lc_kbs(soup)
-
-        count = len(citania_texty) if citania_texty else 0
-        log_info(f"[LC-KBS] Počet extrahovaných riadkov čítaní: {count}")
-
-        if not isinstance(citania_texty, list) or not citania_texty:
-            log_info("[LC-KBS] Parsovanie vrátilo prázdny alebo neplatný výsledok.")
-            try:
-                debug_html = response.text[:500]
-                log_info(f"[LC-KBS] Debug HTML začiatok: {debug_html}")
-            except Exception as e_debug:
-                log_exception("[LC-KBS] Nepodarilo sa prečítať debug HTML", e_debug)
-            return False
-
-        vystup.extend(citania_texty)
-
-        celkovy_text = "\n".join(vystup)
-        log_info(f"[LC-KBS] Celková dĺžka textu: {len(celkovy_text)} znakov")
-
-        if len(celkovy_text) < 200:
-            log_info("[LC-KBS] Text je príliš krátky – pravdepodobne chyba.")
-            return False
-
-        # ----------------------------------------------------
-        # ZJEDNOTENÉ A ODOLNÉ OVERENIE SEKCIÍ (bez diakritiky)
-        # ----------------------------------------------------        
-
-        norm = normalize_diacritics(celkovy_text)
-        
-        has_citanie = any(k in norm for k in ["prve citanie", "citanie z", "citanie"])
-
-        has_zalm = any(k in norm for k in ["zalm", "responzoriovy", "medzispev"])
-
-        # tu sprísnime / zjednodušíme detekciu evanjelia
-        has_evanjelium = any(k in norm for k in [
-            "evanjelium",
-            "evanjelia",
-            "evanjel",
-            "z evanjelia",
-            "utrpenie",
-            "pasie"
-        ])
-
-        if not has_citanie:
-            log_info("[LC-KBS] Chýba sekcia ČÍTANIE – parsovanie zlyhalo.")
-            return False
-
-        if not has_zalm:
-            # Refrén žalmu môže byť v HTML tagoch, ktoré parser preskočil
-            # (napr. <li>, <em>). Neblokujeme uloženie – citania.txt sa uloží
-            # bez refrenu a používateľ ho môže doplniť ručne cez Pomocníka.
-            log_info("[LC-KBS] Upozornenie: sekcia ŽALM sa nenašla – refrén bude v súbore chýbať.")
-
-        if not has_evanjelium:
-            log_info("[LC-KBS] Chýba sekcia EVANJELIUM – parsovanie zlyhalo.")
-            return False
-
-        if _lc_kbs_ocakava_dve_citania(datum, nazov_info):
-            pocet_citani = _lc_kbs_pocet_citani_pred_evanjeliom(citania_texty)
-            if pocet_citani < 2:
-                log_info(
-                    "[LC-KBS] Nedeľa alebo slávnosť musí mať dve čítania pred evanjeliom, "
-                    f"našli sa iba {pocet_citani}. Súbor neukladám."
-                )
-                return False
-        # ----------------------------------------------------
-
-        log_info(f"[LC-KBS] Atomicky ukladám nový súbor: {vystup_cesta}")
-        try:
-            _zapis_text_atomicky(vystup_cesta, celkovy_text, encoding="utf-8")
-        except UnicodeEncodeError as e_enc:
-            log_exception(
-                "[LC-KBS] Chyba kódovania pri zápise súboru – text obsahuje znaky "
-                "mimo UTF-8. Súbor nebol uložený.",
-                e_enc,
-            )
-            return False
-
-        log_info("[LC-KBS] Hotovo – čítania úspešne uložené.")
-        return True
-
-    except requests_module.RequestException as e:
-        log_exception(f"[LC-KBS] Chyba pri sťahovaní z URL: {url or 'neznáma'}", e)
-        return False
+        zaciatok = response.content[:2048].decode("ascii", errors="ignore")
+        m = re.search(r'charset=["\']?\s*([\w-]+)', zaciatok, re.IGNORECASE)
+        if m:
+            log_debug(f"[{kontext}] Kódovanie nájdené v <meta charset>: {m.group(1)}")
+            return m.group(1)
     except Exception as e:
-        log_exception("[LC-KBS] Neočakávaná chyba", e)
+        log_debug(f"[{kontext}] Hľadanie <meta charset> v HTML zlyhalo: {e}")
+
+    odhad = response.apparent_encoding or fallback
+    if odhad.lower() in ("iso-8859-1", "latin-1"):
+        log_debug(
+            f"[{kontext}] apparent_encoding odhadol '{odhad}' (typický falošný "
+            f"odhad pre stredoeurópsky text) – používam fallback '{fallback}'."
+        )
+        return fallback
+    return odhad
+
+
+def stiahni_citania_z_lc_kbs(datum: date, vystup_cesta: Path | str) -> bool:
+    _over_gregoriansky_datum(datum)
+    url = None
+    if chybaju_kniznice_pre_stahovanie():
         return False
+    requests_module = requests
+    beautiful_soup = BeautifulSoup
+    assert requests_module is not None and beautiful_soup is not None
+    req_exc = getattr(requests_module, "RequestException", Exception)
+    http_exc = getattr(requests_module, "HTTPError", req_exc)
+    to_exc = getattr(requests_module, "Timeout", req_exc)
+    conn_exc = getattr(requests_module, "ConnectionError", req_exc)
+    session = _vytvor_lc_kbs_session()
+    response = None
+    try:
+        datum_str = datum.strftime("%Y-%m-%d")
+        for pokus in range(1, LC_KBS_REFRENY_MAX_POKUSOV + 1):
+            url = f"https://lc.kbs.sk/?den={datum_str}&_={int(time.time())}"
+            headers = _lc_kbs_headers("citania")
+            try:
+                if session is not None:
+                    response = session.get(url, headers=headers, timeout=(5, 15))
+                else:
+                    response = requests_module.get(url, headers=headers, timeout=(5, 15))
+                response.raise_for_status()
+                break
+            except http_exc as e:
+                sc = getattr(getattr(e, "response", None), "status_code", None)
+                if sc in LC_KBS_DOCASNE_HTTP_STATUSY and pokus < LC_KBS_REFRENY_MAX_POKUSOV:
+                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    continue
+                return False
+            except (to_exc, conn_exc, req_exc):
+                if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
+                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    continue
+                return False
+        if response is None:
+            return False
+        response.encoding = _zisti_http_kodovanie(response, "LC-KBS", fallback="utf-8")
+        soup = beautiful_soup(response.text, 'html.parser')
+        vystup = ["="*60, "ČÍTANIA NA SVÄTÚ OMŠU", f"{datum.strftime('%d.%m.%Y')}", "="*60, ""]
+        nazov_info = _extrahovaj_info_dna_lc_kbs(soup, datum)
+        if nazov_info:
+            vystup.extend(_vycisti_text_lc_kbs(r) for r in nazov_info)
+            vystup.append("")
+        citania_texty = _extrahovaj_vsetky_citania_lc_kbs(soup)
+        if not citania_texty:
+            return False
+        vystup.extend(citania_texty)
+        celkovy_text = "\n".join(vystup)
+        if len(celkovy_text) < 200:
+            return False
+        _zapis_text_atomicky(vystup_cesta, celkovy_text, encoding="utf-8")
+        return True
+    except Exception as e:
+        log_exception(f"stiahni_citania_z_lc_kbs: neočakávaná chyba (URL: {url or 'neznáma'})", e)
+        return False
+    finally:
+        if 'session' in locals() and session is not None:
+            try:
+                session.close()
+            except Exception:
+                pass
 
 
 def _lc_kbs_ocakava_dve_citania(datum, nazov_info) -> bool:
@@ -5395,6 +5294,12 @@ def _extrahovaj_vsetky_citania_lc_kbs(soup):
     refreny_zalmov_seen = set()
     ignorujeme_zalm = False
     refren_aktualneho_zalmu = None
+    pocet_ignorovanych_od_zalmu = 0
+    # Bezpečnostná poistka: ak sa po tomto počte prvkov od začiatku žalmu
+    # nenájde nadpis ďalšieho čítania (napr. kvôli zmene štruktúry stránky),
+    # ignorovanie žalmu sa nútene ukončí a do logu sa zapíše varovanie,
+    # namiesto toho, aby sa zvyšok stránky potichu zahodil.
+    MAX_ELEMENTOV_BEZ_NADPISU_ZALM = 15
 
     def _pridaj_refren_zalmu(text):
         nonlocal refren_aktualneho_zalmu
@@ -5459,8 +5364,24 @@ def _extrahovaj_vsetky_citania_lc_kbs(soup):
         if ignorujeme_zalm:
             if je_nadpis_citania(text):
                 ignorujeme_zalm = False
+                pocet_ignorovanych_od_zalmu = 0
             else:
-                continue
+                pocet_ignorovanych_od_zalmu += 1
+                if pocet_ignorovanych_od_zalmu > MAX_ELEMENTOV_BEZ_NADPISU_ZALM:
+                    log_info(
+                        "[LC-KBS] VAROVANIE: po žalme sa ani po "
+                        f"{MAX_ELEMENTOV_BEZ_NADPISU_ZALM} prvkoch nenašiel nadpis "
+                        "ďalšieho čítania – štruktúra stránky sa pravdepodobne "
+                        "zmenila. Ignorovanie žalmu nútene ukončujem, aby sa "
+                        "nestratil zvyšok textu."
+                    )
+                    ignorujeme_zalm = False
+                    pocet_ignorovanych_od_zalmu = 0
+                    # Bez 'continue' – tento prvok sa nižšie spracuje bežným
+                    # spôsobom (môže ísť napr. rovno o nadpis, ktorý predošlá
+                    # kontrola z nejakého dôvodu nerozpoznala).
+                else:
+                    continue
 
         # 3. Koniec sekcie
         if "počuli sme božie slovo" in low or "počuli sme slovo pánovo" in low:
@@ -5499,6 +5420,7 @@ def _extrahovaj_vsetky_citania_lc_kbs(soup):
         if low.startswith(("responzóriový žalm", "žalm")):
             ignorujeme_zalm = True
             refren_aktualneho_zalmu = None
+            pocet_ignorovanych_od_zalmu = 0
             log_debug("[LC-KBS] Začína žalm – ignorujem text žalmu.")
             continue
 
@@ -6533,9 +6455,7 @@ def stiahni_vespery_z_breviar(datum, vystup_cesta, oznacit_chory=True):
 
         resp = requests_module.get(url, headers=_BREVIAR_HEADERS, timeout=20)
         resp.raise_for_status()
-        enc = resp.apparent_encoding or "utf-8"
-        if enc.lower() in ("iso-8859-1", "latin-1"):
-            enc = "windows-1250"
+        enc = _zisti_http_kodovanie(resp, "BREVIAR", fallback="windows-1250")
         resp.encoding = enc
         log_info(f"[BREVIAR] Stiahnuté: {len(resp.text)} znakov, kódovanie: {resp.encoding}")
 
@@ -8016,9 +7936,19 @@ class ControlApp:
         self._refreny_lock = threading.Lock()
         self._cezrocne_tyzdenne_lock = threading.Lock()
         self._liturgicke_tyzdne_lock = threading.Lock()
+
+        self._download_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="KinakDL")
+        try:
+            atexit.register(self._download_executor.shutdown, wait=False, cancel_futures=True)
+        except TypeError:
+            atexit.register(self._download_executor.shutdown, wait=False)
         
         # --- Inicializácia hlavného okna ---
         self.master = master
+        try:
+            self.master.protocol("WM_DELETE_WINDOW", lambda: (self._shutdown_executor(), self.master.destroy()))
+        except Exception:
+            pass
         self.initializing = True
         self.posledny_nazov_v_labeli = None
 
@@ -8921,18 +8851,16 @@ class ControlApp:
             self.ulozit_nastavenia()
     
     
-    def ulozit_nastavenia(self, aktualizovat_label=True):
+    def _zbieraj_a_normalizuj_nastavenia_z_gui(self) -> dict:
         """
-        Uloží aktuálne nastavenia z GUI do súboru config.json pomocou atomického zápisu.
-        Aktualizuje vizuálne parametre (farby, fonty, Live Preview) v reálnom čase.
-        """
-        # Prevencia zacyklenia (neukladáme, ak práve načítavame)
-        if getattr(self, "_loading_settings", False) is True:
-            return
+        Načíta hodnoty z GUI premenných (Tkinter *Var objektov) do atribútov
+        `self.*` a doplní chýbajúce konfiguračné atribúty defaultmi (potrebné
+        napr. pre unit testy vytvárajúce ControlApp cez object.__new__).
 
-        # ------------------------------------------------------------
-        # 1. ZBER DÁT Z GUI (Bezpečný prístup)
-        # ------------------------------------------------------------
+        Vracia slovník s hodnotami, ktoré sa nedostávajú priamo do `self`
+        (napr. `pouzit_vlastnu_farbu`), a sú potrebné až pri zostavovaní
+        slovníka pre config.json v `_zostav_config_dict`.
+        """
         try:
             if hasattr(self, "font_size_var"):
                 try:
@@ -8995,10 +8923,21 @@ class ControlApp:
             if not hasattr(self, attr_name):
                 setattr(self, attr_name, default_value)
 
-        # ------------------------------------------------------------
-        # 2. SYNCHRONIZÁCIA KOMPONENTOV (OKAMŽITÁ REAKCIA)
-        # ------------------------------------------------------------
-        
+        return {
+            "pouzit_vlastnu": pouzit_vlastnu,
+            "lit_season": lit_season,
+            "def_filter": def_filter,
+        }
+
+    def _synchronizuj_zivy_nahlad_a_projekciu(self, aktualizovat_label: bool) -> None:
+        """
+        Premietne práve načítané nastavenia (farba textu, veľkosť fontu,
+        rýchlosť prelínania a pod.) okamžite do živého náhľadu v ovládacom
+        okne, do prípadného otvoreného projekčného okna, a prekreslí
+        aktuálne zobrazenú strofu. Musí bežať až PO
+        `_zbieraj_a_normalizuj_nastavenia_z_gui`, keďže číta hodnoty
+        (self.text_color, self.fade_speed, ...), ktoré tá metóda nastavuje.
+        """
         # A) AKTUALIZÁCIA LIVE PREVIEW (Farba textu v ovládacom okne)
         # OPRAVA: Použitie správneho názvu premennej self.live_preview_label
         preview_label = getattr(self, "live_preview_label", None)
@@ -9049,15 +8988,18 @@ class ControlApp:
             except Exception as e:
                 log_exception("ulozit_nastavenia: Chyba pri prekreslení aktuálnej strofy", e)
 
-        # ------------------------------------------------------------
-        # 3. PRÍPRAVA SLOVNÍKA PRE CONFIG.JSON
-        # ------------------------------------------------------------
+    def _zostav_config_dict(self, pouzit_vlastnu: bool, lit_season: str, def_filter: str) -> dict:
+        """
+        Poskladá a vráti slovník so všetkými hodnotami určenými na zápis
+        do config.json. Čisto dátová transformácia bez I/O a bez
+        vedľajších účinkov na GUI.
+        """
         current_song_folder = str(getattr(self, "song_folder_path", Path(DEFAULT_SONG_FOLDER)))
-        
+
         liturgical_year_var = getattr(self, "liturgical_year_var", None)
         liturgical_year_value = liturgical_year_var.get() if liturgical_year_var is not None else vypocitaj_liturgicky_rok()
 
-        new_config = {
+        return {
             "text_color": self.text_color,
             "font_size": int(self.font_size),
             "song_folder": current_song_folder,
@@ -9099,9 +9041,13 @@ class ControlApp:
             "preferred_monitor_index":   int(getattr(self, "preferred_monitor_index", 0)),
         }
 
-        # ------------------------------------------------------------
-        # 4. ATOMICKÝ ZÁPIS NA DISK
-        # ------------------------------------------------------------
+    def _zapis_config_na_disk(self, new_config: dict, aktualizovat_label: bool) -> None:
+        """
+        Atomicky zapíše `new_config` do CONFIG_FILE_PATH (cez dočasný súbor
+        + os.replace). Pri zlyhaní zápisu (napr. PermissionError do AppData)
+        ponúkne používateľovi uloženie do náhradného súboru cez dialóg
+        "Uložiť ako".
+        """
         target_dir = CONFIG_FILE_PATH.parent
         target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -9139,7 +9085,7 @@ class ControlApp:
             self.config = new_config
 
             if aktualizovat_label and self.song_folder_label is not None:
-                self.song_folder_label.config(text=current_song_folder)
+                self.song_folder_label.config(text=str(new_config.get("song_folder", "")))
 
         except PermissionError as e:
             log_exception("ulozit_nastavenia: Prístup zamietnutý do AppData", e)
@@ -9155,8 +9101,31 @@ class ControlApp:
                     temp_path.unlink()
                 except Exception as e:
                     log_exception("ulozit_nastavenia: nepodarilo sa odstrániť temp súbor", e)
-                             
-                                      
+
+    def ulozit_nastavenia(self, aktualizovat_label=True):
+        """
+        Uloží aktuálne nastavenia z GUI do súboru config.json pomocou atomického zápisu.
+        Aktualizuje vizuálne parametre (farby, fonty, Live Preview) v reálnom čase.
+
+        Táto metóda je už len tenký orchestrátor (SRP) nad štyrmi
+        samostatnými krokmi, z ktorých každý má jednu zodpovednosť:
+          1. `_zbieraj_a_normalizuj_nastavenia_z_gui` – zber dát z GUI
+             premenných + doplnenie chýbajúcich atribútov defaultmi.
+          2. `_synchronizuj_zivy_nahlad_a_projekciu` – okamžitá vizuálna
+             reakcia (Live Preview, projekčné okno, aktuálna strofa).
+          3. `_zostav_config_dict` – poskladanie slovníka pre config.json.
+          4. `_zapis_config_na_disk` – atomický zápis na disk vrátane
+             fallbacku pri PermissionError.
+        """
+        # Prevencia zacyklenia (neukladáme, ak práve načítavame)
+        if getattr(self, "_loading_settings", False) is True:
+            return
+
+        extra = self._zbieraj_a_normalizuj_nastavenia_z_gui()
+        self._synchronizuj_zivy_nahlad_a_projekciu(aktualizovat_label)
+        new_config = self._zostav_config_dict(**extra)
+        self._zapis_config_na_disk(new_config, aktualizovat_label)
+
     def vytvorit_gui(self):
         style = ttk.Style()
         style.configure("TButton", font=(self.font_family, 12), padding=6)
@@ -9644,13 +9613,12 @@ class ControlApp:
         tk.Label(frame_datum, text=".", bg="#1e1e1e", fg="#888888",
                  font=(self.font_family, 14, "bold")).pack(side=tk.LEFT, padx=2)
 
+        rok_var = tk.StringVar(value=str(dnes.year))
         sp_rok = tk.Spinbox(
-            frame_datum, from_=2000, to=2100, width=5,
-            **spin_style
+            frame_datum, from_=GREGORIANSKY_MIN_ROK, to=GREGORIANSKY_MAX_ROK, width=5,
+            textvariable=rok_var, state="readonly", readonlybackground="#2e2e2e", **spin_style
         )
         sp_rok.pack(side=tk.LEFT)
-        sp_rok.delete(0, tk.END)
-        sp_rok.insert(0, str(dnes.year))
 
         # --- Chybová správa a tlačidlo Stiahni vybraný dátum ---
         chyba_var = tk.StringVar(value="")
@@ -9661,7 +9629,7 @@ class ControlApp:
             try:
                 den = int(sp_den.get())
                 mes = int(sp_mes.get())
-                rok = int(sp_rok.get())
+                rok = _validuj_rok_pre_gui(rok_var.get())
                 vybrany = date(rok, mes, den)
             except ValueError:
                 chyba_var.set("Neplatný dátum – skontroluj hodnoty.")
@@ -9683,9 +9651,13 @@ class ControlApp:
         """Zobrazí dialóg: Stiahnuť čítania na Dnes alebo na vybraný dátum."""
 
         def akcia(datum):
-            def _po_uspesnom_stiahuti():
+            def po_uspesnom_stiahnuti():
+                # Automatická úprava čítaní pre projekciu prebehne potichu
+                # (zobrazit_potvrdenie=False) – jediné okno, ktoré používateľ
+                # uvidí, je finálne "Čítania aktualizované" zo spracuj_vysledok
+                # v aktualizovat_citania_gui (analogicky ako pri vešperách).
                 try:
-                    self.upravit_citania_pre_projekciu()
+                    self.upravit_citania_pre_projekciu(zobrazit_potvrdenie=False)
                 except Exception as e:
                     log_exception("open_citanie/upravit", e)
                     messagebox.showerror("Chyba", f"Úprava čítaní zlyhala: {e}")
@@ -9693,7 +9665,7 @@ class ControlApp:
             try:
                 self.aktualizovat_citania_gui(
                     datum=datum,
-                    on_success=lambda: self.master.after(0, _po_uspesnom_stiahuti)
+                    on_success=po_uspesnom_stiahnuti,
                 )
             except Exception as e:
                 log_exception("open_citanie/start_thread", e)
@@ -9722,7 +9694,8 @@ class ControlApp:
         alebo zamietnuté potvrdenie).
         """
         try:
-            rok = int(rok_var.get())
+
+            rok = _validuj_rok_pre_gui(rok_var.get())
             if rok < 2000 or rok > 2100:
                 raise ValueError
         except ValueError:
@@ -9741,32 +9714,15 @@ class ControlApp:
         return True
 
 
-    def open_refreny_zalmov(self):
-        """Zobrazí dialóg na stiahnutie mesačných súborov refrénov žalmov pre celý rok."""
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Stiahnuť refrény žalmov (1L–12L)")
-        dialog.configure(bg="#1e1e1e")
-        dialog.resizable(False, False)
-        dialog.transient(self.master)
-        dialog.grab_set()
-        dialog.lift()
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
-
-        self.master.update_idletasks()
-        mx = self.master.winfo_x() + self.master.winfo_width() // 2
-        my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 380, 245
-        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
-
-        tk.Label(
-            dialog,
-            text="Stiahnuť refrény žalmov po mesiacoch:",
-            bg="#1e1e1e",
-            fg="#ffffff",
-            font=(self.font_family, 13, "bold")
-        ).pack(pady=(18, 10))
-
-        rok_var = tk.StringVar(value=str(date.today().year))
+    def _vytvor_rok_spinbox(self, parent, rok_var: "tk.StringVar | None" = None):
+        """
+        Vytvorí rok_var (ak nie je zadaný) a Spinbox 2000-2100 so spoločným
+        vizuálom (spin_style), ktorý používajú všetky dialógy stiahnutia
+        pre daný rok. Nezabalí (nepacke) Spinbox – to robí volajúci, keďže
+        poradie/odsadenie sa dialóg od dialógu líši.
+        """
+        if rok_var is None:
+            rok_var = tk.StringVar(value=str(date.today().year))
         spin_style = {
             "bg": "#2e2e2e",
             "fg": "#ffffff",
@@ -9779,19 +9735,49 @@ class ControlApp:
             "highlightbackground": "#555555",
             "highlightcolor": "#aaaaaa",
         }
+        sp_rok = tk.Spinbox(parent, from_=GREGORIANSKY_MIN_ROK, to=GREGORIANSKY_MAX_ROK, width=6, textvariable=rok_var, state="readonly", readonlybackground="#2e2e2e", **spin_style)
+        return rok_var, sp_rok
 
-        sp_rok = tk.Spinbox(dialog, from_=2000, to=2100, width=6, textvariable=rok_var, **spin_style)
-        sp_rok.pack(pady=(0, 8))
+    def _zobraz_dialog_stiahnutia_pre_rok(
+        self,
+        *,
+        titulok_okna: str,
+        dw: int,
+        dh: int,
+        zostav_obsah_fn,
+        potvrdzujuci_text_fn,
+        akcia_po_potvrdeni,
+        tlacidlo_text: str = "Stiahni refrény",
+    ) -> "tk.Toplevel":
+        """
+        Spoločný základ pre dialógy stiahnutia refrénov/sviatkov pre daný rok
+        (Toplevel okno + vycentrovanie, chybová hláška, tlačidlo, klávesové
+        skratky Enter/Escape, fokus). Predtým mala každá z ôsmich `open_*`
+        metód (napr. open_cezrocne_tyzdenne_refreny) vlastnú kópiu tohto
+        ~25-riadkového obalu.
 
-        tk.Label(
-            dialog,
-            text="Prepíšu sa súbory 1L.txt až 12L.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
-            bg="#1e1e1e",
-            fg="#bbbbbb",
-            font=(self.font_family, 10),
-            justify=tk.CENTER,
-            wraplength=330,
-        ).pack(pady=(0, 10))
+        Samotný obsah dialógu (nadpis, rok spinbox, informačné popisky) sa
+        však medzi dialógmi líši – niekde je pred spinboxom ešte dynamický
+        popisok, niekde je info-text zabalený vo Frame, niekde sa aktualizuje
+        cez trace_add. Preto ho zostavuje volajúci cez `zostav_obsah_fn(dialog)`,
+        ktorá musí vrátiť dvojicu (rok_var, sp_rok) – tie táto metóda použije
+        pre potvrdenie sťahovania a nastavenie fokusu.
+        """
+        dialog = tk.Toplevel(self.master)
+        dialog.title(titulok_okna)
+        dialog.configure(bg="#1e1e1e")
+        dialog.resizable(False, False)
+        dialog.transient(self.master)
+        dialog.grab_set()
+        dialog.lift()
+        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+
+        self.master.update_idletasks()
+        mx = self.master.winfo_x() + self.master.winfo_width() // 2
+        my = self.master.winfo_y() + self.master.winfo_height() // 2
+        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+
+        rok_var, sp_rok = zostav_obsah_fn(dialog)
 
         chyba_var = tk.StringVar(value="")
         tk.Label(
@@ -9812,119 +9798,108 @@ class ControlApp:
             "bd": 0,
             "padx": 20,
             "pady": 8,
-            "cursor": "hand2"
+            "cursor": "hand2",
         }
 
         def spusti():
             self._potvrd_a_spusti_stiahnutie(
                 dialog, rok_var, chyba_var,
-                potvrdzujuci_text_fn=lambda rok: (
-                    f"Naozaj stiahnuť refrény žalmov pre rok {rok}?\n\n"
-                    "Súbory 1L.txt až 12L.txt sa prepíšu, pôvodné verzie sa uložia do zálohy."
-                ),
-                akcia_po_potvrdeni=self.aktualizovat_refreny_zalmov_gui,
+                potvrdzujuci_text_fn=potvrdzujuci_text_fn,
+                akcia_po_potvrdeni=akcia_po_potvrdeni,
             )
 
-        tk.Button(dialog, text="Stiahni refrény", command=spusti, **btn_style).pack()
+        tk.Button(dialog, text=tlacidlo_text, command=spusti, **btn_style).pack()
 
         dialog.bind("<Return>", lambda e: spusti())
         dialog.bind("<Escape>", lambda e: dialog.destroy())
         dialog.focus_force()
         sp_rok.focus_set()
 
+        return dialog
+
+    def open_refreny_zalmov(self):
+        """Zobrazí dialóg na stiahnutie mesačných súborov refrénov žalmov pre celý rok."""
+        def zostav_obsah(dialog):
+            tk.Label(
+                dialog,
+                text="Stiahnuť refrény žalmov po mesiacoch:",
+                bg="#1e1e1e",
+                fg="#ffffff",
+                font=(self.font_family, 13, "bold")
+            ).pack(pady=(18, 10))
+
+            rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
+            sp_rok.pack(pady=(0, 8))
+
+            tk.Label(
+                dialog,
+                text="Prepíšu sa súbory 1L.txt až 12L.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
+                bg="#1e1e1e",
+                fg="#bbbbbb",
+                font=(self.font_family, 10),
+                justify=tk.CENTER,
+                wraplength=330,
+            ).pack(pady=(0, 10))
+
+            return rok_var, sp_rok
+
+        self._zobraz_dialog_stiahnutia_pre_rok(
+            titulok_okna="Stiahnuť refrény žalmov (1L–12L)",
+            dw=380, dh=245,
+            zostav_obsah_fn=zostav_obsah,
+            potvrdzujuci_text_fn=lambda rok: (
+                f"Naozaj stiahnuť refrény žalmov pre rok {rok}?\n\n"
+                "Súbory 1L.txt až 12L.txt sa prepíšu, pôvodné verzie sa uložia do zálohy."
+            ),
+            akcia_po_potvrdeni=self.aktualizovat_refreny_zalmov_gui,
+        )
+
 
     def open_cezrocne_tyzdenne_refreny(self):
         """Zobrazí dialóg na stiahnutie 34 súborov cezročných týždňov pre párny/nepárny rok."""
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Stiahnuť refrény žalmov")
-        dialog.configure(bg="#1e1e1e")
-        dialog.resizable(False, False)
-        dialog.transient(self.master)
-        dialog.grab_set()
-        dialog.lift()
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        def zostav_obsah(dialog):
+            tk.Label(
+                dialog,
+                text="Stiahnuť týždne cezročného obdobia:",
+                bg="#1e1e1e",
+                fg="#ffffff",
+                font=(self.font_family, 13, "bold"),
+                wraplength=360,
+                justify=tk.CENTER,
+            ).pack(pady=(18, 10))
 
-        self.master.update_idletasks()
-        mx = self.master.winfo_x() + self.master.winfo_width() // 2
-        my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 420, 265
-        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+            rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
+            sp_rok.pack(pady=(0, 8))
 
-        tk.Label(
-            dialog,
-            text="Stiahnuť týždne cezročného obdobia:",
-            bg="#1e1e1e",
-            fg="#ffffff",
-            font=(self.font_family, 13, "bold"),
-            wraplength=360,
-            justify=tk.CENTER,
-        ).pack(pady=(18, 10))
+            info_var = tk.StringVar(value="")
 
-        rok_var = tk.StringVar(value=str(date.today().year))
-        spin_style = {
-            "bg": "#2e2e2e",
-            "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
-            "relief": "flat",
-            "bd": 1,
-            "font": (self.font_family, 14, "bold"),
-            "justify": "center",
-            "highlightthickness": 1,
-            "highlightbackground": "#555555",
-            "highlightcolor": "#aaaaaa",
-        }
+            def aktualizuj_info(*_args):
+                try:
 
-        sp_rok = tk.Spinbox(dialog, from_=2000, to=2100, width=6, textvariable=rok_var, **spin_style)
-        sp_rok.pack(pady=(0, 8))
+                    rok = _validuj_rok_pre_gui(rok_var.get())
+                    parita = 2 if rok % 2 == 0 else 1
+                    parita_text = "párny" if parita == 2 else "nepárny"
+                    info_var.set(
+                        f"Prepíšu sa súbory 1C{parita}.txt až 34C{parita}.txt ({parita_text} rok).\n"
+                        "Existujúce súbory sa predtým automaticky zálohujú."
+                    )
+                except ValueError:
+                    info_var.set("Zadaj rok v rozsahu 2000 - 2100.")
 
-        info_var = tk.StringVar(value="")
+            rok_var.trace_add("write", aktualizuj_info)
+            aktualizuj_info()
 
-        def aktualizuj_info(*_args):
-            try:
-                rok = int(rok_var.get())
-                parita = 2 if rok % 2 == 0 else 1
-                parita_text = "párny" if parita == 2 else "nepárny"
-                info_var.set(
-                    f"Prepíšu sa súbory 1C{parita}.txt až 34C{parita}.txt ({parita_text} rok).\n"
-                    "Existujúce súbory sa predtým automaticky zálohujú."
-                )
-            except ValueError:
-                info_var.set("Zadaj rok v rozsahu 2000 - 2100.")
+            tk.Label(
+                dialog,
+                textvariable=info_var,
+                bg="#1e1e1e",
+                fg="#bbbbbb",
+                font=(self.font_family, 10),
+                justify=tk.CENTER,
+                wraplength=360,
+            ).pack(pady=(0, 10))
 
-        rok_var.trace_add("write", aktualizuj_info)
-        aktualizuj_info()
-
-        tk.Label(
-            dialog,
-            textvariable=info_var,
-            bg="#1e1e1e",
-            fg="#bbbbbb",
-            font=(self.font_family, 10),
-            justify=tk.CENTER,
-            wraplength=360,
-        ).pack(pady=(0, 10))
-
-        chyba_var = tk.StringVar(value="")
-        tk.Label(
-            dialog,
-            textvariable=chyba_var,
-            bg="#1e1e1e",
-            fg="#ff6b6b",
-            font=(self.font_family, 9),
-        ).pack(pady=(0, 4))
-
-        btn_style = {
-            "bg": "#3a3a3a",
-            "fg": "#ffffff",
-            "activebackground": "#555555",
-            "activeforeground": "#ffffff",
-            "font": (self.font_family, 12, "bold"),
-            "relief": "flat",
-            "bd": 0,
-            "padx": 20,
-            "pady": 8,
-            "cursor": "hand2"
-        }
+            return rok_var, sp_rok
 
         def cezrocny_potvrdzujuci_text(rok):
             parita = 2 if rok % 2 == 0 else 1
@@ -9934,19 +9909,13 @@ class ControlApp:
                 "pôvodné verzie sa uložia do zálohy."
             )
 
-        def spusti():
-            self._potvrd_a_spusti_stiahnutie(
-                dialog, rok_var, chyba_var,
-                potvrdzujuci_text_fn=cezrocny_potvrdzujuci_text,
-                akcia_po_potvrdeni=self.aktualizovat_cezrocne_tyzdenne_refreny_gui,
-            )
-
-        tk.Button(dialog, text="Stiahni refrény", command=spusti, **btn_style).pack()
-
-        dialog.bind("<Return>", lambda e: spusti())
-        dialog.bind("<Escape>", lambda e: dialog.destroy())
-        dialog.focus_force()
-        sp_rok.focus_set()
+        self._zobraz_dialog_stiahnutia_pre_rok(
+            titulok_okna="Stiahnuť refrény žalmov",
+            dw=420, dh=265,
+            zostav_obsah_fn=zostav_obsah,
+            potvrdzujuci_text_fn=cezrocny_potvrdzujuci_text,
+            akcia_po_potvrdeni=self.aktualizovat_cezrocne_tyzdenne_refreny_gui,
+        )
 
 
     def _spusti_stahovanie_s_progressom(
@@ -9976,7 +9945,11 @@ class ControlApp:
         1. Pokus o získanie `lock` bez blokovania – ak je už obsadený, zobrazí
            `zaneprazdnene_sprava` a vráti False.
         2. Vytvorí modálny progress dialóg (titulok, rozmery, štítky, Progressbar).
-        3. Spustí worker vlákno, ktoré zavolá
+        3. Spustí worker vlákno. To si NAJPRV samo overí internetové pripojenie
+           (`_over_internet_socket()` – bez GUI vedľajších účinkov, bezpečné
+           z worker vlákna); ak nie je dostupné, `stiahni_funkcia` sa vôbec
+           nezavolá a používateľ dostane špecifickú hlášku "Žiadne internetové
+           pripojenie". Inak zavolá
            `stiahni_funkcia(rok, self.song_folder_path, progress_callback=...)`.
            Priebeh sa do dialógu hlási thread-safe cez `self.master.after(...)`.
         4. Po dokončení: zavrie dialóg, obnoví kurzor, uvoľní `lock`, nastaví
@@ -10061,6 +10034,13 @@ class ControlApp:
                 if progress_dialog.winfo_exists():
                     progress_dialog.destroy()
 
+                if vysledok.get("_bez_internetu"):
+                    messagebox.showerror(
+                        "Žiadne internetové pripojenie",
+                        "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.",
+                    )
+                    return
+
                 if vysledok.get("uspech"):
                     try:
                         self.subory_zoznam = self.ziskaj_zoznam_suborov()
@@ -10084,6 +10064,23 @@ class ControlApp:
                     log_exception(f"{kontext}: focus_set zlyhal", e)
 
         def vlakno():
+            # Kontrola internetu sa robí až TU (v pozadovom vlákne), nie v GUI
+            # vlákne pred spustením – socket.create_connection() je blokujúca
+            # operácia a inak by na krátky čas zamrazila celé okno ešte pred
+            # zobrazením progress dialógu.
+            if not _over_internet_socket():
+                vysledok = dict(vysledok_pri_zlyhani)
+                vysledok["_bez_internetu"] = True
+                try:
+                    self.master.after(0, lambda: po_stiahnuti(vysledok))
+                except Exception as e:
+                    log_exception(f"{kontext}: master.after (bez internetu) zlyhal", e)
+                    try:
+                        lock.release()
+                    except RuntimeError:
+                        pass
+                return
+
             try:
                 vysledok = stiahni_funkcia(
                     rok,
@@ -10103,22 +10100,34 @@ class ControlApp:
                 except RuntimeError:
                     pass
 
-        threading.Thread(target=vlakno, daemon=True).start()
+        try:
+            self._download_executor.submit(vlakno)
+        except RuntimeError:
+            threading.Thread(target=vlakno, daemon=True).start()
         return True
 
 
-    def aktualizovat_refreny_zalmov_gui(self, rok=None):
+    def _priprav_stahovanie_gui(self, kontext: str, mkdir_chybova_sprava: str = "Nepodarilo sa pripraviť priečinok pre súbory.") -> bool:
         """
-        GUI wrapper pre hromadné stiahnutie refrénov responzóriových žalmov.
-        Vytvorí alebo prepíše mesačné súbory 1L.txt až 12L.txt vo zvolenom priečinku piesní.
-        """
-        if rok is None:
-            rok = date.today().year
+        Spoločný "preflight" pre GUI downloadery refrénov/sviatkov: over dostupnosť
+        knižníc a priečinka piesní, priečinok pripraviť (mkdir).
 
+        Ak niečo zlyhá, sám zobrazí chybové okno (messagebox) a vráti False –
+        volajúca metóda má vtedy jednoducho urobiť `return False`.
+
+        Predtým mala každá z ôsmich `aktualizovat_*_gui` metód vlastnú kópiu
+        tohto bloku (líšili sa len v texte hlášky pri zlyhaní mkdir); teraz je
+        na jednom mieste, takže prípadná zmena poradia kontrol alebo textu sa
+        robí len tu.
+
+        POZNÁMKA: kontrola internetového pripojenia sa tu ZÁMERNE nerobí –
+        `socket.create_connection()` je blokujúca operácia (až `timeout`
+        sekúnd), ktorá by pri jej volaní priamo tu zamrazila GUI vlákno ešte
+        predtým, než by sa vôbec zobrazil progress dialóg. Namiesto toho ju
+        volajúce `_spusti_stahovanie_s_progressom` / `_spusti_jednoduche_stahovanie`
+        vykonávajú (cez _over_internet_socket()) až vnútri worker vlákna.
+        """
         if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
             return False
 
         if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
@@ -10128,14 +10137,54 @@ class ControlApp:
         try:
             self.song_folder_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            log_exception("aktualizovat_refreny_zalmov_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre mesačné súbory.")
+            log_exception(f"{kontext}: mkdir zlyhal", e)
+            messagebox.showerror("Chyba", mkdir_chybova_sprava)
+            return False
+
+        return True
+
+    def _formatuj_zalohu_text(self, zaloha: "str | None", popis_suborov: str = "súbory") -> str:
+        """
+        Spoločné formátovanie textu o zálohe pôvodných súborov v hláseniach
+        GUI downloaderov (predtým 8× skopírovaný if/else, líšiaci sa len
+        v texte `popis_suborov`).
+        """
+        if zaloha:
+            return f"\nZáloha pôvodných súborov:\n{zaloha}\n"
+        return f"\nPôvodné {popis_suborov} neexistovali, záloha nebola potrebná.\n"
+
+    def _formatuj_chybne_kody_text(self, chybne_kody, popis: str = "Chybné súbory", pripona: str = "") -> str:
+        """
+        Spoločné formátovanie riadku o chybných kódoch/súboroch v hláseniach
+        GUI downloaderov. Ak je `chybne_kody` prázdne, vráti "".
+
+        - popis: úvodný text pred dvojbodkou (líši sa medzi downloadermi,
+          napr. "Týždne s chybou", "Súbory s chybou", "Chybné súbory").
+        - pripona: pripojí sa ku každému kódu (napr. ".txt"); default "" = žiadna.
+        """
+        if not chybne_kody:
+            return ""
+        polozky = ", ".join(f"{k}{pripona}" for k in chybne_kody)
+        return f"{popis}: {polozky}\n"
+
+    def aktualizovat_refreny_zalmov_gui(self, rok=None):
+        """
+        GUI wrapper pre hromadné stiahnutie refrénov responzóriových žalmov.
+        Vytvorí alebo prepíše mesačné súbory 1L.txt až 12L.txt vo zvolenom priečinku piesní.
+        """
+        if rok is None:
+            rok = date.today().year
+
+        if not self._priprav_stahovanie_gui(
+            "aktualizovat_refreny_zalmov_gui",
+            "Nepodarilo sa pripraviť priečinok pre mesačné súbory.",
+        ):
             return False
 
         def spracuj_vysledok(vysledok):
             if vysledok.get("uspech"):
                 zaloha = vysledok.get("zaloha")
-                zaloha_text = f"\nZáloha pôvodných súborov:\n{zaloha}\n" if zaloha else "\nPôvodné mesačné súbory neexistovali, záloha nebola potrebná.\n"
+                zaloha_text = self._formatuj_zalohu_text(zaloha, "mesačné súbory")
                 messagebox.showinfo(
                     "Refrény aktualizované",
                     f"Refrény žalmov pre rok {rok} boli úspešne stiahnuté.\n\n"
@@ -10174,21 +10223,10 @@ class ControlApp:
         if rok is None:
             rok = date.today().year
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
-            return False
-
-        try:
-            self.song_folder_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_cezrocne_tyzdenne_refreny_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre týždenné súbory.")
+        if not self._priprav_stahovanie_gui(
+            "aktualizovat_cezrocne_tyzdenne_refreny_gui",
+            "Nepodarilo sa pripraviť priečinok pre týždenné súbory.",
+        ):
             return False
 
         parita = 2 if rok % 2 == 0 else 1
@@ -10196,13 +10234,9 @@ class ControlApp:
         def spracuj_vysledok(vysledok):
             if vysledok.get("uspech"):
                 zaloha = vysledok.get("zaloha")
-                zaloha_text = f"\nZáloha pôvodných súborov:\n{zaloha}\n" if zaloha else "\nPôvodné týždenné súbory neexistovali, záloha nebola potrebná.\n"
+                zaloha_text = self._formatuj_zalohu_text(zaloha, "týždenné súbory")
                 chybne_kody = vysledok.get("chybne_kody") or []
-                chybne_text = (
-                    f"Týždne s chybou: {', '.join(chybne_kody)}\n"
-                    if chybne_kody
-                    else ""
-                )
+                chybne_text = self._formatuj_chybne_kody_text(chybne_kody, "Týždne s chybou")
                 messagebox.showinfo(
                     "Cezročné týždne aktualizované",
                     f"Refrény žalmov pre týždne cezročného obdobia na rok {rok} boli úspešne stiahnuté.\n\n"
@@ -10237,103 +10271,49 @@ class ControlApp:
 
     def open_liturgicke_tyzdne_refreny(self):
         """Zobrazí dialóg na stiahnutie refrénov žalmov pre pôstne, VT, veľkonočné a adventné týždne."""
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Stiahnuť liturgické týždne (1P–VT–7VN–4AD)")
-        dialog.configure(bg="#1e1e1e")
-        dialog.resizable(False, False)
-        dialog.transient(self.master)
-        dialog.grab_set()
-        dialog.lift()
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        def zostav_obsah(dialog):
+            tk.Label(
+                dialog,
+                text="Stiahnuť refrény žalmov pre liturgické týždne:",
+                bg="#1e1e1e",
+                fg="#ffffff",
+                font=(self.font_family, 13, "bold"),
+                wraplength=400,
+                justify=tk.CENTER,
+            ).pack(pady=(18, 10))
 
-        self.master.update_idletasks()
-        mx = self.master.winfo_x() + self.master.winfo_width() // 2
-        my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 460, 300
-        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+            rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
+            sp_rok.pack(pady=(0, 8))
 
-        tk.Label(
-            dialog,
-            text="Stiahnuť refrény žalmov pre liturgické týždne:",
-            bg="#1e1e1e",
-            fg="#ffffff",
-            font=(self.font_family, 13, "bold"),
-            wraplength=400,
-            justify=tk.CENTER,
-        ).pack(pady=(18, 10))
-
-        rok_var = tk.StringVar(value=str(date.today().year))
-        spin_style = {
-            "bg": "#2e2e2e",
-            "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
-            "relief": "flat",
-            "bd": 1,
-            "font": (self.font_family, 14, "bold"),
-            "justify": "center",
-            "highlightthickness": 1,
-            "highlightbackground": "#555555",
-            "highlightcolor": "#aaaaaa",
-        }
-
-        sp_rok = tk.Spinbox(dialog, from_=2000, to=2100, width=6, textvariable=rok_var, **spin_style)
-        sp_rok.pack(pady=(0, 8))
-
-        tk.Label(
-            dialog,
-            text=(
-                "Stiahne refrény žalmov pre:\n"
-                "  • Pôstne týždne: 1P.txt – 5P.txt\n"
-                "  • Veľký týždeň: VT.txt\n"
-                "  • Veľkonočné týždne: 1VN.txt – 7VN.txt\n"
-                "  • Adventné týždne: 1AD.txt – 4AD.txt\n\n"
-                "Existujúce súbory sa pred prepísaním automaticky zálohujú."
-            ),
-            bg="#1e1e1e",
-            fg="#bbbbbb",
-            font=(self.font_family, 10),
-            justify=tk.LEFT,
-            wraplength=410,
-        ).pack(pady=(0, 10), padx=20, anchor="w")
-
-        chyba_var = tk.StringVar(value="")
-        tk.Label(
-            dialog,
-            textvariable=chyba_var,
-            bg="#1e1e1e",
-            fg="#ff6b6b",
-            font=(self.font_family, 9),
-        ).pack(pady=(0, 4))
-
-        btn_style = {
-            "bg": "#3a3a3a",
-            "fg": "#ffffff",
-            "activebackground": "#555555",
-            "activeforeground": "#ffffff",
-            "font": (self.font_family, 12, "bold"),
-            "relief": "flat",
-            "bd": 0,
-            "padx": 20,
-            "pady": 8,
-            "cursor": "hand2",
-        }
-
-        def spusti():
-            self._potvrd_a_spusti_stiahnutie(
-                dialog, rok_var, chyba_var,
-                potvrdzujuci_text_fn=lambda rok: (
-                    f"Naozaj stiahnuť refrény liturgických týždňov pre rok {rok}?\n\n"
-                    "Súbory 1P–5P, VT, 1VN–7VN, PS, ZV, ZST, VP, VG, VPON, NP sa prepíšu, pôvodné verzie sa uložia do zálohy.\n"
+            tk.Label(
+                dialog,
+                text=(
+                    "Stiahne refrény žalmov pre:\n"
+                    "  • Pôstne týždne: 1P.txt – 5P.txt\n"
+                    "  • Veľký týždeň: VT.txt\n"
+                    "  • Veľkonočné týždne: 1VN.txt – 7VN.txt\n"
+                    "  • Adventné týždne: 1AD.txt – 4AD.txt\n\n"
+                    "Existujúce súbory sa pred prepísaním automaticky zálohujú."
                 ),
-                akcia_po_potvrdeni=self.aktualizovat_liturgicke_tyzdne_refreny_gui,
-            )
+                bg="#1e1e1e",
+                fg="#bbbbbb",
+                font=(self.font_family, 10),
+                justify=tk.LEFT,
+                wraplength=410,
+            ).pack(pady=(0, 10), padx=20, anchor="w")
 
-        tk.Button(dialog, text="Stiahni refrény", command=spusti, **btn_style).pack()
+            return rok_var, sp_rok
 
-        dialog.bind("<Return>", lambda e: spusti())
-        dialog.bind("<Escape>", lambda e: dialog.destroy())
-        dialog.focus_force()
-        sp_rok.focus_set()
+        self._zobraz_dialog_stiahnutia_pre_rok(
+            titulok_okna="Stiahnuť liturgické týždne (1P–VT–7VN–4AD)",
+            dw=460, dh=300,
+            zostav_obsah_fn=zostav_obsah,
+            potvrdzujuci_text_fn=lambda rok: (
+                f"Naozaj stiahnuť refrény liturgických týždňov pre rok {rok}?\n\n"
+                "Súbory 1P–5P, VT, 1VN–7VN, PS, ZV, ZST, VP, VG, VPON, NP sa prepíšu, pôvodné verzie sa uložia do zálohy.\n"
+            ),
+            akcia_po_potvrdeni=self.aktualizovat_liturgicke_tyzdne_refreny_gui,
+        )
 
 
     def aktualizovat_liturgicke_tyzdne_refreny_gui(self, rok=None):
@@ -10344,31 +10324,13 @@ class ControlApp:
         if rok is None:
             rok = date.today().year
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
-            return False
-
-        try:
-            self.song_folder_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_liturgicke_tyzdne_refreny_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre súbory.")
+        if not self._priprav_stahovanie_gui("aktualizovat_liturgicke_tyzdne_refreny_gui"):
             return False
 
         def spracuj_vysledok(vysledok):
             if vysledok.get("uspech"):
                 zaloha = vysledok.get("zaloha")
-                zaloha_text = (
-                    f"\nZáloha pôvodných súborov:\n{zaloha}\n"
-                    if zaloha
-                    else "\nPôvodné súbory neexistovali, záloha nebola potrebná.\n"
-                )
+                zaloha_text = self._formatuj_zalohu_text(zaloha)
                 messagebox.showinfo(
                     "Liturgické týždne aktualizované",
                     f"Refrény žalmov liturgických týždňov pre rok {rok} boli úspešne stiahnuté.\n\n"
@@ -10401,107 +10363,53 @@ class ControlApp:
 
     def open_postne_velkonocne_refreny(self):
         """Zobrazí dialóg na stiahnutie refrénov žalmov pre pôstne, VT, veľkonočné týždne a špeciálne jednodenné slávenia."""
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Stiahnuť refrény žalmov")
-        dialog.configure(bg="#1e1e1e")
-        dialog.resizable(False, False)
-        dialog.transient(self.master)
-        dialog.grab_set()
-        dialog.lift()
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        def zostav_obsah(dialog):
+            tk.Label(
+                dialog,
+                text="Stiahnuť refrény žalmov – pôstne a veľkonočné:",
+                bg="#1e1e1e",
+                fg="#ffffff",
+                font=(self.font_family, 13, "bold"),
+                wraplength=400,
+                justify=tk.CENTER,
+            ).pack(pady=(18, 10))
 
-        self.master.update_idletasks()
-        mx = self.master.winfo_x() + self.master.winfo_width() // 2
-        my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 520, 380
-        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+            rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
+            sp_rok.pack(pady=(0, 8))
 
-        tk.Label(
-            dialog,
-            text="Stiahnuť refrény žalmov – pôstne a veľkonočné:",
-            bg="#1e1e1e",
-            fg="#ffffff",
-            font=(self.font_family, 13, "bold"),
-            wraplength=400,
-            justify=tk.CENTER,
-        ).pack(pady=(18, 10))
+            frame = tk.Frame(dialog, bg="#1e1e1e")
+            frame.pack(pady=(0, 10), padx=25, anchor="w")
 
-        rok_var = tk.StringVar(value=str(date.today().year))
-        spin_style = {
-            "bg": "#2e2e2e",
-            "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
-            "relief": "flat",
-            "bd": 1,
-            "font": (self.font_family, 14, "bold"),
-            "justify": "center",
-            "highlightthickness": 1,
-            "highlightbackground": "#555555",
-            "highlightcolor": "#aaaaaa",
-        }
-
-        sp_rok = tk.Spinbox(dialog, from_=2000, to=2100, width=6, textvariable=rok_var, **spin_style)
-        sp_rok.pack(pady=(0, 8))
-
-        frame = tk.Frame(dialog, bg="#1e1e1e")
-        frame.pack(pady=(0, 10), padx=25, anchor="w")
-
-        tk.Label(
-            frame,
-            text=(
-                "Stiahne refrény žalmov pre:\n\n"
-                "  • Pôstne týždne: 1P.txt – 5P.txt\n"
-                "  • Veľký týždeň: VT.txt\n"
-                "  • Veľkonočné týždne: 1VN.txt – 7VN.txt\n"
-                "  • Slávenia v tomto období: PS.txt, ZV.txt,\n"
-                "    ZST.txt, VP.txt, VG.txt, VPON.txt, NP.txt\n\n"
-                "Existujúce súbory sa pred prepísaním automaticky zálohujú."
-            ),
-            bg="#1e1e1e",
-            fg="#bbbbbb",
-            font=(self.font_family, 10),
-            justify=tk.LEFT,
-            wraplength=410,
-        ).pack(anchor="w", ipadx=10)
-
-        chyba_var = tk.StringVar(value="")
-        tk.Label(
-            dialog,
-            textvariable=chyba_var,
-            bg="#1e1e1e",
-            fg="#ff6b6b",
-            font=(self.font_family, 9),
-        ).pack(pady=(0, 4))
-
-        btn_style = {
-            "bg": "#3a3a3a",
-            "fg": "#ffffff",
-            "activebackground": "#555555",
-            "activeforeground": "#ffffff",
-            "font": (self.font_family, 12, "bold"),
-            "relief": "flat",
-            "bd": 0,
-            "padx": 20,
-            "pady": 8,
-            "cursor": "hand2",
-        }
-
-        def spusti():
-            self._potvrd_a_spusti_stiahnutie(
-                dialog, rok_var, chyba_var,
-                potvrdzujuci_text_fn=lambda rok: (
-                    f"Naozaj stiahnuť refrény žalmov pre pôstne a veľkonočné obdobie na rok {rok}?\n\n"
-                    "Súbory 1P–5P, VT, 1VN–7VN, PS, ZV, ZST, VP, VG, VPON, NP sa prepíšu, pôvodné verzie sa uložia do zálohy.\n"
+            tk.Label(
+                frame,
+                text=(
+                    "Stiahne refrény žalmov pre:\n\n"
+                    "  • Pôstne týždne: 1P.txt – 5P.txt\n"
+                    "  • Veľký týždeň: VT.txt\n"
+                    "  • Veľkonočné týždne: 1VN.txt – 7VN.txt\n"
+                    "  • Slávenia v tomto období: PS.txt, ZV.txt,\n"
+                    "    ZST.txt, VP.txt, VG.txt, VPON.txt, NP.txt\n\n"
+                    "Existujúce súbory sa pred prepísaním automaticky zálohujú."
                 ),
-                akcia_po_potvrdeni=self.aktualizovat_postne_velkonocne_refreny_gui,
-            )
+                bg="#1e1e1e",
+                fg="#bbbbbb",
+                font=(self.font_family, 10),
+                justify=tk.LEFT,
+                wraplength=410,
+            ).pack(anchor="w", ipadx=10)
 
-        tk.Button(dialog, text="Stiahni refrény", command=spusti, **btn_style).pack()
+            return rok_var, sp_rok
 
-        dialog.bind("<Return>", lambda e: spusti())
-        dialog.bind("<Escape>", lambda e: dialog.destroy())
-        dialog.focus_force()
-        sp_rok.focus_set()
+        self._zobraz_dialog_stiahnutia_pre_rok(
+            titulok_okna="Stiahnuť refrény žalmov",
+            dw=520, dh=380,
+            zostav_obsah_fn=zostav_obsah,
+            potvrdzujuci_text_fn=lambda rok: (
+                f"Naozaj stiahnuť refrény žalmov pre pôstne a veľkonočné obdobie na rok {rok}?\n\n"
+                "Súbory 1P–5P, VT, 1VN–7VN, PS, ZV, ZST, VP, VG, VPON, NP sa prepíšu, pôvodné verzie sa uložia do zálohy.\n"
+            ),
+            akcia_po_potvrdeni=self.aktualizovat_postne_velkonocne_refreny_gui,
+        )
 
 
     def aktualizovat_postne_velkonocne_refreny_gui(self, rok=None):
@@ -10509,37 +10417,15 @@ class ControlApp:
         if rok is None:
             rok = date.today().year
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
-            return False
-
-        try:
-            self.song_folder_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_postne_velkonocne_refreny_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre súbory.")
+        if not self._priprav_stahovanie_gui("aktualizovat_postne_velkonocne_refreny_gui"):
             return False
 
         def spracuj_vysledok(vysledok):
             if vysledok.get("uspech"):
                 zaloha = vysledok.get("zaloha")
-                zaloha_text = (
-                    f"\nZáloha pôvodných súborov:\n{zaloha}\n"
-                    if zaloha
-                    else "\nPôvodné súbory neexistovali, záloha nebola potrebná.\n"
-                )
+                zaloha_text = self._formatuj_zalohu_text(zaloha)
                 chybne_kody = vysledok.get("chybne_kody", [])
-                chybne_text = (
-                    f"Chybné súbory: {', '.join(f'{k}.txt' for k in chybne_kody)}\n"
-                    if chybne_kody
-                    else ""
-                )
+                chybne_text = self._formatuj_chybne_kody_text(chybne_kody, pripona=".txt")
                 messagebox.showinfo(
                     "Pôstne a veľkonočné obdobie aktualizované",
                     f"Refrény žalmov pre pôstne a veľkonočné obdobie na rok {rok} boli úspešne stiahnuté.\n\n"
@@ -10574,97 +10460,43 @@ class ControlApp:
 
     def open_adventne_refreny(self):
         """Zobrazí dialóg na stiahnutie refrénov žalmov pre adventné týždne."""
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Stiahnuť refrény žalmov (1AD–4AD)")
-        dialog.configure(bg="#1e1e1e")
-        dialog.resizable(False, False)
-        dialog.transient(self.master)
-        dialog.grab_set()
-        dialog.lift()
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        def zostav_obsah(dialog):
+            tk.Label(
+                dialog,
+                text="Stiahnuť refrény žalmov – adventné týždne:",
+                bg="#1e1e1e",
+                fg="#ffffff",
+                font=(self.font_family, 13, "bold"),
+                wraplength=400,
+                justify=tk.CENTER,
+            ).pack(pady=(18, 10))
 
-        self.master.update_idletasks()
-        mx = self.master.winfo_x() + self.master.winfo_width() // 2
-        my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 460, 280
-        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+            rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
+            sp_rok.pack(pady=(0, 8))
 
-        tk.Label(
-            dialog,
-            text="Stiahnuť refrény žalmov – adventné týždne:",
-            bg="#1e1e1e",
-            fg="#ffffff",
-            font=(self.font_family, 13, "bold"),
-            wraplength=400,
-            justify=tk.CENTER,
-        ).pack(pady=(18, 10))
+            tk.Label(
+                dialog,
+                text="Prepíšu sa súbory 1AD.txt až 4AD.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
+                bg="#1e1e1e",
+                fg="#bbbbbb",
+                font=(self.font_family, 10),
+                justify=tk.CENTER,
+                wraplength=330,
+            ).pack(pady=(0, 10))
 
-        rok_var = tk.StringVar(value=str(date.today().year))
-        spin_style = {
-            "bg": "#2e2e2e",
-            "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
-            "relief": "flat",
-            "bd": 1,
-            "font": (self.font_family, 14, "bold"),
-            "justify": "center",
-            "highlightthickness": 1,
-            "highlightbackground": "#555555",
-            "highlightcolor": "#aaaaaa",
-        }
+            return rok_var, sp_rok
 
-        sp_rok = tk.Spinbox(dialog, from_=2000, to=2100, width=6, textvariable=rok_var, **spin_style)
-        sp_rok.pack(pady=(0, 8))
-
-        tk.Label(
-            dialog,
-            text="Prepíšu sa súbory 1AD.txt až 4AD.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
-            bg="#1e1e1e",
-            fg="#bbbbbb",
-            font=(self.font_family, 10),
-            justify=tk.CENTER,
-            wraplength=330,
-        ).pack(pady=(0, 10))
-
-        chyba_var = tk.StringVar(value="")
-        tk.Label(
-            dialog,
-            textvariable=chyba_var,
-            bg="#1e1e1e",
-            fg="#ff6b6b",
-            font=(self.font_family, 9),
-        ).pack(pady=(0, 4))
-
-        btn_style = {
-            "bg": "#3a3a3a",
-            "fg": "#ffffff",
-            "activebackground": "#555555",
-            "activeforeground": "#ffffff",
-            "font": (self.font_family, 12, "bold"),
-            "relief": "flat",
-            "bd": 0,
-            "padx": 20,
-            "pady": 8,
-            "cursor": "hand2",
-        }
-
-        def spusti():
-            self._potvrd_a_spusti_stiahnutie(
-                dialog, rok_var, chyba_var,
-                potvrdzujuci_text_fn=lambda rok: (
-                    f"Naozaj stiahnuť refrény adventných týždňov pre rok {rok}?\n\n"
-                    "Súbory 1AD–4AD sa prepíšu.\n"
-                    "Pôvodné verzie sa uložia do zálohy."
-                ),
-                akcia_po_potvrdeni=self.aktualizovat_adventne_refreny_gui,
-            )
-
-        tk.Button(dialog, text="Stiahni refrény", command=spusti, **btn_style).pack()
-
-        dialog.bind("<Return>", lambda e: spusti())
-        dialog.bind("<Escape>", lambda e: dialog.destroy())
-        dialog.focus_force()
-        sp_rok.focus_set()
+        self._zobraz_dialog_stiahnutia_pre_rok(
+            titulok_okna="Stiahnuť refrény žalmov (1AD–4AD)",
+            dw=460, dh=280,
+            zostav_obsah_fn=zostav_obsah,
+            potvrdzujuci_text_fn=lambda rok: (
+                f"Naozaj stiahnuť refrény adventných týždňov pre rok {rok}?\n\n"
+                "Súbory 1AD–4AD sa prepíšu.\n"
+                "Pôvodné verzie sa uložia do zálohy."
+            ),
+            akcia_po_potvrdeni=self.aktualizovat_adventne_refreny_gui,
+        )
 
 
     def aktualizovat_adventne_refreny_gui(self, rok=None):
@@ -10672,37 +10504,15 @@ class ControlApp:
         if rok is None:
             rok = date.today().year
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
-            return False
-
-        try:
-            self.song_folder_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_adventne_refreny_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre súbory.")
+        if not self._priprav_stahovanie_gui("aktualizovat_adventne_refreny_gui"):
             return False
 
         def spracuj_vysledok(vysledok):
             if vysledok.get("uspech"):
                 zaloha = vysledok.get("zaloha")
-                zaloha_text = (
-                    f"\nZáloha pôvodných súborov:\n{zaloha}\n"
-                    if zaloha
-                    else "\nPôvodné súbory neexistovali, záloha nebola potrebná.\n"
-                )
+                zaloha_text = self._formatuj_zalohu_text(zaloha)
                 chybne_kody = vysledok.get("chybne_kody") or []
-                chybne_text = (
-                    f"Týždne s chybou: {', '.join(chybne_kody)}\n"
-                    if chybne_kody
-                    else ""
-                )
+                chybne_text = self._formatuj_chybne_kody_text(chybne_kody, "Týždne s chybou")
                 messagebox.showinfo(
                     "Adventné týždne aktualizované",
                     f"Refrény žalmov adventných týždňov pre rok {rok} boli úspešne stiahnuté.\n\n"
@@ -10736,97 +10546,43 @@ class ControlApp:
 
     def open_turicne_sviatky(self):
         """Zobrazí dialóg na stiahnutie refrénov žalmov pre Turíce a nadväzujúce sviatky (1TS–7TS)."""
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Stiahnuť refrény žalmov (1TS–7TS)")
-        dialog.configure(bg="#1e1e1e")
-        dialog.resizable(False, False)
-        dialog.transient(self.master)
-        dialog.grab_set()
-        dialog.lift()
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        def zostav_obsah(dialog):
+            tk.Label(
+                dialog,
+                text="Stiahnuť refrény žalmov – Turíce a nadväzujúce sviatky:",
+                bg="#1e1e1e",
+                fg="#ffffff",
+                font=(self.font_family, 13, "bold"),
+                wraplength=400,
+                justify=tk.CENTER,
+            ).pack(pady=(18, 10))
 
-        self.master.update_idletasks()
-        mx = self.master.winfo_x() + self.master.winfo_width() // 2
-        my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 460, 280
-        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+            rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
+            sp_rok.pack(pady=(0, 8))
 
-        tk.Label(
-            dialog,
-            text="Stiahnuť refrény žalmov – Turíce a nadväzujúce sviatky:",
-            bg="#1e1e1e",
-            fg="#ffffff",
-            font=(self.font_family, 13, "bold"),
-            wraplength=400,
-            justify=tk.CENTER,
-        ).pack(pady=(18, 10))
+            tk.Label(
+                dialog,
+                text="Prepíšu sa súbory 1TS.txt až 7TS.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
+                bg="#1e1e1e",
+                fg="#bbbbbb",
+                font=(self.font_family, 10),
+                justify=tk.CENTER,
+                wraplength=330,
+            ).pack(pady=(0, 10))
 
-        rok_var = tk.StringVar(value=str(date.today().year))
-        spin_style = {
-            "bg": "#2e2e2e",
-            "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
-            "relief": "flat",
-            "bd": 1,
-            "font": (self.font_family, 14, "bold"),
-            "justify": "center",
-            "highlightthickness": 1,
-            "highlightbackground": "#555555",
-            "highlightcolor": "#aaaaaa",
-        }
+            return rok_var, sp_rok
 
-        sp_rok = tk.Spinbox(dialog, from_=2000, to=2100, width=6, textvariable=rok_var, **spin_style)
-        sp_rok.pack(pady=(0, 8))
-
-        tk.Label(
-            dialog,
-            text="Prepíšu sa súbory 1TS.txt až 7TS.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
-            bg="#1e1e1e",
-            fg="#bbbbbb",
-            font=(self.font_family, 10),
-            justify=tk.CENTER,
-            wraplength=330,
-        ).pack(pady=(0, 10))
-
-        chyba_var = tk.StringVar(value="")
-        tk.Label(
-            dialog,
-            textvariable=chyba_var,
-            bg="#1e1e1e",
-            fg="#ff6b6b",
-            font=(self.font_family, 9),
-        ).pack(pady=(0, 4))
-
-        btn_style = {
-            "bg": "#3a3a3a",
-            "fg": "#ffffff",
-            "activebackground": "#555555",
-            "activeforeground": "#ffffff",
-            "font": (self.font_family, 12, "bold"),
-            "relief": "flat",
-            "bd": 0,
-            "padx": 20,
-            "pady": 8,
-            "cursor": "hand2",
-        }
-
-        def spusti():
-            self._potvrd_a_spusti_stiahnutie(
-                dialog, rok_var, chyba_var,
-                potvrdzujuci_text_fn=lambda rok: (
-                    f"Naozaj stiahnuť refrény Turíc a nadväzujúcich sviatkov pre rok {rok}?\n\n"
-                    "Súbory 1TS–7TS sa prepíšu.\n"
-                    "Pôvodné verzie sa uložia do zálohy."
-                ),
-                akcia_po_potvrdeni=self.aktualizovat_turicne_sviatky_gui,
-            )
-
-        tk.Button(dialog, text="Stiahni refrény", command=spusti, **btn_style).pack()
-
-        dialog.bind("<Return>", lambda e: spusti())
-        dialog.bind("<Escape>", lambda e: dialog.destroy())
-        dialog.focus_force()
-        sp_rok.focus_set()
+        self._zobraz_dialog_stiahnutia_pre_rok(
+            titulok_okna="Stiahnuť refrény žalmov (1TS–7TS)",
+            dw=460, dh=280,
+            zostav_obsah_fn=zostav_obsah,
+            potvrdzujuci_text_fn=lambda rok: (
+                f"Naozaj stiahnuť refrény Turíc a nadväzujúcich sviatkov pre rok {rok}?\n\n"
+                "Súbory 1TS–7TS sa prepíšu.\n"
+                "Pôvodné verzie sa uložia do zálohy."
+            ),
+            akcia_po_potvrdeni=self.aktualizovat_turicne_sviatky_gui,
+        )
 
 
     def aktualizovat_turicne_sviatky_gui(self, rok=None):
@@ -10834,37 +10590,15 @@ class ControlApp:
         if rok is None:
             rok = date.today().year
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
-            return False
-
-        try:
-            self.song_folder_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_turicne_sviatky_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre súbory.")
+        if not self._priprav_stahovanie_gui("aktualizovat_turicne_sviatky_gui"):
             return False
 
         def spracuj_vysledok(vysledok):
             if vysledok.get("uspech"):
                 zaloha = vysledok.get("zaloha")
-                zaloha_text = (
-                    f"\nZáloha pôvodných súborov:\n{zaloha}\n"
-                    if zaloha
-                    else "\nPôvodné súbory neexistovali, záloha nebola potrebná.\n"
-                )
+                zaloha_text = self._formatuj_zalohu_text(zaloha)
                 chybne_kody = vysledok.get("chybne_kody") or []
-                chybne_text = (
-                    f"Súbory s chybou: {', '.join(chybne_kody)}\n"
-                    if chybne_kody
-                    else ""
-                )
+                chybne_text = self._formatuj_chybne_kody_text(chybne_kody, "Súbory s chybou")
                 messagebox.showinfo(
                     "Turíce a nadväzujúce sviatky aktualizované",
                     f"Refrény žalmov pre Turíce a nadväzujúce sviatky na rok {rok} boli úspešne stiahnuté.\n\n"
@@ -10899,131 +10633,77 @@ class ControlApp:
 
     def open_vianocne_sviatky(self):
         """Zobrazí dialóg na stiahnutie refrénov žalmov pre vianočné sviatky daného roku."""
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Stiahnuť refrény žalmov")
-        dialog.configure(bg="#1e1e1e")
-        dialog.resizable(False, False)
-        dialog.transient(self.master)
-        dialog.grab_set()
-        dialog.lift()
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        def zostav_obsah(dialog):
+            tk.Label(
+                dialog,
+                text="Stiahnuť refrény žalmov vianočných sviatkov:",
+                bg="#1e1e1e",
+                fg="#ffffff",
+                font=(self.font_family, 13, "bold"),
+                wraplength=380,
+                justify=tk.CENTER,
+            ).pack(pady=(18, 6))
 
-        self.master.update_idletasks()
-        mx = self.master.winfo_x() + self.master.winfo_width() // 2
-        my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 440, 460
-        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+            rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
+            obdobie_var = tk.StringVar(value="")
 
-        tk.Label(
-            dialog,
-            text="Stiahnuť refrény žalmov vianočných sviatkov:",
-            bg="#1e1e1e",
-            fg="#ffffff",
-            font=(self.font_family, 13, "bold"),
-            wraplength=380,
-            justify=tk.CENTER,
-        ).pack(pady=(18, 6))
+            def aktualizuj_obdobie(*_args):
+                try:
+                    r = int(rok_var.get())
+                    obdobie_var.set(f"Vianočné obdobie {r} / {r + 1}  (25.12.{r} – Krst Krista Pána {r + 1})")
+                except ValueError:
+                    obdobie_var.set("")
 
-        rok_var = tk.StringVar(value=str(date.today().year))
-        obdobie_var = tk.StringVar(value="")
+            rok_var.trace_add("write", aktualizuj_obdobie)
+            aktualizuj_obdobie()
 
-        def aktualizuj_obdobie(*_args):
-            try:
-                r = int(rok_var.get())
-                obdobie_var.set(f"Vianočné obdobie {r} / {r + 1}  (25.12.{r} – Krst Krista Pána {r + 1})")
-            except ValueError:
-                obdobie_var.set("")
+            tk.Label(
+                dialog,
+                textvariable=obdobie_var,
+                bg="#1e1e1e",
+                fg="#8fd0ff",
+                font=(self.font_family, 10, "bold"),
+                justify=tk.CENTER,
+                wraplength=390,
+            ).pack(pady=(0, 8))
 
-        rok_var.trace_add("write", aktualizuj_obdobie)
-        aktualizuj_obdobie()
+            sp_rok.pack(pady=(0, 8))
 
-        tk.Label(
-            dialog,
-            textvariable=obdobie_var,
-            bg="#1e1e1e",
-            fg="#8fd0ff",
-            font=(self.font_family, 10, "bold"),
-            justify=tk.CENTER,
-            wraplength=390,
-        ).pack(pady=(0, 8))
+            tk.Label(
+                dialog,
+                text=(
+                    "(1VI.txt, 2VI.txt, SR.txt, STEF.txt, SJE.txt, NEV.txt, PDR.txt, PMB.txt, NMJ.txt, KKP.txt).\n"
+                    "Existujúce súbory sa pred prepísaním automaticky zálohujú.\n\n"
+                    "Zadaný rok = december (25.–31.12.). Januárová časť toho istého\n"
+                    "vianočného obdobia (PMB, NMJ, KKP, 2VI) sa stiahne automaticky\n"
+                    "z januára nasledujúceho roka.\n\n"
+                    "Ak sviatok v danom roku padne na nedeľu (nahradí ho\n"
+                    "nedeľný formulár), pôvodný súbor zostane bez zmeny.\n"
 
-        spin_style = {
-            "bg": "#2e2e2e",
-            "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
-            "relief": "flat",
-            "bd": 1,
-            "font": (self.font_family, 14, "bold"),
-            "justify": "center",
-            "highlightthickness": 1,
-            "highlightbackground": "#555555",
-            "highlightcolor": "#aaaaaa",
-        }
-
-        sp_rok = tk.Spinbox(dialog, from_=2000, to=2100, width=6, textvariable=rok_var, **spin_style)
-        sp_rok.pack(pady=(0, 8))
-
-        tk.Label(
-            dialog,
-            text=(
-                "(1VI.txt, 2VI.txt, SR.txt, STEF.txt, SJE.txt, NEV.txt, PDR.txt, PMB.txt, NMJ.txt, KKP.txt).\n"
-                "Existujúce súbory sa pred prepísaním automaticky zálohujú.\n\n"
-                "Zadaný rok = december (25.–31.12.). Januárová časť toho istého\n"
-                "vianočného obdobia (PMB, NMJ, KKP, 2VI) sa stiahne automaticky\n"
-                "z januára nasledujúceho roka.\n\n"
-                "Ak sviatok v danom roku padne na nedeľu (nahradí ho\n"
-                "nedeľný formulár), pôvodný súbor zostane bez zmeny.\n"
-
-            ),
-            bg="#1e1e1e",
-            fg="#bbbbbb",
-            font=(self.font_family, 10),
-            justify=tk.CENTER,
-            wraplength=390,
-        ).pack(pady=(0, 10))
-
-        chyba_var = tk.StringVar(value="")
-        tk.Label(
-            dialog,
-            textvariable=chyba_var,
-            bg="#1e1e1e",
-            fg="#ff6b6b",
-            font=(self.font_family, 9),
-        ).pack(pady=(0, 4))
-
-        btn_style = {
-            "bg": "#3a3a3a",
-            "fg": "#ffffff",
-            "activebackground": "#555555",
-            "activeforeground": "#ffffff",
-            "font": (self.font_family, 12, "bold"),
-            "relief": "flat",
-            "bd": 0,
-            "padx": 20,
-            "pady": 8,
-            "cursor": "hand2",
-        }
-
-        def spusti():
-            self._potvrd_a_spusti_stiahnutie(
-                dialog, rok_var, chyba_var,
-                potvrdzujuci_text_fn=lambda rok: (
-                    f"Naozaj stiahnuť refrény žalmov vianočného obdobia {rok}/{rok + 1}?\n\n"
-                    f"December sa stiahne z roku {rok}, január (PMB, NMJ, KKP, 2VI) "
-                    f"z roku {rok + 1}.\n"
-                    "Súbory sviatkov, ktoré sa v tomto období slávia, sa prepíšu.\n"
-                    "Sviatky, ktoré padnú na nedeľu, sa nemenia.\n"
-                    "Pôvodné verzie sa uložia do zálohy."
                 ),
-                akcia_po_potvrdeni=self.aktualizovat_vianocne_sviatky_gui,
-            )
+                bg="#1e1e1e",
+                fg="#bbbbbb",
+                font=(self.font_family, 10),
+                justify=tk.CENTER,
+                wraplength=390,
+            ).pack(pady=(0, 10))
 
-        tk.Button(dialog, text="Stiahni refrény", command=spusti, **btn_style).pack()
+            return rok_var, sp_rok
 
-        dialog.bind("<Return>", lambda e: spusti())
-        dialog.bind("<Escape>", lambda e: dialog.destroy())
-        dialog.focus_force()
-        sp_rok.focus_set()
+        self._zobraz_dialog_stiahnutia_pre_rok(
+            titulok_okna="Stiahnuť refrény žalmov",
+            dw=440, dh=460,
+            zostav_obsah_fn=zostav_obsah,
+            potvrdzujuci_text_fn=lambda rok: (
+                f"Naozaj stiahnuť refrény žalmov vianočného obdobia {rok}/{rok + 1}?\n\n"
+                f"December sa stiahne z roku {rok}, január (PMB, NMJ, KKP, 2VI) "
+                f"z roku {rok + 1}.\n"
+                "Súbory sviatkov, ktoré sa v tomto období slávia, sa prepíšu.\n"
+                "Sviatky, ktoré padnú na nedeľu, sa nemenia.\n"
+                "Pôvodné verzie sa uložia do zálohy."
+            ),
+            akcia_po_potvrdeni=self.aktualizovat_vianocne_sviatky_gui,
+        )
 
 
     def aktualizovat_vianocne_sviatky_gui(self, rok=None):
@@ -11038,21 +10718,10 @@ class ControlApp:
         if rok is None:
             rok = date.today().year
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
-            return False
-
-        try:
-            self.song_folder_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_vianocne_sviatky_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre súbory sviatkov.")
+        if not self._priprav_stahovanie_gui(
+            "aktualizovat_vianocne_sviatky_gui",
+            "Nepodarilo sa pripraviť priečinok pre súbory sviatkov.",
+        ):
             return False
 
         celkovo_sviatkov = len(VIANOCNE_SVIATKY_KODY) + 2  # +2: kompilované súbory 1VI a 2VI
@@ -11060,20 +10729,12 @@ class ControlApp:
         def spracuj_vysledok(vysledok):
             if vysledok.get("uspech"):
                 zaloha = vysledok.get("zaloha")
-                zaloha_text = (
-                    f"\nZáloha pôvodných súborov:\n{zaloha}\n"
-                    if zaloha
-                    else "\nPôvodné súbory sviatkov neexistovali, záloha nebola potrebná.\n"
-                )
+                zaloha_text = self._formatuj_zalohu_text(zaloha, "súbory sviatkov")
                 subory = vysledok.get("subory", [])
                 subory_text = "\n".join(Path(s).name for s in subory) if subory else "– žiadne –"
 
                 chybne_kody = vysledok.get("chybne_kody", [])
-                chybne_text = (
-                    f"Chybné súbory: {', '.join(f'{k}.txt' for k in chybne_kody)}\n"
-                    if chybne_kody
-                    else ""
-                )
+                chybne_text = self._formatuj_chybne_kody_text(chybne_kody, pripona=".txt")
                 messagebox.showinfo(
                     "Refrény žalmov aktualizované",
                     f"Refrény žalmov vianočného obdobia {rok}/{rok + 1} boli úspešne stiahnuté.\n\n"
@@ -11110,104 +10771,50 @@ class ControlApp:
 
     def open_liturgicke_sviatky(self):
         """Zobrazí dialóg na stiahnutie refrénov žalmov pre liturgické sviatky daného roku."""
-        dialog = tk.Toplevel(self.master)
-        dialog.title("Stiahnuť refrény žalmov")
-        dialog.configure(bg="#1e1e1e")
-        dialog.resizable(False, False)
-        dialog.transient(self.master)
-        dialog.grab_set()
-        dialog.lift()
-        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        def zostav_obsah(dialog):
+            tk.Label(
+                dialog,
+                text="Stiahnuť refrény žalmov cezročných sviatkov:",
+                bg="#1e1e1e",
+                fg="#ffffff",
+                font=(self.font_family, 13, "bold"),
+                wraplength=380,
+                justify=tk.CENTER,
+            ).pack(pady=(18, 10))
 
-        self.master.update_idletasks()
-        mx = self.master.winfo_x() + self.master.winfo_width() // 2
-        my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 500, 330
-        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+            rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
+            sp_rok.pack(pady=(0, 8))
 
-        tk.Label(
-            dialog,
-            text="Stiahnuť refrény žalmov cezročných sviatkov:",
-            bg="#1e1e1e",
-            fg="#ffffff",
-            font=(self.font_family, 13, "bold"),
-            wraplength=380,
-            justify=tk.CENTER,
-        ).pack(pady=(18, 10))
+            tk.Label(
+                dialog,
+                text=(
+                    "(napr. OND.txt, NJK.txt, BAR.txt…).\n"
+                    "Existujúce súbory sa pred prepísaním automaticky zálohujú.\n\n"
+                    "Ak sa sviatok v danom roku neslávi (je vynechaný alebo\n"
+                    "prekrytý iným slávením), pôvodný súbor zostane bez zmeny.\n"
 
-        rok_var = tk.StringVar(value=str(date.today().year))
-        spin_style = {
-            "bg": "#2e2e2e",
-            "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
-            "relief": "flat",
-            "bd": 1,
-            "font": (self.font_family, 14, "bold"),
-            "justify": "center",
-            "highlightthickness": 1,
-            "highlightbackground": "#555555",
-            "highlightcolor": "#aaaaaa",
-        }
-
-        sp_rok = tk.Spinbox(dialog, from_=2000, to=2100, width=6, textvariable=rok_var, **spin_style)
-        sp_rok.pack(pady=(0, 8))
-
-        tk.Label(
-            dialog,
-            text=(                
-                "(napr. OND.txt, NJK.txt, BAR.txt…).\n"
-                "Existujúce súbory sa pred prepísaním automaticky zálohujú.\n\n"
-                "Ak sa sviatok v danom roku neslávi (je vynechaný alebo\n"
-                "prekrytý iným slávením), pôvodný súbor zostane bez zmeny.\n"
-                
-            ),
-            bg="#1e1e1e",
-            fg="#bbbbbb",
-            font=(self.font_family, 10),
-            justify=tk.CENTER,
-            wraplength=390,
-        ).pack(pady=(0, 10))
-
-        chyba_var = tk.StringVar(value="")
-        tk.Label(
-            dialog,
-            textvariable=chyba_var,
-            bg="#1e1e1e",
-            fg="#ff6b6b",
-            font=(self.font_family, 9),
-        ).pack(pady=(0, 4))
-
-        btn_style = {
-            "bg": "#3a3a3a",
-            "fg": "#ffffff",
-            "activebackground": "#555555",
-            "activeforeground": "#ffffff",
-            "font": (self.font_family, 12, "bold"),
-            "relief": "flat",
-            "bd": 0,
-            "padx": 20,
-            "pady": 8,
-            "cursor": "hand2",
-        }
-
-        def spusti():
-            self._potvrd_a_spusti_stiahnutie(
-                dialog, rok_var, chyba_var,
-                potvrdzujuci_text_fn=lambda rok: (
-                    f"Naozaj stiahnuť refrény žalmov cezročných sviatkov pre rok {rok}?\n\n"
-                    "Súbory sviatkov, ktoré sa v tomto roku slávia, sa prepíšu.\n"
-                    "Sviatky prekryté vyššou slávnosťou alebo prenesené na iný deň sa nemenia. "
-                    "Pôvodné verzie sa uložia do zálohy."
                 ),
-                akcia_po_potvrdeni=self.aktualizovat_liturgicke_sviatky_gui,
-            )
+                bg="#1e1e1e",
+                fg="#bbbbbb",
+                font=(self.font_family, 10),
+                justify=tk.CENTER,
+                wraplength=390,
+            ).pack(pady=(0, 10))
 
-        tk.Button(dialog, text="Stiahni refrény", command=spusti, **btn_style).pack()
+            return rok_var, sp_rok
 
-        dialog.bind("<Return>", lambda e: spusti())
-        dialog.bind("<Escape>", lambda e: dialog.destroy())
-        dialog.focus_force()
-        sp_rok.focus_set()
+        self._zobraz_dialog_stiahnutia_pre_rok(
+            titulok_okna="Stiahnuť refrény žalmov",
+            dw=500, dh=330,
+            zostav_obsah_fn=zostav_obsah,
+            potvrdzujuci_text_fn=lambda rok: (
+                f"Naozaj stiahnuť refrény žalmov cezročných sviatkov pre rok {rok}?\n\n"
+                "Súbory sviatkov, ktoré sa v tomto roku slávia, sa prepíšu.\n"
+                "Sviatky prekryté vyššou slávnosťou alebo prenesené na iný deň sa nemenia. "
+                "Pôvodné verzie sa uložia do zálohy."
+            ),
+            akcia_po_potvrdeni=self.aktualizovat_liturgicke_sviatky_gui,
+        )
 
 
     def aktualizovat_liturgicke_sviatky_gui(self, rok=None):
@@ -11219,21 +10826,10 @@ class ControlApp:
         if rok is None:
             rok = date.today().year
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
-            return False
-
-        try:
-            self.song_folder_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_liturgicke_sviatky_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre súbory sviatkov.")
+        if not self._priprav_stahovanie_gui(
+            "aktualizovat_liturgicke_sviatky_gui",
+            "Nepodarilo sa pripraviť priečinok pre súbory sviatkov.",
+        ):
             return False
 
         celkovo_sviatkov = len(LITURGICKE_SVIATKY_KODY)
@@ -11241,21 +10837,13 @@ class ControlApp:
         def spracuj_vysledok(vysledok):
             if vysledok.get("uspech"):
                 zaloha = vysledok.get("zaloha")
-                zaloha_text = (
-                    f"\nZáloha pôvodných súborov:\n{zaloha}\n"
-                    if zaloha
-                    else "\nPôvodné súbory sviatkov neexistovali, záloha nebola potrebná.\n"
-                )
+                zaloha_text = self._formatuj_zalohu_text(zaloha, "súbory sviatkov")
                 # NOVÉ – zoznam stiahnutých txt
                 subory = vysledok.get("subory", [])
                 subory_text = "\n".join(Path(s).name for s in subory) if subory else "– žiadne –"
 
                 chybne_kody = vysledok.get("chybne_kody", [])
-                chybne_text = (
-                    f"Chybné súbory: {', '.join(f'{k}.txt' for k in chybne_kody)}\n"
-                    if chybne_kody
-                    else ""
-                )
+                chybne_text = self._formatuj_chybne_kody_text(chybne_kody, pripona=".txt")
                 messagebox.showinfo(
                     "Refrény žalmov aktualizované",
                     f"Refrény žalmov cezročných sviatkov pre {rok} boli úspešne stiahnuté.\n\n"
@@ -11325,7 +10913,7 @@ class ControlApp:
         return bloky              
                     
 
-    def upravit_citania_pre_projekciu(self, max_chars=180):
+    def upravit_citania_pre_projekciu(self, max_chars=180, zobrazit_potvrdenie=True):
 
         subor = self.song_folder_path / "citania.txt"
         if not subor.exists():
@@ -11618,12 +11206,16 @@ class ControlApp:
         finalny = "\n\n".join(bloky)
         _zapis_text_atomicky(subor, finalny, encoding="utf-8")
 
-        messagebox.showinfo(
-            "Hotovo",
-            "Čítania boli upravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
-            "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi."
-        )
-        self.manual_entry.focus_set()  
+        if zobrazit_potvrdenie:
+            messagebox.showinfo(
+                "Hotovo",
+                "Čítania boli upravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
+                "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi."
+            )
+        try:
+            self.manual_entry.focus_set()
+        except Exception:
+            pass
            
           
     def _spusti_jednoduche_stahovanie(
@@ -11647,7 +11239,11 @@ class ControlApp:
         Postup:
         1. Pokus o získanie `lock` bez blokovania – ak je obsadený, zobrazí
            `zaneprazdnene_sprava` a vráti False.
-        2. Nastaví kurzor na "wait" a spustí worker vlákno, ktoré zavolá
+        2. Nastaví kurzor na "wait" a spustí worker vlákno. To si NAJPRV samo
+           overí internetové pripojenie (`_over_internet_socket()` – bez GUI
+           vedľajších účinkov, bezpečné z worker vlákna); ak nie je dostupné,
+           `stiahni_funkcia` sa vôbec nezavolá a používateľ dostane
+           špecifickú hlášku "Žiadne internetové pripojenie". Inak zavolá
            `stiahni_funkcia(*stiahni_args, **stiahni_kwargs)` a vráti bool
            (úspech/neúspech). Ak funkcia doběhne bez výnimky a je zadané
            `vytvor_log_spravu(uspech)`, výsledná správa sa zaloguje cez
@@ -11670,9 +11266,16 @@ class ControlApp:
 
         kwargs = stiahni_kwargs or {}
 
-        def po_stiahnuti(uspech):
+        def po_stiahnuti(uspech, bez_internetu=False):
             try:
                 if not self.master.winfo_exists():
+                    return
+
+                if bez_internetu:
+                    messagebox.showerror(
+                        "Žiadne internetové pripojenie",
+                        "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.",
+                    )
                     return
 
                 if uspech and callable(on_success):
@@ -11693,6 +11296,20 @@ class ControlApp:
                     log_exception(f"{kontext}: lock už bol uvoľnený", e)
 
         def vlakno():
+            # Rovnako ako v _spusti_stahovanie_s_progressom: kontrola internetu
+            # sa vykonáva až tu (v pozadovom vlákne), aby blokujúci
+            # socket.create_connection() nezamrazil GUI vlákno pred spustením.
+            if not _over_internet_socket():
+                try:
+                    self.master.after(0, lambda: po_stiahnuti(False, bez_internetu=True))
+                except Exception as e:
+                    log_exception(f"{kontext}: master.after (bez internetu) zlyhal", e)
+                    try:
+                        lock.release()
+                    except RuntimeError:
+                        pass
+                return
+
             try:
                 uspech = stiahni_funkcia(*stiahni_args, **kwargs)
                 if vytvor_log_spravu is not None:
@@ -11711,7 +11328,10 @@ class ControlApp:
                 except RuntimeError as e2:
                     log_exception(f"{kontext}: lock už bol uvoľnený", e2)
 
-        threading.Thread(target=vlakno, daemon=True).start()
+        try:
+            self._download_executor.submit(vlakno)
+        except RuntimeError:
+            threading.Thread(target=vlakno, daemon=True).start()
         return True
 
 
@@ -11725,25 +11345,17 @@ class ControlApp:
         if datum is None:
             datum = date.today()
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
+        # Spoločný preflight (chýbajúce knižnice, internet, priečinok na piesne
+        # + jeho vytvorenie) – rovnaký helper ako pre ostatných 8 GUI
+        # downloaderov, aby prípadná budúca zmena poradia/textu kontrol
+        # nemusela byť ručne zosúladená na viacerých miestach.
+        if not self._priprav_stahovanie_gui(
+            "aktualizovat_citania_gui",
+            "Nepodarilo sa pripraviť priečinok pre citania.txt.",
+        ):
             return False
 
         vystup_cesta = self.song_folder_path / "citania.txt"
-
-        # Istota, že priečinok existuje
-        try:
-            vystup_cesta.parent.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_citania_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre citania.txt.")
-            return False
 
         def spracuj_vysledok(uspech):
             if uspech:
@@ -11799,24 +11411,14 @@ class ControlApp:
         if datum is None:
             datum = date.today()
 
-        if zobraz_chybu_chybajucich_kniznic_pre_stahovanie():
-            return False
-
-        if not je_internet_dostupny():
-            return False
-
-        if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
+        # Spoločný preflight – pozri poznámku v aktualizovat_citania_gui vyššie.
+        if not self._priprav_stahovanie_gui(
+            "aktualizovat_vespery_gui",
+            "Nepodarilo sa pripraviť priečinok pre vespery.txt.",
+        ):
             return False
 
         vystup_cesta = self.song_folder_path / "vespery.txt"
-
-        try:
-            vystup_cesta.parent.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            log_exception("aktualizovat_vespery_gui: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", "Nepodarilo sa pripraviť priečinok pre vespery.txt.")
-            return False
 
         oznacit = getattr(self, "zobrazovat_znaky_chorov", True)
 
@@ -14747,13 +14349,27 @@ class ControlApp:
         except Exception as e:
             log_exception("zatvorit_nastavenia: focus_set after 100ms failed", e)       
              
-    def open_direktorium(self):
-        """Otvára okno liturgického direktória a ošetruje stavy okna."""
-        # Kontrola, či už direktórium beží ako samostatné okno
-        if getattr(self, "_direktorium_open", False):
+    def _otvor_prehliadaciu_pomocku(
+        self,
+        flag_attr: str,
+        trieda_okna,
+        args_okna: tuple,
+        width_attr: str,
+        height_attr: str,
+        reset_ui_kontext: str,
+        kriticka_chyba_popis: str,
+    ):
+        """
+        Spoločná logika pre open_direktorium a open_slavnosti: otvorí pomocné
+        prehliadacie okno (DirektoriumApp/SlavnostiApp), zapamätá si jeho
+        rozmery pri zatvorení a po zavretí obnoví fokus na vyhľadávacie pole.
+        Predtým mali obe metódy vlastnú (identickú) kópiu tejto kostry,
+        líšiacu sa len v triede okna, atribútoch rozmerov a texte hlásení.
+        """
+        if getattr(self, flag_attr, False):
             return  # už otvorené, nič nerobíme
 
-        self._direktorium_open = True
+        setattr(self, flag_attr, True)
         # Potlačíme vymazat_subor_menu už PRED otvorením okna: pri zatváraní
         # modálneho okna (uvoľnenie grab_set cez destroy()) môže Tk vrátiť
         # fokus na manual_entry OKAMŽITE – ešte skôr, než stihne zabehnúť náš
@@ -14762,91 +14378,54 @@ class ControlApp:
         # stihli vymazať.
         self._suppress_vymazat = True
         try:
-            # 1) Pokus o vytvorenie okna DirektoriumApp
-            saved_dw = int(self.direktorium_window_width)
-            saved_dh = int(self.direktorium_window_height)
+            saved_w = int(getattr(self, width_attr))
+            saved_h = int(getattr(self, height_attr))
 
-            def _uloz_direktorium_rozmery(w, h):
-                self.direktorium_window_width  = w
-                self.direktorium_window_height = h
+            def _uloz_rozmery(w, h):
+                setattr(self, width_attr, w)
+                setattr(self, height_attr, h)
                 self.ulozit_nastavenia(aktualizovat_label=False)
 
-            app = DirektoriumApp(
-                self.master, self.direktorium_data,
-                init_width=saved_dw, init_height=saved_dh,
-                on_close_callback=_uloz_direktorium_rozmery,
+            app = trieda_okna(
+                self.master, *args_okna,
+                init_width=saved_w, init_height=saved_h,
+                on_close_callback=_uloz_rozmery,
                 on_song_select=self.nacitat_z_okna_pomocok,
             )
 
-            # Reset combobox na "Zoznam piesní"
             self.song_combobox.current(0)
 
-            # 2) Resetuj UI s logovaním (vnútorná poistka)
             try:
                 self.reset_ui()
             except Exception as e:
-                log_exception("Chyba pri reset_ui v rámci open_direktorium", e)
+                log_exception(f"Chyba pri reset_ui v rámci {reset_ui_kontext}", e)
 
-            # 3) Počkáme, kým sa okno zavrie
             self.master.wait_window(app.top)
 
-        except Exception as e:           
-            log_exception("Kritická chyba pri otváraní okna Direktória", e)
+        except Exception as e:
+            log_exception(f"Kritická chyba pri otváraní okna {kriticka_chyba_popis}", e)
 
-        finally:            
-            self._direktorium_open = False
-            # Po zavretí nastavíme fokus späť na vstupné pole (bez vymazania popiskov)
+        finally:
+            setattr(self, flag_attr, False)
             self.master.after(100, self._obnov_focus_manual_entry_bez_vymazania)
-       
+
+    def open_direktorium(self):
+        """Otvára okno liturgického direktória a ošetruje stavy okna."""
+        self._otvor_prehliadaciu_pomocku(
+            "_direktorium_open", DirektoriumApp, (self.direktorium_data,),
+            "direktorium_window_width", "direktorium_window_height",
+            reset_ui_kontext="open_direktorium",
+            kriticka_chyba_popis="Direktória",
+        )
 
     def open_slavnosti(self):
         """Otvára okno s liturgickým direktóriom a ošetruje chyby pri inicializácii."""
-        if getattr(self, "_slavnosti_open", False):
-            return
-
-        self._slavnosti_open = True
-        # Pozri komentár v open_direktorium – aj tu treba potlačiť
-        # vymazat_subor_menu už pred otvorením okna, lebo Tk môže vrátiť
-        # fokus na manual_entry okamžite pri zatváraní okna (destroy/grab
-        # release), ešte skôr, než stihne zabehnúť odložený focus_set.
-        self._suppress_vymazat = True
-        try:
-            # 1) Pokus o otvorenie okna SlavnostiApp
-            saved_sw = int(self.slavnosti_window_width)
-            saved_sh = int(self.slavnosti_window_height)
-
-            def _uloz_slavnosti_rozmery(w, h):
-                self.slavnosti_window_width  = w
-                self.slavnosti_window_height = h
-                self.ulozit_nastavenia(aktualizovat_label=False)
-
-            app = SlavnostiApp(
-                self.master, SLAVNOSTI_DATA, NEPRIKAZANE_DATA, POHYBLIVE_DATA,
-                init_width=saved_sw, init_height=saved_sh,
-                on_close_callback=_uloz_slavnosti_rozmery,
-                on_song_select=self.nacitat_z_okna_pomocok,
-            )
-
-            # Nastavenie comboboxu na predvolenú hodnotu
-            self.song_combobox.current(0)
-
-            # 2) Reset UI s logovaním (vnútorná poistka)
-            try:
-                self.reset_ui()
-            except Exception as e:
-                log_exception("Chyba pri reset_ui v rámci open_slavnosti", e)
-
-            # 3) Čakanie na zatvorenie okna
-            self.master.wait_window(app.top)
-
-        except Exception as e:            
-            log_exception("Kritická chyba pri otváraní okna Slávností", e)
-            
-        finally:
-            # Zabezpečíme, že flag sa vždy vráti na False a focus sa vráti do vyhľadávania
-            self._slavnosti_open = False
-            self.master.after(100, self._obnov_focus_manual_entry_bez_vymazania)
-            
+        self._otvor_prehliadaciu_pomocku(
+            "_slavnosti_open", SlavnostiApp, (SLAVNOSTI_DATA, NEPRIKAZANE_DATA, POHYBLIVE_DATA),
+            "slavnosti_window_width", "slavnosti_window_height",
+            reset_ui_kontext="open_slavnosti",
+            kriticka_chyba_popis="Slávností",
+        )
     
     def otvorit_pomocnika(self):
         try:
@@ -15745,74 +15324,91 @@ class ControlApp:
         self.aktualne_strofy = []
         self.aktualny_index_strofa = 0        
     
+    # ==========================================================
+    # LIVE PREVIEW – oddelenie debounce a exekúcie (oprava leak-u after_id)
+    # ==========================================================
+    def _cancel_pending_live_preview(self):
+        """Zruší čakajúce naplánované volanie live preview, ak existuje."""
+        old_id = getattr(self, "_live_preview_after_id", None)
+        if old_id:
+            try:
+                self.master.after_cancel(old_id)
+            except Exception as e:
+                log_exception("_cancel_pending_live_preview: after_cancel zlyhal", e)
+            finally:
+                self._live_preview_after_id = None
+
+    def _schedule_live_preview(self, text, delay=100):
+        """
+        Debounce wrapper: zruší predchádzajúce naplánovanie a naplánuje nové.
+        Volá sa pri rýchlom písaní alebo pri retry (malé rozmery / guard).
+        """
+        # 1. zruš staré
+        self._cancel_pending_live_preview()
+        # 2. naplánuj nové – closure via default arg t=text aby sa neprepisovalo
+        try:
+            self._live_preview_after_id = self.master.after(
+                delay, lambda t=text: self._on_scheduled_live_preview(t)
+            )
+        except Exception as e:
+            log_exception("_schedule_live_preview: master.after zlyhal", e)
+            self._live_preview_after_id = None
+
+    def _on_scheduled_live_preview(self, text):
+        """Callback volaný z Tk after – vyčistí ID a spustí skutočný render."""
+        # after práve vypršal, jeho ID už nie je pending
+        self._live_preview_after_id = None
+        self.update_live_preview(text)
+
     def update_live_preview(self, text):
         """
-        Finálna oprava: Správne skrývanie cez place_forget a centrovanie textu.
+        Samotná logika aktualizácie – chráni sa len guardom proti re-entry.
+        Debouncing (after_cancel + after) rieši _schedule_live_preview(),
+        nie táto funkcia. Tým sa zabráni leak-u after_id pri rýchlom písaní.
         """
 
-        # 1. Kontrola widgetov
+        # 1. Guard proti súbežnému behu – ak už beží, naplánujeme retry namiesto dropu
+        if getattr(self, "_live_preview_updating", False):
+            self._schedule_live_preview(text, delay=100)
+            return
+
+        # 2. Kontrola widgetov
         preview = getattr(self, "live_preview_label", None)
         container = getattr(self, "preview_container", None)
         if not preview or not container or not preview.winfo_exists():
+            self._cancel_pending_live_preview()
             return
 
-        # 2. Kontrola nastavení (či je náhľad zapnutý v UI)
+        # 3. Kontrola nastavení (či je náhľad zapnutý v UI)
         show_preview_var = getattr(self, "zobrazovat_live_preview_var", None)
-        
         if not show_preview_var or not show_preview_var.get():
-            # Ak je vypnuté, vymažeme text a úplne schováme Frame
             preview.config(text="")
             if container.winfo_ismapped():
                 container.place_forget()
-
-            # Zrušíme naplánované aktualizácie
-            old_id = getattr(self, "_live_preview_after_id", None)
-            if old_id:
-                try:
-                    self.master.after_cancel(old_id)
-                except Exception as e:
-                    log_exception("update_live_preview: after_cancel zlyhal (vypnutie preview)", e)
-                self._live_preview_after_id = None
+            self._cancel_pending_live_preview()
             return
 
-        # 3. Zobrazenie kontajnera (ak bol skrytý)
+        # 4. Zobrazenie kontajnera (ak bol skrytý)
         if not container.winfo_ismapped():
             container.place(relx=1.0, rely=1.0, x=-10, y=-10, anchor="se")
 
-        # 4. Získanie aktuálnych rozmerov kontajnera (bez update_idletasks!)
+        # 5. Rozmery kontajnera
         w = container.winfo_width()
         h = container.winfo_height()
 
-        # Ak sú rozmery príliš malé (stáva sa pri inicializácii), skúsime to znova o 100ms
         if w <= 10 or h <= 10:
-
-            # Ak okno nie je skutočne viditeľné (minimalizované, withdrawn, skryté...),
-            # nepokúšame sa aktualizovať – inak vzniká nekonečná slučka.
-            # winfo_viewable() je platform-agnostické: vracia True iba ak sú
-            # widget aj všetci jeho predkovia mapovaní na obrazovke.
+            # Pri inicializácii sú rozmery ešte 1x1 – retry cez debounce, nie priamy after
             try:
                 if not self.master.winfo_exists() or not self.master.winfo_viewable():
                     return
             except tk.TclError:
                 pass
-
-            old_id = getattr(self, "_live_preview_after_id", None)
-            if old_id:
-                try:
-                    self.master.after_cancel(old_id)
-                except Exception as e:
-                    log_exception("update_live_preview: after_cancel zlyhal (malé rozmery)", e)
-
-            self._live_preview_after_id = self.master.after(100, lambda: self.update_live_preview(text))
+            self._schedule_live_preview(text, delay=100)
             return
 
-        # 5. Guard proti preťaženiu
-        if getattr(self, "_live_preview_updating", False):
-            return
+        # 6. Skutočný render s ochranou proti re-entry
         self._live_preview_updating = True
-
         try:
-            # Kontrola globálnej viditeľnosti textu
             if not self.is_text_visible:
                 preview.config(text="")
                 return
@@ -15821,33 +15417,42 @@ class ControlApp:
             if hasattr(self, "remove_special_chars"):
                 cisty_text = self.remove_special_chars(cisty_text)
 
-            # 6. DYNAMICKÝ VÝPOČET PÍSMA
-            max_w = int(w * 0.88)  # 12% horizontálny padding
-            max_h = int(h * 0.82)  # 18% vertikálny padding
+            max_w = int(w * 0.88)
+            max_h = int(h * 0.82)
 
-            current_size = PREVIEW_FONT_INIT
             font_family: str = FONT_NAME or "Arial"
-            loop_limit = PREVIEW_LOOP_LIMIT
 
-            # Persistent font objekt uložený ako self._preview_test_font – vytvorí sa raz
-            # a ďalšie volania iba reconfigurujú family/size. Predíde sa tým rastu
-            # internej Tk tabuľky fontov pri každom volaní update_live_preview.
+            # Persistentný font objekt – vytvorí sa raz, potom len reconfigure
             test_font = getattr(self, "_preview_test_font", None)
             if test_font is None:
-                test_font = tkfont.Font(family=font_family, size=current_size, weight="bold")
+                test_font = tkfont.Font(family=font_family, size=PREVIEW_FONT_MIN, weight="bold")
                 self._preview_test_font = test_font
             else:
-                test_font.configure(family=font_family, size=current_size)
+                test_font.configure(family=font_family)
 
-            while current_size > PREVIEW_FONT_MIN and loop_limit > 0:
-                test_font.configure(size=current_size)
-                needed_h = estimate_text_height(cisty_text, test_font, max_w)
-                if needed_h <= max_h:
-                    break
-                current_size -= 1
-                loop_limit -= 1
+            # --- BINÁRNE VYHĽADÁVANIE (zjednotené s ProjectionWindow) ---
+            low = PREVIEW_FONT_MIN
+            high = PREVIEW_FONT_INIT
+            best_size = PREVIEW_FONT_MIN
 
-            # 7. Aplikácia na Label
+            # Rýchly early-exit: ak sa zmestí aj max veľkosť, nemusíme hľadať
+            test_font.configure(size=high)
+            if estimate_text_height(cisty_text, test_font, max_w) <= max_h:
+                best_size = high
+            else:
+                while low <= high:
+                    mid = (low + high) // 2
+                    test_font.configure(size=mid)
+                    needed_h = estimate_text_height(cisty_text, test_font, max_w)
+
+                    if needed_h <= max_h:
+                        best_size = mid      # zmestí sa -> skús väčšie
+                        low = mid + 1
+                    else:
+                        high = mid - 1       # nezmestí sa -> skús menšie
+
+            current_size = best_size
+
             preview.config(
                 text=cisty_text,
                 font=(font_family, current_size, "bold"),
@@ -15858,21 +15463,28 @@ class ControlApp:
 
         except Exception as e:
             log_exception("update_live_preview zlyhal", e)
-
         finally:
             self._live_preview_updating = False
-            # Render prebehol úspešne (w > 10) – prípadný čakajúci retry
-            # je teraz zbytočný. Odvoláme ho a ID vyčistíme.
-            old_id = getattr(self, "_live_preview_after_id", None)
-            if old_id:
-                try:
-                    self.master.after_cancel(old_id)
-                except Exception as e:
-                    log_exception("update_live_preview finally: after_cancel zlyhal", e)
-            self._live_preview_after_id = None
+            # Žiadne after_cancel tu! ID sa čistí v _on_scheduled_live_preview()
+            # alebo v _cancel_pending_live_preview() pri debounce. Tým sa zabráni
+            # situácii, kedy finally zruší práve naplánovaný nový after.
                                     
 
+    def _shutdown_executor(self) -> None:
+        try:
+            ex = getattr(self, '_download_executor', None)
+            if ex is not None:
+                ex.shutdown(wait=False, cancel_futures=True)
+        except TypeError:
+            try:
+                ex.shutdown(wait=False)  # type: ignore[union-attr]
+            except Exception:
+                pass
+        except Exception:
+            pass
+
 if __name__ == "__main__":
+
     root = None  # ← pridane, aby bola premenná vždy definovaná
 
     try:
