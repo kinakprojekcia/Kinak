@@ -61,8 +61,8 @@ except ImportError:
 # ==========================================================
 # ZÁKLADNÉ NASTAVENIA
 # ==========================================================
-KINAK_VERSION = "3.0"
-ENABLE_DIAGNOSTICS = False
+
+KINAK_VERSION = "3.1"
 
 GREGORIANSKY_MIN_ROK = 1583
 GREGORIANSKY_MAX_ROK = 9999
@@ -679,10 +679,11 @@ PEVNE_SLAVENIA_S_VLASTNYM_KODOM = [
     (6, 24, "NJK", "NARODENIE SV. JÁNA KRSTITEĽA", "Slávnosť", datum_narodenia_jana_krstitela),
     (7, 2, "NAVPM", "NÁVŠTEVA PREBLAHOSLAVENEJ PANNY MÁRIE", "Sviatok", None),
     # CMV bol donedávna vynechaný z tejto tabuľky a ošetrený len samostatným
-    # if-om vo vypocitaj_kod_liturgickej_casti (kód/názov/stupeň nižšie sú s ním
-    # zámerne v súlade) – doplnené, aby o ňom vedeli aj ostatné funkcie, ktoré
-    # túto tabuľku používajú na detekciu kolízií (napr.
-    # je_neposkvrnene_srdce_pm_prekazane).
+    # if-om vo vypocitaj_kod_liturgickej_casti – ten if-blok bol odstránený
+    # (viď poznámka nad "Narodenie Pána má používať vianočný súbor 1VI..."
+    # v tej funkcii), keďže duplikoval presne tento záznam. CMV je odteraz
+    # definované JEDINE tu, čo využívajú aj ostatné funkcie na detekciu
+    # kolízií (napr. je_neposkvrnene_srdce_pm_prekazane).
     (7, 5, "CMV", "SV. CYRILA A METODA, SLOVANSKÝCH VIEROZVESTOV", "Slávnosť", None),
     (7, 11, "BEN", "SV. BENEDIKTA, OPÁTA, PATRÓNA EURÓPY", "Sviatok", None),
     (7, 23, "BRI", "SV. BRIGITY, REHOĽNÍČKY, PATRÓNKY EURÓPY", "Sviatok", None),
@@ -707,6 +708,33 @@ PEVNE_SLAVENIA_S_VLASTNYM_KODOM = [
     (11, 9, "VPLB", "VÝROČIE POSVIACKY LATERÁNSKEJ BAZILIKY", "Sviatok", None),
     (11, 30, "OND", "SV. ONDREJA, APOŠTOLA", "Sviatok", None),
     (12, 8, "12L", "NEPOŠKVRNENÉ POČATIE PANNY MÁRIE", "Slávnosť", datum_neposkvrneneho_pocatia),
+
+    # Novoročné obdobie (26.12.–3.1.). Tieto dni mali predtým samostatné
+    # if-bloky vo vypocitaj_kod_liturgickej_casti – rovnaký vzor ako
+    # CMV/NAVPM/PREM a pod. vyššie, zjednotené sem z rovnakého dôvodu
+    # (jediný zdroj pravdy pre kód/názov/stupeň). Nazov pre "PMB" je zámerne
+    # zhodný (case-insenzitívne, bez dátumovej prípony) s príslušným záznamom
+    # v direktóriu ("Panny Márie Bohorodičky (1.I.)"), aby ma_vlastnu_omsu_vigilie()
+    # správne rozpoznala jeho vigíliu bez ohľadu na to, ktorý zdroj názvu sa
+    # práve použije.
+    #
+    # POZOR – "1VI" (Narodenie Pána, 25.12.) sem ZÁMERNE NEPATRÍ, hoci by inak
+    # zapadalo do rovnakého vzoru: kód "1VI" totiž nie je len kódom tohto
+    # jedného dňa, ale zároveň aj generickým kódom celého zvyšku vianočného
+    # obdobia (26.–31.12., okrem dní vyššie a Svätej rodiny) vracaným
+    # o kúsok nižšie vo vypocitaj_kod_liturgickej_casti(). Skúška v tomto
+    # module ukázala, že pridanie riadku (12, 25, "1VI", ...) sem spôsobí, že
+    # vypocitaj_aktualnu_liturgicku_cast() pre 25.12. omylom vráti generický
+    # názov "OKTÁVA PO NARODENÍ PÁNA" (z LITURGICKE_CASTI_PODLA_KODU["1VI"])
+    # namiesto správneho "NARODENIE PÁNA" – kód sa zhoduje, ale ide o iný deň.
+    # Narodenie Pána preto ostáva ošetrené explicitne (vypocitaj_kod_liturgickej_casti
+    # aj vypocitaj_aktualnu_liturgicku_cast nižšie).
+    (12, 26, "STEF", "SV. ŠTEFANA, PRVÉHO MUČENÍKA", "Sviatok", None),
+    (12, 27, "SJE", "SV. JÁNA, APOŠTOLA A EVANJELISTU", "Sviatok", None),
+    (12, 28, "NEV", "SV. NEVINIATOK, MUČENÍKOV", "Sviatok", None),
+    (12, 31, "PDR", "POSLEDNÝ DEŇ ROKA", "", None),
+    (1, 1, "PMB", "PANNY MÁRIE BOHORODIČKY", "Slávnosť", None),
+    (1, 3, "NMJ", "NAJSVÄTEJŠIE MENO JEŽIŠ", "Spomienka", None),
 ]
 
 # Mapovanie kódov na liturgické dni pre prepojenie s direktóriom
@@ -999,66 +1027,35 @@ def vypocitaj_kod_liturgickej_casti(dnes: date | None = None) -> str:
     if dnes == vypocitaj_datum_pohyblivych_slaveni(dnes.year)["Najsvätejšieho Srdca Ježišovho"]:
         return "6TS"
 
-    # Návšteva preblahoslavenej Panny Márie: pevný 2.7., vlastný kód pred direktóriom (inak by vrátilo 7L)
-    if dnes == date(dnes.year, 7, 2) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "NAVPM", "Návšteva preblahoslavenej Panny Márie", "Sviatok"):
-        return "NAVPM"
-
-    # Sv. Cyrila a Metoda: pevný 5.7., vlastný kód pred direktóriom (inak by vrátilo generické 7L
-    # so zlým stupňom "Sviatok" cez STUPEN_OVERRIDE, namiesto skutočnej "Slávnosť")
-    if dnes == date(dnes.year, 7, 5) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "CMV", "Sv. Cyrila a Metoda, slovanských vierozvestov", "Slávnosť"):
-        return "CMV"
-
-    # Premenenie Pána: pevný 6.8., vlastný kód pred direktóriom (inak by vrátilo 8L)
-    if dnes == date(dnes.year, 8, 6) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "PREM", "Premenenie Pána", "Sviatok"):
-        return "PREM"
-
-    # Narodenie Panny Márie: pevný 8.9., vlastný kód pred direktóriom (inak by vrátilo 9L)
-    if dnes == date(dnes.year, 9, 8) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "NPMAR", "Narodenie Panny Márie", "Sviatok"):
-        return "NPMAR"
-
-    # Povýšenie Svätého kríža: pevný 14.9., vlastný kód pred direktóriom (inak by vrátilo 9L)
-    if dnes == date(dnes.year, 9, 14) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "PSK", "Povýšenie Svätého kríža", "Sviatok"):
-        return "PSK"
-
-    # Sv. Michala, Gabriela a Rafaela, archanieli: pevný 29.9., vlastný kód pred direktóriom (inak by vrátilo 9L)
-    if dnes == date(dnes.year, 9, 29) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "MGR", "Sv. Michala, Gabriela a Rafaela, archanieli", "Sviatok"):
-        return "MGR"
-
-    # Spomienka na Všetkých zosnulých veriacich: pevný 2.11., vlastný kód pred direktóriom (inak by vrátilo 11L)
-    if dnes == date(dnes.year, 11, 2) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "ZOS", "Spomienka na Všetkých zosnulých veriacich", "Spomienka"):
-        return "ZOS"
-
-    # Výročie posviacky Lateránskej baziliky: pevný 9.11., vlastný kód pred direktóriom (inak by vrátilo 11L)
-    if dnes == date(dnes.year, 11, 9) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "VPLB", "Výročie posviacky Lateránskej baziliky", "Sviatok"):
-        return "VPLB"
-
-    # Narodenie Pána má používať vianočný súbor 1VI, nie mesačný december 12L.
+    # POZNÁMKA: Návšteva preblahoslavenej Panny Márie (NAVPM, 2.7.), Sv. Cyrila
+    # a Metoda (CMV, 5.7.), Premenenie Pána (PREM, 6.8.), Narodenie Panny Márie
+    # (NPMAR, 8.9.), Povýšenie Svätého kríža (PSK, 14.9.), Sv. Michala, Gabriela
+    # a Rafaela (MGR, 29.9.), Spomienka na Všetkých zosnulých (ZOS, 2.11.),
+    # Výročie posviacky Lateránskej baziliky (VPLB, 9.11.) a časť novoročného
+    # obdobia (Sv. Štefan STEF 26.12., Sv. Ján SJE 27.12., Sv. Neviniatka NEV
+    # 28.12., Posledný deň roka PDR 31.12., Panny Márie Bohorodičky PMB 1.1.,
+    # Najsvätejšie meno Ježiš NMJ 3.1.) tu kedysi mali samostatné if-bloky,
+    # hoci ich kód/názov/stupeň sú zhodné so záznamami v
+    # PEVNE_SLAVENIA_S_VLASTNYM_KODOM – dve miesta s tou istou logikou sa
+    # časom vedeli rozísť (presne to sa už raz stalo pri CMV, pozri komentár
+    # pri tabuľke). Odstránené: o kód aj o prednosť pred nedeľou sa teraz stará
+    # jediný zdroj pravdy – lookup `najdi_pevne_slavenie_s_vlastnym_kodom`
+    # nižšie v tejto funkcii (spolu s `pevne_slavenie_ma_prednost_pred_nedelou`).
+    #
+    # Narodenie Pána (1VI, 25.12.) do tejto konsolidácie ZÁMERNE nepatrí – jeho
+    # kód "1VI" je zároveň generickým kódom pre celé zvyšné vianočné obdobie
+    # (pozri `if dnes >= date(dnes.year, 12, 25): ... return "1VI"` nižšie),
+    # takže pridanie samostatného riadku do tabuľky by spôsobilo, že
+    # vypocitaj_aktualnu_liturgicku_cast() by pre 25.12. omylom vrátil
+    # generický názov "OKTÁVA PO NARODENÍ PÁNA" namiesto správneho "NARODENIE
+    # PÁNA" (kódy sa zhodujú, no ide o iný deň). Preto ostáva ošetrené
+    # explicitne aj v tejto funkcii, aj vo vypocitaj_aktualnu_liturgicku_cast().
+    #
+    # Musí sa skontrolovať PRED direktóriovým lookupom nižšie (najdi_presny_datum_v_direktoriu):
+    # direktórium má pre 25.12. vlastný záznam s dátumovou príponou "(25.XII.)",
+    # ktorý by inak vrátil generický mesačný kód "12L" namiesto správneho "1VI".
     if dnes == date(dnes.year, 12, 25) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "1VI", "Narodenie Pána", "Slávnosť"):
         return "1VI"
-
-    # Sv. Štefan má vlastný súbor vianočného obdobia, nie všeobecný 1VI/12L.
-    if dnes == date(dnes.year, 12, 26) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "STEF", "Sv. Štefana, prvého mučeníka", "Sviatok"):
-        return "STEF"
-
-    # Sv. Ján, apoštol a evanjelista: pevný 27.12., vlastný kód pred všeobecným 1VI.
-    if dnes == date(dnes.year, 12, 27) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "SJE", "Sv. Jána, apoštola a evanjelistu", "Sviatok"):
-        return "SJE"
-
-    # Sv. Neviniatka, mučeníci: pevný 28.12., vlastný kód pred všeobecným 1VI/12L.
-    if dnes == date(dnes.year, 12, 28) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "NEV", "Sv. Neviniatok, mučeníkov", "Sviatok"):
-        return "NEV"
-
-    # Posledný deň roka má vlastný záznam v direktóriu.
-    if dnes == date(dnes.year, 12, 31) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "PDR", "Posledný deň roka", ""):
-        return "PDR"
-
-    # Panny Márie Bohorodičky má pevný dátum 1.1. a vlastný kód vo vianočnom filtri.
-    if dnes == date(dnes.year, 1, 1) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "PMB", "Panny Márie Bohorodičky", "Slávnosť"):
-        return "PMB"
-
-    # Najsvätejšie meno Ježiš má pevný dátum 3.1.; nedeľa má pred spomienkou prednosť.
-    if dnes == date(dnes.year, 1, 3) and pevne_slavenie_ma_prednost_pred_nedelou(dnes, "NMJ", "Najsvätejšie meno Ježiš", "Spomienka"):
-        return "NMJ"
 
     # Nanebovstúpenie Pána (40. deň po Veľkej noci) je slávnosť Pána a má prednosť
     # pred akýmkoľvek pevným dátumom (napr. v rokoch 2035 a 2046 padne na 3.5.,
@@ -1760,638 +1757,9 @@ def vypocitaj_tyzden_zaltara(dnes: date | None = None) -> str:
 # (cez polnoc prvej adventnej nedele).
 
 # ==========================================================
-# CESTY (Modernizované cez pathlib)
+# DIREKTORIUM_DATA – obsah direktória KBS (piesne/žalmy pre pevné a pohyblivé
+# slávenia), potrebný pre najdi_presny_datum_v_direktoriu() vyššie.
 # ==========================================================
-IS_FROZEN = getattr(sys, "frozen", False)
-
-if IS_FROZEN:
-    # Adresár s EXE súborom
-    BASE_DIR = Path(sys.executable).parent
-    # _MEIPASS pre interné ikony
-    INTERNAL_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR))
-else:
-    BASE_DIR = Path(__file__).resolve().parent
-    INTERNAL_DIR = BASE_DIR
-
-def _vytvor_adresar_s_fallbackom(cesta: Path, popis: str, fallback_meno: str) -> tuple[Path, str | None]:
-    """Vytvori adresar; pri zlyhani pouzije docasny fallback namiesto padu pri starte."""
-    try:
-        cesta.mkdir(parents=True, exist_ok=True)
-        return cesta, None
-    except Exception as primary_error:
-        fallback = Path(tempfile.gettempdir()) / fallback_meno
-        sprava = (
-            f"{popis}: nepodarilo sa vytvorit {cesta} ({primary_error!r}); "
-            f"pouzivam fallback {fallback}"
-        )
-        try:
-            fallback.mkdir(parents=True, exist_ok=True)
-            return fallback, sprava
-        except Exception as fallback_error:
-            docasny = Path(tempfile.mkdtemp(prefix=f"{fallback_meno}_"))
-            return (
-                docasny,
-                f"{sprava}; pevny fallback zlyhal ({fallback_error!r}); pouzivam {docasny}",
-            )
-
-
-CONFIG_DIR_FALLBACK_INFO = None
-SONG_FOLDER_FALLBACK_INFO = None
-
-# Konfiguracny adresar (AppData)
-if platform.system() == "Windows":
-    CONFIG_DIR = Path(os.getenv("LOCALAPPDATA", Path.home() / "AppData/Local")) / "Kinak"
-else:
-    CONFIG_DIR = Path.home() / ".config/Kinak"
-
-CONFIG_DIR, CONFIG_DIR_FALLBACK_INFO = _vytvor_adresar_s_fallbackom(
-    CONFIG_DIR,
-    "Konfiguracny adresar",
-    "Kinak",
-)
-
-CONFIG_FILE_PATH = CONFIG_DIR / "config.json"
-LOG_PATH = CONFIG_DIR / "diagnostika.txt"
-
-# --- LOGIKA PRE PIESNE ---
-LOCAL_SONG_FOLDER = BASE_DIR / "piesne"
-SYSTEM_SONG_FOLDER = CONFIG_DIR / "piesne"
-
-# Rozhodnutie o predvolenom priecinku (Pri distribucii priloz priecinok piesne k suboru EXE.)
-if LOCAL_SONG_FOLDER.is_dir():
-    DEFAULT_SONG_FOLDER = LOCAL_SONG_FOLDER
-else:
-    DEFAULT_SONG_FOLDER, SONG_FOLDER_FALLBACK_INFO = _vytvor_adresar_s_fallbackom(
-        SYSTEM_SONG_FOLDER,
-        "Systemovy priecinok piesni",
-        "Kinak_piesne",
-    )
-
-# Cesty k ikonám
-ICONS_DIR = INTERNAL_DIR / "icons"
-APP_ICON = ICONS_DIR / "Kinak32.ico"
-ICON_PNG = ICONS_DIR / "Kinak_128r.png"
-
-# ==========================================================
-# DIAGNOSTIKA / LOGOVANIE - s rotaciou
-# ==========================================================
-LOG_MAX_BYTES = 5000000  # 5 MB
-LOG_BACKUP_COUNT = 3
-_kinak_logger = None
-
-def _get_kinak_logger():
-    global _kinak_logger
-    if _kinak_logger is not None:
-        return _kinak_logger
-    logger = logging.getLogger("Kinak")
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = False
-    try:
-        if logger.handlers:
-            logger.handlers.clear()
-    except Exception:
-        pass
-    try:
-        LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        handler = RotatingFileHandler(
-            filename=str(LOG_PATH),
-            maxBytes=LOG_MAX_BYTES,
-            backupCount=LOG_BACKUP_COUNT,
-            encoding="utf-8"
-        )
-        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-    except Exception as e:
-        try:
-            print(f"[LOGGING SETUP ERROR] {e}", file=sys.stderr)
-        except Exception:
-            pass
-    _kinak_logger = logger
-    return logger
-
-def _log(level, message, exc=None):
-    if not ENABLE_DIAGNOSTICS:
-        return
-    try:
-        logger = _get_kinak_logger()
-        lvl = getattr(logging, level.upper(), logging.INFO)
-        if exc is not None:
-            logger.log(lvl, message, exc_info=(type(exc), exc, exc.__traceback__))
-        else:
-            logger.log(lvl, message)
-    except Exception as logging_error:
-        try:
-            print(f"[LOGGING ERROR] {message} | {logging_error}", file=sys.stderr)
-        except Exception:
-            pass
-
-def log_exception(context, exc):
-    if not ENABLE_DIAGNOSTICS:
-        return
-    _log("ERROR", context, exc)
-
-def log_info(message):
-    if not ENABLE_DIAGNOSTICS:
-        return
-    _log("INFO", message)
-
-def log_debug(message):
-    if not ENABLE_DIAGNOSTICS:
-        return
-    _log("DEBUG", message)
-
-
-
-
-def update_progress(
-    progress_callback,
-    sprava: str,
-    aktualny: int | None = None,
-    spolu: int | None = None,
-) -> None:
-    """
-    Spoločný pomocník na nahlásenie priebehu sťahovania (nahrádza predtým
-    7× duplicitne definovanú lokálnu funkciu `progress(...)` vnútri
-    jednotlivých `stiahni_*` funkcií).
-
-    Ak je `progress_callback` volateľný, zavolá ho s (sprava, aktualny, spolu)
-    a prípadnú výnimku bezpečne zaloguje, aby zlyhanie GUI callbacku nikdy
-    nezhodilo samotné sťahovanie.
-    """
-    if callable(progress_callback):
-        try:
-            progress_callback(sprava, aktualny, spolu)
-        except Exception as e:
-            log_exception("[LC-KBS] Progress callback zlyhal", e)
-
-# ==========================================================
-# Inicializácia diagnostiky (Pathlib verzia)
-# ==========================================================
-
-def chybaju_kniznice_pre_stahovanie() -> list[str]:
-    """Vráti zoznam chýbajúcich knižníc potrebných na sťahovanie textov."""
-    chybaju = []
-    if requests is None:
-        chybaju.append("requests")
-    if BeautifulSoup is None:
-        chybaju.append("beautifulsoup4")
-    return chybaju
-
-
-def zobraz_chybu_chybajucich_kniznic_pre_stahovanie() -> bool:
-    """Zobrazí používateľovi jasnú chybu, ak chýbajú knižnice pre sťahovanie."""
-    chybaju = chybaju_kniznice_pre_stahovanie()
-    if not chybaju:
-        return False
-
-    nazvy = ", ".join(chybaju)
-    log_info(f"Sťahovanie nie je dostupné, chýbajú knižnice: {nazvy}")
-    messagebox.showerror(
-        "Chýbajú knižnice",
-        "Funkcia sťahovania čítaní, vešpier, refrénov a cezročných týždňov nie je dostupná, "
-        f"pretože chýbajú tieto Python knižnice: {nazvy}.\n\n"
-        "Doinštalujte ich príkazom:\n"
-        "pip install requests beautifulsoup4\n\n"
-        "Ak používate EXE verziu, treba ich zahrnúť pri zostavení aplikácie."
-    )
-    return True
-
-
-_INTERNET_KONTROLA_HOST = ("1.1.1.1", 53)
-
-def _over_internet_socket(timeout: float = 2.0) -> bool:
-    """
-    Čistá kontrola internetového pripojenia bez akýchkoľvek GUI vedľajších
-    účinkov (žiadny messagebox) – vďaka tomu je BEZPEČNÉ volať ju aj
-    z pozadového (worker) vlákna, na rozdiel od je_internet_dostupny().
-    """
-    try:
-        socket.create_connection(_INTERNET_KONTROLA_HOST, timeout=timeout)
-        return True
-    except OSError:
-        return False
-
-
-def je_internet_dostupny(timeout: float = 2.0) -> bool:
-    """
-    Rýchla kontrola internetu – vráti True ak je pripojenie, inak zobrazí chybu.
-
-    POZOR – táto funkcia volá messagebox, takže je bezpečné ju volať LEN
-    z hlavného (GUI) vlákna. Zo sťahovacieho worker vlákna (kde by messagebox
-    z iného než hlavného vlákna bol nekorektný voči Tkinter) použite priamo
-    _over_internet_socket(), ktorá je čisto informatívna bez vedľajších účinkov.
-    """
-    if _over_internet_socket(timeout):
-        return True
-    messagebox.showerror("Žiadne internetové pripojenie", "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.")
-    return False
-
-
-def zobraz_chybu_stahovania(nazov: str, zdroj: str):
-    """Jednotné chybové hlásenie pre všetky sťahovania."""
-    messagebox.showerror(
-        "Chyba pri sťahovaní",
-        f"Nepodarilo sa stiahnuť {nazov} z {zdroj}.\n\n"
-        "Možné príčiny:\n"
-        "• Žiadne internetové pripojenie\n"
-        f"• Stránka {zdroj} je nedostupná\n"
-        "• Prístup mohol zablokovať Firewall alebo Antivírus\n"
-        "• Zmenila sa štruktúra stránky\n\n"
-        "Podrobnosti v logu."
-    )
-
-def init_diagnostics():
-    if not ENABLE_DIAGNOSTICS:
-        return
-    try:
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        # LOG_PATH je teraz objekt Path, môžeme ho otvoriť priamo
-        with LOG_PATH.open("a", encoding="utf-8") as f:
-            f.write("\n" + "="*40 + "\n")
-            f.write(f"Štart Kinak v{KINAK_VERSION} | {now}\n")
-            f.write(f"OS: {platform.platform()}\n")
-            f.write(f"Architektúra: {platform.machine()}\n")
-            f.write(f"Python: {platform.python_version()}\n")            
-            f.write(f"Režim: {'EXE' if IS_FROZEN else 'Script'}\n")
-            
-            # .resolve() vráti absolútnu cestu, čo je pre diagnostiku najistejšie
-            f.write(f"Base Dir: {BASE_DIR.resolve()}\n")
-            f.write(f"Config: {CONFIG_DIR.resolve()}\n")
-            if CONFIG_DIR_FALLBACK_INFO:
-                f.write(f"Config fallback: {CONFIG_DIR_FALLBACK_INFO}\n")
-            
-            # Pridáme informáciu o priečinku s piesňami pre lepší prehľad
-            f.write(f"Songs Dir: {DEFAULT_SONG_FOLDER.resolve()}\n")
-            if SONG_FOLDER_FALLBACK_INFO:
-                f.write(f"Songs fallback: {SONG_FOLDER_FALLBACK_INFO}\n")
-            f.write("="*40 + "\n")
-            
-    except Exception as e:
-        try:
-            # Ak zlyhá zápis do súboru, vypíšeme to aspoň do systémového erroru
-            sys.stderr.write(f"[INIT LOG ERROR] {e}\n")
-        except Exception:
-            pass
-
-# ==========================================================
-# POMOCNÉ FUNKCIE NA ÚROVNI MODULU
-# ==========================================================
-
-def normalize_diacritics(text: str) -> str:
-    """
-    Normalizuje reťazec – odstráni diakritiku a prevedie na malé písmená.
-    Ponecháva medzery, interpunkciu a ostatné znaky.
-    Používa sa na porovnávanie textov bez ohľadu na diakritiku
-    (napr. pri validácii stiahnutých čítaní).
-    Pozri aj: ControlApp.normalize_alnum() – agresívnejší variant len pre alfanum.
-    """
-    text = unicodedata.normalize("NFD", text)
-    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
-    return text.lower()
-
-def estimate_text_height(text: str, font_obj, wraplength: int) -> int:
-    """
-    Odhadne výšku textu v pixeloch pri danom wraplength.
-    Simuluje zalamovanie slov rovnako ako Tkinter Label – bez renderovania.
-    Používaná v ProjectionWindow aj ControlApp (live preview).
-
-    Poznámka k \\xa0 (nezlomiteľná medzera):
-        Tk Label zalamuje wraplength VÝHRADNE na ASCII medzere (U+0020).
-        \\xa0 Tk považuje za súčasť slova — token "aaa\\xa0bbb" sa NEzalamuje.
-        Python str.split() naopak \\xa0 rozdeľuje, čo by spôsobilo nadhodnotenie
-        počtu riadkov (písmo by bolo príliš malé). Preto \\xa0 nahrádzame bežnou
-        medzerou ešte pred tokenizáciou, čím odhad zodpovedá správaniu Tk.
-    """
-    try:
-        if not text:
-            return font_obj.metrics("linespace")
-
-        total_lines = 0
-        line_h = font_obj.metrics("linespace")
-
-        for paragraph in text.split("\n"):
-            words = paragraph.replace("\xa0", " ").split()
-            if not words:
-                total_lines += 1
-                continue
-
-            line = words[0]
-            for word in words[1:]:
-                if font_obj.measure(line + " " + word) <= wraplength:
-                    line += " " + word
-                else:
-                    total_lines += 1
-                    line = word
-            total_lines += 1
-
-        return total_lines * line_h
-
-    except Exception as e:
-        log_exception("estimate_text_height: chyba pri výpočte", e)
-        try:
-            # Fallback: odhadneme počet riadkov podľa zalomení v texte.
-            # Lepšia aproximácia ako hardcoded "3" – pri dlhom texte by
-            # hodnota 3 spôsobila príliš veľké písmo v projekcii.
-            approx_lines = max(1, text.count("\n") + 1) if text else 1
-            return font_obj.metrics("linespace") * approx_lines
-        except Exception as e2:
-            log_exception("estimate_text_height: fallback zlyhal", e2)
-            return 40
-
-# ==========================================================
-# GLOBÁLNE UI KONŠTANTY
-# ==========================================================
-# Fonty sú detekované dynamicky funkciou _inicializovat_fonty(), ktorá sa volá
-# v __main__ hneď po vytvorení Tk inštancie (tkfont.families() ju vyžaduje).
-# Predvolené hodnoty slúžia ako univerzálny fallback – platné na všetkých platformách.
-FONT_NAME: str = "Arial"
-FONT_MONO: str = "Courier"
-
-def _inicializovat_fonty() -> None:
-    """
-    Detekuje systémové fonty a nastaví globálne konštanty FONT_NAME a FONT_MONO.
-
-    Musí byť volaná po vytvorení Tk inštancie (tkfont.families() to vyžaduje),
-    ale PRED prvým vytvorením ProjectionWindow alebo ControlApp – inak by
-    všetky widgety dostali predvolený fallback „Arial" namiesto systémového fontu.
-
-    Správne poradie v __main__:
-        root = tk.Tk()
-        root.withdraw()
-        _inicializovat_fonty()   # ← hneď tu, pred ControlApp(root)
-        app = ControlApp(root)
-    """
-    global FONT_NAME, FONT_MONO
-    try:
-        _available_fonts = tkfont.families()
-
-        if sys.platform == "darwin":
-            FONT_NAME = "SF Pro Display" if "SF Pro Display" in _available_fonts else "Helvetica"
-            FONT_MONO = "Menlo"
-        elif sys.platform == "win32":
-            FONT_NAME = "Segoe UI" if "Segoe UI" in _available_fonts else "Arial"
-            FONT_MONO = "Consolas"
-        else:
-            FONT_NAME = "Ubuntu" if "Ubuntu" in _available_fonts else "DejaVu Sans"
-            FONT_MONO = "Monospace" if "Monospace" in _available_fonts else "Courier"
-
-    except Exception as e_font:
-        log_exception("_inicializovat_fonty: Chyba pri detekcii fontov", e_font)
-        FONT_NAME = "Arial"
-        FONT_MONO = "Courier"
-
-# TEXT_COLOR, BACKGROUND_COLOR a DEFAULT_USE_FADE sú aktívne konštanty:
-# používajú sa v ProjectionWindow.__init__ a ControlApp (nie len ako init hodnoty).
-TEXT_COLOR = "#ffffff"
-BACKGROUND_COLOR = "#1e1e1e"
-PANEL_BG_COLOR = "#1e1e1e"
-
-# Farba textu labelu odporúčaných piesní z direktória (svetlomodrá).
-# Definovaná ako konštanta, aby ju `.config(fg=...)` pri mazaní textu
-# neprepísalo späť na bielu.
-DIREKTORIUM_LABEL_FG = "#aaddff"
-TEXT_PANEL_BG = "#2e2e2e"
-
-WRAP_PADDING_RATIO = 0.06
-MIN_WRAP = 240
-# Podiel šírky okna použitý ako max_w pri výpočte veľkosti písma v projekcii.
-# Zvyšok (6 %) tvorí horizontálny padding (zrkadlí WRAP_PADDING_RATIO).
-PROJECTION_WRAP_RATIO = 0.94
-
-# Konštanty pre Live Preview panel (update_live_preview)
-PREVIEW_FONT_INIT   = 20   # počiatočná veľkosť písma pre iteratívny výpočet
-PREVIEW_FONT_MIN    = 8    # minimálna povolená veľkosť písma v preview
-PREVIEW_LOOP_LIMIT  = 15   # max. počet iterácií pri zmenšovaní písma (ochrana pred zacyklením)
-
-# Konštanty pre horný panel strofy (vypocitaj_velkost_pisma_pre_strofu)
-STROFA_FONT_INIT    = 40   # počiatočná veľkosť písma (najväčšia povolená)
-STROFA_FONT_MIN     = 14   # minimálna veľkosť písma (čitateľnosť)
-STROFA_LOOP_LIMIT   = 30   # ochrana pred zacyklením
-STROFA_PADDING_H    = 60   # horizontálny padding (2× padx=20 + rezerva)
-STROFA_PADDING_V    = 30   # vertikálny padding (2× pady=10 + rezerva)
-
-# Oneskorenia jednorazových inicializačných callbackov pri štarte ControlApp (ms)
-_STARTUP_FOCUS_DELAY_MS   = 300   # focus na manual_entry
-_STARTUP_PREVIEW_DELAY_MS = 600   # prvý live preview render
-_STARTUP_SAVE_DELAY_MS    = 800   # uloženie nastavení po inicializácii GUI
-
-# Adventné a Pôstne majú rovnakú liturgickú farbu (fialová) – zámerné.
-LITURGICKE_OBDOBIA = {
-    "Adventné": "#FF80FF",
-    "Vianočné": "#FFCC33",
-    "Pôstne":   "#FF80FF",
-    "Veľkonočné": "#FFCC33",
-    "Cezročné": "#80FF00"
-}
-
-DEFAULT_CONFIG = {
-    # Poznámka: "base_dir" sa ukladá do JSON len pre informáciu.
-    # Pri štarte sa BASE_DIR vždy určuje nezávisle od tohto záznamu (pozri sekciu CESTY).
-    "base_dir": str(BASE_DIR),
-    "font_size": 75,
-    "text_color": LITURGICKE_OBDOBIA.get("Cezročné", "#80FF00"),
-    "song_folder": str(DEFAULT_SONG_FOLDER),  
-    "liturgical_season": "Cezročné",
-    "liturgical_year": vypocitaj_liturgicky_rok(),
-    "default_filter_obdobie": "Cezročné C2",
-    "pouzit_vlastnu_farbu": False,
-    "bottom_margin": 40,
-    "reserved_vertical_ratio": 0.20,
-    "zobrazit_direktorium": False,
-    "fade_speed": "mierne rýchle",
-    "pomocnik_font_size": 14,
-    "pomocnik_x": -1,
-    "pomocnik_y": -1,
-    "pomocnik_width": -1,
-    "pomocnik_height": -1,
-    "pomocnik_last_tab": 1,
-    "zobrazovat_live_preview": True,
-    "zobrazovat_specialne_znaky": True,
-    "zobrazovat_znaky_chorov": True,
-    "statusbar_tyzden_zaltara": True,
-    "statusbar_skratka_zalmu": True,
-    "statusbar_jks_piesne": True,
-    "main_window_x": -1,
-    "main_window_y": -1,
-    "main_window_width": -1,
-    "main_window_height": -1,
-    "settings_window_width": -1,
-    "settings_window_height": -1,
-    "direktorium_window_width": -1,
-    "direktorium_window_height": -1,
-    "slavnosti_window_width": -1,
-    "slavnosti_window_height": -1,
-    "about_window_width": -1,
-    "about_window_height": -1,
-    "about_last_tab": 1,
-    "about_font_size": 12,
-    "preferred_monitor_index": 0
-}
-
-# FONT_SIZE je predvolená hodnota; ControlApp spravuje aktuálny stav
-# výhradne cez self.font_size a ProjectionWindow cez self.font_size.
-# Globálna konštanta sa číta len pri inicializácii DEFAULT_CONFIG.
-FONT_SIZE = DEFAULT_CONFIG["font_size"]
-MAX_FONT_SIZE = 150  # horná hranica slidera veľkosti písma (r. vytvorit_nastavenia_okno)
-
-DEFAULT_USE_FADE = True
-
-# --- Globálne zoznamy liturgických slávení ---
-
-SLAVNOSTI_DATA = [
-    ("Panny Márie Bohorodičky", "1. 1"),           # [PMB]
-    ("Zjavenie Pána - Traja králi", "6. 1"),                # [ZP]
-    ("Nanebovstúpenie Pána", "pohyblivý"),                  # [NP]
-    ("Najsvätejšieho Kristovho Tela a Krvi", "pohyblivý"),  # [TIK]
-    ("Sv. Petra a Pavla, apoštolov", "29. 6"),              # [PP]
-    ("Nanebovzatie Panny Márie", "15. 8"),                  # [NPM]
-    ("Všetkých svätých", "1. 11"),                          # [VS]
-    ("Nepoškvrnené počatie Panny Márie", "8. 12"),          # [NPPM]
-    ("Narodenie Pána", "25. 12"),                           # [NPAN]
-]
-
-NEPRIKAZANE_DATA = [
-    ("Najsvätejšie meno Ježiš", "3. 1"),                               # [NMJ]
-    ("Obetovanie Pána (Hromnice)", "2. 2"),                            # [OP]     
-    ("Popolcová streda", "pohyblivý"),                                 # [PS]   
-    ("Sv. Jozefa, ženícha Panny Márie", "19. 3"),                      # [SJ]
-    ("Zvestovanie Pána*", "25. 3"),                                    # [ZV]
-    ("Pondelok vo Veľkonočnej oktáve", "pohyblivý"),                   # [VPON]    
-    ("Turíčny pondelok", "pohyblivý"),                                 # [TPON]
-    ("Pána Ježiša Krista, najvyššieho a večného kňaza", "pohyblivý"),  # [VK] 
-    ("Najsvätejšieho Srdca Ježišovho", "pohyblivý"),                   # [NSJ]
-    ("Nepoškvrnené Srdce Panny Márie", "pohyblivý"),                   # [NSPM]
-    ("Narodenie sv. Jána Krstiteľa", "24. 6"),                         # [NJK]
-    ("Návšteva preblahoslavenej Panny Márie", "2. 7"),                 # [NAVPM]
-    ("Sv. Cyrila a Metoda, slovanských vierozvestov", "5. 7"),         # [CMV] 
-    ("Premenenie Pána", "6. 8"),                                       # [PREM]
-    ("Narodenie Panny Márie", "8. 9"),                                 # [NPMAR]
-    ("Povýšenie Svätého kríža", "14. 9"),                              # [PSK]
-    ("Sedembolestnej Panny Márie, patrónky Slovenska", "15. 9"),       # [SPM]
-    ("Sv. Michala, Gabriela a Rafaela, archanieli", "29. 9"),             # [MGR] 
-    ("Spomienka na Všetkých zosnulých veriacich", "2. 11"),            # [ZOS]
-    ("Výročie posviacky Lateránskej baziliky", "9. 11"),              # [VPLB]   
-    ("Sv. Štefana, prvého mučeníka", "26. 12"),                        # [STEF]
-    ("Sv. Neviniatok, mučeníkov", "28. 12"),                           # [NEV]
-]
-
-POHYBLIVE_DATA = [
-    ("Prvá adventná nedeľa (začína nový liturgický rok)",
-     "Nasleduje po slávnosti Krista Kráľa."),                                      # [1AD]
-
-    ("Svätej rodiny Ježiša, Márie a Jozefa",
-     "Nedeľa nasledujúca po Narodení Pána alebo 30. decembra v situácii, že slávnosť Narodenia Pána pripadne na nedeľu."),  # [SR]
-
-    ("Krst Krista Pána",
-     "Nedeľa po Zjavení Pána uzatvára vianočné obdobie."),  # [KKP]
-
-    ("Popolcová streda",
-     "Streda v siedmom týždni pred Veľkonočnou nedeľou."),                          # [PS]
-
-    ("Palmová (Kvetná nedeľa)",
-     "Nedeľa pred Veľkonočnou nedeľou."),                                           # [VT]
-
-    ("Veľkonočná nedeľa",
-     "Nedeľa po prvom jarnom splne mesiaca. Môže pripadnúť na jednu z nedieľ od 22. marca do 25. apríla."),  # [1VN]
-    
-    ("Pondelok vo Veľkonočnej oktáve",                   
-     "Nasleduje hneď po Veľkonočnej nedeli."),                                      # [VPON]
-
-    ("Nedeľa Božieho milosrdenstva",
-     "Druhá veľkonočná nedeľa, posledný deň veľkonočnej oktávy."),                  # [NBM]
-
-    ("Nanebovstúpenie Pána",
-     "Štyridsiaty deň po Veľkej noci – pripadá vždy na štvrtok 6. veľkonočného týždňa"),                                            # [NP]
-
-    ("Nedeľa zoslania Ducha Svätého (Turíce)",
-     "Päťdesiaty deň po Veľkej noci - uzatvára sa veľkonočné obdobie."),            # [TUR]
-    
-    ("Panny Márie, Matky Cirkvi",
-     "Deň po Zoslaní Ducha Svätého - Turíčny pondelok."),                           # [PMMC]
-
-    ("Pána Ježiša Krista, najvyššieho a večného kňaza",
-     "Štvrtok po slávnosti Zoslania Ducha Svätého."),                               # [VK]
-
-    ("Najsvätejšej Trojice",
-     "Prvá nedeľa po slávnosti Zoslania Ducha Svätého."),                           # [NT]
-
-    ("Najsvätejšieho Kristovho Tela a Krvi",
-     "Štvrtok po slávnosti Najsvätejšej Trojice."),                                 # [TIK]
-
-    ("Najsvätejšieho Srdca Ježišovho",
-     "Piatok v týždni po slávnosti Najsvätejšieho Kristovho Tela a Krvi."),         # [NSJ]
-    
-    ("Nepoškvrnené Srdce Panny Márie",
-     "Sobota po Najsvätejšom Srdci Ježišovom."),                                  # [NSPM]
-
-    ("Krista Kráľa",
-     "Posledná, 34. cezročná nedeľa v liturgickom roku."),                        # [KK]
-]
-
-SLAVNOSTI_KODY_PRE_VYBER = {
-    "Panny Márie Bohorodičky": "PMB",
-    "Zjavenie Pána - Traja králi": "1L",
-    "Nanebovstúpenie Pána": "NP",
-    "Najsvätejšieho Kristovho Tela a Krvi": "5TS",
-    "Sv. Petra a Pavla, apoštolov": "6L",
-    "Nanebovzatie Panny Márie": "8L",
-    "Všetkých svätých": "11L",
-    "Nepoškvrnené počatie Panny Márie": "12L",
-    "Narodenie Pána": "1VI",
-    "Najsvätejšie meno Ježiš": "NMJ",
-    "Obetovanie Pána (Hromnice)": "2L",
-    "Popolcová streda": "PS",
-    "Sv. Jozefa, ženícha Panny Márie": "3L",
-    "Zvestovanie Pána*": "ZV",
-    "Pondelok vo Veľkonočnej oktáve": "VPON",
-    "Turíčny pondelok": "2TS",
-    "Pána Ježiša Krista, najvyššieho a večného kňaza": "3TS",
-    "Najsvätejšieho Srdca Ježišovho": "6TS",
-    "Nepoškvrnené Srdce Panny Márie": "7TS",
-    "Narodenie sv. Jána Krstiteľa": "NJK",
-    "Návšteva preblahoslavenej Panny Márie": "NAVPM",
-    "Sv. Cyrila a Metoda, slovanských vierozvestov": "CMV",
-    "Premenenie Pána": "PREM",
-    "Narodenie Panny Márie": "NPMAR",
-    "Povýšenie Svätého kríža": "PSK",
-    "Sedembolestnej Panny Márie, patrónky Slovenska": "9L",
-    "Sv. Michala, Gabriela a Rafaela, archanieli": "MGR",
-    "Spomienka na Všetkých zosnulých veriacich": "ZOS",
-    "Výročie posviacky Lateránskej baziliky": "VPLB",
-    "Sv. Štefana, prvého mučeníka": "STEF",
-    "Sv. Jána, apoštola a evanjelistu": "SJE",    
-    "Sv. Neviniatok, mučeníkov": "NEV",
-    "Prvá adventná nedeľa (začína nový liturgický rok)": "1AD",
-    "Svätej rodiny Ježiša, Márie a Jozefa": "SR",
-    "Krst Krista Pána": "KKP",
-    "Palmová (Kvetná nedeľa)": "VT",
-    "Veľkonočná nedeľa": "1VN",
-    "Nedeľa Božieho milosrdenstva": "2VN",
-    "Nedeľa zoslania Ducha Svätého (Turíce)": "1TS",
-    "Panny Márie, Matky Cirkvi": "2TS",
-    "Najsvätejšej Trojice": "4TS",
-    "Krista Kráľa": "34C",
-}
-
-
-def vyber_prvu_piesen_z_direktorioveho_textu(text):
-    """Z direktóriového zápisu typu '244, 1' alebo '3/18/19' vyberie prvé číslo piesne."""
-    match = re.search(r"\b\d{1,3}[a-zA-Z]?\b", str(text or ""))
-    return match.group(0) if match else ""
-
-# --- Direktórium vložené priamo do kódu ---
-#
-# Kľúč  vlastna_omsa_vigilie  (bool | chýba):
-#   True  – slávnosť sa ANTICIPUJE: omša v predvečer platí na nasledujúci deň.
-#           Liturgický základ: slávnosť má Prvé vešpery, jej deň začína
-#           večer predtým (GIRM; Všeobecné smernice Liturgie hodín, č. 59).
-#           Príklady: Turíce, Nanebovzatie Panny Márie, Všetkých svätých…
-#   False – slávnosť sa neanticipuje (napr. Krista Kráľa, Najsv. Trojica).
-#   chýba – záznam je Sviatok alebo Spomienka; anticipácia sa na ne
-#           nevzťahuje, pretože nemajú Prvé vešpery.
-
 DIREKTORIUM_DATA = {
     "Adventné": [
     {
@@ -3373,6 +2741,701 @@ DIREKTORIUM_DATA = {
   ]
 }
 
+
+# Predvolený (štartovací) stav diagnostiky/logovania do súboru (pozri LOG_PATH
+# nižšie). Používateľ ho môže kedykoľvek prepnúť v Nastaveniach → Pokročilé →
+# Diagnostika; runtime hodnotu potom mení výhradne funkcia nastav_diagnostiku()
+# (sekcia DIAGNOSTIKA / LOGOVANIE nižšie) volaná z nacitat_nastavenia() a
+# _zbieraj_a_normalizuj_nastavenia_z_gui(). Táto konštanta je teda len
+# východisková hodnota pred prvým načítaním config.json.
+ENABLE_DIAGNOSTICS = True
+
+
+# ==========================================================
+# CESTY (Modernizované cez pathlib)
+# ==========================================================
+IS_FROZEN = getattr(sys, "frozen", False)
+
+if IS_FROZEN:
+    # Adresár s EXE súborom
+    BASE_DIR = Path(sys.executable).parent
+    # _MEIPASS pre interné ikony
+    INTERNAL_DIR = Path(getattr(sys, "_MEIPASS", BASE_DIR))
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+    INTERNAL_DIR = BASE_DIR
+
+def _vytvor_adresar_s_fallbackom(cesta: Path, popis: str, fallback_meno: str) -> tuple[Path, str | None]:
+    """Vytvori adresar; pri zlyhani pouzije docasny fallback namiesto padu pri starte."""
+    try:
+        cesta.mkdir(parents=True, exist_ok=True)
+        return cesta, None
+    except Exception as primary_error:
+        fallback = Path(tempfile.gettempdir()) / fallback_meno
+        sprava = (
+            f"{popis}: nepodarilo sa vytvorit {cesta} ({primary_error!r}); "
+            f"pouzivam fallback {fallback}"
+        )
+        try:
+            fallback.mkdir(parents=True, exist_ok=True)
+            return fallback, sprava
+        except Exception as fallback_error:
+            docasny = Path(tempfile.mkdtemp(prefix=f"{fallback_meno}_"))
+            return (
+                docasny,
+                f"{sprava}; pevny fallback zlyhal ({fallback_error!r}); pouzivam {docasny}",
+            )
+
+
+CONFIG_DIR_FALLBACK_INFO = None
+SONG_FOLDER_FALLBACK_INFO = None
+
+# Konfiguracny adresar (AppData)
+if platform.system() == "Windows":
+    CONFIG_DIR = Path(os.getenv("LOCALAPPDATA", Path.home() / "AppData/Local")) / "Kinak"
+else:
+    CONFIG_DIR = Path.home() / ".config/Kinak"
+
+CONFIG_DIR, CONFIG_DIR_FALLBACK_INFO = _vytvor_adresar_s_fallbackom(
+    CONFIG_DIR,
+    "Konfiguracny adresar",
+    "Kinak",
+)
+
+CONFIG_FILE_PATH = CONFIG_DIR / "config.json"
+LOG_PATH = CONFIG_DIR / "diagnostika.txt"
+
+# --- LOGIKA PRE PIESNE ---
+LOCAL_SONG_FOLDER = BASE_DIR / "piesne"
+SYSTEM_SONG_FOLDER = CONFIG_DIR / "piesne"
+
+# Rozhodnutie o predvolenom priecinku (Pri distribucii priloz priecinok piesne k suboru EXE.)
+if LOCAL_SONG_FOLDER.is_dir():
+    DEFAULT_SONG_FOLDER = LOCAL_SONG_FOLDER
+else:
+    DEFAULT_SONG_FOLDER, SONG_FOLDER_FALLBACK_INFO = _vytvor_adresar_s_fallbackom(
+        SYSTEM_SONG_FOLDER,
+        "Systemovy priecinok piesni",
+        "Kinak_piesne",
+    )
+
+# Cesty k ikonám
+ICONS_DIR = INTERNAL_DIR / "icons"
+APP_ICON = ICONS_DIR / "Kinak32.ico"
+ICON_PNG = ICONS_DIR / "Kinak_128r.png"
+
+# ==========================================================
+# DIAGNOSTIKA / LOGOVANIE - s rotaciou
+# ==========================================================
+LOG_MAX_BYTES = 5000000  # 5 MB
+LOG_BACKUP_COUNT = 3
+_kinak_logger = None
+
+def _get_kinak_logger():
+    global _kinak_logger
+    if _kinak_logger is not None:
+        return _kinak_logger
+    logger = logging.getLogger("Kinak")
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    try:
+        if logger.handlers:
+            logger.handlers.clear()
+    except Exception:
+        pass
+    try:
+        LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        handler = RotatingFileHandler(
+            filename=str(LOG_PATH),
+            maxBytes=LOG_MAX_BYTES,
+            backupCount=LOG_BACKUP_COUNT,
+            encoding="utf-8"
+        )
+        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    except Exception as e:
+        try:
+            print(f"[LOGGING SETUP ERROR] {e}", file=sys.stderr)
+        except Exception:
+            pass
+    _kinak_logger = logger
+    return logger
+
+def _log(level, message, exc=None):
+    if not ENABLE_DIAGNOSTICS:
+        return
+    try:
+        logger = _get_kinak_logger()
+        lvl = getattr(logging, level.upper(), logging.INFO)
+        if exc is not None:
+            logger.log(lvl, message, exc_info=(type(exc), exc, exc.__traceback__))
+        else:
+            logger.log(lvl, message)
+    except Exception as logging_error:
+        try:
+            print(f"[LOGGING ERROR] {message} | {logging_error}", file=sys.stderr)
+        except Exception:
+            pass
+
+def log_exception(context, exc):
+    if not ENABLE_DIAGNOSTICS:
+        return
+    _log("ERROR", context, exc)
+
+def log_info(message):
+    if not ENABLE_DIAGNOSTICS:
+        return
+    _log("INFO", message)
+
+def log_debug(message):
+    if not ENABLE_DIAGNOSTICS:
+        return
+    _log("DEBUG", message)
+
+
+def nastav_diagnostiku(povolena: bool) -> None:
+    """
+    Zapne/vypne diagnostické logovanie za behu – bez nutnosti reštartu appky.
+
+    Volá sa z dvoch miest:
+      - nacitat_nastavenia() pri štarte/znovunačítaní config.json,
+      - _zbieraj_a_normalizuj_nastavenia_z_gui() pri každej zmene prepínača
+        "Diagnostika" v okne Nastavenia (cez ulozit_nastavenia()).
+
+    Prechod False→True sa zaloguje AŽ PO nastavení príznaku (inak by log_info
+    ešte videl starú hodnotu False a nič by nezapísal). Prechod True→False sa
+    naopak zaloguje ešte PRED vypnutím, aby v logu ostala stopa, že a kedy bolo
+    logovanie vypnuté.
+    """
+    global ENABLE_DIAGNOSTICS
+    povolena = bool(povolena)
+    if povolena and not ENABLE_DIAGNOSTICS:
+        ENABLE_DIAGNOSTICS = True
+        log_info("Diagnostika zapnutá v nastaveniach.")
+    elif not povolena and ENABLE_DIAGNOSTICS:
+        log_info("Diagnostika vypnutá v nastaveniach.")
+        ENABLE_DIAGNOSTICS = False
+    else:
+        ENABLE_DIAGNOSTICS = povolena
+
+
+def update_progress(
+    progress_callback,
+    sprava: str,
+    aktualny: int | None = None,
+    spolu: int | None = None,
+) -> None:
+    """
+    Spoločný pomocník na nahlásenie priebehu sťahovania (nahrádza predtým
+    7× duplicitne definovanú lokálnu funkciu `progress(...)` vnútri
+    jednotlivých `stiahni_*` funkcií).
+
+    Ak je `progress_callback` volateľný, zavolá ho s (sprava, aktualny, spolu)
+    a prípadnú výnimku bezpečne zaloguje, aby zlyhanie GUI callbacku nikdy
+    nezhodilo samotné sťahovanie.
+    """
+    if callable(progress_callback):
+        try:
+            progress_callback(sprava, aktualny, spolu)
+        except Exception as e:
+            log_exception("[LC-KBS] Progress callback zlyhal", e)
+
+# ==========================================================
+# Inicializácia diagnostiky (Pathlib verzia)
+# ==========================================================
+
+def chybaju_kniznice_pre_stahovanie() -> list[str]:
+    """Vráti zoznam chýbajúcich knižníc potrebných na sťahovanie textov."""
+    chybaju = []
+    if requests is None:
+        chybaju.append("requests")
+    if BeautifulSoup is None:
+        chybaju.append("beautifulsoup4")
+    return chybaju
+
+
+def zobraz_chybu_chybajucich_kniznic_pre_stahovanie() -> bool:
+    """Zobrazí používateľovi jasnú chybu, ak chýbajú knižnice pre sťahovanie."""
+    chybaju = chybaju_kniznice_pre_stahovanie()
+    if not chybaju:
+        return False
+
+    nazvy = ", ".join(chybaju)
+    log_info(f"Sťahovanie nie je dostupné, chýbajú knižnice: {nazvy}")
+    messagebox.showerror(
+        "Chýbajú knižnice",
+        "Funkcia sťahovania čítaní, vešpier, refrénov a cezročných týždňov nie je dostupná, "
+        f"pretože chýbajú tieto Python knižnice: {nazvy}.\n\n"
+        "Doinštalujte ich príkazom:\n"
+        "pip install requests beautifulsoup4\n\n"
+        "Ak používate EXE verziu, treba ich zahrnúť pri zostavení aplikácie."
+    )
+    return True
+
+
+# Viaceré kandidátske ciele pre kontrolu pripojenia. Predtým sa appka
+# spoliehala výhradne na priamy TCP na 1.1.1.1:53 – ak sieť (napr. školská/
+# firemná so striktným firewallom) blokuje práve tento konkrétny host/port,
+# appka nahlásila "žiadne pripojenie", hoci HTTPS na skutočné ciele
+# sťahovania mohol byť úplne priechodný. Zoznam preto obsahuje aj samotné
+# reálne ciele sťahovania (lc.kbs.sk, breviar.kbs.sk na porte 443) ako
+# poslednú záchranu.
+_INTERNET_KONTROLA_HOSTY: tuple[tuple[str, int], ...] = (
+    ("1.1.1.1", 53),         # Cloudflare DNS – rýchla kontrola priamo na IP (bez DNS resolvingu)
+    ("8.8.8.8", 53),         # Google DNS – záložný host pre prípad, že 1.1.1.1 je blokovaný
+    ("lc.kbs.sk", 443),      # reálny cieľ sťahovania čítaní / refrénov žalmov
+    ("breviar.kbs.sk", 443), # reálny cieľ sťahovania vešpier
+)
+
+def _over_internet_socket(timeout: float = 2.0) -> bool:
+    """
+    Čistá kontrola internetového pripojenia bez akýchkoľvek GUI vedľajších
+    účinkov (žiadny messagebox) – vďaka tomu je BEZPEČNÉ volať ju aj
+    z pozadového (worker) vlákna, na rozdiel od je_internet_dostupny().
+
+    Postupne skúša ciele z _INTERNET_KONTROLA_HOSTY a vráti True hneď po
+    prvom úspešnom spojení; "žiadne pripojenie" nahlási až keď zlyhajú
+    úplne všetky – jeden zablokovaný host/port tak appku už neblokuje
+    falošne, pokiaľ je aspoň jeden z cieľov (vrátane reálnych serverov
+    lc.kbs.sk/breviar.kbs.sk) reálne dosiahnuteľný.
+    """
+    for host, port in _INTERNET_KONTROLA_HOSTY:
+        try:
+            socket.create_connection((host, port), timeout=timeout)
+            return True
+        except OSError:
+            continue
+    return False
+
+
+def je_internet_dostupny(timeout: float = 2.0) -> bool:
+    """
+    Rýchla kontrola internetu – vráti True ak je pripojenie, inak zobrazí chybu.
+
+    POZOR – táto funkcia volá messagebox, takže je bezpečné ju volať LEN
+    z hlavného (GUI) vlákna. Zo sťahovacieho worker vlákna (kde by messagebox
+    z iného než hlavného vlákna bol nekorektný voči Tkinter) použite priamo
+    _over_internet_socket(), ktorá je čisto informatívna bez vedľajších účinkov.
+    """
+    if _over_internet_socket(timeout):
+        return True
+    messagebox.showerror("Žiadne internetové pripojenie", "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.")
+    return False
+
+
+def zobraz_chybu_stahovania(nazov: str, zdroj: str):
+    """Jednotné chybové hlásenie pre všetky sťahovania."""
+    messagebox.showerror(
+        "Chyba pri sťahovaní",
+        f"Nepodarilo sa stiahnuť {nazov} z {zdroj}.\n\n"
+        "Možné príčiny:\n"
+        "• Žiadne internetové pripojenie\n"
+        f"• Stránka {zdroj} je nedostupná\n"
+        "• Prístup mohol zablokovať Firewall alebo Antivírus\n"
+        "• Zmenila sa štruktúra stránky\n\n"
+        "Podrobnosti v logu."
+    )
+
+def init_diagnostics():
+    if not ENABLE_DIAGNOSTICS:
+        return
+    try:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # LOG_PATH je teraz objekt Path, môžeme ho otvoriť priamo
+        with LOG_PATH.open("a", encoding="utf-8") as f:
+            f.write("\n" + "="*40 + "\n")
+            f.write(f"Štart Kinak v{KINAK_VERSION} | {now}\n")
+            f.write(f"OS: {platform.platform()}\n")
+            f.write(f"Architektúra: {platform.machine()}\n")
+            f.write(f"Python: {platform.python_version()}\n")            
+            f.write(f"Režim: {'EXE' if IS_FROZEN else 'Script'}\n")
+            
+            # .resolve() vráti absolútnu cestu, čo je pre diagnostiku najistejšie
+            f.write(f"Base Dir: {BASE_DIR.resolve()}\n")
+            f.write(f"Config: {CONFIG_DIR.resolve()}\n")
+            if CONFIG_DIR_FALLBACK_INFO:
+                f.write(f"Config fallback: {CONFIG_DIR_FALLBACK_INFO}\n")
+            
+            # Pridáme informáciu o priečinku s piesňami pre lepší prehľad
+            f.write(f"Songs Dir: {DEFAULT_SONG_FOLDER.resolve()}\n")
+            if SONG_FOLDER_FALLBACK_INFO:
+                f.write(f"Songs fallback: {SONG_FOLDER_FALLBACK_INFO}\n")
+            f.write("="*40 + "\n")
+            
+    except Exception as e:
+        try:
+            # Ak zlyhá zápis do súboru, vypíšeme to aspoň do systémového erroru
+            sys.stderr.write(f"[INIT LOG ERROR] {e}\n")
+        except Exception:
+            pass
+
+# ==========================================================
+# POMOCNÉ FUNKCIE NA ÚROVNI MODULU
+# ==========================================================
+
+def normalize_diacritics(text: str) -> str:
+    """
+    Normalizuje reťazec – odstráni diakritiku a prevedie na malé písmená.
+    Ponecháva medzery, interpunkciu a ostatné znaky.
+    Používa sa na porovnávanie textov bez ohľadu na diakritiku
+    (napr. pri validácii stiahnutých čítaní).
+    Pozri aj: ControlApp.normalize_alnum() – agresívnejší variant len pre alfanum.
+    """
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    return text.lower()
+
+def estimate_text_height(text: str, font_obj, wraplength: int) -> int:
+    """
+    Odhadne výšku textu v pixeloch pri danom wraplength.
+    Simuluje zalamovanie slov rovnako ako Tkinter Label – bez renderovania.
+    Používaná v ProjectionWindow aj ControlApp (live preview).
+
+    Poznámka k \\xa0 (nezlomiteľná medzera):
+        Tk Label zalamuje wraplength VÝHRADNE na ASCII medzere (U+0020).
+        \\xa0 Tk považuje za súčasť slova — token "aaa\\xa0bbb" sa NEzalamuje.
+        Python str.split() naopak \\xa0 rozdeľuje, čo by spôsobilo nadhodnotenie
+        počtu riadkov (písmo by bolo príliš malé). Preto \\xa0 nahrádzame bežnou
+        medzerou ešte pred tokenizáciou, čím odhad zodpovedá správaniu Tk.
+    """
+    try:
+        if not text:
+            return font_obj.metrics("linespace")
+
+        total_lines = 0
+        line_h = font_obj.metrics("linespace")
+
+        for paragraph in text.split("\n"):
+            words = paragraph.replace("\xa0", " ").split()
+            if not words:
+                total_lines += 1
+                continue
+
+            line = words[0]
+            for word in words[1:]:
+                if font_obj.measure(line + " " + word) <= wraplength:
+                    line += " " + word
+                else:
+                    total_lines += 1
+                    line = word
+            total_lines += 1
+
+        return total_lines * line_h
+
+    except Exception as e:
+        log_exception("estimate_text_height: chyba pri výpočte", e)
+        try:
+            # Fallback: odhadneme počet riadkov podľa zalomení v texte.
+            # Lepšia aproximácia ako hardcoded "3" – pri dlhom texte by
+            # hodnota 3 spôsobila príliš veľké písmo v projekcii.
+            approx_lines = max(1, text.count("\n") + 1) if text else 1
+            return font_obj.metrics("linespace") * approx_lines
+        except Exception as e2:
+            log_exception("estimate_text_height: fallback zlyhal", e2)
+            return 40
+
+# ==========================================================
+# GLOBÁLNE UI KONŠTANTY
+# ==========================================================
+# Fonty sú detekované dynamicky funkciou _inicializovat_fonty(), ktorá sa volá
+# v __main__ hneď po vytvorení Tk inštancie (tkfont.families() ju vyžaduje).
+# Predvolené hodnoty slúžia ako univerzálny fallback – platné na všetkých platformách.
+FONT_NAME: str = "Arial"
+FONT_MONO: str = "Courier"
+
+def _inicializovat_fonty() -> None:
+    """
+    Detekuje systémové fonty a nastaví globálne konštanty FONT_NAME a FONT_MONO.
+
+    Musí byť volaná po vytvorení Tk inštancie (tkfont.families() to vyžaduje),
+    ale PRED prvým vytvorením ProjectionWindow alebo ControlApp – inak by
+    všetky widgety dostali predvolený fallback „Arial" namiesto systémového fontu.
+
+    Správne poradie v __main__:
+        root = tk.Tk()
+        root.withdraw()
+        _inicializovat_fonty()   # ← hneď tu, pred ControlApp(root)
+        app = ControlApp(root)
+    """
+    global FONT_NAME, FONT_MONO
+    try:
+        _available_fonts = tkfont.families()
+
+        if sys.platform == "darwin":
+            FONT_NAME = "SF Pro Display" if "SF Pro Display" in _available_fonts else "Helvetica"
+            FONT_MONO = "Menlo"
+        elif sys.platform == "win32":
+            FONT_NAME = "Segoe UI" if "Segoe UI" in _available_fonts else "Arial"
+            FONT_MONO = "Consolas"
+        else:
+            FONT_NAME = "Ubuntu" if "Ubuntu" in _available_fonts else "DejaVu Sans"
+            FONT_MONO = "Monospace" if "Monospace" in _available_fonts else "Courier"
+
+    except Exception as e_font:
+        log_exception("_inicializovat_fonty: Chyba pri detekcii fontov", e_font)
+        FONT_NAME = "Arial"
+        FONT_MONO = "Courier"
+
+# TEXT_COLOR, BACKGROUND_COLOR a DEFAULT_USE_FADE sú aktívne konštanty:
+# používajú sa v ProjectionWindow.__init__ a ControlApp (nie len ako init hodnoty).
+TEXT_COLOR = "#ffffff"
+BACKGROUND_COLOR = "#1e1e1e"
+PANEL_BG_COLOR = "#1e1e1e"
+
+# Farba textu labelu odporúčaných piesní z direktória (svetlomodrá).
+# Definovaná ako konštanta, aby ju `.config(fg=...)` pri mazaní textu
+# neprepísalo späť na bielu.
+DIREKTORIUM_LABEL_FG = "#aaddff"
+TEXT_PANEL_BG = "#2e2e2e"
+
+WRAP_PADDING_RATIO = 0.06
+MIN_WRAP = 240
+# Podiel šírky okna použitý ako max_w pri výpočte veľkosti písma v projekcii.
+# Zvyšok (6 %) tvorí horizontálny padding (zrkadlí WRAP_PADDING_RATIO).
+PROJECTION_WRAP_RATIO = 0.94
+
+# Konštanty pre Live Preview panel (update_live_preview)
+PREVIEW_FONT_INIT   = 20   # počiatočná veľkosť písma pre iteratívny výpočet
+PREVIEW_FONT_MIN    = 8    # minimálna povolená veľkosť písma v preview
+PREVIEW_LOOP_LIMIT  = 15   # max. počet iterácií pri zmenšovaní písma (ochrana pred zacyklením)
+
+# Konštanty pre horný panel strofy (vypocitaj_velkost_pisma_pre_strofu)
+STROFA_FONT_INIT    = 40   # počiatočná veľkosť písma (najväčšia povolená)
+STROFA_FONT_MIN     = 14   # minimálna veľkosť písma (čitateľnosť)
+STROFA_LOOP_LIMIT   = 30   # ochrana pred zacyklením
+STROFA_PADDING_H    = 60   # horizontálny padding (2× padx=20 + rezerva)
+STROFA_PADDING_V    = 30   # vertikálny padding (2× pady=10 + rezerva)
+
+# Oneskorenia jednorazových inicializačných callbackov pri štarte ControlApp (ms)
+_STARTUP_FOCUS_DELAY_MS   = 300   # focus na manual_entry
+_STARTUP_PREVIEW_DELAY_MS = 600   # prvý live preview render
+_STARTUP_SAVE_DELAY_MS    = 800   # uloženie nastavení po inicializácii GUI
+
+# Adventné a Pôstne majú rovnakú liturgickú farbu (fialová) – zámerné.
+LITURGICKE_OBDOBIA = {
+    "Adventné": "#FF80FF",
+    "Vianočné": "#FFCC33",
+    "Pôstne":   "#FF80FF",
+    "Veľkonočné": "#FFCC33",
+    "Cezročné": "#80FF00"
+}
+
+DEFAULT_CONFIG = {
+    # Poznámka: "base_dir" sa ukladá do JSON len pre informáciu.
+    # Pri štarte sa BASE_DIR vždy určuje nezávisle od tohto záznamu (pozri sekciu CESTY).
+    "base_dir": str(BASE_DIR),
+    "font_size": 75,
+    "text_color": LITURGICKE_OBDOBIA.get("Cezročné", "#80FF00"),
+    "song_folder": str(DEFAULT_SONG_FOLDER),  
+    "liturgical_season": "Cezročné",
+    "liturgical_year": vypocitaj_liturgicky_rok(),
+    "default_filter_obdobie": "Cezročné C2",
+    "pouzit_vlastnu_farbu": False,
+    "bottom_margin": 40,
+    "reserved_vertical_ratio": 0.20,
+    "zobrazit_direktorium": False,
+    "fade_speed": "mierne rýchle",
+    "pomocnik_font_size": 14,
+    "pomocnik_x": -1,
+    "pomocnik_y": -1,
+    "pomocnik_width": -1,
+    "pomocnik_height": -1,
+    "pomocnik_last_tab": 1,
+    "zobrazovat_live_preview": True,
+    "zobrazovat_specialne_znaky": True,
+    "zobrazovat_znaky_chorov": True,
+    "statusbar_tyzden_zaltara": True,
+    "statusbar_skratka_zalmu": True,
+    "statusbar_jks_piesne": True,
+    "main_window_x": -1,
+    "main_window_y": -1,
+    "main_window_width": -1,
+    "main_window_height": -1,
+    "settings_window_width": -1,
+    "settings_window_height": -1,
+    "direktorium_window_width": -1,
+    "direktorium_window_height": -1,
+    "slavnosti_window_width": -1,
+    "slavnosti_window_height": -1,
+    "about_window_width": -1,
+    "about_window_height": -1,
+    "about_last_tab": 1,
+    "about_font_size": 12,
+    "preferred_monitor_index": 0,
+    # Diagnostické logovanie do LOG_PATH (Nastavenia → Pokročilé → Diagnostika).
+    # Predvolene zapnuté, aby pri páde/chybe mal používateľ reálne čo poslať na
+    # podporu; kedykoľvek sa dá v nastaveniach vypnúť (pozri nastav_diagnostiku()).
+    "diagnostika_povolena": True,
+}
+
+# FONT_SIZE je predvolená hodnota; ControlApp spravuje aktuálny stav
+# výhradne cez self.font_size a ProjectionWindow cez self.font_size.
+# Globálna konštanta sa číta len pri inicializácii DEFAULT_CONFIG.
+FONT_SIZE = DEFAULT_CONFIG["font_size"]
+MAX_FONT_SIZE = 150  # horná hranica slidera veľkosti písma (r. vytvorit_nastavenia_okno)
+
+DEFAULT_USE_FADE = True
+
+# --- Globálne zoznamy liturgických slávení ---
+
+SLAVNOSTI_DATA = [
+    ("Panny Márie Bohorodičky", "1. 1"),           # [PMB]
+    ("Zjavenie Pána - Traja králi", "6. 1"),                # [ZP]
+    ("Nanebovstúpenie Pána", "pohyblivý"),                  # [NP]
+    ("Najsvätejšieho Kristovho Tela a Krvi", "pohyblivý"),  # [TIK]
+    ("Sv. Petra a Pavla, apoštolov", "29. 6"),              # [PP]
+    ("Nanebovzatie Panny Márie", "15. 8"),                  # [NPM]
+    ("Všetkých svätých", "1. 11"),                          # [VS]
+    ("Nepoškvrnené počatie Panny Márie", "8. 12"),          # [NPPM]
+    ("Narodenie Pána", "25. 12"),                           # [NPAN]
+]
+
+NEPRIKAZANE_DATA = [
+    ("Najsvätejšie meno Ježiš", "3. 1"),                               # [NMJ]
+    ("Obetovanie Pána (Hromnice)", "2. 2"),                            # [OP]     
+    ("Popolcová streda", "pohyblivý"),                                 # [PS]   
+    ("Sv. Jozefa, ženícha Panny Márie", "19. 3"),                      # [SJ]
+    ("Zvestovanie Pána*", "25. 3"),                                    # [ZV]
+    ("Pondelok vo Veľkonočnej oktáve", "pohyblivý"),                   # [VPON]    
+    ("Turíčny pondelok", "pohyblivý"),                                 # [TPON]
+    ("Pána Ježiša Krista, najvyššieho a večného kňaza", "pohyblivý"),  # [VK] 
+    ("Najsvätejšieho Srdca Ježišovho", "pohyblivý"),                   # [NSJ]
+    ("Nepoškvrnené Srdce Panny Márie", "pohyblivý"),                   # [NSPM]
+    ("Narodenie sv. Jána Krstiteľa", "24. 6"),                         # [NJK]
+    ("Návšteva preblahoslavenej Panny Márie", "2. 7"),                 # [NAVPM]
+    ("Sv. Cyrila a Metoda, slovanských vierozvestov", "5. 7"),         # [CMV] 
+    ("Premenenie Pána", "6. 8"),                                       # [PREM]
+    ("Narodenie Panny Márie", "8. 9"),                                 # [NPMAR]
+    ("Povýšenie Svätého kríža", "14. 9"),                              # [PSK]
+    ("Sedembolestnej Panny Márie, patrónky Slovenska", "15. 9"),       # [SPM]
+    ("Sv. Michala, Gabriela a Rafaela, archanieli", "29. 9"),             # [MGR] 
+    ("Spomienka na Všetkých zosnulých veriacich", "2. 11"),            # [ZOS]
+    ("Výročie posviacky Lateránskej baziliky", "9. 11"),              # [VPLB]   
+    ("Sv. Štefana, prvého mučeníka", "26. 12"),                        # [STEF]
+    ("Sv. Neviniatok, mučeníkov", "28. 12"),                           # [NEV]
+]
+
+POHYBLIVE_DATA = [
+    ("Prvá adventná nedeľa (začína nový liturgický rok)",
+     "Nasleduje po slávnosti Krista Kráľa."),                                      # [1AD]
+
+    ("Svätej rodiny Ježiša, Márie a Jozefa",
+     "Nedeľa nasledujúca po Narodení Pána alebo 30. decembra v situácii, že slávnosť Narodenia Pána pripadne na nedeľu."),  # [SR]
+
+    ("Krst Krista Pána",
+     "Nedeľa po Zjavení Pána uzatvára vianočné obdobie."),  # [KKP]
+
+    ("Popolcová streda",
+     "Streda v siedmom týždni pred Veľkonočnou nedeľou."),                          # [PS]
+
+    ("Palmová (Kvetná nedeľa)",
+     "Nedeľa pred Veľkonočnou nedeľou."),                                           # [VT]
+
+    ("Veľkonočná nedeľa",
+     "Nedeľa po prvom jarnom splne mesiaca. Môže pripadnúť na jednu z nedieľ od 22. marca do 25. apríla."),  # [1VN]
+    
+    ("Pondelok vo Veľkonočnej oktáve",                   
+     "Nasleduje hneď po Veľkonočnej nedeli."),                                      # [VPON]
+
+    ("Nedeľa Božieho milosrdenstva",
+     "Druhá veľkonočná nedeľa, posledný deň veľkonočnej oktávy."),                  # [NBM]
+
+    ("Nanebovstúpenie Pána",
+     "Štyridsiaty deň po Veľkej noci – pripadá vždy na štvrtok 6. veľkonočného týždňa"),                                            # [NP]
+
+    ("Nedeľa zoslania Ducha Svätého (Turíce)",
+     "Päťdesiaty deň po Veľkej noci - uzatvára sa veľkonočné obdobie."),            # [TUR]
+    
+    ("Panny Márie, Matky Cirkvi",
+     "Deň po Zoslaní Ducha Svätého - Turíčny pondelok."),                           # [PMMC]
+
+    ("Pána Ježiša Krista, najvyššieho a večného kňaza",
+     "Štvrtok po slávnosti Zoslania Ducha Svätého."),                               # [VK]
+
+    ("Najsvätejšej Trojice",
+     "Prvá nedeľa po slávnosti Zoslania Ducha Svätého."),                           # [NT]
+
+    ("Najsvätejšieho Kristovho Tela a Krvi",
+     "Štvrtok po slávnosti Najsvätejšej Trojice."),                                 # [TIK]
+
+    ("Najsvätejšieho Srdca Ježišovho",
+     "Piatok v týždni po slávnosti Najsvätejšieho Kristovho Tela a Krvi."),         # [NSJ]
+    
+    ("Nepoškvrnené Srdce Panny Márie",
+     "Sobota po Najsvätejšom Srdci Ježišovom."),                                  # [NSPM]
+
+    ("Krista Kráľa",
+     "Posledná, 34. cezročná nedeľa v liturgickom roku."),                        # [KK]
+]
+
+SLAVNOSTI_KODY_PRE_VYBER = {
+    "Panny Márie Bohorodičky": "PMB",
+    "Zjavenie Pána - Traja králi": "1L",
+    "Nanebovstúpenie Pána": "NP",
+    "Najsvätejšieho Kristovho Tela a Krvi": "5TS",
+    "Sv. Petra a Pavla, apoštolov": "6L",
+    "Nanebovzatie Panny Márie": "8L",
+    "Všetkých svätých": "11L",
+    "Nepoškvrnené počatie Panny Márie": "12L",
+    "Narodenie Pána": "1VI",
+    "Najsvätejšie meno Ježiš": "NMJ",
+    "Obetovanie Pána (Hromnice)": "2L",
+    "Popolcová streda": "PS",
+    "Sv. Jozefa, ženícha Panny Márie": "3L",
+    "Zvestovanie Pána*": "ZV",
+    "Pondelok vo Veľkonočnej oktáve": "VPON",
+    "Turíčny pondelok": "2TS",
+    "Pána Ježiša Krista, najvyššieho a večného kňaza": "3TS",
+    "Najsvätejšieho Srdca Ježišovho": "6TS",
+    "Nepoškvrnené Srdce Panny Márie": "7TS",
+    "Narodenie sv. Jána Krstiteľa": "NJK",
+    "Návšteva preblahoslavenej Panny Márie": "NAVPM",
+    "Sv. Cyrila a Metoda, slovanských vierozvestov": "CMV",
+    "Premenenie Pána": "PREM",
+    "Narodenie Panny Márie": "NPMAR",
+    "Povýšenie Svätého kríža": "PSK",
+    "Sedembolestnej Panny Márie, patrónky Slovenska": "9L",
+    "Sv. Michala, Gabriela a Rafaela, archanieli": "MGR",
+    "Spomienka na Všetkých zosnulých veriacich": "ZOS",
+    "Výročie posviacky Lateránskej baziliky": "VPLB",
+    "Sv. Štefana, prvého mučeníka": "STEF",
+    "Sv. Jána, apoštola a evanjelistu": "SJE",    
+    "Sv. Neviniatok, mučeníkov": "NEV",
+    "Prvá adventná nedeľa (začína nový liturgický rok)": "1AD",
+    "Svätej rodiny Ježiša, Márie a Jozefa": "SR",
+    "Krst Krista Pána": "KKP",
+    "Palmová (Kvetná nedeľa)": "VT",
+    "Veľkonočná nedeľa": "1VN",
+    "Nedeľa Božieho milosrdenstva": "2VN",
+    "Nedeľa zoslania Ducha Svätého (Turíce)": "1TS",
+    "Panny Márie, Matky Cirkvi": "2TS",
+    "Najsvätejšej Trojice": "4TS",
+    "Krista Kráľa": "34C",
+}
+
+
+def vyber_prvu_piesen_z_direktorioveho_textu(text):
+    """Z direktóriového zápisu typu '244, 1' alebo '3/18/19' vyberie prvé číslo piesne."""
+    match = re.search(r"\b\d{1,3}[a-zA-Z]?\b", str(text or ""))
+    return match.group(0) if match else ""
+
+# --- Direktórium vložené priamo do kódu ---
+#
+# Kľúč  vlastna_omsa_vigilie  (bool | chýba):
+#   True  – slávnosť sa ANTICIPUJE: omša v predvečer platí na nasledujúci deň.
+#           Liturgický základ: slávnosť má Prvé vešpery, jej deň začína
+#           večer predtým (GIRM; Všeobecné smernice Liturgie hodín, č. 59).
+#           Príklady: Turíce, Nanebovzatie Panny Márie, Všetkých svätých…
+#   False – slávnosť sa neanticipuje (napr. Krista Kráľa, Najsv. Trojica).
+#   chýba – záznam je Sviatok alebo Spomienka; anticipácia sa na ne
+#           nevzťahuje, pretože nemajú Prvé vešpery.
+#
+# (DIREKTORIUM_DATA je definovaná vyššie, hneď po ostatných liturgických
+# tabuľkách a funkciách – pozri sekciu "ZÁKLADNÉ NASTAVENIA" na začiatku
+# súboru.)
+
 FADE_PRESETS = {
     "vypnuté": {"steps": 0,  "delay": 0},
     "rýchle": {"steps": 10, "delay": 10},
@@ -3531,75 +3594,47 @@ def _lc_kbs_headers(ucel: str = "") -> dict:
 
 
 def _stiahni_lc_kbs_soup(datum: date, timeout: tuple[int, int] = (5, 20)) -> Any | None:
+    """
+    Stiahne a naparsuje stránku lc.kbs.sk pre daný dátum.
+
+    Retry na úrovni HTTPAdapter/urllib3.Retry (nastavený v _vytvor_lc_kbs_session)
+    rieši nižšie-úrovňové zlyhania spojenia; táto slučka navyše pokrýva prípady,
+    kde spojenie prebehlo, ale server vrátil dočasnú chybu (LC_KBS_DOCASNE_HTTP_STATUSY),
+    alebo požiadavka zlyhala inak (timeout, výpadok siete, prerušené spojenie) –
+    s osobitným logovaním pre každý typ chyby, aby bolo pri diagnostike jasné,
+    kde presne sťahovanie zlyhalo.
+    """
     _over_gregoriansky_datum(datum)
     if chybaju_kniznice_pre_stahovanie():
         return None
+
     requests_module = requests
     beautiful_soup = BeautifulSoup
     assert requests_module is not None and beautiful_soup is not None
+
     datum_str = datum.strftime("%Y-%m-%d")
     session = _vytvor_lc_kbs_session()
-    req_exc = getattr(requests_module, "RequestException", Exception)
-    http_exc = getattr(requests_module, "HTTPError", req_exc)
-    for pokus in range(1, LC_KBS_REFRENY_MAX_POKUSOV + 1):
-        url = f"https://lc.kbs.sk/?den={datum_str}&_={int(time.time())}"
-        try:
-            headers = _lc_kbs_headers("refreny-zalmov")
-            resp = session.get(url, headers=headers, timeout=timeout) if session else requests_module.get(url, headers=headers, timeout=timeout)
-            resp.raise_for_status()
-            resp.encoding = resp.apparent_encoding or "utf-8"
-            if not resp.encoding or resp.encoding.lower() in ("iso-8859-1", "latin-1"):
-                resp.encoding = "utf-8"
-            return beautiful_soup(resp.text, "html.parser")
-        except http_exc as e:
-            sc = getattr(getattr(e, "response", None), "status_code", None)
-            if sc in LC_KBS_DOCASNE_HTTP_STATUSY and pokus < LC_KBS_REFRENY_MAX_POKUSOV:
-                time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
-                continue
-            return None
-        except req_exc:
-            if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
-                time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
-                continue
-            return None
-        finally:
-            if pokus >= LC_KBS_REFRENY_MAX_POKUSOV and session is not None:
-                try:
-                    session.close()
-                except Exception:
-                    pass
-    if session is not None:
-        try:
-            session.close()
-        except Exception:
-            pass
-    return None
-
-    requests_module = requests
-    beautiful_soup = BeautifulSoup
-    assert requests_module is not None
-    assert beautiful_soup is not None
-
-    datum_str = datum.strftime("%Y-%m-%d")
 
     request_exception_type = getattr(requests_module, "RequestException", Exception)
     http_error_type = getattr(requests_module, "HTTPError", request_exception_type)
     timeout_type = getattr(requests_module, "Timeout", request_exception_type)
     connection_error_type = getattr(requests_module, "ConnectionError", request_exception_type)
 
-    for pokus in range(1, LC_KBS_REFRENY_MAX_POKUSOV + 1):
-        url = f"https://lc.kbs.sk/?den={datum_str}&_={int(time.time())}"
-        try:
-            response = requests_module.get(url, headers=_lc_kbs_headers("refreny-zalmov"), timeout=timeout)
-            response.raise_for_status()
-            response.encoding = response.apparent_encoding or "utf-8"
-            if not response.encoding or response.encoding.lower() in ("iso-8859-1", "latin-1"):
-                response.encoding = "utf-8"
-            return beautiful_soup(response.text, "html.parser")
-        except http_error_type as e:
-            status_code = getattr(getattr(e, "response", None), "status_code", None)
-            if status_code in LC_KBS_DOCASNE_HTTP_STATUSY:
-                if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
+    try:
+        for pokus in range(1, LC_KBS_REFRENY_MAX_POKUSOV + 1):
+            url = f"https://lc.kbs.sk/?den={datum_str}&_={int(time.time())}"
+            try:
+                headers = _lc_kbs_headers("refreny-zalmov")
+                resp = session.get(url, headers=headers, timeout=timeout) if session else requests_module.get(url, headers=headers, timeout=timeout)
+                resp.raise_for_status()
+                resp.encoding = resp.apparent_encoding or "utf-8"
+                if not resp.encoding or resp.encoding.lower() in ("iso-8859-1", "latin-1"):
+                    resp.encoding = "utf-8"
+                return beautiful_soup(resp.text, "html.parser")
+
+            except http_error_type as e:
+                status_code = getattr(getattr(e, "response", None), "status_code", None)
+                if status_code in LC_KBS_DOCASNE_HTTP_STATUSY and pokus < LC_KBS_REFRENY_MAX_POKUSOV:
                     log_debug(
                         f"[LC-KBS] Dátum {datum_str}: HTTP {status_code}, "
                         f"skúšam znova ({pokus}/{LC_KBS_REFRENY_MAX_POKUSOV})."
@@ -3608,44 +3643,55 @@ def _stiahni_lc_kbs_soup(datum: date, timeout: tuple[int, int] = (5, 20)) -> Any
                     continue
 
                 log_info(
-                    f"[LC-KBS] Dátum {datum_str}: server vrátil HTTP {status_code} "
-                    f"aj po {LC_KBS_REFRENY_MAX_POKUSOV} pokusoch, refrén preskakujem."
+                    f"[LC-KBS] Dátum {datum_str}: server vrátil HTTP {status_code or 'chyba'} "
+                    f"po {pokus} pokusoch, refrén preskakujem."
                 )
                 return None
 
-            log_info(f"[LC-KBS] Dátum {datum_str}: HTTP {status_code or 'chyba'}, refrén preskakujem.")
-            return None
-        except (timeout_type, connection_error_type) as e:
-            if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
-                log_debug(
-                    f"[LC-KBS] Dátum {datum_str}: sieťová chyba ({e}), "
-                    f"skúšam znova ({pokus}/{LC_KBS_REFRENY_MAX_POKUSOV})."
-                )
-                time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
-                continue
+            except (timeout_type, connection_error_type) as e:
+                if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
+                    log_debug(
+                        f"[LC-KBS] Dátum {datum_str}: sieťová chyba ({e}), "
+                        f"skúšam znova ({pokus}/{LC_KBS_REFRENY_MAX_POKUSOV})."
+                    )
+                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    continue
 
-            log_info(
-                f"[LC-KBS] Dátum {datum_str}: sieťová chyba aj po "
-                f"{LC_KBS_REFRENY_MAX_POKUSOV} pokusoch, refrén preskakujem."
-            )
-            return None
-        except request_exception_type as e:
-            # Sem padá napr. ChunkedEncodingError ("Response ended prematurely")
-            # – ide o prerušenie spojenia, oplatí sa znova skúsiť.
-            if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
-                log_debug(
-                    f"[LC-KBS] Dátum {datum_str}: požiadavka zlyhala ({e}), "
-                    f"skúšam znova ({pokus}/{LC_KBS_REFRENY_MAX_POKUSOV})."
+                log_info(
+                    f"[LC-KBS] Dátum {datum_str}: sieťová chyba aj po "
+                    f"{LC_KBS_REFRENY_MAX_POKUSOV} pokusoch, refrén preskakujem."
                 )
-                time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
-                continue
-            log_info(f"[LC-KBS] Dátum {datum_str}: požiadavka zlyhala ({e}), refrén preskakujem.")
-            return None
-        except Exception as e:
-            log_exception(f"[LC-KBS] Neočakávaná chyba pri dátume {datum_str}", e)
-            return None
+                return None
 
-    return None
+            except request_exception_type as e:
+                # Sem padá napr. ChunkedEncodingError ("Response ended prematurely")
+                # – ide o prerušenie spojenia, oplatí sa znova skúsiť.
+                if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
+                    log_debug(
+                        f"[LC-KBS] Dátum {datum_str}: požiadavka zlyhala ({e}), "
+                        f"skúšam znova ({pokus}/{LC_KBS_REFRENY_MAX_POKUSOV})."
+                    )
+                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    continue
+
+                log_info(f"[LC-KBS] Dátum {datum_str}: požiadavka zlyhala ({e}), refrén preskakujem.")
+                return None
+
+        return None
+
+    except Exception as e:
+        # Neočakávaná (nesieťová) chyba – nemá zmysel ju opakovať.
+        log_exception(f"[LC-KBS] Neočakávaná chyba pri dátume {datum_str}", e)
+        return None
+
+    finally:
+        # Session sa zatvára VŽDY (úspech aj zlyhanie) – predtým sa pri
+        # úspešnom sťahovaní na prvý pokus session nezatvárala vôbec.
+        if session is not None:
+            try:
+                session.close()
+            except Exception:
+                pass
 
 
 def _vycisti_refren_zalmu_lc_kbs(text: str) -> str:
@@ -8074,6 +8120,7 @@ class ControlApp:
         self.statusbar_tyzden_zaltara: bool = DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", True)
         self.statusbar_skratka_zalmu: bool = DEFAULT_CONFIG.get("statusbar_skratka_zalmu", True)
         self.statusbar_jks_piesne: bool = DEFAULT_CONFIG.get("statusbar_jks_piesne", True)
+        self.diagnostika_povolena: bool = DEFAULT_CONFIG.get("diagnostika_povolena", True)
 
         # Premenné geometrie hlavného okna (ukladaná/načítavaná pozícia a veľkosť)
         self.main_window_x:      int = -1
@@ -8166,6 +8213,7 @@ class ControlApp:
         self.statusbar_tyzden_zaltara_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", True))
         self.statusbar_skratka_zalmu_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_skratka_zalmu", True))
         self.statusbar_jks_piesne_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_jks_piesne", True))
+        self.diagnostika_povolena_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("diagnostika_povolena", True))
         self.aktualna_liturgicka_cast_var = tk.StringVar(
             self.master,
             value=format_aktualna_liturgicka_cast()
@@ -8786,6 +8834,10 @@ class ControlApp:
                 set_safe("statusbar_jks_piesne_var", self.statusbar_jks_piesne)
                 self.aktualizovat_status_bar()
 
+                self.diagnostika_povolena = bool(full_config.get("diagnostika_povolena", True))
+                set_safe("diagnostika_povolena_var", self.diagnostika_povolena)
+                nastav_diagnostiku(self.diagnostika_povolena)
+
                 # Pomocník
                 self.pomocnik_font_size = full_config["pomocnik_font_size"]
                 self.pomocnik_x = full_config.get("pomocnik_x", -1)
@@ -8885,6 +8937,8 @@ class ControlApp:
         self.statusbar_skratka_zalmu = self.statusbar_skratka_zalmu_var.get() if hasattr(self, "statusbar_skratka_zalmu_var") else True
         self.statusbar_jks_piesne = self.statusbar_jks_piesne_var.get() if hasattr(self, "statusbar_jks_piesne_var") else True
         self.aktualizovat_status_bar()
+        self.diagnostika_povolena = self.diagnostika_povolena_var.get() if hasattr(self, "diagnostika_povolena_var") else True
+        nastav_diagnostiku(self.diagnostika_povolena)
         self.bottom_margin = self.bottom_margin_var.get() if hasattr(self, "bottom_margin_var") else 50
         self.reserved_vertical_ratio = self.reserved_vertical_var.get() if hasattr(self, "reserved_vertical_var") else 0.20
 
@@ -8898,6 +8952,7 @@ class ControlApp:
             "statusbar_tyzden_zaltara": True,
             "statusbar_skratka_zalmu": True,
             "statusbar_jks_piesne": True,
+            "diagnostika_povolena": DEFAULT_CONFIG.get("diagnostika_povolena", True),
             "pomocnik_font_size": DEFAULT_CONFIG.get("pomocnik_font_size", 14),
             "pomocnik_x": DEFAULT_CONFIG.get("pomocnik_x", -1),
             "pomocnik_y": DEFAULT_CONFIG.get("pomocnik_y", -1),
@@ -9017,6 +9072,7 @@ class ControlApp:
             "statusbar_tyzden_zaltara": bool(self.statusbar_tyzden_zaltara),
             "statusbar_skratka_zalmu": bool(self.statusbar_skratka_zalmu),
             "statusbar_jks_piesne": bool(self.statusbar_jks_piesne),
+            "diagnostika_povolena": bool(self.diagnostika_povolena),
             "fade_speed": self.fade_speed,
             "pomocnik_font_size": int(self.pomocnik_font_size),
             "pomocnik_x": int(self.pomocnik_x),
@@ -9972,12 +10028,32 @@ class ControlApp:
         progress_dialog.resizable(False, False)
         progress_dialog.transient(self.master)
         progress_dialog.lift()
-        progress_dialog.protocol("WM_DELETE_WINDOW", lambda: None)
+
+        def zrusit_zobrazenie():
+            # Nejde o skutočné zrušenie sťahovania (worker vlákno beží ďalej
+            # na pozadí ako daemon a bezpečne dobehne, vrátane finálneho
+            # messageboxu cez po_stiahnuti) – len skryje dialóg, aby
+            # používateľ nebol pri pomalom pripojení zaseknutý bez možnosti
+            # okno zatvoriť. `lock` sa preto zámerne NEUVOĽŇUJE tu – uvoľní
+            # ho až po_stiahnuti(), keď sťahovanie na pozadí naozaj skončí.
+            try:
+                if progress_dialog.winfo_exists():
+                    progress_dialog.destroy()
+            except tk.TclError:
+                pass
+            try:
+                self.master.config(cursor="")
+            except tk.TclError:
+                pass
+            log_info(f"{kontext}: dialóg priebehu zatvorený používateľom, sťahovanie pokračuje na pozadí.")
+
+        progress_dialog.protocol("WM_DELETE_WINDOW", zrusit_zobrazenie)
 
         self.master.update_idletasks()
         mx = self.master.winfo_x() + self.master.winfo_width() // 2
         my = self.master.winfo_y() + self.master.winfo_height() // 2
-        progress_dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+        dh_s_tlacidlom = dh + 46  # miesto navyše pre tlačidlo "Zrušiť" a vysvetľujúci popis pod ním
+        progress_dialog.geometry(f"{dw}x{dh_s_tlacidlom}+{mx - dw // 2}+{my - dh_s_tlacidlom // 2}")
 
         stav_var = tk.StringVar(value=uvodna_sprava)
         pocet_var = tk.StringVar(value="")
@@ -10002,6 +10078,21 @@ class ControlApp:
             fg="#bbbbbb",
             font=(self.font_family, 10),
         ).pack()
+
+        tk.Button(
+            progress_dialog,
+            text="Zrušiť",
+            command=zrusit_zobrazenie,
+            width=12,
+        ).pack(pady=(10, 2))
+
+        tk.Label(
+            progress_dialog,
+            text="Sťahovanie bude pokračovať na pozadí.",
+            bg="#1e1e1e",
+            fg="#888888",
+            font=(self.font_family, 8),
+        ).pack(pady=(0, 6))
 
         try:
             self.master.config(cursor="wait")
@@ -13405,6 +13496,30 @@ class ControlApp:
             command=self.zobraz_info_rezervy
         ).pack(side=tk.RIGHT)
 
+        # 9b. DIAGNOSTIKA
+        frame_diag = vytvor_sekciu(pokrocile_frame, "Diagnostika")
+        vytvor_popis(
+            frame_diag,
+            "Keď je diagnostika zapnutá, aplikácia priebežne zapisuje chyby a technické "
+            "udalosti do log súboru nižšie (s automatickou rotáciou, aby súbor nerástol "
+            "donekonečna). Pri probléme s aplikáciou tento súbor pomôže zistiť "
+            "príčinu – v takom prípade je dobré mať diagnostiku zapnutú."
+        )
+        self.checkbox_diagnostika = vytvor_check(
+            frame_diag,
+            "Zapnúť diagnostické logovanie do súboru",
+            self.diagnostika_povolena_var
+        )
+        tk.Label(
+            frame_diag,
+            text=f"Súbor: {LOG_PATH}",
+            wraplength=450,
+            font=(self.font_family, 9),
+            fg="#555555",
+            anchor="w",
+            justify=tk.LEFT,
+        ).pack(anchor="w", pady=(4, 0))
+
         # 10. RESET
         frame_reset = vytvor_sekciu(pokrocile_frame, "Reset do pôvodného stavu")
         vytvor_popis(frame_reset, "Vráti všetky nastavenia na pôvodné hodnoty. Použite ho v prípade, že sa nastavenia „rozladia“ tak, že sa text zobrazí mimo obrazovky, je príliš orezaný, nečitateľný alebo sa vôbec nezobrazí kvôli nesprávnym nastaveniam.")
@@ -13674,6 +13789,13 @@ class ControlApp:
         if hasattr(self, "zobrazit_direktorium_var"):
             raw = self.config.get("zobrazit_direktorium", False)
             self.zobrazit_direktorium_var.set(bool(raw))
+
+        # Diagnostika (logovanie do súboru)
+        if hasattr(self, "diagnostika_povolena_var"):
+            raw = self.config.get("diagnostika_povolena", True)
+            self.diagnostika_povolena_var.set(bool(raw))
+            self.diagnostika_povolena = bool(raw)
+            nastav_diagnostiku(self.diagnostika_povolena)
 
         # Rezervy
         if hasattr(self, "reserved_vertical_var"):
