@@ -652,7 +652,7 @@ STUPEN_OVERRIDE = {
     "OND":  "Sviatok",
     "VPLB": "Sviatok",   # Výročie posviacky Lateránskej baziliky – piesne z direktória sa berú zo všeobecného záznamu "Výročie posviacky chrámu"
     "4L":   "Sviatok",   # Aprílové sviatky svätých mužov majú viac konkrétnych názvov – piesne z direktória sa berú zo všeobecného záznamu "Sviatky svätých mužov"
-    "7L":   "Sviatok",   # Júnové sviatky apoštolov majú viac konkrétnych názvov – piesne z direktória sa berú zo všeobecného záznamu "Sviatky apoštolov"
+    "7L":   "Sviatok",   # Júlové sviatky apoštolov majú viac konkrétnych názvov – piesne z direktória sa berú zo všeobecného záznamu "Sviatky apoštolov"
     "10L":  "Sviatok",   # Októbrové sviatky mučeníkov majú viac konkrétnych názvov – piesne z direktória sa berú zo všeobecného záznamu "Sviatky mučeníkov"
 }
 
@@ -14659,12 +14659,13 @@ class ControlApp:
                 "  4L  –  Sviatky svätých mužov (v apríli)\n"
                 "  5L  –  Sv. Jozef, robotník (1. V.) – ak nepadne na nedeľu\n"
                 "  6L  –  Sv. Peter a Pavol, apoštoli (29. VI.)\n"
-                "  7L  –  Sviatky apoštolov (v júni)\n"
+                "  7L  –  Sviatky apoštolov (v júli)\n"
                 "  8L  –  Nanebovzatie Panny Márie (15. VIII.)\n"
                 "  9L  –  Sedembolestná Panna Mária (15. IX.)\n"
                 " 10L  –  Sviatky mučeníkov (v októbri)\n"
                 " 11L  –  Všetkých svätých (1. XI.)\n"
                 " 12L  –  Nepoškvrnené počatie Panny Márie (8. XII.) – ak nepadne na nedeľu\n\n"
+                " xL?  –  Fixná pripomienka v stavovom riadku (nie chyba). Použi ju, ak si medzi ponúknutými skratkami nenašiel vhodný žalm.\n\n" 
                 
                 "PRAKTICKÁ POZNÁMKA\n"
                 "─────────────────────\n"
