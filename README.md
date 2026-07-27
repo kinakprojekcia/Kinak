@@ -88,8 +88,11 @@ Liturgia hodín / vešpery: breviar.kbs.sk
 Inštalácia
 
 Pre bežného používateľa (Windows)
+
 Stiahnite si Kinak_v3.1.exe zo sekcie Releases do priečinka Kinak
+
 Súbor Kinak.exe musí mať pri sebe aj priečinok s názvom piesne
+
 Kinak (priečinok môže mať ľubovoľný názov)
 ├── Kinak.exe
 └── piesne/
