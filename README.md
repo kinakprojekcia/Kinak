@@ -29,7 +29,7 @@ Kinak urobí všetko plne automaticky, aby mal premietač všetko pripravené na
 
 • zohľadní presuny slávení, ak sa kryjú s významnejšími sláveniami
 
-• vie, či je cyklus A/B/C a či je rok párny/npárny
+• vie, či je cyklus A/B/C a či je rok párny/nepárny
 
 • v stavovom riadku zobrazí skratku žalmu na dnes aj zajtrajšok
 
@@ -57,21 +57,23 @@ Kinak to urobí automaticky. Spoľahlivo. Offline.
 Len dva kliky — a všetko je pripravené.
 A premietač môže konečne prežívať omšu, nie len premietať.
 
+PRE KOHO JE KINAK?
 
+• pre premietačov piesní na plátno / TV
+• pre farnosti, ktoré chcú mať čítania, vešpery, žalmy, piesne a rôzne modlitby pripravené automaticky
 
-Pre koho je Kinak?
-pre premietačov piesní na plátno / TV
-pre farnosti, ktoré chcú mať čítania, vešpery, žalmy a piesne a rôzne modlitby pripravené automaticky
-Čo vie Kinak?
-Premietanie na druhý monitor / projektor s nastavením farieb, veľkosti, prelínania
-Piesne – rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica
-Liturgický kalendár pre Slovensko – automatický výpočet:
-Veľkonočná nedeľa (Meeus-Jones-Butcher)
-adventná nedeľa, Advent, Vianoce, Pôst, Veľká noc
-Presuny slávení: Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa atď. Ak slávnosť koliduje s významnejším slávením, program automaticky zohľadní jej presun.
-Týždeň žaltára I.-IV., liturgické roky A/B/C, cyklus I/II
-Sťahovanie čítaní a vešpier na daný deň (offline cache)
-Funguje bez internetu – po prvom stiahnutí
+ČO VIE KINAK?
+
+• Premietanie na druhý monitor / projektor s nastavením farieb, veľkosti, prelínania
+• Piesne – rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica
+• Liturgický kalendár pre Slovensko – automatický výpočet:
+ Veľkonočná nedeľa (Meeus-Jones-Butcher)
+ adventná nedeľa, Advent, Vianoce, Pôst, Veľká noc
+• Presuny slávení: Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa atď. Ak slávnosť koliduje s významnejším slávením, program automaticky zohľadní jej presun.
+• Týždeň žaltára I.-IV., liturgické roky A/B/C, cyklus I/II
+• Sťahovanie čítaní a vešpier na daný deň (offline cache)
+• Funguje bez internetu – po prvom stiahnutí
+
 Liturgický kalendár – špecifikácia
 Liturgické výpočty sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku, nie americkým modelom.
 
@@ -79,7 +81,9 @@ Krajina / provincia: Slovensko (SK)
 Kalendár: všeobecný rímsky + vlastné slávenia slovenskej provincie (sv. Cyril a Metod 5.7., Sedembolestná Panna Mária 15.9. a i.)
 Smernice: Všeobecné normy o liturgickom roku a o kalendári + Direktórium KBS
 Kľúčový rozdiel oproti US modelu: Zjavenie Pána je na Slovensku pevne 6. januára (prikázaný sviatok, štátny sviatok) a nepresúva sa na nedeľu. Preto Krst Krista Pána = nedeľa PO 6.1., aj keď 6.1. je nedeľa (napr. 13.1.2019, 13.1.2030).
-Zdroje dát
+
+ZDROJE DÁT
+
 Obsah čítaní a vešpier nie je súčasťou programu. Sťahuje sa na požiadanie pre osobnú potrebu farnosti:
 
 Liturgický kalendár a čítania: lc.kbs.sk (Konferencia biskupov Slovenska)
@@ -101,14 +105,6 @@ Kinak (priečinok môže mať ľubovoľný názov)
     ├── 003.txt
     └── ...
 Spustite a choďte do menu Pomoc → Rýchly sprievodca
-
-Inštalácia pre vývojára
-bash
-git clone https://github.com/VASE_MENO/Kinak.git
-cd Kinak
-pip install requests beautifulsoup4 screeninfo
-python Kinak.py
-Požiadavky: Python 3.9+, Windows 10/11, knižnice requests, beautifulsoup4, screeninfo
 
 LICENCIA
 MIT License - pozri súbor LICENSE 
