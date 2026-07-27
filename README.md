@@ -69,8 +69,8 @@ PRE KOHO JE KINAK?
 • Piesne – rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica
 
 • Liturgický kalendár pre Slovensko – automatický výpočet:
- Veľkonočná nedeľa (Meeus-Jones-Butcher)
- adventná nedeľa, Advent, Vianoce, Pôst, Veľká noc
+  - Veľkonočná nedeľa (Meeus-Jones-Butcher)
+  - adventná nedeľa, Advent, Vianoce, Pôst, Veľká noc
  
 • Presuny slávení: Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa atď. Ak slávnosť koliduje s významnejším slávením, program automaticky zohľadní jej presun.
 
@@ -97,6 +97,7 @@ ZDROJE DÁT
 Obsah čítaní a vešpier nie je súčasťou programu. Sťahuje sa na požiadanie pre osobnú potrebu farnosti:
 
 Liturgický kalendár a čítania: lc.kbs.sk (Konferencia biskupov Slovenska)
+
 Liturgia hodín / vešpery: breviar.kbs.sk
 
 INŠTALÁCIA
@@ -114,6 +115,7 @@ Kinak (priečinok môže mať ľubovoľný názov)
     ├── 002.txt
     ├── 003.txt
     └── ...
+
 Spustite a choďte do menu Pomoc → Rýchly sprievodca
 
 LICENCIA
