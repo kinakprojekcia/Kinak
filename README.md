@@ -64,8 +64,8 @@ PRE KOHO JE KINAK?
 
 ČO VIE KINAK?
 
-• Premietanie na druhý monitor / projektor s nastavením farieb, veľkosti, prelínania
-• Piesne – rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica
+• Premietanie na druhý monitor / projektor s nastavením farieb, veľkosti, prelínania\n
+• Piesne – rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica\n
 • Liturgický kalendár pre Slovensko – automatický výpočet:
  Veľkonočná nedeľa (Meeus-Jones-Butcher)
  adventná nedeľa, Advent, Vianoce, Pôst, Veľká noc
