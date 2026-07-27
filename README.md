@@ -21,7 +21,7 @@ Piesne – rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnic
 Liturgický kalendár pre Slovensko – automatický výpočet:
 Veľkonočná nedeľa (Meeus-Jones-Butcher)
 adventná nedeľa, Advent, Vianoce, Pôst, Veľká noc
-Presuny sviatkov: Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa atď.
+Presuny slávení: Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa atď. Ak slávnosť koliduje s významnejším slávením, program automaticky zohľadní jej presun.
 Týždeň žaltára I.-IV., liturgické roky A/B/C, cyklus I/II
 Sťahovanie čítaní a vešpier na daný deň (offline cache)
 Funguje bez internetu – po prvom stiahnutí
