@@ -7,10 +7,57 @@ Krajina: SK
 
 Zdarma pre všetky farnosti na Slovensku. Dáta čítaní, vešpier a žalmov: zdroj lc.kbs.sk / breviar.kbs.sk
 
-Reálny program, ktorý počas liturgie beží v kostole v Kremnici. Vznikol ako dobrovoľnícky projekt pre našu farnosť a je voľne k dispozícii pre všetky farnosti.
+Reálny program, ktorý počas liturgie beží vo všetkých kostoloch v Kremnici. Vznikol ako dobrovoľnícky projekt pre našu farnosť a je voľne k dispozícii pre všetky farnosti.
 
-Príbeh
-5 rokov som prepisovala piesne do Wordu a hľadala, aký je týždeň žaltára a či má prednosť sviatok. Vytvorila som Kinak, aby premietač mal všetko na 2 kliky – bez internetu, bez stresu pred omšou.
+PREČO VZNIKOL KINAK
+
+Premietač počas omše často žongluje s Wordom, mobilom, tromi rôznymi stránkami s čítaniami, knižkou žalmov a lístočkom, na ktorý si včera ceruzkou napísal: „Aký je dnes žalm?“  
+Je sviatok? Má prednosť slávnosť? Cyklus A, B alebo C? Párny či nepárny rok? 20c1 alebo 20c2?
+
+Stále dokola prepisovať texty z Wordu do Wordu, listovať v direktóriu, hľadať správny žalm a zisťovať, či má sviatok prednosť…
+Proste zmätok.
+
+A presne preto vznikol Kinak.
+
+ČO KINAK RIEŠI
+
+Kinak urobí všetko plne automaticky, aby mal premietač všetko pripravené na 2 kliky:
+
+• funguje offline, bez internetu
+
+• automaticky vypočíta liturgický deň
+
+• zohľadní presuny slávení, ak sa kryjú s významnejšími sláveniami
+
+• vie, či je cyklus A/B/C a či je rok párny/npárny
+
+• v stavovom riadku zobrazí skratku žalmu na dnes aj zajtrajšok
+
+• ponúkne odporúčané piesne z JKS podľa žalmu
+
+• prepojí žalm priamo s oknom Slávenia a Direktória
+
+Už žiadne:
+
+• prepisovanie textov z Wordu do Wordu
+
+• listovanie v direktóriu
+
+• hľadanie v knižkách a pokrčených papierikoch
+
+• stres pred omšou
+
+PREČO JE TO DÔLEŽITÉ
+
+Premietač už nemusí riešiť chaos.
+Nemusí hľadať, prepisovať, kontrolovať, porovnávať.
+
+Kinak to urobí automaticky. Spoľahlivo. Offline.
+
+Len dva kliky — a všetko je pripravené.
+A premietač môže konečne prežívať omšu, nie len premietať.
+
+
 
 Pre koho je Kinak?
 pre premietačov piesní na plátno / TV
