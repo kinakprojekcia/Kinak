@@ -85,7 +85,7 @@ Obsah čítaní a vešpier nie je súčasťou programu. Sťahuje sa na požiadan
 Liturgický kalendár a čítania: lc.kbs.sk (Konferencia biskupov Slovenska)
 Liturgia hodín / vešpery: breviar.kbs.sk
 
-Inštalácia
+INŠTALÁCIA
 
 Pre bežného používateľa (Windows)
 
@@ -110,7 +110,7 @@ pip install requests beautifulsoup4 screeninfo
 python Kinak.py
 Požiadavky: Python 3.9+, Windows 10/11, knižnice requests, beautifulsoup4, screeninfo
 
-Licencia
+LICENCIA
 MIT License - pozri súbor LICENSE 
 
 Vysvetlenie v skratke:
@@ -120,7 +120,7 @@ Zdarma pre všetky farnosti na Slovensku. Dáta čítaní: zdroj lc.kbs.sk / bre
 
 Copyright (c) 2026 Kinak - Kremnica
 
-Kontakt
+KONTAKT
 Vytvorené ako dobrovoľnícky projekt pre farnosť Kremnica.
 
 
