@@ -79,7 +79,9 @@ LITURGICKÝ KALENDÁR – ŠPECIFIKÁCIA
 Liturgické výpočty sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku, nie americkým modelom.
 
 • Krajina / provincia: Slovensko (SK)
+
 • Kalendár: všeobecný rímsky + vlastné slávenia slovenskej provincie (sv. Cyril a Metod 5.7., Sedembolestná Panna Mária 15.9. a i.)
+
 • Smernice: Všeobecné normy o liturgickom roku a o kalendári + Direktórium KBS
 
 Kľúčový rozdiel oproti US modelu: Zjavenie Pána je na Slovensku pevne 6. januára (prikázaný sviatok, štátny sviatok) a nepresúva sa na nedeľu. Preto Krst Krista Pána = nedeľa PO 6.1., aj keď 6.1. je nedeľa (napr. 13.1.2019, 13.1.2030).
