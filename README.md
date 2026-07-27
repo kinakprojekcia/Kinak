@@ -1,3 +1,2 @@
 # Kinak
-Liturgický projekčný program
-Zdarma pre všetky farnosti na Slovensku
+Liturgický projekčný program - zdarma pre všetky farnosti na Slovensku
