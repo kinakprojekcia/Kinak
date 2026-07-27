@@ -60,6 +60,7 @@ A premietač môže konečne prežívať omšu, nie len premietať.
 PRE KOHO JE KINAK?
 
 • pre premietačov piesní na plátno / TV
+
 • pre farnosti, ktoré chcú mať čítania, vešpery, žalmy, piesne a rôzne modlitby pripravené automaticky
 
 ČO VIE KINAK?
@@ -119,6 +120,7 @@ Kinak (priečinok môže mať ľubovoľný názov)
 Spustite a choďte do menu Pomoc → Rýchly sprievodca
 
 LICENCIA
+
 MIT License - pozri súbor LICENSE 
 
 Vysvetlenie v skratke:
@@ -129,6 +131,7 @@ Zdarma pre všetky farnosti na Slovensku. Dáta čítaní: zdroj lc.kbs.sk / bre
 Copyright (c) 2026 Kinak - Kremnica
 
 KONTAKT
+
 Vytvorené ako dobrovoľnícky projekt pre farnosť Kremnica.
 
 
