@@ -104,17 +104,9 @@ INŠTALÁCIA
 
 Pre bežného používateľa (Windows)
 
-Stiahnite si Kinak_v3.1.exe zo sekcie Releases do priečinka Kinak
+Stiahnite si celý priečinok Kinak_v3.1
 
 Súbor Kinak.exe musí mať pri sebe aj priečinok s názvom piesne
-
-Kinak (priečinok môže mať ľubovoľný názov)
-├── Kinak.exe
-└── piesne/
-    ├── 001.txt
-    ├── 002.txt
-    ├── 003.txt
-    └── ...
 
 Spustite a choďte do menu Pomoc → Rýchly sprievodca
 
