@@ -11,8 +11,7 @@ Reálny program, ktorý počas liturgie beží vo všetkých kostoloch v Kremnic
 
 PREČO VZNIKOL KINAK
 
-Premietač počas omše často žongluje s Wordom, mobilom, tromi rôznymi stránkami s čítaniami, knižkou žalmov a lístočkom, na ktorý si včera ceruzkou napísal: „Aký je dnes žalm?“  
-Je sviatok? Má prednosť slávnosť? Cyklus A, B alebo C? Párny či nepárny rok? 20c1 alebo 20c2?
+Premietač počas omše často žongluje s Wordom, mobilom, tromi rôznymi stránkami s čítaniami, knižkou žalmov a lístočkom, na ktorý si včera ceruzkou napísal: „Aký je dnes žalm?“ Je sviatok? Má prednosť slávnosť? Cyklus A, B alebo C? Párny či nepárny rok? 20c1 alebo 20c2?
 
 Stále dokola prepisovať texty z Wordu do Wordu, listovať v direktóriu, hľadať správny žalm a zisťovať, či má sviatok prednosť…
 Proste zmätok.
