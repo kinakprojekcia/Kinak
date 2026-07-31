@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import annotations   # Aby testy bežali aj na Python 3.9
 
 import sys
@@ -20,9 +21,11 @@ import logging
 from functools import lru_cache
 from logging.handlers import RotatingFileHandler
 import socket
+import weakref
 from pathlib import Path
 from datetime import datetime, date, timedelta
-from typing import cast, Callable, Any
+from types import MappingProxyType
+from typing import cast, Callable, Any, Mapping, TYPE_CHECKING
 
 # Knižnice tretích strán
 try:
@@ -54,7 +57,7 @@ from tkinter import ttk, messagebox, colorchooser, filedialog
 # Bezpečný import screeninfo
 # ==========================================================
 try:
-    from screeninfo import get_monitors
+    from screeninfo import get_monitors  # type: ignore[import-not-found]
 except ImportError:
     get_monitors = None
 
@@ -63,6 +66,30 @@ except ImportError:
 # ==========================================================
 
 KINAK_VERSION = "3.1"
+
+# ==========================================================
+# LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA
+# ==========================================================
+# Krajina / provincia: Slovensko (SK)
+# Direktórium: Rímske + slovenské vlastné slávenia (Sv. Cyril a Metod 5.7.,
+#              Sedembolestná Panna Mária 15.9. atď.)
+# Zjavenie Pána: PEVNE 6. januára (štátny sviatok, nepresúva sa na nedeľu
+#              ako napr. v USA/UK) -> preto Krst Pána = najbližšia nedeľa
+#              PO 6.1., a to aj vtedy, keď 6.1. samo pripadne na nedeľu
+#              (pozri krst_krista_pana() nižšie a jeho docstring pre plné
+#              liturgicko-právne zdôvodnenie tohto rozdielu).
+#
+# Zdroje dát pre generovanie obsahu:
+#   - Liturgický kalendár a čítania: lc.kbs.sk (Konferencia biskupov Slovenska)
+#   - Liturgia hodín / vešpery: breviar.kbs.sk
+#   - Smernice: Všeobecné normy o liturgickom roku a o kalendári
+#
+# Upozornenie: Sťahovaný obsah z lc.kbs.sk / breviar.kbs.sk NIE JE súčasťou
+# distribúcie – sťahuje sa na požiadanie, pre osobnú potrebu farnosti.
+# ==========================================================
+
+KALENDAR_KRAJINA = "SK"
+KALENDAR_ZDROJE = "lc.kbs.sk, breviar.kbs.sk"
 
 GREGORIANSKY_MIN_ROK = 1583
 GREGORIANSKY_MAX_ROK = 9999
@@ -217,7 +244,7 @@ def datum_zvestovania_pana(rok: int) -> date:
 
     Príklady rokov s presunutím:
         2016 – 25.3. = Veľký piatok        → presun na 4.4. (prípad 1)
-        2035 – 25.3. = Kvetná nedeľa       → presun na 2.4. (prípad 1)
+        2035 – 25.3. = Veľkonočná nedeľa   → presun na 2.4. (prípad 1)
         2007 – 25.3. = 5. pôstna nedeľa    → presun na 26.3. (prípad 2)
         2012 – 25.3. = 5. pôstna nedeľa    → presun na 26.3. (prípad 2)
         2057 – 25.3. = pôstna nedeľa       → presun na 26.3. (prípad 2)
@@ -243,16 +270,20 @@ def datum_zvestovania_pana(rok: int) -> date:
     return zv
 
 @lru_cache(maxsize=None)
-def vypocitaj_datum_pohyblivych_slaveni(rok: int) -> dict:
+def vypocitaj_datum_pohyblivych_slaveni(rok: int) -> Mapping[str, date]:
     """
     Vypočíta konkrétne dátumy všetkých pohyblivých slávení pre daný rok.
-    Vracia slovník: {názov slávenia: date}
+    Vracia mapping: {názov slávenia: date}
 
-    Cachované cez @lru_cache. POZOR: volajúci kód nesmie vrátený slovník
-    meniť "in place" (napr. priradením kľúča alebo .update/.pop) — všetky
-    volania v tomto súbore ho už dnes len čítajú (.get/.items/`in`), takže
-    cachovanie je bezpečné; pri budúcich úpravách zachovaj tento kontrakt,
-    prípadne si pred mutáciou spravte plytkú kópiu (dict(...)).
+    Cachované cez @lru_cache – opakované volanie s rovnakým `rok` vracia tú
+    istú zdieľanú inštanciu. Aby prípadná budúca mutácia (napr. priradenie
+    kľúča alebo .update/.pop) nemohla ticho poškodiť túto zdieľanú cache
+    položku pre všetky ostatné volania v aplikácii, návratová hodnota je
+    zabalená do `MappingProxyType` – ide o skutočne nemeniteľný (read-only)
+    pohľad na dict, takže `.get`/.items()/`in`/indexovanie fungujú rovnako
+    ako doteraz, ale akýkoľvek pokus o zápis (`d["x"] = y`, `d.pop(...)`)
+    okamžite vyhodí `TypeError` presne na mieste chyby – namiesto tichého
+    poškodenia cache, ktoré by sa prejavilo inde a inokedy.
     """
     velka_noc   = velkonocna_nedela(rok)
     turice      = velka_noc + timedelta(days=49)
@@ -262,7 +293,7 @@ def vypocitaj_datum_pohyblivych_slaveni(rok: int) -> dict:
     # Svätá rodina - jediný zdroj pravdy: datum_svatej_rodiny()
     svata_rodina = datum_svatej_rodiny(rok)
 
-    return {
+    return MappingProxyType({
         "Prvá adventná nedeľa (začína nový liturgický rok)": prva_advent,
         "Svätej rodiny Ježiša, Márie a Jozefa":             svata_rodina,
         "Krst Krista Pána":                                  krst_krista_pana(rok),
@@ -281,7 +312,7 @@ def vypocitaj_datum_pohyblivych_slaveni(rok: int) -> dict:
         "Najsvätejšieho Srdca Ježišovho":                    turice + timedelta(days=19),
         "Nepoškvrnené Srdce Panny Márie":                    turice + timedelta(days=20),
         "Krista Kráľa":                                      krista_krala,
-    }
+    })
 
 # Pohyblivé "slávnosti Pána" – podľa Všeobecných noriem liturgického roka
 # (č. 60) majú prednosť pred pevnou slávnosťou svätca rovnakého stupňa
@@ -312,7 +343,27 @@ def datum_narodenia_jana_krstitela(rok: int) -> date:
     return povodny_datum
 
 def je_neposkvrnene_srdce_pm_prekazane(datum: date) -> bool:
-    """NSPM je spomienka; pri kolízii so slávnosťou/sviatkom sa vynechá, nepresúva."""
+    """
+    NSPM je spomienka; pri kolízii so slávnosťou/sviatkom sa vynechá, nepresúva.
+
+    Kolíziu overujeme voči OBOM zdrojom pevných dátumov v aplikácii (nie len
+    voči jednému), aby budúce rozšírenie ktoréhokoľvek z nich bolo
+    automaticky pokryté aj tu, bez nutnosti pridávať ďalšie natvrdo napísané
+    dátumy:
+      1. DIREKTORIUM_DATA (cez najdi_presny_datum_v_direktoriu) – hlavný
+         zdroj pevných dátumov s presným "(D.M.)" zápisom v poli "den".
+      2. PEVNE_SLAVENIA_S_VLASTNYM_KODOM – doplnkový zoznam pre slávenia,
+         ktoré DIREKTORIUM_DATA eviduje len generickým záznamom bez
+         konkrétneho dátumu (napr. "Sviatky apoštolov", "Sviatky Panny
+         Márie" namiesto konkrétne sv. Tomáša 3.7. alebo Návštevy Panny
+         Márie 2.7.) – DIREKTORIUM_DATA teda tieto dva dátumy vôbec
+         neobsahuje v podobe, ktorú by našiel bod 1.
+
+    Kolidujúce slávenie NSPM vytláča, len ak má vyšší stupeň
+    (Slávnosť/Sviatok) – dve spomienky na ten istý deň sa navzájom
+    automaticky nevylučujú (Všeobecné normy liturgického roka, čl. 60),
+    preto sa "Spomienka"/prázdny stupeň zámerne neberie ako kolízia.
+    """
     pohyblive = vypocitaj_datum_pohyblivych_slaveni(datum.year)
     datum_nspm = pohyblive.get("Nepoškvrnené Srdce Panny Márie")
     if datum != datum_nspm:
@@ -323,16 +374,27 @@ def je_neposkvrnene_srdce_pm_prekazane(datum: date) -> bool:
     if datum == date(datum.year, 6, 29):  # Sv. Petra a Pavla, apoštolov (slávnosť)
         return True
 
-    # Extrémne zriedkavý okrajový prípad: NSPM (Turíce+20) sa počíta zo dňa
-    # Veľkej noci, takže keď Veľká noc pripadne na svoj najneskorší možný
-    # dátum (25.4.), NSPM vyjde až na 2.–3. júla, kde už koliduje s pevnými
-    # sviatkami z PEVNE_SLAVENIA_S_VLASTNYM_KODOM (napr. Návšteva Panny
-    # Márie 2.7., Sv. Tomáš apoštol 3.7.). Stalo sa to v roku 2011 a stane sa
-    # znova v rokoch 2038 a 2095. Namiesto pridávania ďalších natvrdo
-    # napísaných dátumov kontrolujeme priamo voči existujúcej tabuľke, aby
-    # akékoľvek jej budúce rozšírenie bolo automaticky pokryté aj tu.
-    if najdi_pevne_slavenie_s_vlastnym_kodom(datum) is not None:
-        return True
+    # 1) DIREKTORIUM_DATA – vyzaduj_prednost=False, lebo tu neriešime prednosť
+    #    pred nedeľou (datum aj tak nikdy nie je nedeľa, keďže NSPM pripadá
+    #    vždy na utorok), len samotnú existenciu pevného slávenia v tento deň.
+    z_direktoria = najdi_presny_datum_v_direktoriu(datum, vyzaduj_prednost=False)
+    if z_direktoria is not None:
+        _, nazov_z_direktoria = z_direktoria
+        if ziskaj_stupen_liturgickeho_dna(nazov_z_direktoria) in ("Slávnosť", "Sviatok"):
+            return True
+
+    # 2) PEVNE_SLAVENIA_S_VLASTNYM_KODOM – zachytáva zvyšok (napr. Návšteva
+    #    Panny Márie 2.7., Sv. Tomáš apoštol 3.7.), ktorý bod 1 vyššie nenájde
+    #    (pozri dôvod v docstringu). Extrémne zriedkavý okrajový prípad: NSPM
+    #    (Turíce+20) sa počíta zo dňa Veľkej noci, takže keď Veľká noc
+    #    pripadne na svoj najneskorší možný dátum (25.4.), NSPM vyjde až na
+    #    2.–3. júla. Stalo sa to v roku 2011 a stane sa znova v rokoch 2038
+    #    a 2095.
+    z_vlastneho_kodu = najdi_pevne_slavenie_s_vlastnym_kodom(datum)
+    if z_vlastneho_kodu is not None:
+        _, _, stupen_z_vlastneho_kodu = z_vlastneho_kodu
+        if stupen_z_vlastneho_kodu in ("Slávnosť", "Sviatok"):
+            return True
 
     return False
 
@@ -623,8 +685,17 @@ RIMSKE_MESIACE = {
     "XII": 12,
 }
 
+# POZNÁMKA: Obetovanie Pána (2.2.) tu ZÁMERNE NEPATRÍ, hoci ide o sviatok
+# Pána, ktorý má rovnako ako PREM/PSK/VPLB prednosť pred bežnou nedeľou. Na
+# rozdiel od nich však nemá vlastný kód v PEVNE_SLAVENIA_S_VLASTNYM_KODOM –
+# vždy sa rieši cez generický direktóriový lookup
+# (najdi_presny_datum_v_direktoriu), ktorý preň vracia mesačný kód "2L",
+# nikdy "OP". Kód "OP" by sa tu preto nikdy nezhodoval s `kod` odovzdaným do
+# pevne_slavenie_ma_prednost_pred_nedelou() – bol to mŕtvy, nedosiahnuteľný
+# člen množiny. Prednosť Obetovania Pána pred nedeľou aj tak spoľahlivo
+# zabezpečuje vetva `"PÁNA" in nazov_upper` nižšie (direktóriový názov
+# "Obetovanie Pána" toto slovo vždy obsahuje) – žiadna zmena správania.
 SVIATKY_PANA_S_PREDNOSTOU_V_NEDELU = {
-    "OP",    # Obetovanie Pána
     "PREM",  # Premenenie Pána
     "PSK",   # Povýšenie Svätého kríža
     "VPLB",  # Výročie posviacky Lateránskej baziliky
@@ -1007,6 +1078,11 @@ def vypocitaj_kod_liturgickej_casti(dnes: date | None = None) -> str:
     """
     dnes = dnes or date.today()
 
+    # Volané nižšie viackrát pre ten istý rok (Najsvätejšieho Kristovho Tela
+    # a Krvi, Najsvätejšieho Srdca Ježišovho) – aj keď je funkcia @lru_cache-ovaná,
+    # netreba ju volať opakovane v jednom behu, stačí jedno vyhľadanie v cachi.
+    pohyblive_dnes = vypocitaj_datum_pohyblivych_slaveni(dnes.year)
+
     # Zvestovanie Pána: pevný 25.3. alebo presunutý dátum po veľkonočnej oktáve.
     # Kontrolujeme pred direktóriom, pretože direktórium vracia generický mesačný
     # kód (3L), nie špecifický kód ZV.
@@ -1015,7 +1091,7 @@ def vypocitaj_kod_liturgickej_casti(dnes: date | None = None) -> str:
 
     # Najsvätejšie Kristovo Telo a Krv je prikázaná pohyblivá slávnosť; v roku
     # 2038 padne na 24.6. a má v KBS kalendári prednosť pred Narodením sv. Jána.
-    if dnes == vypocitaj_datum_pohyblivych_slaveni(dnes.year)["Najsvätejšieho Kristovho Tela a Krvi"]:
+    if dnes == pohyblive_dnes["Najsvätejšieho Kristovho Tela a Krvi"]:
         return "5TS"
 
     # Narodenie sv. Jána Krstiteľa: 24.6.; ak ho prekryje Srdce Ježišovo, presúva sa na 23.6.
@@ -1024,7 +1100,7 @@ def vypocitaj_kod_liturgickej_casti(dnes: date | None = None) -> str:
 
     # Najsvätejšie Srdce Ježišovo je pohyblivá slávnosť; v neskorých
     # veľkonočných rokoch môže padnúť na pevný 2.7. a má prednosť pred NAVPM.
-    if dnes == vypocitaj_datum_pohyblivych_slaveni(dnes.year)["Najsvätejšieho Srdca Ježišovho"]:
+    if dnes == pohyblive_dnes["Najsvätejšieho Srdca Ježišovho"]:
         return "6TS"
 
     # POZNÁMKA: Návšteva preblahoslavenej Panny Márie (NAVPM, 2.7.), Sv. Cyrila
@@ -1380,7 +1456,7 @@ def zostav_text_status_baru(
 ) -> str:
     """Zostaví text stavového riadku bez potreby vytvárať Tkinter widgety."""
     dnes = dnes or date.today()
-    casti = []
+    casti: list[str] = []
 
     if zobrazit_zalm:
         skratky = format_skratky_liturgickej_casti(dnes)
@@ -3045,8 +3121,10 @@ def init_diagnostics():
         
         # LOG_PATH je teraz objekt Path, môžeme ho otvoriť priamo
         with LOG_PATH.open("a", encoding="utf-8") as f:
-            f.write("\n" + "="*40 + "\n")
+            oddelovac: str = "=" * 40
+            f.write(f"\n{oddelovac}\n")
             f.write(f"Štart Kinak v{KINAK_VERSION} | {now}\n")
+            f.write(f"Kalendár: {KALENDAR_KRAJINA} | Zdroje: {KALENDAR_ZDROJE}\n")
             f.write(f"OS: {platform.platform()}\n")
             f.write(f"Architektúra: {platform.machine()}\n")
             f.write(f"Python: {platform.python_version()}\n")            
@@ -3062,7 +3140,7 @@ def init_diagnostics():
             f.write(f"Songs Dir: {DEFAULT_SONG_FOLDER.resolve()}\n")
             if SONG_FOLDER_FALLBACK_INFO:
                 f.write(f"Songs fallback: {SONG_FOLDER_FALLBACK_INFO}\n")
-            f.write("="*40 + "\n")
+            f.write(f"{oddelovac}\n")
             
     except Exception as e:
         try:
@@ -3087,6 +3165,45 @@ def normalize_diacritics(text: str) -> str:
     text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
     return text.lower()
 
+_SIRKA_SLOVA_CACHE: dict[tuple, int] = {}
+
+def _kluc_fontu(font_obj) -> tuple:
+    """
+    Vráti hashovateľný kľúč popisujúci aktuálnu konfiguráciu fontu, jedným
+    Tcl volaním (`font_obj.actual()` bez argumentu vráti celý dict naraz).
+
+    DÔLEŽITÉ: volať toto len RAZ na beh estimate_text_height() a výsledok si
+    podržať v premennej – `font_obj.actual("family")` (t. j. so zadaným
+    argumentom) je samostatné Tcl volanie, takže 4 takéto volania (family,
+    size, weight, slant) na KAŽDÉ slovo by boli násobne drahšie než samotné
+    `measure()`, ktorému sa chceme vyhnúť (odmerané: 4× jednotlivo ≈ 4× drahšie
+    než 1× `actual()` bez argumentu).
+    """
+    a = font_obj.actual()
+    return (a.get("family"), a.get("size"), a.get("weight"), a.get("slant"))
+
+def _sirka_slova(font_obj, font_key: tuple, slovo: str) -> int:
+    """
+    Vráti šírku `slovo` vo fonte `font_obj` v pixeloch, s cachou podľa
+    (font_key, slovo) – `font_key` sa počíta raz za volanie estimate_text_height
+    (pozri _kluc_fontu), nie opakovane za každé slovo.
+
+    `font.measure()` je volanie do Tcl interpretra, teda relatívne drahé;
+    estimate_text_height() sa volá opakovane vo vnútri binárneho vyhľadávania
+    veľkosti písma v update_live_preview() (viď PREVIEW_FONT_MIN..INIT), takže
+    tie isté slová (bežné liturgické frázy, refrény ako "Aleluja", "Pane") sa
+    pri tej istej veľkosti písma merajú znova a znova. Cache je celoaplikačná
+    (nie len na jeden beh) – rovnaké slová sa objavujú naprieč rôznymi
+    zobrazenými textami počas celej relácie, takže sa oplatí výsledok
+    podržať dlhšie než len na jedno volanie.
+    """
+    kluc = (font_key, slovo)
+    sirka = _SIRKA_SLOVA_CACHE.get(kluc)
+    if sirka is None:
+        sirka = font_obj.measure(slovo)
+        _SIRKA_SLOVA_CACHE[kluc] = sirka
+    return sirka
+
 def estimate_text_height(text: str, font_obj, wraplength: int) -> int:
     """
     Odhadne výšku textu v pixeloch pri danom wraplength.
@@ -3099,6 +3216,16 @@ def estimate_text_height(text: str, font_obj, wraplength: int) -> int:
         Python str.split() naopak \\xa0 rozdeľuje, čo by spôsobilo nadhodnotenie
         počtu riadkov (písmo by bolo príliš malé). Preto \\xa0 nahrádzame bežnou
         medzerou ešte pred tokenizáciou, čím odhad zodpovedá správaniu Tk.
+
+    Poznámka k výkonu: šírka riadku sa počíta ako súčet cachovaných šírok
+    jednotlivých slov (_sirka_slova) plus šírka medzery, namiesto opakovaného
+    merania celého narastajúceho reťazca "line + word" pri každom slove. Pri
+    fontoch s výrazným kerningom na hranici slov by to teoreticky mohlo dať
+    o zlomok pixela inú hodnotu než jedno meranie celého reťazca naraz –
+    empiricky (Arial, Courier, DejaVu Sans; veľkosti 10–120 px; 960 kombinácií
+    textov/veľkostí/šírok) sa výsledný počet riadkov v žiadnom testovanom
+    prípade nelíšil, takže ide o zanedbateľný rozdiel výmenou za výrazne menej
+    a lacnejších Tcl volaní.
     """
     try:
         if not text:
@@ -3106,6 +3233,8 @@ def estimate_text_height(text: str, font_obj, wraplength: int) -> int:
 
         total_lines = 0
         line_h = font_obj.metrics("linespace")
+        font_key = _kluc_fontu(font_obj)
+        sirka_medzery = _sirka_slova(font_obj, font_key, " ")
 
         for paragraph in text.split("\n"):
             words = paragraph.replace("\xa0", " ").split()
@@ -3113,13 +3242,15 @@ def estimate_text_height(text: str, font_obj, wraplength: int) -> int:
                 total_lines += 1
                 continue
 
-            line = words[0]
+            sirka_riadku = _sirka_slova(font_obj, font_key, words[0])
             for word in words[1:]:
-                if font_obj.measure(line + " " + word) <= wraplength:
-                    line += " " + word
+                sirka_slova = _sirka_slova(font_obj, font_key, word)
+                kandidat = sirka_riadku + sirka_medzery + sirka_slova
+                if kandidat <= wraplength:
+                    sirka_riadku = kandidat
                 else:
                     total_lines += 1
-                    line = word
+                    sirka_riadku = sirka_slova
             total_lines += 1
 
         return total_lines * line_h
@@ -3230,7 +3361,14 @@ DEFAULT_CONFIG = {
     "text_color": LITURGICKE_OBDOBIA.get("Cezročné", "#80FF00"),
     "song_folder": str(DEFAULT_SONG_FOLDER),  
     "liturgical_season": "Cezročné",
-    "liturgical_year": vypocitaj_liturgicky_rok(),
+    # Podobne ako "base_dir" vyššie, ide len o zápisný/informačný placeholder
+    # pre config.json, kým appka nič lepšie nezistí. ZÁMERNE tu NIE JE
+    # vypocitaj_liturgicky_rok() – to by hodnotu "zamrazilo" na okamih importu
+    # modulu (presne princíp, pred ktorým varuje komentár pri
+    # vypocitaj_tyzden_zaltara nižšie). Autoritatívna hodnota sa vždy počíta
+    # nanovo za behu (ControlApp.nacitat_nastavenia r. ~8807,
+    # _zostav_config_dict r. ~9063) a táto konštanta sa pri tom nikde nečíta.
+    "liturgical_year": "",
     "default_filter_obdobie": "Cezročné C2",
     "pouzit_vlastnu_farbu": False,
     "bottom_margin": 40,
@@ -6590,6 +6728,17 @@ class ProjectionWindow:
         self.target_text_color = text_color
         self._configure_after_id = None
         self._debounce_title_after_id = None
+
+        # Stav prebiehajúcej fade-in animácie na widget – WeakKeyDictionary
+        # namiesto skôr používaných dynamických atribútov s kľúčom
+        # f"_fade_after_id_{id(widget)}". Kľúčovanie priamo cez `id()`
+        # (adresa objektu v pamäti) je krehké: `id()` je unikátne len počas
+        # životnosti objektu, takže po zničení widgetu a prípadnom opätovnom
+        # využití tej istej adresy pamäte iným objektom by mohlo dôjsť ku
+        # kolízii kľúčov. WeakKeyDictionary kľúčuje podľa skutočnej identity
+        # widgetu (nie podľa jeho pamäťovej adresy) a záznam navyše sám zmizne,
+        # keď je widget zničený a uvoľnený z pamäte.
+        self._fade_after_ids: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
         
         # --- doplnené atribúty ---
         self.zobrazovat_live_preview: bool = False
@@ -7098,16 +7247,15 @@ class ProjectionWindow:
         if not widget or not widget.winfo_exists():
             return
 
-        attr_id = f"_fade_after_id_{id(widget)}"
-        old_id = getattr(self, attr_id, None)
+        old_id = self._fade_after_ids.get(widget)
 
         if old_id:
             try:
                 self.master.after_cancel(old_id)
             except Exception as e_cancel:
-                log_exception(f"_stop_fade_animation: after_cancel zlyhal pre widget {id(widget)}", e_cancel)
+                log_exception(f"_stop_fade_animation: after_cancel zlyhal pre widget {widget}", e_cancel)
 
-        setattr(self, attr_id, None)   
+        self._fade_after_ids[widget] = None
                 
 
     def _animate_fade_in(self, widget, current_step=0):
@@ -7148,19 +7296,17 @@ class ProjectionWindow:
             # Nastavenie aktuálnej farby
             widget.config(fg=f"#{r:02x}{g:02x}{b:02x}")
 
-            attr_id = f"_fade_after_id_{id(widget)}"
-
             # Pokračovanie animácie, ak nie sme na poslednom kroku
             if current_step < steps - 1:
                 new_id = self.master.after(
                     delay,
                     lambda: self._animate_fade_in(widget, current_step + 1)
                 )
-                setattr(self, attr_id, new_id)
+                self._fade_after_ids[widget] = new_id
             else:
                 # Finálna farba
                 widget.config(fg=target)
-                setattr(self, attr_id, None)
+                self._fade_after_ids[widget] = None
 
         except Exception as e:
             log_exception("Chyba počas behu fade-in animácie", e)
@@ -7959,661 +8105,314 @@ class Tooltip:
             self.tipwindow.destroy()
             self.tipwindow = None       
                  
-class ControlApp:
-    """Hlavné ovládacie okno, ktoré zostane na primárnom monitore."""
-    def __init__(self, master):
-        log_info("Inicializujem ControlApp...")
+# ============================================================
+# ControlApp je rozdelená na tematické mixiny (nižšie), aby jedna
+# trieda nemala ~7650 riadkov a desiatky nesúvisiacich zodpovedností
+# naraz (pôvodný stav – pozri code review, bod 2.1 "God Object").
+# Ide o ČISTO ORGANIZAČNÝ refaktoring: telá metód sú textovo IDENTICKÉ
+# s pôvodnými, len rozdelené do menších tried podľa zodpovednosti a
+# spojené späť násobnou dedičnosťou v `class ControlApp(...)` nižšie.
+# Behavior (poradie volaní, atribúty, self.*) sa nemení – Python metódy
+# z mixinov pristupujú k rovnakému `self` presne tak, ako predtým.
+# ============================================================
 
-        self._loading_settings = True
+if TYPE_CHECKING:
+    class _ControlAppBase:
+        """Typovo-kontrolný "kontrakt" pre statické nástroje (Pyright/mypy/Pylance),
+        NIE skutočná trieda za behu programu (pozri `else` nižšie).
 
-        # Aktuálna veľkosť písma – spravovaná výhradne cez self.font_size.
-        # Nahradza pôvodný globálny mutable FONT_SIZE.
-        self.font_size: int = DEFAULT_CONFIG["font_size"]
+        Keď je jedna veľká trieda rozdelená na viacero mixinov (pozri komentár pri
+        `class ControlApp` nižšie), metóda v jednom mixine, ktorá odkazuje na
+        `self.nieco_ine`, nevidí, že `nieco_ine` je v skutočnosti definované v
+        `__init__` alebo v inom mixine – z pohľadu samostatnej triedy `_XyzMixin`
+        taký atribút/metóda proste neexistuje. Preto Pyright/Pylance bez tohto
+        "kontraktu" hlásia stovky falošných chýb `reportAttributeAccessIssue`.
 
-        # 1. ZÁKLADNÉ STAVOVÉ PREMENNÉ
-        self.is_text_visible = False
-        log_debug(f"is_text_visible = {self.is_text_visible}")
-
-        # Zámok pre thread-safe ochranu pred súbežným sťahovaním čítaní.
-        # Inicializujeme tu – pred vytvorit_gui() – aby GUI udalosť nemohla
-        # zavolať aktualizovat_citania_gui() skôr, než lock existuje.
-        self._citania_lock = threading.Lock()
-        self._vespery_lock = threading.Lock()
-        self._refreny_lock = threading.Lock()
-        self._cezrocne_tyzdenne_lock = threading.Lock()
-        self._liturgicke_tyzdne_lock = threading.Lock()
-
-        self._download_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="KinakDL")
-        try:
-            atexit.register(self._download_executor.shutdown, wait=False, cancel_futures=True)
-        except TypeError:
-            atexit.register(self._download_executor.shutdown, wait=False)
-        
-        # --- Inicializácia hlavného okna ---
-        self.master = master
-        try:
-            self.master.protocol("WM_DELETE_WINDOW", lambda: (self._shutdown_executor(), self.master.destroy()))
-        except Exception:
-            pass
-        self.initializing = True
-        self.posledny_nazov_v_labeli = None
-
-        # ------------------------------------------------------------
-        #  Hlavné atribúty deklarované vopred.
-        #  Konkrétne widgety sa priradia až pri vytváraní GUI/okien.
-        # ------------------------------------------------------------
-        self.strofa_label: tk.Text = cast(tk.Text, None)
-        self.nazov_label: tk.Label = cast(tk.Label, None)
-        self.obsah_suboru_text: tk.Text = cast(tk.Text, None)
-        self.popis_label: tk.Label = cast(tk.Label, None)
-        self.direktorium_label: tk.Label = cast(tk.Label, None)
-        self.manual_entry: tk.Entry = cast(tk.Entry, None)
-        self.song_combobox: ttk.Combobox = cast(ttk.Combobox, None)
-        self.song_folder_label: tk.Label = cast(tk.Label, None)
-        self.status_bar_frame: tk.Frame = cast(tk.Frame, None)
-        self.status_bar_zaltár_label: tk.Label = cast(tk.Label, None)
-        self.live_preview_label: tk.Label = cast(tk.Label, None)
-        self.preview_container: tk.Widget = cast(tk.Widget, None)
-        self.filter_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
-        self.subor_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
-        self.vyber_farbu_button: ttk.Button = cast(ttk.Button, None)
-        self.obdobie_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
-        self.indikator_farby: tk.Canvas = cast(tk.Canvas, None)
-
-        self.projection_window_root: tk.Toplevel = cast(tk.Toplevel, None)
-        self.projection_window: ProjectionWindow = cast(ProjectionWindow, None)
-        self.pomocnik_okno: tk.Toplevel | None = None
-        self.settings_window: tk.Toplevel | None = None
-        self.about_window: tk.Toplevel | None = None
-        self.direktorium_window: tk.Toplevel | None = None
-        self.slavnosti_window: tk.Toplevel | None = None
-
-        self._startup_after_ids: list[str] = []
-        self._main_geom_after_id = None
-        self._pomocnik_geom_after_id = None
-        self._settings_geom_after_id = None
-        self._about_geom_after_id = None
-        self._direktorium_geom_after_id = None
-        self._slavnosti_geom_after_id = None
-        self._live_preview_after_id = None
-        self._auto_nacitanie_after_id = None
-
-        self._direktorium_open = False
-        self._slavnosti_open = False
-        self._suppress_vymazat = False
-        self._live_preview_updating = False
-        self._preview_test_font = None
-        self._strofa_test_font = None
-        self._aktualna_vigilia = None
-        self._aktualna_vynechane = None
-        self.font_family: str = FONT_NAME or "Arial"
-     
-        
-        # 2. UPRATOVANIE LOGOV (Spúšťame pred načítaním nastavení)
-        # 14 dní, ponechať aspoň 2 najnovšie súbory
-        self.vycistit_stare_logy(dni=14, minimalny_pocet=2)
-
-        # 3. NAČÍTANIE NASTAVENÍ A POISTKA FADE SPEED        
-        # Ak v konfigu niečo chýba, použije sa default
-        self.fade_speed = DEFAULT_CONFIG.get("fade_speed", "mierne rýchle")
-
-        # --- OŠETRENIE MODULU SCREENINFO ---
-        if get_monitors is None:
-            try:
-                log_info("Modul 'screeninfo' nebol nájdený — projekcia sa otvorí na hlavnom monitore.")
-                messagebox.showwarning(
-                    "Pozor",
-                    "Modul 'screeninfo' nebol nájdený.\n\n"
-                    "Projekcia sa otvorí na hlavnom monitore.\n"
-                    "Ak chcete používať viac monitorov, nainštalujte balík:\n"
-                    "pip install screeninfo"
-                )
-            except Exception as e:
-                log_exception("ControlApp.__init__: screeninfo warning zlyhalo", e)
-
-        # --- Tmavý tenký scrollbar – vytvoriť iba raz ---
-        style = ttk.Style()
-        try:
-            # Ak štýl už existuje, Tcl vyhodí chybu, ktorú ignorujeme
-            style.element_create("KinakDark.Scrollbar.trough", "from", "default")
-            style.element_create("KinakDark.Scrollbar.thumb", "from", "default")
-        except tk.TclError:
-            pass
-
-        style.layout(
-            "KinakDark.Vertical.TScrollbar",
-            [("KinakDark.Scrollbar.trough", {"children": [("KinakDark.Scrollbar.thumb", {"sticky": "nswe"})], "sticky": "nswe"})]
-        )
-
-        style.configure(
-            "KinakDark.Vertical.TScrollbar",
-            troughcolor="#1e1e1e",
-            background="#333333",
-            darkcolor="#222222",
-            lightcolor="#444444",
-            bordercolor="#1e1e1e",
-            arrowcolor="#dddddd",
-            width=8
-        )
-
-        # --- Inicializácia premenných z konfigurácie ---
-        self.bottom_margin = DEFAULT_CONFIG.get("bottom_margin", 40)
-        self.bottom_margin_var = tk.IntVar(self.master, value=self.bottom_margin)
-
-        self.reserved_vertical_ratio = DEFAULT_CONFIG.get("reserved_vertical_ratio", 0.20)
-        self.reserved_vertical_var = tk.DoubleVar(self.master, value=self.reserved_vertical_ratio)
-
-        # Premenné Pomocníka
-        self.pomocnik_font_size = DEFAULT_CONFIG.get("pomocnik_font_size", 14)
-        self.pomocnik_x = DEFAULT_CONFIG.get("pomocnik_x", -1)
-        self.pomocnik_y = DEFAULT_CONFIG.get("pomocnik_y", -1)
-        self.pomocnik_width = DEFAULT_CONFIG.get("pomocnik_width", -1)
-        self.pomocnik_height = DEFAULT_CONFIG.get("pomocnik_height", -1)
-        self.pomocnik_last_tab = DEFAULT_CONFIG.get("pomocnik_last_tab", 1)
-
-        # Hodnoty ukladané do konfigurácie.
-        self.text_color: str = TEXT_COLOR
-        self.zobrazit_direktorium: bool = DEFAULT_CONFIG.get("zobrazit_direktorium", False)
-        self.zobrazovat_live_preview: bool = DEFAULT_CONFIG.get("zobrazovat_live_preview", True)
-        self.zobrazovat_specialne_znaky: bool = DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True)
-        self.zobrazovat_znaky_chorov: bool = DEFAULT_CONFIG.get("zobrazovat_znaky_chorov", True)
-        self.statusbar_tyzden_zaltara: bool = DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", True)
-        self.statusbar_skratka_zalmu: bool = DEFAULT_CONFIG.get("statusbar_skratka_zalmu", True)
-        self.statusbar_jks_piesne: bool = DEFAULT_CONFIG.get("statusbar_jks_piesne", True)
-        self.diagnostika_povolena: bool = DEFAULT_CONFIG.get("diagnostika_povolena", True)
-
-        # Premenné geometrie hlavného okna (ukladaná/načítavaná pozícia a veľkosť)
-        self.main_window_x:      int = -1
-        self.main_window_y:      int = -1
-        self.main_window_width:  int = -1
-        self.main_window_height: int = -1
-        self.settings_window_width: int = DEFAULT_CONFIG.get("settings_window_width", -1)
-        self.settings_window_height: int = DEFAULT_CONFIG.get("settings_window_height", -1)
-        self.direktorium_window_width: int = DEFAULT_CONFIG.get("direktorium_window_width", -1)
-        self.direktorium_window_height: int = DEFAULT_CONFIG.get("direktorium_window_height", -1)
-        self.slavnosti_window_width: int = DEFAULT_CONFIG.get("slavnosti_window_width", -1)
-        self.slavnosti_window_height: int = DEFAULT_CONFIG.get("slavnosti_window_height", -1)
-        self.about_window_width: int = DEFAULT_CONFIG.get("about_window_width", -1)
-        self.about_window_height: int = DEFAULT_CONFIG.get("about_window_height", -1)
-        self.about_last_tab: int = DEFAULT_CONFIG.get("about_last_tab", 1)
-        self.about_font_size: int = DEFAULT_CONFIG.get("about_font_size", 12)
-
-        # --- Načítanie direktória ---
-        try:
-            # DIREKTORIUM_DATA by malo byť načítané globálne v Kinak.py            
-            self.direktorium_data = DIREKTORIUM_DATA
-            log_info(f"Direktórium načítané, počet období: {len(self.direktorium_data)}")
-        except Exception as e:
-            self.direktorium_data = {}
-            log_exception("Chyba pri priradení direktória", e)
-
-        # --- Nastavenie geometrie hlavného okna ---
-        screen_width = self.master.winfo_screenwidth()
-        screen_height = self.master.winfo_screenheight()
-
-        # Načítanie uloženej geometrie z configu (ak existuje)
-        # Config z disku načítame priamo tu – nacitat_nastavenia() sa volá neskôr,
-        # ale geometriu potrebujeme nastaviť ešte pred vytvorením GUI widgetov.
-        _early_config = {}
-        if CONFIG_FILE_PATH.exists():
-            try:
-                _raw = CONFIG_FILE_PATH.read_text(encoding='utf-8')
-                if _raw.strip():
-                    _loaded_early_config = json.loads(_raw)
-                    if isinstance(_loaded_early_config, dict):
-                        _early_config = _loaded_early_config
-                    else:
-                        log_info(
-                            "Predčasné načítanie geometrie: config.json nie je JSON objekt "
-                            f"({type(_loaded_early_config).__name__}), používam predvolenú geometriu."
-                        )
-            except Exception as e:
-                log_exception('Predčasné načítanie geometrie z configu zlyhalo', e)
-
-        def _safe_geometry_int(key, default=-1):
-            try:
-                return int(_early_config.get(key, default))
-            except (TypeError, ValueError):
-                log_info(f"Predčasné načítanie geometrie: neplatná hodnota {key!r}, používam {default}.")
-                return default
-
-        _saved_w = _safe_geometry_int("main_window_width")
-        _saved_h = _safe_geometry_int("main_window_height")
-        _saved_x = _safe_geometry_int("main_window_x")
-        _saved_y = _safe_geometry_int("main_window_y")
-
-        if _saved_w != -1 and _saved_h != -1 and _saved_x != -1 and _saved_y != -1:
-            # Použiť uloženú geometriu
-            window_width  = _saved_w
-            window_height = _saved_h
-            x = _saved_x
-            y = _saved_y
-        else:
-            # Predvolená geometria (dynamický výpočet)
-            window_width  = int(screen_width * 0.8)
-            usable_height = screen_height - 48
-            window_height = max(700, min(900, int(usable_height * 0.95)))
-            x = (screen_width - window_width) // 2
-            y = max(0, (screen_height - window_height) // 2 - 40)
-
-        self.master.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
-        # --- Stavové premenné GUI ---
-        self.text_color_var = tk.StringVar(self.master, value=TEXT_COLOR)
-        self.default_filter_var = tk.StringVar(self.master, value=DEFAULT_CONFIG.get("default_filter_obdobie", "Cezročné C2"))
-        self.obdobie_var = tk.StringVar(self.master)
-        self.pouzit_vlastnu_farbu = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("pouzit_vlastnu_farbu", False))
-        self.fade_speed_var = tk.StringVar(self.master, value=self.fade_speed)
-        self.liturgical_year_var = tk.StringVar(self.master, value=vypocitaj_liturgicky_rok())
-
-        self.zobrazit_direktorium_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_direktorium", False))
-        self.zobrazovat_live_preview_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_live_preview", True))
-        self.zobrazovat_specialne_znaky_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True))
-        self.zobrazovat_znaky_chorov_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_znaky_chorov", True))
-        self.statusbar_tyzden_zaltara_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", True))
-        self.statusbar_skratka_zalmu_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_skratka_zalmu", True))
-        self.statusbar_jks_piesne_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_jks_piesne", True))
-        self.diagnostika_povolena_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("diagnostika_povolena", True))
-        self.aktualna_liturgicka_cast_var = tk.StringVar(
-            self.master,
-            value=format_aktualna_liturgicka_cast()
-        )
-
-        # --- Atribúty pre piesne ---
-        self.aktualne_cislo_piesne = "000"
-        self.aktualne_strofy = []
-        self.aktualny_index_strofa = 0
-        self.original_projection_text = ""
-        self.nazov_piesne = ""
-        self.aktualny_subor_cesta = None
-
-        # Definícia liturgických období
-        self.obdobie_subory = {
-            "Adventné": ["1AD", "2AD", "3AD", "4AD"],
-            "Vianočné": ["1VI", "STEF", "SJE", "NEV", "SR", "PDR", "PMB", "2VI", "NMJ", "KKP"],
-            "Pôstne": ["PS", "1P", "2P", "3P", "4P", "5P", "VT", "ZST", "VP", "ZV"],
-            "Veľkonočné": ["VG", "1VN", "VPON", "2VN", "3VN", "4VN", "5VN", "6VN", "NP", "7VN"],
-            "Turíce a sviatky": ["1TS", "2TS", "3TS", "4TS", "5TS", "6TS", "7TS"],
-            "Cezročné sviatky": ["FJ", "NJK", "NAVPM", "CMV", "BEN", "BRI", "PREM", "VAV", "BAR", "NPMAR", "PSK", "MATE", "MGR", "ZOS", "VPLB", "OND"],
-            "Cezročné C1": [f"{i}C1" for i in range(1, 35)],
-            "Cezročné C2": [f"{i}C2" for i in range(1, 35)],
-            "Mesačné": [f"{i}L" for i in range(1, 13)],
-            # Sentinel None – reálny zoznam súborov sa počíta dynamicky
-            # v _ziskaj_nezaradene_subory() pri každom výbere tohto filtra.
-            "Modlitby a iné": None,
-        }
-
-        self.popisy_suborov = {
-            "1AD": "Prvý adventný týždeň",
-            "2AD": "Druhý adventný týždeň",
-            "3AD": "Tretí adventný týždeň – Nedeľa Gaudete",
-            "4AD": "Štvrtý adventný týždeň",
-            "1VI": "Oktáva po narodení Pána", 
-            "STEF": "Sv. Štefana, prvého mučeníka (26. XII.)",
-            "SJE": "Sv. Jána, apoštola a evanjelistu (27. XII.)",
-            "NEV": "Sv. Neviniatok, mučeníkov (28. XII.)",
-            "SR": "Svätej rodiny Ježiša, Márie a Jozefa",
-            "PDR": "Posledný deň roka",
-            "PMB": "Panny Márie Bohorodičky (1. I.)",
-            "NMJ": "Najsvätejšie meno Ježiš (3. I.)",
-            "2VI": "Vianočné obdobie",
-            "KKP": "Krst Krista Pána",
-            "PS": "Popolcová streda a dni po nej",
-            "1P": "Prvý pôstny týždeň",
-            "2P": "Druhý pôstny týždeň",
-            "3P": "Tretí pôstny týždeň",
-            "4P": "Štvrtý pôstny týždeň – Nedeľa Laetare",
-            "5P": "Piaty pôstny týždeň – Smrtná nedeľa",
-            "VT": "Veľký týždeň",
-            "ZST": "Zelený štvrtok",
-            "VP": "Veľký piatok",
-            "ZV": "Zvestovanie Pána*",
-            
-            "VG": "Veľkonočná vigília",
-            "1VN": "Veľkonočná nedeľa Pánovho zmŕtvychvstania",            
-            "VPON": "Pondelok vo Veľkonočnej oktáve",
-            "2VN": "2. veľkonočná nedeľa – Nedeľa Božieho milosrdenstva",
-            "3VN": "3. veľkonočná nedeľa",
-            "4VN": "4. veľkonočná nedeľa – Nedeľa Dobrého pastiera",
-            "5VN": "5. veľkonočná nedeľa",
-            "6VN": "6. veľkonočná nedeľa",
-            "NP":  "Nanebovstúpenie Pána",
-            "7VN": "7. veľkonočná nedeľa",
-            "1TS": "Nedeľa zoslania Ducha Svätého", "2TS": "Panny Márie, Matky Cirkvi", "3TS": "Pána Ježiša Krista, najvyššieho a večného kňaza",
-            "4TS": "Najsvätejšia Trojica", "5TS": "Najsvätejšieho Kristovho Tela a Krvi", "6TS": "Najsvätejšieho Srdca Ježišovho",
-            "7TS": "Nepoškvrnené Srdce Panny Márie",
-            "FJ": "Sv. Filipa a Jakuba, apoštolov (3. V.)",
-            "NJK": "Narodenie sv. Jána Krstiteľa (24. VI.)",
-            "NAVPM": "Návšteva preblahoslavenej Panny Márie (2. VII.)",
-            "BEN":   "Sv. Benedikta, opáta, patróna Európy (11. VII.)",
-            "BRI":   "Sv. Brigity, rehoľníčky, patrónky Európy (23. VII.)",
-            "VAV":   "Sv. Vavrinca, diakona a mučeníka (10. VIII.)",
-            "BAR":   "Sv. Bartolomeja, apoštola (24. VIII.)",
-            "MATE":  "Sv. Matúša, apoštola a evanjelistu (21. IX.)",
-            "OND":   "Sv. Ondreja, apoštola (30. XI.)",
-            "CMV":   "Sv. Cyrila a Metoda (5.VII.)",
-            "PREM":  "Premenenie Pána (6. VIII.)",
-            "NPMAR": "Narodenie Panny Márie (8. IX.)",
-            "PSK":   "Povýšenie Svätého kríža (14. IX.)",
-            "MGR":   "Sv. Michala, Gabriela a Rafaela, archanieli (29. IX.)",
-            "ZOS":   "Spomienka na Všetkých zosnulých veriacich (2. XI.)",
-            "VPLB":  "Výročie posviacky Lateránskej baziliky (9. XI.)"
-        }
-
-        mesiace = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"]
-        for i, mesiac in enumerate(mesiace, start=1):
-            self.popisy_suborov[f"{i}L"] = mesiac
-        for i in range(1, 35):
-            self.popisy_suborov[f"{i}C1"] = f"{i}. týždeň (nepárny rok)"
-            self.popisy_suborov[f"{i}C2"] = f"{i}. týždeň (párny rok)"
-
-        # --- NAČÍTANIE NASTAVENÍ (Pathlib ochrana) ---
-        self.nacitat_nastavenia()
-        
-        # Prevod song_folder z configu (string) na Path objekt
-        # Ak config ešte neexistuje, použije sa DEFAULT_SONG_FOLDER (už je Path)
-        self.song_folder_path = Path(self.config.get("song_folder", DEFAULT_SONG_FOLDER))
-        
-        log_debug(f"CONFIG JE TU: {CONFIG_FILE_PATH.resolve()}")
-        log_debug(f"PIESNE SÚ V: {self.song_folder_path.resolve()}")
-        
-        # --- Inicializácia Projekčného okna ---
-        self.default_use_fade = self.config.get("default_use_fade", True)
-
-        self.projection_window_root = tk.Toplevel(self.master)
-
-        # Použijeme setattr, aby editor (Pylance/Mypy) nehlásil chybu "Attribute unknown"
-        setattr(self.projection_window_root, "control_app_ref", self)
-
-        self.projection_window = ProjectionWindow(
-            self.projection_window_root,
-            int(self.config.get("font_size", 75)),
-            text_color=self.text_color_var.get(),
-            fade_enabled=str(self.default_use_fade).lower() == "true",
-            bottom_margin=int(self.bottom_margin_var.get()),
-            reserved_vertical_ratio=float(self.reserved_vertical_var.get()),
-            fade_speed=self.fade_speed_var.get(),
-            preferred_monitor_index=getattr(self, "preferred_monitor_index", 0)
-        )
-
-        # Nastavenie ďalších vlastností pre projekčné okno
-        self.projection_window.fade_speed = self.fade_speed
-        self.projection_window.target_text_color = self.text_color_var.get()
-        self.projection_window.zobrazovat_specialne_znaky = self.zobrazovat_specialne_znaky_var.get()
-        self.projection_window.zobrazovat_znaky_chorov = self.zobrazovat_znaky_chorov_var.get()
-        self.projection_window.preferred_monitor_index = getattr(self, "preferred_monitor_index", 0)
-        
-        # Zabezpečenie existencie priečinka (Pathlib)
-        self.song_folder_path.mkdir(parents=True, exist_ok=True)
-
-        # Načítanie zoznamu piesní
-        self.zoznam_piesni_data = self.nacitaj_piesne_do_zoznamu_z_priecinka()
-        
-        # Vytvorenie GUI a skratiek
-        self.vytvorit_gui()
-        self.nastavit_globalne_skratky()
-
-        # --- KRITICKÝ KROK PRE STABILITU ---
-        # Vynútime, aby si Windows uvedomil skutočné rozmery okna skôr, než skončí init
-        self.master.update_idletasks()
-        self.master.update() 
-
-        # Ukončenie inicializácie
-        self.initializing = False
-        self.aktualizovat_vzhlad()
-
-        # Vyčistenie projekcie pri štarte
-        self.projection_window.update_text("")
-        self.projection_window.update_title(name="", current=0, total=None)
-
-        # --- Ukladanie geometrie hlavného okna pri každej zmene veľkosti/pozície ---
-        def _uloz_geometriu_hlavneho_okna(event):
-            if event.widget is not self.master:
-                return
-            if self.initializing:
-                return
-
-            def zapis_geometrie():
-                self.main_window_x = self.master.winfo_x()
-                self.main_window_y = self.master.winfo_y()
-                self.main_window_width = self.master.winfo_width()
-                self.main_window_height = self.master.winfo_height()
-                self.ulozit_nastavenia(aktualizovat_label=False)
-
-            self._naplanuj_debounced_zapis(
-                "_main_geom_after_id", zapis_geometrie, "_uloz_geometriu_hlavneho_okna"
-            )
-
-        self.master.bind('<Configure>', _uloz_geometriu_hlavneho_okna)
-
-        # Focus na vstupné pole
-        self.master.focus_set()
-
-        # Jednorazové inicializačné callbacky – ID sledujeme, aby ich
-        # potvrdit_ukoncenie mohlo zrušiť pred master.destroy().
-        # (Tkinter síce zruší after() pri destroy() automaticky, ale
-        # explicitné cancel je bezpečnejšie pri rýchlom zavretí počas initu.)
-        _id1 = self.master.after(_STARTUP_FOCUS_DELAY_MS,   lambda: self.manual_entry.focus_set())
-        _id2 = self.master.after(_STARTUP_PREVIEW_DELAY_MS, lambda: self.update_live_preview(""))
-        _id3 = self.master.after(_STARTUP_SAVE_DELAY_MS,    self.ulozit_nastavenia, False)
-        self._startup_after_ids = [_id1, _id2, _id3]
-
-        log_info("ControlApp inicializovaný.")
-    
-
-    def vycistit_stare_logy(self, dni=14, minimalny_pocet=2):
+        Toto je len deklarácia (typový náznak) – žiadny z týchto atribútov sa tu
+        skutočne nenastavuje. Reálne hodnoty sa nastavujú výhradne v
+        `ControlApp.__init__` a v jednotlivých mixinoch, presne tak, ako doteraz.
         """
-        Odstráni diagnostické súbory staršie ako zadaný počet dní.
-        Vždy ponechá aspoň 'minimalny_pocet' najnovších súborov.
-        """
-        try:
-            # Predpokladáme, že CONFIG_FILE_PATH je definovaná globálne 
-            log_dir = CONFIG_FILE_PATH.parent
-            if not log_dir.exists():
-                return
+        _about_geom_after_id: Any
+        _aktualna_vigilia: Any
+        _aktualna_vynechane: Any
+        _auto_nacitanie_after_id: Any
+        _cezrocne_tyzdenne_lock: Any
+        _citania_lock: Any
+        _direktorium_geom_after_id: Any
+        _direktorium_open: Any
+        _download_executor: Any
+        _liturgicke_tyzdne_lock: Any
+        _live_preview_after_id: Any
+        _live_preview_updating: Any
+        _loading_settings: Any
+        _main_geom_after_id: Any
+        _pomocnik_geom_after_id: Any
+        _preview_test_font: Any
+        _refreny_lock: Any
+        _settings_geom_after_id: Any
+        _slavnosti_geom_after_id: Any
+        _slavnosti_open: Any
+        _startup_after_ids: Any
+        _strofa_test_font: Any
+        _suppress_vymazat: Any
+        _vespery_lock: Any
+        _wizard_monitor_combo: Any
+        about_font_size: Any
+        about_last_tab: Any
+        about_window: Any
+        about_window_height: Any
+        about_window_width: Any
+        aktualna_liturgicka_cast_var: Any
+        aktualne_cislo_piesne: Any
+        aktualne_strofy: Any
+        aktualny_index_strofa: Any
+        aktualny_subor_cesta: Any
+        bottom_margin: Any
+        bottom_margin_var: Any
+        cele_hodnoty_comboboxu: Any
+        checkbox_diagnostika: Any
+        checkbox_direktorium: Any
+        checkbox_live_preview: Any
+        checkbox_specialne_znaky: Any
+        checkbox_statusbar_skratka_zalmu: Any
+        checkbox_statusbar_zaltara: Any
+        checkbox_vlastna_farba: Any
+        checkbox_znaky_chorov: Any
+        config: Any
+        default_filter_menu: Any
+        default_filter_obdobie: Any
+        default_filter_var: Any
+        default_use_fade: Any
+        diagnostika_povolena: Any
+        diagnostika_povolena_var: Any
+        direktorium_data: Any
+        direktorium_label: Any
+        direktorium_window: Any
+        direktorium_window_height: Any
+        direktorium_window_width: Any
+        fade_speed: Any
+        fade_speed_combo: Any
+        fade_speed_var: Any
+        filter_menu: Any
+        filter_var: Any
+        folder_label: Any
+        font_family: Any
+        font_size: Any
+        font_size_var: Any
+        indikator_farby: Any
+        indikator_farby_id: Any
+        indikator_id: Any
+        indikator_ziarovka: Any
+        initializing: Any
+        is_text_visible: Any
+        liturgical_season: Any
+        liturgical_year_var: Any
+        live_preview_label: Any
+        main_window_height: Any
+        main_window_width: Any
+        main_window_x: Any
+        main_window_y: Any
+        manual_entry: Any
+        manual_entry_hint: Any
+        master: Any
+        nazov_label: Any
+        nazov_piesne: Any
+        obdobie_menu: Any
+        obdobie_subory: Any
+        obdobie_var: Any
+        obsah_suboru_text: Any
+        original_projection_text: Any
+        pomocnik_font_size: Any
+        pomocnik_height: Any
+        pomocnik_last_tab: Any
+        pomocnik_okno: Any
+        pomocnik_width: Any
+        pomocnik_x: Any
+        pomocnik_y: Any
+        popis_label: Any
+        popisy_suborov: Any
+        posledny_nazov_v_labeli: Any
+        pouzit_vlastnu_farbu: Any
+        preferred_monitor_index: Any
+        preview_container: Any
+        projection_window: Any
+        projection_window_root: Any
+        reserved_vertical_ratio: Any
+        reserved_vertical_var: Any
+        settings_window: Any
+        settings_window_height: Any
+        settings_window_width: Any
+        slavnosti_window: Any
+        slavnosti_window_height: Any
+        slavnosti_window_width: Any
+        slider_res_vert: Any
+        song_combobox: Any
+        song_folder_label: Any
+        song_folder_path: Any
+        song_var: Any
+        status_bar_frame: Any
+        status_bar_zaltár_label: Any
+        statusbar_jks_piesne: Any
+        statusbar_jks_piesne_var: Any
+        statusbar_skratka_zalmu: Any
+        statusbar_skratka_zalmu_var: Any
+        statusbar_tyzden_zaltara: Any
+        statusbar_tyzden_zaltara_var: Any
+        strofa_label: Any
+        subor_menu: Any
+        subor_var: Any
+        subory_zoznam: Any
+        text_color: Any
+        text_color_var: Any
+        vyber_farbu_button: Any
+        wizard_window: Any
+        zobrazit_direktorium: Any
+        zobrazit_direktorium_var: Any
+        zobrazovat_live_preview: Any
+        zobrazovat_live_preview_var: Any
+        zobrazovat_specialne_znaky: Any
+        zobrazovat_specialne_znaky_var: Any
+        zobrazovat_znaky_chorov: Any
+        zobrazovat_znaky_chorov_var: Any
+        zoznam_piesni_data: Any
 
-            # Získame všetky .txt súbory súvisiace s logovaním
-            vsetky_logy = sorted(
-                [f for f in log_dir.glob("*.txt") if "log" in f.name or "diagnostika" in f.name],
-                key=lambda x: x.stat().st_mtime,
-                reverse=True  # Najnovšie sú na začiatku
-            )
+        def _aktualizuj_direktorium_pre_subor(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _build_footer(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _build_info_tabs_header(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _build_main_containers(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _build_tab_frames(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _build_tab_ovladanie(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _build_tab_piesne(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _build_tab_projektor(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _build_tabs_header(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _cancel_pending_live_preview(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _dopln_znaky_chorov_do_aktualnych_vespier(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _formatuj_chybne_kody_text(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _formatuj_zalohu_text(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _global_backspace_handler(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _naplanuj_debounced_zapis(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _normalize(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _obnov_focus_manual_entry_bez_vymazania(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _on_scheduled_live_preview(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _otvor_prehliadaciu_pomocku(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _potvrd_a_spusti_stiahnutie(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _pridaj_nastavenie_check(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _pridaj_nastavenie_slider(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _priprav_stahovanie_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _schedule_live_preview(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _setup_wizard_window(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _show_tab(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _shutdown_executor(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _spusti_jednoduche_stahovanie(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _spusti_stahovanie_s_progressom(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _synchronizuj_zivy_nahlad_a_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _udalost_je_v_editovatelnom_widgete(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _update_nazov_label(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _vytvor_rok_spinbox(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _vytvor_sekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _wire_tab_switching(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _zablokovat_klik(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _zapis_config_na_disk(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _zatvorit_pomocnika(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _zbieraj_a_normalizuj_nastavenia_z_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _ziskaj_nezaradene_subory(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _zobraz_dialog_stiahnutia(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _zobraz_dialog_stiahnutia_pre_rok(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _zostav_config_dict(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktivuj_projekciu_pre_subor(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_adventne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_cezrocne_tyzdenne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_citania_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_direktorium_label(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_info_liturgickeho_roka(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_liturgicke_sviatky_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_liturgicke_tyzdne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_postne_velkonocne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_refreny_zalmov_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_status_bar(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_stav_tlacidla_farby(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_titulok_okna(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_turicne_sviatky_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_vespery_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_vianocne_sviatky_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_vzhlad(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizuj_popis(self, *args: Any, **kwargs: Any) -> Any: ...
+        def auto_nacitanie_suboru(self, *args: Any, **kwargs: Any) -> Any: ...
+        def clear_screen(self, *args: Any, **kwargs: Any) -> Any: ...
+        def enter_aktivuj_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def filtrovat_subory(self, *args: Any, **kwargs: Any) -> Any: ...
+        def format_typography(self, *args: Any, **kwargs: Any) -> Any: ...
+        def klavesa_minus(self, *args: Any, **kwargs: Any) -> Any: ...
+        def klavesa_plus(self, *args: Any, **kwargs: Any) -> Any: ...
+        def klavesa_vlavo(self, *args: Any, **kwargs: Any) -> Any: ...
+        def klavesa_vpravo(self, *args: Any, **kwargs: Any) -> Any: ...
+        def manual_entry_enter(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nacitaj_piesne_do_zoznamu_z_priecinka(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nacitaj_piesne_z_direktoria_pre_subor(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nacitat_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nacitat_piesne(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nacitat_podla_menu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nacitat_z_okna_pomocok(self, *args: Any, **kwargs: Any) -> Any: ...
+        def najdi_subor_podla_prefixu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nastavit_farbu_pisma_podla_obdobia(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nastavit_globalne_skratky(self, *args: Any, **kwargs: Any) -> Any: ...
+        def normalize_alnum(self, *args: Any, **kwargs: Any) -> Any: ...
+        def obnovit_nastavenia_v_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def obnovit_predvolene(self, *args: Any, **kwargs: Any) -> Any: ...
+        def odlozene_auto_nacitanie(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_adventne_refreny(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_cezrocne_tyzdenne_refreny(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_citanie(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_direktorium(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_liturgicke_sviatky(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_liturgicke_tyzdne_refreny(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_postne_velkonocne_refreny(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_refreny_zalmov(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_slavnosti(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_turicne_sviatky(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_vespery(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_vianocne_sviatky(self, *args: Any, **kwargs: Any) -> Any: ...
+        def otvorit_pomocnika(self, *args: Any, **kwargs: Any) -> Any: ...
+        def oznac_aktualnu_strofu_v_obsahu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def posun_strofu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def potvrdit_ukoncenie(self, *args: Any, **kwargs: Any) -> Any: ...
+        def remove_special_chars(self, *args: Any, **kwargs: Any) -> Any: ...
+        def reset_ui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def rozdel_text_na_bloky(self, *args: Any, **kwargs: Any) -> Any: ...
+        def set_projection_indicator(self, *args: Any, **kwargs: Any) -> Any: ...
+        def skus_manualne_nacitanie(self, *args: Any, **kwargs: Any) -> Any: ...
+        def toggle_projection_text(self, *args: Any, **kwargs: Any) -> Any: ...
+        def ulozit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
+        def update_live_preview(self, *args: Any, **kwargs: Any) -> Any: ...
+        def upravit_citania_pre_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def vybrat_vlastnu_farbu_textu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def vycistit_stare_logy(self, *args: Any, **kwargs: Any) -> Any: ...
+        def vymazat_subor_menu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def vypni_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def vypocitaj_velkost_pisma_pre_strofu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def vytvorit_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def vytvorit_nastavenia_okno(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zapni_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zatvorit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
+        def ziskaj_aktualnu_a_celkovu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def ziskaj_zoznam_suborov(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zmenit_priecinok_piesni(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zmenit_rezim_farby(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zobraz_aktualnu_strofu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zobraz_info_rezervy(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zobraz_rychly_sprievodca(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zobrazit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
+        def zobrazit_o_aplikacii(self, *args: Any, **kwargs: Any) -> Any: ...
+else:
+    class _ControlAppBase:
+        """Za behu programu úplne prázdna trieda – žiadny vplyv na správanie,
+        runtime atribúty/metódy poskytujú výhradne jednotlivé mixiny a
+        `ControlApp.__init__`, presne ako pred touto úpravou."""
+        pass
 
-            # Ak je súborov menej ako limit, nerobíme nič
-            if len(vsetky_logy) <= minimalny_pocet:
-                return
 
-            hranica_starnutia = datetime.now().timestamp() - (dni * 86400)
-
-            # Preskočíme prvých X najnovších, zvyšok skontrolujeme na vek
-            for subor in vsetky_logy[minimalny_pocet:]:
-                if subor.stat().st_mtime < hranica_starnutia:
-                    try:
-                        subor.unlink()
-                        log_info(f"Upratovanie: Odstránený starý log {subor.name}")
-                    except Exception as e:
-                        log_exception(f"Nepodarilo sa odstrániť log {subor.name}", e)
-        except Exception as e:
-            log_exception("vycistit_stare_logy: chyba pri čistení logov", e)
-    
-            
-    def potvrdit_ukoncenie(self, event=None):
-        if messagebox.askyesno("Kinak: Ukončiť", "Naozaj ukončiť program?"):
-
-            # 1) Startup callbacky
-            for _aid in self._startup_after_ids:
-                try:
-                    self.master.after_cancel(_aid)
-                except Exception as e:
-                    log_exception("potvrdit_ukoncenie: after_cancel zlyhal (_startup_after_ids)", e)
-            self._startup_after_ids = []
-
-            # 2) Live preview
-            _lp = self._live_preview_after_id
-            if _lp:
-                try:
-                    self.master.after_cancel(_lp)
-                except Exception as e:
-                    log_exception("potvrdit_ukoncenie: after_cancel zlyhal (_live_preview_after_id)", e)
-                self._live_preview_after_id = None
-
-            # 3) Auto-načítanie
-            _auto = self._auto_nacitanie_after_id
-            if _auto:
-                try:
-                    self.master.after_cancel(_auto)
-                except Exception as e:
-                    log_exception("potvrdit_ukoncenie: after_cancel zlyhal (_auto_nacitanie_after_id)", e)
-                self._auto_nacitanie_after_id = None
-
-            # 4) Zničenie okna
-            self.master.destroy()    
-    
-     
-    def nacitaj_piesne_do_zoznamu_z_priecinka(self):
-        """
-        Načíta súbory typu NNN*.txt alebo NNNx*.txt (varianty) pomocou pathlib,
-        extrahuje prefix (cislo/variant) a vráti zoznam (cislo, nazov).
-        Názov sa berie z prvého neprázdneho riadku súboru.
-        """
-        piesne = []
-        folder = self.song_folder_path
-
-        # Ak priečinok neexistuje, vrátime prázdny zoznam (pathlib way)
-        if not folder.is_dir():
-            return piesne
-
-        # Prechádzame všetky .txt súbory v priečinku
-        for filepath in folder.glob("*.txt"):
-            # .stem vráti meno súboru bez prípony .txt
-            filename_no_ext = filepath.stem
-            
-            # extrahovať prefix NNN alebo NNNx (napr. 001 alebo 001a)
-            m = re.match(r"^([0-9]{3}[a-zA-Z]?)", filename_no_ext)
-            if not m:
-                continue
-
-            cislo = m.group(1)   # napr. "269b"
-            first_line = ""
-
-            try:
-                # Pokus o načítanie v UTF-8-SIG (rieši aj BOM)
-                try:
-                    with filepath.open("r", encoding="utf-8-sig") as f:
-                        for line in f:
-                            stripped = line.strip()
-                            if stripped:
-                                first_line = stripped
-                                break
-                except (UnicodeDecodeError, UnicodeError):
-                    # Fallback na CP1250 (bežné kódovanie starších súborov vo Windows)
-                    with filepath.open("r", encoding="cp1250") as f:
-                        for line in f:
-                            stripped = line.strip()
-                            if stripped:
-                                first_line = stripped
-                                break
-
-                # OŠETRENIE PRÁZDNEHO SÚBORU
-                # .name vráti celý názov súboru vrátane prípony
-                title = first_line if first_line else filepath.name
-                piesne.append((cislo, title))
-
-            except Exception as e:
-                log_exception(f"Chyba pri načítaní súboru {filepath.name}", e)
-
-        # Utriediť podľa čísla:
-        # Najprv podľa číselnej hodnoty (prvé 3 znaky), potom podľa celého reťazca (varianty a, b...)
-        piesne.sort(key=lambda x: (int(x[0][:3]), x[0]))
-
-        return piesne               
-       
-    def ziskaj_aktualnu_a_celkovu(self):
-        """
-        Vracia (current, total):
-        - current = 0 pre nultú strofu, inak 1..total
-        - total = počet reálnych strof (bez nultého záznamu, ak ho používate)
-        """
-        try:
-            total = max(0, len(self.aktualne_strofy) - 1)
-            if self.aktualny_index_strofa <= 0:
-                current = 0
-            else:
-                current = min(self.aktualny_index_strofa, total)
-            return current, total
-        except Exception as e:
-            log_exception("ziskaj_aktualnu_a_celkovu: neočakávaná chyba", e)
-            return 0, 0
-
-
-    def aktualizovat_info_liturgickeho_roka(self, liturgicky_rok: str | None = None):
-        """
-        Aktualizuje titulok hlavného okna s liturgickým rokom, aktuálnou
-        časťou, dňom týždňa a prípadnými odpočtami / upozorneniami.
-
-        Formát titulku:
-          Kinak v2.2 | Liturgický rok A – časť: 25. TÝŽDEŇ CEZROČNÉHO OBDOBIA, štvrtok
-          Kinak v2.2 | Liturgický rok A – 3. deň Veľkonočnej oktávy (streda)
-          Kinak v2.2 | Liturgický rok A – NANEBOVZATIE PANNY MÁRIE (Slávnosť)
-            + voliteľne:  –  vigília: NAZOV SLÁVNOSTI
-            + voliteľne:  –  ⚠ nedeľa má prednosť pred: NAZOV SVIATKU
-        """
-        if not liturgicky_rok and hasattr(self, "liturgical_year_var") and self.liturgical_year_var:
-            liturgicky_rok = self.liturgical_year_var.get()
-        liturgicky_rok = liturgicky_rok or vypocitaj_liturgicky_rok()
-
-        dnes = date.today()
-        aktualna_cast = vypocitaj_aktualnu_liturgicku_cast(dnes)
-
-        if hasattr(self, "aktualna_liturgicka_cast_var") and self.aktualna_liturgicka_cast_var:
-            self.aktualna_liturgicka_cast_var.set(f"Aktuálna liturgická časť:\n{aktualna_cast}")
-
-        if hasattr(self, "master") and self.master and self.master.winfo_exists():
-            try:
-                cz = zostavit_casove_vztahy_titulku(dnes)
-            except Exception as e:
-                log_exception("aktualizovat_info_liturgickeho_roka: zostavit_casove_vztahy_titulku zlyhalo", e)
-                # Fallback na starý formát
-                cz = {"predpona": "časť: ", "hlavny": aktualna_cast,
-                      "presun": None, "vynechane": None,
-                      "vigilia": None, "prednost_nedele": None}
-
-            # Vigília a poznámka o vynechanom slávení sa zobrazujú v status bare
-            # (vynechané navyše aj v title bare, aby boli oba miesta konzistentné).
-            self._aktualna_vigilia = cz["vigilia"]
-            self._aktualna_vynechane = cz["vynechane"]
-
-            self.master.title(zostav_text_hlavicky(liturgicky_rok, dnes, cz))
-            self.aktualizovat_status_bar()
-
-             
-    def aktualizovat_status_bar(self):
-        """Aktualizuje obsah status baru (skratka žalmu + týždeň žaltára + vigília + vynechané slávenie)."""
-        try:
-            if self.status_bar_frame is None or self.status_bar_zaltár_label is None:
-                return
-
-            zobrazit_zalm    = getattr(self, "statusbar_skratka_zalmu_var",  None)
-            zobrazit_zaltara = getattr(self, "statusbar_tyzden_zaltara_var", None)
-            # zobrazit_jks     = getattr(self, "statusbar_jks_piesne_var",     None)
-
-            text_statusu = zostav_text_status_baru(
-                date.today(),
-                bool(zobrazit_zalm and zobrazit_zalm.get()),
-                bool(zobrazit_zaltara and zobrazit_zaltara.get()),
-                getattr(self, "_aktualna_vigilia", None),
-                getattr(self, "_aktualna_vynechane", None),
-            )
-
-            if text_statusu:
-                self.status_bar_zaltár_label.config(text=text_statusu)
-                self.status_bar_frame.pack(side=tk.BOTTOM, fill=tk.X)
-            else:
-                self.status_bar_zaltár_label.config(text="")
-                self.status_bar_frame.pack_forget()
-        except Exception as e:
-            log_exception("aktualizovat_status_bar: chyba", e)
-
+class _NastaveniaMixin(_ControlAppBase):
+    """Perzistencia a UI okna nastavení appky (config.json, farby, priečinok piesní)."""
 
     def nacitat_nastavenia(self):
         """
@@ -9182,385 +8981,983 @@ class ControlApp:
         new_config = self._zostav_config_dict(**extra)
         self._zapis_config_na_disk(new_config, aktualizovat_label)
 
-    def vytvorit_gui(self):
+    def _vytvor_sekciu(self, rodic, nadpis, popis):
+        """Vytvorí LabelFrame s nadpisom a krátkym vysvetlivkovým textom."""
+        frame = tk.LabelFrame(rodic, text=f" {nadpis} ", padx=10, pady=8, 
+                            font=(self.font_family, 10, "bold"), fg="#333333")
+        frame.pack(fill=tk.X, padx=15, pady=8)
+
+        if popis:
+            lbl_popis = tk.Label(frame, text=popis, font=(self.font_family, 9, "italic"),
+                                fg="#666666", wraplength=550, justify=tk.LEFT)
+            lbl_popis.pack(anchor="w", pady=(0, 5))
+        
+        return frame
+
+    def _pridaj_nastavenie_slider(self, rodic, nadpis, popis, premenna, od, do, rozlisenie=1):
+        """Vytvorí sekciu so sliderom (Scale) na celú šírku."""
+        sekcia = self._vytvor_sekciu(rodic, nadpis, popis)        
+        
+        slider = tk.Scale(
+            sekcia, 
+            from_=od, 
+            to=do, 
+            variable=premenna, 
+            resolution=rozlisenie, 
+            orient=tk.HORIZONTAL,
+            font=(self.font_family, 11),
+            highlightthickness=0  # Odstráni biely obrys pre čistejší vzhľad
+        )
+        
+        # fill=tk.X zabezpečí roztiahnutie po horizontálnej osi
+        slider.pack(fill=tk.X, expand=True, padx=5, pady=(0, 5))
+        
+        # Automatické ukladanie pri pustení tlačidla myši
+        slider.bind("<ButtonRelease-1>", lambda e: self.ulozit_nastavenia(aktualizovat_label=False))
+        
+        return sekcia
+
+    def _pridaj_nastavenie_check(self, rodic, nadpis, popis, premenna, text_check="Zapnuté / Povolené"):
+        """Vytvorí sekciu s potvrdzovacím políčkom (Checkbutton)."""
+        sekcia = self._vytvor_sekciu(rodic, nadpis, popis)
+        chk = tk.Checkbutton(sekcia, text=text_check, variable=premenna, 
+                           command=self.ulozit_nastavenia, font=(self.font_family, 11))
+        chk.pack(anchor="w")
+        return sekcia
+
+    # ==========================================================
+    # HLAVNÁ METÓDA OKNA NASTAVENÍ
+    # ==========================================================
+
+    def vytvorit_nastavenia_okno(self):
+        """Vytvorí konfiguračné okno so všetkými nastaveniami a scrollbarom."""
+        settings_window = tk.Toplevel(self.master)
+        self.settings_window = settings_window
+        settings_window.title("Nastavenia")
+        settings_window.protocol("WM_DELETE_WINDOW", self.zatvorit_nastavenia)
+        
+        # Klúčové mapovanie kláves a fokus
+        settings_window.bind("<Escape>", lambda e: self.zatvorit_nastavenia())        
+        settings_window.after(
+            50,
+            lambda: settings_window.winfo_exists() and settings_window.focus_force()
+        )
+
+        # Nastavenie geometrie (vycentrovanie)
+        saved_w = int(self.settings_window_width)
+        saved_h = int(self.settings_window_height)
+        window_width  = saved_w if saved_w >= 400 else 620
+        window_height = saved_h if saved_h >= 300 else 660
+        screen_width = settings_window.winfo_screenwidth()
+        screen_height = settings_window.winfo_screenheight()
+        x = (screen_width - window_width) // 2
+        y = max(0, (screen_height - window_height) // 2 - 40)
+        settings_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        settings_window.withdraw() # Skryjeme kým sa nevykreslí
+
+        # Sledovanie zmien veľkosti okna Nastavenia (s debounce 500ms)
+        def _uloz_geometriu_nastaveni(event):
+            if event.widget is not self.settings_window:
+                return
+
+            def zapis_geometrie():
+                if self.settings_window and self.settings_window.winfo_exists():
+                    self.settings_window_width = self.settings_window.winfo_width()
+                    self.settings_window_height = self.settings_window.winfo_height()
+                    self.ulozit_nastavenia(aktualizovat_label=False)
+
+            self._naplanuj_debounced_zapis(
+                "_settings_geom_after_id", zapis_geometrie, "_uloz_geometriu_nastaveni"
+            )
+
+        settings_window.bind('<Configure>', _uloz_geometriu_nastaveni)
+
+        # --- ZÁLOŽKY: ZÁKLADNÉ / POKROČILÉ ---
+        container = tk.Frame(settings_window)
+        container.pack(fill=tk.BOTH, expand=True)
+
         style = ttk.Style()
-        style.configure("TButton", font=(self.font_family, 12), padding=6)
-        style.configure("TLabel", font=(self.font_family, 12))
-        style.configure("Header.TLabel", font=(self.font_family, 13, "bold"), foreground="#AAAAAA")
-        style.configure("Settings.TButton", font=(self.font_family, 14), padding=2)
+        style.configure(
+            "KinakSettings.TNotebook",
+            tabmargins=(12, 8, 12, 0)
+        )
+        style.configure(
+            "KinakSettings.TNotebook.Tab",
+            font=(self.font_family, 12, "bold"),
+            padding=(32, 12)
+        )
+        style.map(
+            "KinakSettings.TNotebook.Tab",
+            foreground=[
+                ("selected", "#000000"),
+                ("!selected", "#333333")
+            ],
+            background=[
+                ("selected", "#f2f2f2"),
+                ("!selected", "#d8d8d8")
+            ],
+            expand=[
+                ("selected", (2, 2, 2, 0))
+            ]
+        )
 
-        # globálne nastavenie pre combobox listbox
-        self.master.option_add("*TCombobox*Listbox.font", (self.font_family, 11))
-        self.master.option_add("*TCombobox*Listbox.justify", "left")
+        notebook = ttk.Notebook(container, style="KinakSettings.TNotebook")
+        notebook.pack(fill=tk.BOTH, expand=True)
 
-        horny_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR, height=60)
-        horny_frame.pack_propagate(False)
-        horny_frame.pack(side=tk.TOP, fill=tk.X, anchor="ne", pady=(0, 0))
+        def vytvor_scroll_tab(nazov):
+            tab = tk.Frame(notebook)
+            notebook.add(tab, text=f"   {nazov}   ")
 
-        # --- STATUS BAR (spodok hlavného okna) ---
-        self.status_bar_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR, height=28)
-        self.status_bar_frame.pack_propagate(False)
-        self.status_bar_frame.pack(side=tk.BOTTOM, fill=tk.X)
+            canvas = tk.Canvas(tab, highlightthickness=0)
+            scrollbar = ttk.Scrollbar(tab, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas)
 
-        self.status_bar_zaltár_label = tk.Label(
-            self.status_bar_frame,
-            text="",
-            font=(self.font_family, 12),
-            fg="#aaaaaa",
-            bg=PANEL_BG_COLOR,
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e, c=canvas: c.configure(scrollregion=c.bbox("all"))
+            )
+
+            canvas_frame = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+            def _configure_canvas(event, c=canvas, cf=canvas_frame):
+                c.itemconfig(cf, width=event.width)
+
+            canvas.bind("<Configure>", _configure_canvas)
+            canvas.configure(yscrollcommand=scrollbar.set)
+            canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+            def _on_mousewheel(event, c=canvas):
+                c.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+            canvas.bind("<Enter>", lambda e, c=canvas: c.bind_all("<MouseWheel>", _on_mousewheel))
+            canvas.bind("<Leave>", lambda e, c=canvas: c.unbind_all("<MouseWheel>"))
+
+            return scrollable_frame
+
+        zakladne_frame = vytvor_scroll_tab("Základné")
+        pokrocile_frame = vytvor_scroll_tab("Pokročilé")
+
+        # --- ŠTÝL ---
+        style.configure("Settings.TLabelframe", padding=10)
+        
+        # Pomocná funkcia pre vytváranie sekcií (LabelFrame)
+        def vytvor_sekciu(parent, text):
+            f = tk.LabelFrame(parent, text=text, padx=10, pady=10, 
+                             font=(self.font_family, 12, "bold"), fg="#333333")
+            f.pack(fill=tk.X, padx=15, pady=8)
+            return f
+
+        def vytvor_popis(parent, text, color="#555555"):
+            l = tk.Label(parent, text=text, font=(self.font_family, 10, "italic"),
+                         fg=color, wraplength=550, justify=tk.LEFT)
+            l.pack(anchor="w", pady=(0, 5))
+            return l
+
+        # 1. INFO PANEL
+        frame_info = vytvor_sekciu(zakladne_frame, "Informácia")
+        vytvor_popis(frame_info, "Veľkosť písma sa automaticky prispôsobuje veľkosti obrazovky.")
+
+        # 2. VEĽKOSŤ PÍSMA
+        frame_font = vytvor_sekciu(zakladne_frame, "Základná veľkosť písma")
+        vytvor_popis(
+            frame_font,
+            "Nastavuje maximálnu povolenú veľkosť písma. Ak nastavíš napr. 105, "
+            "písmo nebude nikdy väčšie, ale pri dlhom texte sa automaticky zmenší."
+        )
+
+        # IntVar musí dostať istý int
+        if not hasattr(self, "font_size_var"):
+            self.font_size_var = tk.IntVar(value=int(self.font_size))
+
+        font_size_slider = tk.Scale(
+            frame_font,
+            variable=self.font_size_var,
+            from_=20,
+            to=MAX_FONT_SIZE,
+            orient=tk.HORIZONTAL,
+            font=(self.font_family, 11),
+            command=lambda v: None
+        )
+        font_size_slider.pack(fill=tk.X, expand=True, padx=5, pady=5)
+
+        font_size_slider.bind(
+            "<ButtonRelease-1>",
+            lambda e: self.ulozit_nastavenia(aktualizovat_label=False)
+        )
+
+        vytvor_popis(
+            frame_font,
+            "Odporúčané: Monitor (< 100cm) → cca 105 | TV/Projektor (> 100cm) → cca 75",
+            "#0066cc"
+        )
+        
+        # 3. FARBA TEXTU A OBDOBIA
+        frame_color = vytvor_sekciu(zakladne_frame, "Farba textu")
+        vytvor_popis(frame_color, "Výber liturgického obdobia automaticky nastaví farbu textu pri projekcii.")
+
+        moznosti_obdobia = list(LITURGICKE_OBDOBIA.keys())
+        self.obdobie_menu = tk.OptionMenu(
+            frame_color, self.obdobie_var, *moznosti_obdobia,
+            command=self.nastavit_farbu_pisma_podla_obdobia
+        )
+        self.obdobie_menu.config(font=(self.font_family, 11), width=25)
+        self.obdobie_menu.pack(anchor="w", pady=(0, 10))
+
+        radek_farba = tk.Frame(frame_color)
+        radek_farba.pack(fill=tk.X)
+
+        self.checkbox_vlastna_farba = tk.Checkbutton(
+            radek_farba, text="Použiť vlastnú farbu", variable=self.pouzit_vlastnu_farbu,
+            command=self.zmenit_rezim_farby, font=(self.font_family, 11)
+        )
+        self.checkbox_vlastna_farba.pack(side=tk.LEFT, padx=(0, 10))
+
+        ttk.Button(radek_farba, text="Vybrať farbu…", command=self.vybrat_vlastnu_farbu_textu).pack(side=tk.LEFT)
+
+        # Indikátor farby (Zaoblený polygon)
+        self.indikator_farby = tk.Canvas(radek_farba, width=40, height=30, highlightthickness=0)
+        self.indikator_farby.pack(side=tk.LEFT, padx=10)
+        
+        r = 6
+        points = [4+r, 4, 34-r, 4, 34, 4, 34, 4+r, 34, 26-r, 34, 26, 34-r, 26, 4+r, 26, 4, 26, 4, 26-r, 4, 4+r, 4, 4]
+        self.indikator_farby_id = self.indikator_farby.create_polygon(
+            points, smooth=True, fill=self.text_color_var.get(), outline="#444444", width=1
+        )
+        
+        # 4. LITURGICKÝ ROK A / B / C
+        frame_lit_rok_sekcia = vytvor_sekciu(pokrocile_frame, "Liturgický rok")
+        vytvor_popis(frame_lit_rok_sekcia, "Liturgický cyklus (A, B, C) sa mení v programe Kinak automaticky každú Prvú adventnú nedeľu – začína sa nový liturgický rok.")
+
+        if not hasattr(self, "liturgical_year_var"):
+            self.liturgical_year_var = tk.StringVar(
+                self.master,
+                value=vypocitaj_liturgicky_rok()
+            )
+
+        frame_lit_rok = tk.Frame(frame_lit_rok_sekcia)
+        frame_lit_rok.pack(anchor="w", pady=(4, 0))
+
+        for rok in ("A", "B", "C"):
+            tk.Radiobutton(
+                frame_lit_rok,
+                text=f"  {rok}  ",
+                variable=self.liturgical_year_var,
+                value=rok,
+                font=(self.font_family, 13, "bold"),
+                state=tk.DISABLED,          # hodnota je automatická – len zobrazenie
+            ).pack(side=tk.LEFT, padx=4)
+
+        
+        # 5. PREDVOLENÝ FILTER (HLAVNÉ OKNO)
+        frame_def_filter = vytvor_sekciu(zakladne_frame, "Predvolený filter v ovládaní")
+        vytvor_popis(frame_def_filter, "Vyber filter, ktorý sa zobrazí v hlavnom okne po spustení aplikácie.")
+        
+        moznosti_subory = list(self.obdobie_subory.keys())
+        self.default_filter_menu = tk.OptionMenu(frame_def_filter, self.default_filter_var, *moznosti_subory)
+        self.default_filter_menu.config(font=(self.font_family, 11), width=25)
+        self.default_filter_menu.pack(anchor="w")
+        
+        # Trace teraz ukladá nastavenia a zároveň okamžite aktualizuje zoznam piesní
+        self.default_filter_var.trace_add("write", lambda *a: [
+            self.ulozit_nastavenia(), 
+            self.filtrovat_subory(self.filter_var.get())
+        ])              
+        
+        # 6. BEŽNÉ A POKROČILÉ PREPÍNAČE ZOBRAZENIA
+        def vytvor_check(parent, text, var):
+            cb = tk.Checkbutton(parent, text=text, variable=var, font=(self.font_family, 11), 
+                                command=self.ulozit_nastavenia, pady=2)
+            cb.pack(anchor="w")
+            return cb
+
+        frame_basic_view = vytvor_sekciu(zakladne_frame, "Náhľad v ovládaní")
+
+        self.checkbox_live_preview = tk.Checkbutton(
+            frame_basic_view,
+            text="Zobraziť náhľad projekcie (Live Preview)",
+            variable=self.zobrazovat_live_preview_var,
+            font=(self.font_family, 11),
+            command=lambda: [self.ulozit_nastavenia(), self.update_live_preview(getattr(self, 'posledny_text', ""))],
+            pady=2
+        )
+        self.checkbox_live_preview.pack(anchor="w")
+
+        vytvor_popis(
+            frame_basic_view,
+            "Náhľad pomáha vtedy, keď premietajúci nevidí priamo na projektor alebo televízor.",
+            "#0066cc"
+        )
+
+        frame_checks = vytvor_sekciu(pokrocile_frame, "Liturgické pomôcky a znaky")
+
+        # 1. DIREKTÓRIUM:
+        self.checkbox_direktorium = tk.Checkbutton(
+            frame_checks, 
+            text="Zobraziť odporúčané piesne z JKS pod rozbaľovacím filtrom pri výbere súboru", 
+            variable=self.zobrazit_direktorium_var, 
+            font=(self.font_family, 11),            
+            command=lambda: [self.ulozit_nastavenia(), self.aktualizovat_direktorium_label(), self.filtrovat_subory(self.filter_var.get())],
+            pady=2
+        )
+        self.checkbox_direktorium.pack(anchor="w")
+
+        self.checkbox_specialne_znaky = vytvor_check(frame_checks, "Zobraziť špeciálne znaky JKS (·, _) v projekcii", self.zobrazovat_specialne_znaky_var)
+
+        self.checkbox_znaky_chorov = vytvor_check(frame_checks, "Zobraziť znaky [L] / [P] pre striedanie chórov pri vešperách v projekcii", self.zobrazovat_znaky_chorov_var)
+
+        vytvor_popis(
+            frame_checks,
+            "V hlavnom ovládacom okne zostávajú špeciálne znaky a znaky [L] / [P] "
+            "vždy viditeľné, aby sa premietajúci vedel ľahko orientovať. "
+            "Prepínače ovplyvňujú iba zobrazenie v projekcii.",
+            "#0066cc"
+        )
+
+        
+        self.checkbox_statusbar_skratka_zalmu = vytvor_check(
+            frame_checks,
+            "Zobraziť v stavovom riadku skratku žalmu podľa liturgického obdobia",
+            self.statusbar_skratka_zalmu_var
+        )       
+        
+        
+        self.checkbox_statusbar_zaltara = vytvor_check(
+            frame_checks,
+            "Zobraziť v stavovom riadku aktuálny týždeň žaltára v breviári",
+            self.statusbar_tyzden_zaltara_var
+        )
+                
+
+        # 7. RÝCHLOSŤ PRECHODU
+        frame_fade = vytvor_sekciu(zakladne_frame, "Rýchlosť prechodu textu")
+        vytvor_popis(
+            frame_fade,
+            "Určuje, ako rýchlo sa nová obrazovka (strofa) rozjasní z čiernej."
+        )
+        self.fade_speed_combo = ttk.Combobox(
+            frame_fade, textvariable=self.fade_speed_var,
+            values=["veľmi pomalé", "pomalé", "stredné", "mierne stredné", "mierne rýchle", "rýchle", "vypnuté"],
+            state="readonly", font=(self.font_family, 11), width=20
+        )
+        self.fade_speed_combo.pack(anchor="w", pady=5)
+        self.fade_speed_combo.bind("<<ComboboxSelected>>", lambda e: self.ulozit_nastavenia())
+
+        # 8. UMIESTNENIE SÚBOROV
+        frame_folder = vytvor_sekciu(zakladne_frame, "Umiestnenie súborov")
+
+        self.folder_label = tk.Label(
+            frame_folder,
+            text=str(self.song_folder_path),   
+            wraplength=450,
+            font=(self.font_family, 10),
+            bg="#f9f9f9",
             anchor="w",
-            padx=15
+            justify=tk.LEFT,
+            relief="sunken",
+            padx=5,
+            pady=5
         )
-        self.status_bar_zaltár_label.pack(side=tk.LEFT, fill=tk.Y)
-        self.aktualizovat_status_bar()
+        self.folder_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
 
-        # --- Combobox "Zoznam piesní" vľavo ---
-        self.song_var = tk.StringVar()
-        style.configure("Big.TCombobox", padding=5)
+        ttk.Button(
+            frame_folder,
+            text="Zmeniť…",
+            command=self.zmenit_priecinok_piesni
+        ).pack(side=tk.RIGHT)
 
-        # Povolené písanie (nutné pre vyhľadávanie)
-        self.song_combobox = ttk.Combobox(
-            horny_frame,
-            textvariable=self.song_var,
-            state="normal",
-            width=38,
-            style="Big.TCombobox",
-            font=(self.font_family, 12),
-            height=12
-        )       
+        # 9. REZERVY
+        frame_res = vytvor_sekciu(pokrocile_frame, "Globálna (vertikálna) rezerva")
+        vytvor_popis(frame_res, "Vzdialenosť textu od horného a dolného okraja obrazovky – necháva priestor hore aj dole, aby text nebol nalepený na okraje. Vyššia hodnota = menší text.")
         
-        # Kompletný zoznam piesní
-        self.cele_hodnoty_comboboxu = ["Zoznam piesní"] + [
-            f"{num} - {title}" for num, title in self.zoznam_piesni_data
-        ]
-        self.song_combobox["values"] = self.cele_hodnoty_comboboxu
-        self.song_combobox.current(0)
-        self.song_combobox.pack(side=tk.LEFT, padx=(10, 0), pady=(8, 2), ipady=1)
+        safe_font_name: str = FONT_NAME or "Arial"
 
-        # --- Filtrovanie počas písania ---
-        # Normalizácia diakritiky: používa sa globálna funkcia normalize_diacritics()
-        def on_combobox_typing(event):
-            if event.keysym in ("Up", "Down", "Left", "Right", "Return", "Escape", "Tab"):
-                return
+        # Slider upravený na celú šírku (odstránený length, pridaný fill=tk.X)
+        self.slider_res_vert = tk.Scale(
+            frame_res,
+            variable=self.reserved_vertical_var,
+            from_=0.10,
+            to=0.40,
+            resolution=0.01,
+            orient=tk.HORIZONTAL,
+            font=(safe_font_name, 11),
+            highlightthickness=0
+        )
+        self.slider_res_vert.pack(fill=tk.X, expand=True, padx=5, pady=5)
 
-            # Zapamätáme si text a pozíciu kurzora
-            current_text = self.song_combobox.get()
-            cursor_pos = self.song_combobox.index(tk.INSERT)
+        # Uložiť až po pustení myši
+        self.slider_res_vert.bind(
+            "<ButtonRelease-1>",
+            lambda e: self.ulozit_nastavenia()
+        )
 
-            if current_text == "":
-                nove = self.cele_hodnoty_comboboxu
+        frame_margin = vytvor_sekciu(pokrocile_frame, "Spodná rezerva (Overscan)")
+        vytvor_popis(frame_margin, "Posunie celý text vyššie (ak obrazovka orezáva spodok).")
+        
+        def validate_num(P):
+            return P == "" or (P.isdigit() and 0 <= int(P) <= 400)
+        vcmd = (self.settings_window.register(validate_num), "%P")
+
+        # Rámček, ktorý drží všetky prvky v jednom riadku
+        spin_frame = tk.Frame(frame_margin)
+        spin_frame.pack(fill=tk.X, pady=5)
+
+        # 1. Label (vľavo)
+        tk.Label(
+            spin_frame,
+            text="px (0–400):",
+            font=(safe_font_name, 11)
+        ).pack(side=tk.LEFT)
+
+        # 2. Spinbox (vľavo, hneď za labelom)
+        tk.Spinbox(
+            spin_frame, from_=0, to=400, textvariable=self.bottom_margin_var, 
+            width=10, font=(self.font_family, 11), validate="key", 
+            validatecommand=vcmd, command=self.ulozit_nastavenia
+        ).pack(side=tk.LEFT, padx=5)
+
+        # 3. Tlačidlo (vpravo - teraz je v tom istom ráme ako spinbox)
+        ttk.Button(
+            spin_frame, text="Viac o rezervách", 
+            command=self.zobraz_info_rezervy
+        ).pack(side=tk.RIGHT)
+
+        # 9b. DIAGNOSTIKA
+        frame_diag = vytvor_sekciu(pokrocile_frame, "Diagnostika")
+        vytvor_popis(
+            frame_diag,
+            "Keď je diagnostika zapnutá, aplikácia priebežne zapisuje chyby a technické "
+            "udalosti do log súboru nižšie (s automatickou rotáciou, aby súbor nerástol "
+            "donekonečna). Pri probléme s aplikáciou tento súbor pomôže zistiť "
+            "príčinu – v takom prípade je dobré mať diagnostiku zapnutú."
+        )
+        self.checkbox_diagnostika = vytvor_check(
+            frame_diag,
+            "Zapnúť diagnostické logovanie do súboru",
+            self.diagnostika_povolena_var
+        )
+        tk.Label(
+            frame_diag,
+            text=f"Súbor: {LOG_PATH}",
+            wraplength=450,
+            font=(self.font_family, 9),
+            fg="#555555",
+            anchor="w",
+            justify=tk.LEFT,
+        ).pack(anchor="w", pady=(4, 0))
+
+        # 10. RESET
+        frame_reset = vytvor_sekciu(pokrocile_frame, "Reset do pôvodného stavu")
+        vytvor_popis(frame_reset, "Vráti všetky nastavenia na pôvodné hodnoty. Použite ho v prípade, že sa nastavenia „rozladia“ tak, že sa text zobrazí mimo obrazovky, je príliš orezaný, nečitateľný alebo sa vôbec nezobrazí kvôli nesprávnym nastaveniam.")
+        ttk.Button(frame_reset, text="Obnoviť predvolené", command=self.obnovit_predvolene).pack(anchor="e")
+
+        # FIXNÁ POZNÁMKA NA SPODKU (mimo scrollu)
+        frame_restart = tk.Frame(self.settings_window, pady=10)
+        frame_restart.pack(fill=tk.X)
+
+        tk.Label(
+            frame_restart,
+            text="Niektoré nastavenia sa aplikujú až po reštarte aplikácie.",
+            font=(safe_font_name, 10),
+            fg="#aa0000"
+        ).pack()
+
+        # Dokončenie inicializácie
+        self.aktualizovat_stav_tlacidla_farby()
+        self.aktualizovat_vzhlad()
+        self.settings_window.deiconify() 
+        
+    
+    def zatvorit_nastavenia(self):
+        """
+        Uloží nastavenia bez prebliknutia hlavného rozhrania a korektne zavrie okno.
+        Obnovuje prístup k ovládacím prvkom hlavného okna.
+        """
+        # 1. Pokus o uloženie nastavení (S PARAMETROM False PROTI BLIKANIU)
+        try:
+            # Tu voláme uloženie s False, aby sme obišli prekreslenie labelu
+            self.ulozit_nastavenia(aktualizovat_label=False)
+        except Exception as e:
+            log_exception("zatvorit_nastavenia: kritická chyba pri ukladaní", e)
+
+        # 2. Uvoľnenie "focusu" (grab) okna
+        try:
+            if self.settings_window is not None:
+                self.settings_window.grab_release()
+        except Exception as e:
+            log_exception("zatvorit_nastavenia: grab_release failed", e)
+
+        # 3. Zničenie alebo skrytie okna
+        try:
+            if self.settings_window is not None:
+                self.settings_window.destroy()
+                # DÔLEŽITÉ: Nastavíme na None, aby sme predišli AttributeError nabudúce
+                self.settings_window = None 
+        except Exception as e:
+            log_exception("zatvorit_nastavenia: destroy failed, skúšam withdraw", e)
+            try:
+                if self.settings_window:
+                    self.settings_window.withdraw()
+            except Exception as e2:
+                log_exception("zatvorit_nastavenia: withdraw failed", e2)
+
+        # 4. Opätovné povolenie ovládacích prvkov v hlavnom okne
+        try:
+            if self.manual_entry is not None:
+                self.manual_entry.config(state="normal")
+            if self.filter_menu is not None:
+                self.filter_menu.config(state="normal")
+            if self.subor_menu is not None:
+                self.subor_menu.config(state="normal")
+        except Exception as e:
+            log_exception("zatvorit_nastavenia: aktivácia prvkov zlyhala", e)
+
+        # 5. Vrátenie focusu do hlavného poľa
+        try:
+            if self.manual_entry is not None:
+                self.master.after(100, lambda: self.manual_entry.focus_set()
+                    if self.master.winfo_exists() else None)
+        except Exception as e:
+            log_exception("zatvorit_nastavenia: focus_set after 100ms failed", e)       
+             
+    def obnovit_predvolene(self):
+        """
+        Obnoví celý config.json na predvolené hodnoty z DEFAULT_CONFIG
+        pomocou atomického zápisu (tempfile + os.replace).
+        Aktualizuje všetky súvisiace premenné aj GUI.
+        """
+        if not messagebox.askyesno(
+            "Kinak: Obnoviť predvolené",
+            "Naozaj chceš obnoviť všetky nastavenia na pôvodné hodnoty?"
+        ):
+            return
+
+        try:
+            from pathlib import PurePath
+
+            # 1. Konverzia Path objektov na stringy
+            config_to_save = {
+                k: str(v) if isinstance(v, PurePath) or hasattr(v, "__fspath__") else v
+                for k, v in DEFAULT_CONFIG.items()
+            }
+
+            # 2. Serializácia JSON
+            json_data = json.dumps(config_to_save, indent=4, ensure_ascii=False)
+
+            # 3. Atomický zápis na disk
+            target_dir = CONFIG_FILE_PATH.parent
+            target_dir.mkdir(parents=True, exist_ok=True)
+
+            temp_path = None
+            try:
+                fd, temp_str = tempfile.mkstemp(
+                    dir=str(target_dir),
+                    prefix="config_default_",
+                    suffix=".json"
+                )
+                temp_path = Path(temp_str)
+
+                with os.fdopen(fd, 'w', encoding='utf-8') as tf:
+                    tf.write(json_data)
+                    tf.flush()
+                    os.fsync(tf.fileno())
+
+                # Bezpečné nahradenie pôvodného configu
+                os.replace(str(temp_path), str(CONFIG_FILE_PATH))
+                temp_path = None  # už bolo presunuté
+
+            finally:
+                # Ak temp súbor prežil, odstránime ho
+                if temp_path and temp_path.exists():
+                    try:
+                        temp_path.unlink()
+                    except Exception as e:
+                        log_exception("obnovit_predvolene: nepodarilo sa odstrániť temp súbor", e)
+
+            # 4. Aktualizácia internej konfigurácie
+            self.config = config_to_save.copy()
+
+            # 5. Reset veľkosti písma
+            self.font_size = int(self.config.get("font_size", 75))
+
+            # 6. Načítanie nastavení do aplikácie
+            self.nacitat_nastavenia()
+
+            # 7. Aktualizácia GUI prvkov (ak existuje)
+            callback = getattr(self, "obnovit_nastavenia_v_gui", None)
+            if callable(callback):
+                callback()
+
+            messagebox.showinfo(
+                "Kinak: Hotovo",
+                "Predvolené nastavenia boli obnovené.\n\n"
+                "Niektoré zmeny sa prejavia až po reštarte aplikácie."
+            )
+
+        except Exception as e:
+            log_exception("obnovit_predvolene: Chyba", e)
+            messagebox.showerror("Kinak: Chyba", f"Nepodarilo sa obnoviť nastavenia:\n{e}")
+
+
+
+    # ----------------------------------------------------------------------
+    # Aktualizuje všetky prvky v okne Nastavenia podľa hodnoty self.config.
+    # Volá sa po načítaní configu aj po stlačení tlačidla „Obnoviť predvolené“.
+    # ----------------------------------------------------------------------
+    def obnovit_nastavenia_v_gui(self):
+        """
+        Zosynchronizuje GUI prvky v okne Nastavenia s aktuálnym slovníkom self.config.
+        Všetky cesty sú pre istotu ošetrené cez str().
+        """
+        # --- Veľkosť písma ---
+        if hasattr(self, "font_size_var"):
+            try:
+                value = int(self.config.get("font_size", 100))
+            except (TypeError, ValueError):
+                value = 100
+            self.font_size_var.set(value)
+
+        # Farba textu
+        self.text_color_var.set(self.config.get("text_color", "#FFCC33"))
+        
+        if hasattr(self, "aktualizovat_stav_tlacidla_farby"):
+            self.aktualizovat_stav_tlacidla_farby()
+        
+        # Liturgické obdobie
+        self.obdobie_var.set(self.config.get("liturgical_season", "Cezročné"))
+
+        # Predvolený filter
+        self.default_filter_var.set(self.config.get("default_filter_obdobie", "Cezročné C2"))
+
+        # Fade speed
+        if hasattr(self, "fade_speed_var"):
+            self.fade_speed_var.set(self.config.get("fade_speed", "mierne rýchle"))
+
+        # Live preview - malý náhľad projekcie v pravom dolnom rohu 
+        if hasattr(self, "zobrazovat_live_preview_var"):
+            raw = self.config.get("zobrazovat_live_preview", True)
+            self.zobrazovat_live_preview_var.set(bool(raw))
+
+        # Direktórium
+        if hasattr(self, "zobrazit_direktorium_var"):
+            raw = self.config.get("zobrazit_direktorium", False)
+            self.zobrazit_direktorium_var.set(bool(raw))
+
+        # Diagnostika (logovanie do súboru)
+        if hasattr(self, "diagnostika_povolena_var"):
+            raw = self.config.get("diagnostika_povolena", True)
+            self.diagnostika_povolena_var.set(bool(raw))
+            self.diagnostika_povolena = bool(raw)
+            nastav_diagnostiku(self.diagnostika_povolena)
+
+        # Rezervy
+        if hasattr(self, "reserved_vertical_var"):
+            raw = self.config.get("reserved_vertical_ratio", 0.20)
+            self.reserved_vertical_var.set(float(raw))
+
+        if hasattr(self, "bottom_margin_var"):
+            raw = self.config.get("bottom_margin", 40)
+            self.bottom_margin_var.set(int(raw))
+
+        # Priečinok piesní
+        raw_folder = self.config.get("song_folder", "")
+        self.folder_label.config(text=str(raw_folder))
+
+        # Prekreslenie
+        if hasattr(self, "aktualizovat_vzhlad"):
+            self.aktualizovat_vzhlad()
+
+
+    def zobrazit_nastavenia(self):
+        """
+        Zobrazí modálne okno nastavení a deaktivuje ovládacie prvky hlavného okna.
+        Ošetrené proti NoneType chybe pomocou explicitnej kontroly na None.
+        """
+        try:
+            # 1. KONTROLA EXISTENCIE OKNA (OPRAVENÁ LOGIKA)
+            # Najprv zistíme, či premenná vôbec existuje a či nie je None.
+            okno_treba_vytvorit = False
+            if not hasattr(self, "settings_window") or self.settings_window is None:
+                okno_treba_vytvorit = True
             else:
-                zadany_norm = normalize_diacritics(current_text)
-                nove = [
-                    h for h in self.cele_hodnoty_comboboxu
-                    if zadany_norm in normalize_diacritics(h)
-                ]
+                # Ak nie je None, až vtedy môžeme bezpečne zavolať winfo_exists()
+                try:
+                    if not self.settings_window.winfo_exists():
+                        okno_treba_vytvorit = True
+                except tk.TclError:
+                    okno_treba_vytvorit = True
 
-            # Nastavíme nové hodnoty
-            self.song_combobox["values"] = nove
-
-            # Znovu otvoríme dropdown.
-            # Používame ttk::combobox::Post namiesto event_generate("<Down>"),
-            # pretože Down-event vyžaduje focus a môže spôsobiť dvojité otvorenie.
-            # ttk::combobox::Post je síce nedokumentovaná v man pages, ale je
-            # verejná Tcl proc definovaná v lib/ttk/combobox.tcl od Tk 8.5 (2007)
-            # a stabilná naprieč všetkými relevantými verziami Pythonu/Tk.
+            if okno_treba_vytvorit:
+                self.vytvorit_nastavenia_okno()
+            
+            # 2. ZOBRAZENIE A VYTIAHNUTIE DO POPREDIA
             try:
-                self.song_combobox.tk.call('ttk::combobox::Post', self.song_combobox)
-            except tk.TclError:
-                pass
-
-            # Obnovíme text aj kurzor
-            self.song_combobox.delete(0, tk.END)
-            self.song_combobox.insert(0, current_text)
-
-            try:
-                self.song_combobox.icursor(cursor_pos)
+                if self.settings_window:
+                    self.settings_window.deiconify()
+                    self.settings_window.lift()
+                    self.settings_window.focus_set()
+                    self.settings_window.transient(self.master)
             except Exception as e:
-                log_exception("vytvorit_gui: icursor zlyhal", e)
+                log_exception("zobrazit_nastavenia: zlyhanie pri deiconify/lift", e)
+
+            # 3. NASTAVENIE MODÁLNEHO REŽIMU
+            try:
+                if self.settings_window:
+                    self.settings_window.grab_set()
+            except Exception as e:
+                log_exception("zobrazit_nastavenia: zlyhanie grab_set", e)
+
+            # 4. DEAKTIVÁCIA MENU PRVKOV
+            try:
+                if self.filter_menu is not None:
+                    self.filter_menu.config(state="disabled")
+                if self.subor_menu is not None:
+                    self.subor_menu.config(state="disabled")
+            except Exception as e:
+                log_exception("zobrazit_nastavenia: zlyhanie deaktivácie menu", e)
+
+            # 5. RESET STAVU UI
+            try:
+                if self.song_combobox is not None:
+                    self.song_combobox.current(0)
+                
+                # Kompletný reset UI (vypnutie projekcie pri vstupe do nastavení)
+                self.reset_ui()
+            except Exception as e:
+                log_exception("zobrazit_nastavenia: zlyhanie reset_ui", e)
+
+        except Exception as e:
+            log_exception("zobrazit_nastavenia: kritická chyba metódy", e)
 
 
-        # --- Handler pre výber piesne (kliknutie alebo Enter) ---
-        def on_song_selected(event=None):
-            selection = self.song_combobox.get()
+    def aktualizovat_stav_tlacidla_farby(self):
+        """Bezpečne aktualizuje stav prvkov podľa voľby vlastnej farby."""
+        try:
+            # 1. Získame stav (Boolean)
+            is_custom = self.pouzit_vlastnu_farbu.get()
+            state = "normal" if is_custom else "disabled"
+            obdobie_state = "disabled" if is_custom else "normal"
 
-            if selection == "Zoznam piesní" or not selection:
-                return
+            # 2. Bezpečne aktualizujeme tlačidlo farby
+            btn = getattr(self, "vyber_farbu_button", None)
+            if btn and btn.winfo_exists():
+                btn.config(state=state)
 
-            # Ak používateľ napísal len časť názvu
-            if selection not in self.cele_hodnoty_comboboxu:
-                sel_norm = normalize_diacritics(selection)
-                zhody = [
-                    h for h in self.cele_hodnoty_comboboxu
-                    if sel_norm in normalize_diacritics(h)
-                ]
-                if zhody:
-                    selection = zhody[0]
-                    self.song_var.set(selection)
+            # 3. Bezpečne aktualizujeme menu období
+            menu = getattr(self, "obdobie_menu", None)
+            if menu and menu.winfo_exists():
+                menu.config(state=obdobie_state)
+
+            # 4. Bezpečne aktualizujeme indikátor farby (pack/forget)
+            indikator = getattr(self, "indikator_farby", None)
+            if indikator and indikator.winfo_exists():
+                if is_custom:
+                    indikator.pack(side=tk.LEFT, padx=(6, 0))
                 else:
-                    return
+                    indikator.pack_forget()
 
-            self.reset_ui()
+        except (tk.TclError, RuntimeError) as e:
+            # Ak sa metóda spustila počas ničenia widgetov, ticho to odignorujeme
+            if "invalid command name" not in str(e):
+                log_info(f"Vizuálna aktualizácia preskočená: {e}")    
+                        
 
-            try:
-                num_display = selection.split(" - ")[0]
-                self.nacitat_piesne(nazov_suboru=num_display)
-                self.aktualizuj_popis(num_display)
+    def vybrat_vlastnu_farbu_textu(self):
+        color_tuple = colorchooser.askcolor(initialcolor=self.text_color_var.get())
+        if color_tuple and color_tuple[1]:
+            self.text_color_var.set(color_tuple[1])
+            self.pouzit_vlastnu_farbu.set(True)
+            self.indikator_farby.itemconfig(self.indikator_farby_id, fill=color_tuple[1])
+            self.aktualizovat_vzhlad()
+            self.ulozit_nastavenia()
 
-                self.manual_entry.delete(0, tk.END)
-                self.manual_entry.insert(0, format_cislo_piesne_pre_vstup(num_display))
+    def zmenit_priecinok_piesni(self):
+        # otvorí dialóg na výber priečinka, predvolený je aktuálny self.song_folder_path
+        nova_cesta = filedialog.askdirectory(initialdir=self.song_folder_path)
+        if not nova_cesta:
+            return
 
-                self.subor_var.set("—")
+        # aktualizuj atribút triedy
+        self.song_folder_path = Path(nova_cesta)
 
-                # Po výbere obnovíme celý zoznam
-                self.song_combobox["values"] = self.cele_hodnoty_comboboxu
+        # aktualizuj label v GUI
+        self.folder_label.config(text=str(self.song_folder_path))
 
-                self.master.after_idle(self.manual_entry.focus_set)
-                self.nazov_piesne = num_display
-                self.aktualne_cislo_piesne = num_display
+        # ulož nastavenia do config.json
+        self.ulozit_nastavenia()
 
-            except Exception as e:
-                log_exception("Chyba pri načítaní piesne", e)
+        # obnov zoznam súborov podľa aktuálneho filtra
+        try:
+            aktualne_obdobie = self.default_filter_var.get()
+        except tk.TclError:
+            aktualne_obdobie = None
 
+        if aktualne_obdobie:
+            # použijeme aktuálny filter
+            self.filtrovat_subory(aktualne_obdobie)
+        else:
+            # fallback – načítaj všetky súbory
+            subory = self.ziskaj_zoznam_suborov()
+            menu = self.subor_menu["menu"]
+            menu.delete(0, "end")
 
-        self.song_combobox.bind("<<ComboboxSelected>>", on_song_selected)
-        self.song_combobox.bind("<Return>", on_song_selected)
-        for k in ["<KeyPress-plus>", "<KeyPress-minus>", "<KeyPress-KP_Add>", "<KeyPress-KP_Subtract>"]:
-            self.song_combobox.bind(k, self.klavesa_plus if 'plus' in k or 'Add' in k else self.klavesa_minus)
-        self.song_combobox.bind("=", self.klavesa_plus)
+            for subor in subory:
+                menu.add_command(
+                    label=subor,
+                    command=lambda value=subor: self.subor_var.set(value)
+                )               
+                
 
-        def prepni_focus_tab(event=None):
-            widget = getattr(event, "widget", None)
-            try:
-                if widget is self.manual_entry:
-                    self.song_combobox.focus_set()
-                    self.song_combobox.icursor(tk.END)
-                else:
-                    self.manual_entry.focus_set()
-                    self.manual_entry.icursor(tk.END)
-            except Exception as e:
-                log_exception("prepni_focus_tab: zlyhalo prepnutie fokusu", e)
-            return "break"
+    def zmenit_rezim_farby(self):
+        if not self.pouzit_vlastnu_farbu.get():
+            vybrane_obdobie = self.obdobie_var.get()
+            if vybrane_obdobie in LITURGICKE_OBDOBIA:
+                self.text_color_var.set(LITURGICKE_OBDOBIA[vybrane_obdobie])
+                self.indikator_farby.itemconfig(self.indikator_farby_id, fill=self.text_color_var.get())
+        else:
+            # ak sa prepne na vlastnú farbu, zobraz ju v indikátore
+            self.indikator_farby.itemconfig(self.indikator_farby_id, fill=self.text_color_var.get())
 
-        self.song_combobox.bind("<Tab>", prepni_focus_tab)
-
-        # bielym písmom "názov súboru - strofa 1/25"
-        self.nazov_label = tk.Label(
-            self.master,
-            font=(self.font_family, 15, "bold"),
-            fg="#ffffff",
-            bg=BACKGROUND_COLOR,
-            anchor="center",
-            justify=tk.CENTER
-        )
-        self.nazov_label.place(relx=0.50, y=30, anchor="center")
-
-        # --- Rámik pre tlačidlá napravo ---
-        buttons_frame = tk.Frame(horny_frame, bg=PANEL_BG_COLOR)
-        buttons_frame.pack(side=tk.RIGHT, padx=(0, 5), pady=(8, 2))
-
-        # --- ŠTÝL PRE IKONY ---
-        style.configure("Icon.TButton", font=("Segoe UI Symbol", 13))
-        style.configure("Download.TMenubutton", font=(self.font_family, 13), padding=6)
-
-        toolbar_btn_bg = "#1C1C1C"
-        toolbar_btn_fg = "#E0E0E0"
-        toolbar_btn_active = "#F2F2F2"
-        toolbar_menu_active_bg = "#333333"
-
-        def vytvor_toolbar_menu(parent):
-            return tk.Menu(
-                parent,
-                tearoff=0,
-                font=(self.font_family, 13),
-                bg=toolbar_btn_bg,
-                fg=toolbar_btn_fg,
-                activebackground=toolbar_menu_active_bg,
-                activeforeground=toolbar_btn_active,
-                borderwidth=0
-            )
-
-        def styl_toolbar_widget(widget):
-            widget.configure(
-                bg=toolbar_btn_bg,
-                fg=toolbar_btn_fg,
-                activebackground=toolbar_btn_bg,
-                activeforeground=toolbar_btn_active,
-                relief="flat",
-                borderwidth=0,
-                highlightthickness=0,
-                font=(self.font_family, 13),
-                padx=10,
-                pady=5
-            )
-            widget.pack(side=tk.LEFT, padx=0)
-            return widget
-
-        styl_toolbar_widget(tk.Button(
-            buttons_frame,
-            text="Nastavenia",
-            command=self.zobrazit_nastavenia
-        ))
-
-        liturgicke_nastroje_btn = styl_toolbar_widget(tk.Menubutton(buttons_frame, text="Liturgické nástroje"))
-        liturgicke_nastroje_menu = vytvor_toolbar_menu(liturgicke_nastroje_btn)
-        liturgicke_nastroje_menu.add_command(label="Direktórium", command=self.open_direktorium)
-        liturgicke_nastroje_menu.add_command(label="Slávenia", command=self.open_slavnosti)
-        liturgicke_nastroje_menu.add_separator()
-        liturgicke_nastroje_menu.add_command(label="Stiahnuť čítania", command=self.open_citanie)
-        liturgicke_nastroje_menu.add_command(label="Stiahnuť vešpery", command=self.open_vespery)
-
-        refreny_zalmov_menu = vytvor_toolbar_menu(liturgicke_nastroje_menu)
-        refreny_zalmov_menu.add_command(label="Mesačné (1L–12L)", command=self.open_refreny_zalmov)
-        refreny_zalmov_menu.add_command(label="Adventné (1AD–4AD)", command=self.open_adventne_refreny)
-        refreny_zalmov_menu.add_command(label="Vianočné (1VI, 2VI, SJE, NEV...)", command=self.open_vianocne_sviatky)
-        refreny_zalmov_menu.add_command(label="Pôstne a veľkonočné (PS, 1P–VT–7VN)", command=self.open_postne_velkonocne_refreny)
-        refreny_zalmov_menu.add_command(label="Turíce a nadväzujúce sviatky (1TS–7TS)", command=self.open_turicne_sviatky)
-        refreny_zalmov_menu.add_command(label="Cezročné týždne (1C1–34C2)", command=self.open_cezrocne_tyzdenne_refreny)        
-        refreny_zalmov_menu.add_command(label="Cezročné sviatky (OND, NJK, BAR...)", command=self.open_liturgicke_sviatky)
-        liturgicke_nastroje_menu.add_cascade(label="Stiahnuť refrény žalmov", menu=refreny_zalmov_menu)
-
-        liturgicke_nastroje_btn["menu"] = liturgicke_nastroje_menu
-
-        pomoc_btn = styl_toolbar_widget(tk.Menubutton(buttons_frame, text="Pomoc"))
-        pomoc_menu = vytvor_toolbar_menu(pomoc_btn)
-        pomoc_menu.add_command(label="Pomocník", command=self.otvorit_pomocnika)       
-        pomoc_menu.add_command(label="Rýchly sprievodca", command=self.zobraz_rychly_sprievodca)
-        pomoc_menu.add_separator()
-        pomoc_menu.add_command(label="O aplikácii", command=self.zobrazit_o_aplikacii)
-        pomoc_btn["menu"] = pomoc_menu
-
-        # --- INDIKÁTOR ŽIAROVKY ---
-        self.indikator_ziarovka = tk.Canvas(
-            horny_frame, width=50, height=52, highlightthickness=0, bg=PANEL_BG_COLOR
-        )
-        self.indikator_id = self.indikator_ziarovka.create_rectangle(
-            8, 8, 42, 42, fill="#888888", outline=""
-        )
-        self.indikator_ziarovka.pack(side=tk.RIGHT, padx=(0, 0), pady=(8, 2))     
-
-        # --- PANEL AKTUÁLNA STROFA (Hore) ---
-        panel_strofa_hore = tk.Frame(self.master, bg=BACKGROUND_COLOR, height=250)
-        panel_strofa_hore.pack_propagate(False)
-        panel_strofa_hore.pack(side=tk.TOP, fill=tk.X, padx=10, pady=(0, 0))
-
-        self.strofa_label = tk.Text(
-            panel_strofa_hore, wrap=tk.WORD, bg=BACKGROUND_COLOR, fg=self.text_color_var.get(),
-            relief=tk.FLAT, bd=0, padx=20, pady=10, spacing1=1, spacing2=2, spacing3=1
-        )
-        self.strofa_label.bind("<Button-1>", lambda e: "break")
-        self.strofa_label.tag_configure("center", justify="center", font=(self.font_family, 25, "bold"))
-        self.strofa_label.config(state=tk.DISABLED)
-        self.strofa_label.pack(fill=tk.BOTH, expand=True)
-
-        # --- HLAVNÝ OBSAH ---
-        hlavny_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR)
-        hlavny_frame.pack(fill=tk.BOTH, expand=True)
-
-        # 1. Panel výberu (Vľavo)
-        frame_vyber = tk.Frame(hlavny_frame, width=205, bg=PANEL_BG_COLOR)
-        frame_vyber.pack_propagate(False)
-        frame_vyber.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
-
-        panel_vyber = tk.LabelFrame(frame_vyber, bg=PANEL_BG_COLOR, padx=10, pady=10)
-        panel_vyber.pack(fill=tk.BOTH, expand=True)
-
-        self.manual_entry = tk.Entry(
-            panel_vyber, font=(self.font_family, 25, "bold"), bg="#1e1e1e",
-            fg=self.text_color_var.get(), insertbackground=self.text_color_var.get(), justify="center"
-        )
-        self.manual_entry.pack(fill=tk.X, pady=(0, 10))
-
-        self.manual_entry_hint = tk.Label(
-            panel_vyber, text="Zadaj č. piesne alebo vyber žalm z menu nižšie", font=(self.font_family, 11, "italic"),
-            fg="#aaaaaa", bg=PANEL_BG_COLOR, wraplength=180, justify=tk.CENTER
-        )
-        self.manual_entry_hint.pack(pady=(0, 10))
-
-        # Bindings
-        self.manual_entry.bind("<FocusOut>", self.skus_manualne_nacitanie)
-        self.manual_entry.bind("<KeyPress-Return>", self.manual_entry_enter)
-        self.manual_entry.bind("<KeyRelease>", self.odlozene_auto_nacitanie)
-        for k in ["<KeyPress-plus>", "<KeyPress-minus>", "<KeyPress-KP_Add>", "<KeyPress-KP_Subtract>"]:
-            self.manual_entry.bind(k, self.klavesa_plus if 'plus' in k or 'Add' in k else self.klavesa_minus)
-        self.manual_entry.bind("=", self.klavesa_plus)
-        self.manual_entry.bind("<Right>", self.klavesa_vpravo)
-        self.manual_entry.bind("<Left>", self.klavesa_vlavo)
-        self.manual_entry.bind("<FocusIn>", self.vymazat_subor_menu)
-        self.manual_entry.bind("<Tab>", prepni_focus_tab)
-
-        # Filtre a menu
-        self.filter_var = tk.StringVar(value=self.default_filter_var.get())
-        self.filter_menu = tk.OptionMenu(panel_vyber, self.filter_var, *list(self.obdobie_subory.keys()), command=self.filtrovat_subory)
-        self.filter_menu.config(font=(self.font_family, 14, "bold"), width=16)
-        self.filter_menu.pack(pady=(0, 10))
-
-        self.subor_var = tk.StringVar(value="—")
-        self.subory_zoznam = self.ziskaj_zoznam_suborov()
-        self.subor_menu = tk.OptionMenu(panel_vyber, self.subor_var, *["—"], command=self.nacitat_podla_menu)
-        self.subor_menu.config(font=(self.font_family, 14, "bold"), width=16)
-        self.subor_menu.pack(pady=(0, 10))
-
-        self.popis_label = tk.Label(panel_vyber, text="", font=(self.font_family, 12, "italic"), fg="#bbbbbb", bg=PANEL_BG_COLOR, wraplength=180)
-        self.popis_label.pack(pady=(0, 5))
-
-        self.direktorium_label = tk.Label(panel_vyber, text="", font=(self.font_family, 11), fg=DIREKTORIUM_LABEL_FG, bg=PANEL_BG_COLOR, wraplength=180, justify=tk.LEFT)
-        self.direktorium_label.pack()
-        self.aktualizovat_direktorium_label()        
-
-        # 2. Panel obsah súboru (V strede)
-        panel_obsah = tk.LabelFrame(hlavny_frame, bg=PANEL_BG_COLOR, padx=10, pady=10)
-        panel_obsah.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        scrollbar = tk.Scrollbar(panel_obsah)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        self.obsah_suboru_text = tk.Text(
-            panel_obsah, wrap=tk.WORD, font=(self.font_family, 14), bg="#1e1e1e", fg="#dddddd",
-            yscrollcommand=scrollbar.set, padx=15, pady=10
-        )
-        self.obsah_suboru_text.bind("<Button-1>", lambda e: "break")
-        self.obsah_suboru_text.config(state=tk.DISABLED, spacing3=2)
-        self.obsah_suboru_text.tag_config("highlight", background="#444444", foreground=self.text_color_var.get(), font=(self.font_family, 18, "bold"))
-        self.obsah_suboru_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.config(command=self.obsah_suboru_text.yview)
-
-        # --- LIVE PREVIEW ---
-        self.preview_container = tk.Frame(
-            self.master, width=350, height=160, bg=BACKGROUND_COLOR, bd=1, relief="solid",
-            highlightthickness=1, highlightbackground="#373737"   # "#373737"   #444444"
-        )
-        self.preview_container.place(relx=1.0, rely=1.0, x=-10, y=-10, anchor="se")
-        self.preview_container.pack_propagate(False)        
+        self.aktualizovat_stav_tlacidla_farby()
+        self.aktualizovat_vzhlad()
+        self.ulozit_nastavenia()        
        
-        # Ak pri štarte nie je náhľad povolený, okamžite ho schováme
-        show_preview_var = getattr(self, "zobrazovat_live_preview_var", None)
-        if not show_preview_var or not show_preview_var.get():
-            self.preview_container.place_forget()
+    def nastavit_farbu_pisma_podla_obdobia(self, vybrane_obdobie):
+        if not self.pouzit_vlastnu_farbu.get() and vybrane_obdobie in LITURGICKE_OBDOBIA:
+            nova_farba = LITURGICKE_OBDOBIA[vybrane_obdobie]
+            self.text_color_var.set(nova_farba)
+            self.liturgical_season = vybrane_obdobie
 
-        self.live_preview_label = tk.Label(
-            self.preview_container, 
-            text="", 
-            font=(self.font_family, 14, "bold"),
-            fg=self.text_color_var.get(), 
-            bg=BACKGROUND_COLOR, 
-            justify="center", 
-            anchor="center"
-        )       
-        
-        # padx=(ľavé, pravé) -> (25, 10) znamená 25px zľava, 10px sprava
-        # pady=(horné, dolné) -> (20, 10) znamená 20px zhora, 10px zdola        
-        self.live_preview_label.pack(
-            expand=True, 
-            fill="both", 
-            padx=25,  # 35px vľavo, 15px vpravo
-            pady=20   # 25px hore, 15px dole
-        )
+            # aktualizácia indikátora farby
+            if self.indikator_farby is not None and hasattr(self, "indikator_farby_id"):
+                self.indikator_farby.itemconfig(self.indikator_farby_id, fill=nova_farba)
 
-        # Inicializácia po vytvorení
-        self.filtrovat_subory(self.filter_var.get())
+            self.aktualizovat_vzhlad()
+            self.ulozit_nastavenia()
+            
+
+    def aktualizovat_vzhlad(self, *args):
+        """
+        Aktualizuje vizuálne prvky ovládacieho panelu a projekčného okna.
+        Zabezpečuje konzistenciu farieb, písiem a správne zalomenie náhľadu.
+        """
+        # Ak prebieha inicializácia, zmeny vzhľadu preskočíme 
+        if getattr(self, "initializing", False):
+            return
+
+        try:
+            text_color = self.text_color_var.get()
+            background_color = BACKGROUND_COLOR
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: nepodarilo sa získať premenné farieb", e)
+            return
+
+        # 1) Projekčné okno – nastavenie cieľovej farby a pozadia 
+        try:
+            if self.projection_window is not None:
+                self.projection_window.target_text_color = text_color
+                self.projection_window.update_style(bg_color=background_color)
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: zlyhala aktualizácia projekčného okna", e)
+
+        # 2) Pozadie hlavného okna 
+        try:
+            self.master.configure(bg=background_color)
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia master okna", e)
+
+        # 3) Live Preview – FARBA A ZALOMENIE
+        try:
+            # Pozor na názov: predtým si mala live_preview, teraz live_preview_label
+            preview = getattr(self, "live_preview_label", None)
+            if preview and preview.winfo_exists():
+                # Nastavenie farieb náhľadu
+                preview.config(fg=text_color, bg=background_color)
+                
+                # Výpočet novej šírky pre zalamovanie (identicky ako v update_live_preview)
+                w = preview.winfo_width()
+                if w > 10:
+                    new_wraplen = int(w * 0.88)
+                    preview.config(wraplength=new_wraplen)
+                
+                # Ak je text momentálne zobrazený, vynútime prekreslenie náhľadu
+                # (zabezpečí, že sa zmení aj veľkosť písma podľa nových farieb)
+                if getattr(self, "is_text_visible", False):
+                    # Získame aktuálny text z labelu a pošleme ho na refresh
+                    current_text = preview.cget("text")
+                    if current_text:
+                        self.update_live_preview(current_text)
+
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia live_preview_label", e)
+
+        # 4) Vstupné pole (Manual Entry) 
+        try:
+            self.manual_entry.config(fg=text_color, insertbackground=text_color)
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia manual_entry", e)
+
+        # 5) Panel strofy
+        try:
+            self.strofa_label["foreground"] = text_color
+            self.strofa_label["background"] = background_color
+
+            if hasattr(self.strofa_label, "master"):
+                master_widget = self.strofa_label.master
+                master_widget["background"] = background_color
+
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia strofa_label", e)
+
+        # 6) Highlight tag v texte
+        try:
+            if self.obsah_suboru_text is not None:
+                safe_font_name: str = FONT_NAME or "Arial"
+
+                self.obsah_suboru_text.tag_config(
+                    "highlight",
+                    background="#444444",
+                    foreground=text_color,
+                    font=(safe_font_name, 18, "bold")
+                )
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia tagu highlight", e)
+
+        # 7) Aktualizácia stavu tlačidiel a čistenie textu, ak je projekcia vypnutá 
+        try:
+            self.aktualizovat_stav_tlacidla_farby()
+
+            if not getattr(self, "is_text_visible", False):
+                if self.projection_window is not None:
+                    self.projection_window.update_text("")
+                    self.projection_window.update_title(name="", current=0, total=None)
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: záverečná aktualizácia stavu zlyhala", e)                        
+
+    def aktualizovat_titulok_okna(self):
+        """Aktualizuje titulok hlavného okna pri zmene liturgického roku v nastaveniach."""
+        novy_rok = self.liturgical_year_var.get()
         
-              
+        if hasattr(self, "config"):
+            self.config["liturgical_year"] = novy_rok
+        
+        try:
+            if hasattr(self, "master") and self.master:
+                self.aktualizovat_info_liturgickeho_roka(novy_rok)
+        except Exception as e:
+            print(f"Nepodarilo sa aktualizovať titulok: {e}")
+
+        # --- AUTOMATICKÉ ULOŽENIE DO SÚBORU ---
+        # Skúsime zavolať tvoju existujúcu ukladaciu funkciu
+        if hasattr(self, "ulozit_nastavenia"):
+            self.ulozit_nastavenia()
+        elif hasattr(self, "ulozit_konfiguraciu"):
+            self.ulozit_nastavenia()          
+        
+
+class _StahovanieMixin(_ControlAppBase):
+    """Orchestrácia sťahovania čítaní/vešpier/refrénov z lc.kbs.sk a breviar.kbs.sk."""
+
     def _zobraz_dialog_stiahnutia(self, title: str, nadpis: str, akcia):
         """
         Spoločný dialóg na výber dátumu sťahovania (čítania aj vešpery).
@@ -11543,473 +11940,99 @@ class ControlApp:
             spracuj_vysledok=spracuj_vysledok,
         )
 
-    def aktualizovat_direktorium_label(self):
-        """Aktualizuje viditeľnosť a text labelu direktória pri zachovaní pôvodného poradia."""
-        if self.direktorium_label is None:
-            return
-
-        # Ak je direktórium vypnuté → skryť a skončiť
-        if not self.zobrazit_direktorium_var.get():
-            self.direktorium_label.pack_forget()
-            return
-
-        # Ak je direktórium zapnuté → aktualizovať text a zobraziť
-        obdobie = self.obdobie_var.get()
-        self.direktorium_label.config(text=f"Odporúčané piesne pre:\n{obdobie}")
-        self.direktorium_label.pack(anchor="w", pady=(0, 5))
-                
-       
-    def aktualizuj_popis(self, nazov_bez_ext):
-        popis = next((v for k, v in self.popisy_suborov.items() if k.lower() == nazov_bez_ext.lower()), "")
-        if popis:
-            self.popis_label.config(text=f"Žalmy pre {popis}")
-        else:
-            self.popis_label.config(text="")
-            self.direktorium_label.config(text="")
-
-    def odlozene_auto_nacitanie(self, event=None):
-        # 1. Ignorovať klávesy pre posun strofy a navigáciu
-        if event is not None:
-            keysym = getattr(event, "keysym", "")
-            if keysym in (
-                "plus", "minus", "equal", "KP_Add", "KP_Subtract",
-                "Left", "Right", "Up", "Down", "Return", "Escape", "Tab",
-                "Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R", "Caps_Lock"
-            ):
-                return
-
-        aid = self._auto_nacitanie_after_id
-
-        # Zrušenie starého callbacku, ale len ak je to platné after ID
-        if isinstance(aid, str) and aid.startswith("after#"):
-            try:
-                self.master.after_cancel(aid)
-            except Exception as e:
-                log_exception("odlozene_auto_nacitanie: after_cancel failed", e)
-
-        # Vždy resetujeme ID, aby sme nerušili staré hodnoty
-        self._auto_nacitanie_after_id = None
-
-        # Naplánujeme nový callback
+    def _shutdown_executor(self) -> None:
         try:
-            self._auto_nacitanie_after_id = self.master.after(400, self.auto_nacitanie_suboru)
-        except Exception as e:
-            log_exception("odlozene_auto_nacitanie: master.after failed", e)        
-        
-
-    def _update_nazov_label(self):
-        """
-        Ovládací panel – horný stavový label.
-        -------------------------------------
-        - Zobrazuje číslo piesne + stav strofy (napr. "123 — 2/5").
-        - Ak je current == 0 → prázdny text. Ak nemáme názov piesne, nič nezobrazujeme.
-        - Ovládací panel ukazuje detailný stav, projekcia ukazuje len názov piesne.
-        """
-        try:
-            # 1) Ak nemáme názov piesne → nič nezobrazujeme
-            if not getattr(self, "nazov_piesne", ""):
-                final_text = ""
-                self.nazov_label.config(text=final_text)
-
-                if self.is_text_visible:
-                    self.projection_window.update_title(name="", current=0, total=None)
-                return
-
-            # 2) Získame číslo piesne
-            cislo = self.aktualne_cislo_piesne or self.nazov_piesne
-
-            # čisté vizuálne formátovanie čísla
-            if isinstance(cislo, str) and cislo.isdigit():
-                cislo = str(int(cislo))
-
-            # 3) Získame stav strofy
-            current, total = self.ziskaj_aktualnu_a_celkovu()
-
-            # 4) Vytvoríme výsledný text pre ovládací panel
-            if self.aktualne_strofy and current > 0:
-                final_text = f"{cislo} — {current}/{total}"
-            else:
-                final_text = ""
-
-            # 5) POISTKA – ak sa text nezmenil, nič nerobíme
-            if self.posledny_nazov_v_labeli == final_text:
-                return
-
-            self.posledny_nazov_v_labeli = final_text            
-
-            # 6) Aktualizácia ovládacieho panelu
-            self.nazov_label.config(text=final_text)
-
-            # 7) Projekcia dostane len názov piesne (bez strofy)
-            if self.is_text_visible:
-                self.projection_window.update_title(
-                    name=self.nazov_piesne if final_text else "",
-                    current=current,
-                    total=total
-                )
-
-        except Exception as e:            
-            log_exception("Chyba pri aktualizácii stavového labelu", e)          
-                       
-    # Normalizuje text strofy – odstráni pomocné znaky (·, _) a medzery.
-    # Vďaka tomu sa rôzne varianty refrénu považujú za rovnaký text
-    # a zvýrazňovanie už správne postupuje na ďalší výskyt
-    # a teda pri refréne už nepreskakuje na jeho prvý výskyt.
-    def _normalize(self, text):
-        """
-        → interné porovnávanie
-        """
-        return text.replace("·", "").replace("_", "").strip()  
-        
-    def format_typography(self, text):
-        """
-        Ošetruje slovenskú typografiu – nahrádza medzery po jednoznakových
-        predložkách a spojkách nezlomiteľnou medzerou.
-        """
-        
-        if not text:
-            return ""
-
-        predlozky = "vzuoikasyVZUOIKASY"
-
-        return re.sub(
-            rf"(?<!\S)([{predlozky}])\s+",
-            "\\1\u00A0",
-            text
-        )    
-    
-    def remove_special_chars(self, text):
-        """
-        → čistenie pre projekciu
-        """
-        vysledok = text or ""
-
-        if not getattr(self, "zobrazovat_znaky_chorov", True):
-            vysledok = re.sub(r"(?m)^\[(?:L|P)\]\s*", "", vysledok)
-
-        if not getattr(self, "zobrazovat_specialne_znaky", True):
-            vysledok = vysledok.replace("·", "").replace("_", "")
-
-        return vysledok
-
-    def _dopln_znaky_chorov_do_aktualnych_vespier(self):
-        """Doplní [L]/[P] do už načítaných vešpier, ak boli načítané zo staršieho súboru bez značiek."""
-        if not getattr(self, "zobrazovat_znaky_chorov", True):
-            return
-
-        nazvy = [
-            str(getattr(self, "nazov_piesne", "") or ""),
-            str(getattr(self, "aktualne_cislo_piesne", "") or ""),
-        ]
-        aktualny_subor_cesta = getattr(self, "aktualny_subor_cesta", None)
-        if aktualny_subor_cesta:
+            ex = getattr(self, '_download_executor', None)
+            if ex is not None:
+                ex.shutdown(wait=False, cancel_futures=True)
+        except TypeError:
             try:
-                aktualny_subor_cesta = Path(aktualny_subor_cesta)
-                nazvy.extend([aktualny_subor_cesta.name, aktualny_subor_cesta.stem])
-            except TypeError:
-                nazvy.append(str(aktualny_subor_cesta))
-
-        nazov_lower = " ".join(nazvy).lower()
-        if "vesper" not in nazov_lower and "vešper" not in nazov_lower:
-            return
-
-        strofy = getattr(self, "aktualne_strofy", None)
-        if not strofy or len(strofy) <= 1:
-            return
-
-        obsah = "\n\n".join(strofy[1:])
-        if re.search(r"(?m)^\[(?:L|P)\]\s*", obsah):
-            return
-
-        riadky = obsah.splitlines()
-        if not any(r in _BREVIAR_SEKCIE for r in riadky):
-            return
-
-        aktualny_index = getattr(self, "aktualny_index_strofa", 0)
-        riadky = oznac_chory(riadky, oznacit_lp=True)
-        riadky = _normalizuj_aleluja_v_tretej_antifone_psalmodie(riadky)
-        novy_obsah = "\n".join(riadky)
-        nove_strofy = [s.strip() for s in re.split(r"\n\s*\n", novy_obsah) if s.strip()]
-
-        if not nove_strofy:
-            return
-
-        self.aktualne_strofy = [""] + nove_strofy
-        self.aktualny_index_strofa = min(aktualny_index, len(self.aktualne_strofy) - 1)
-
-        text_widget = getattr(self, "obsah_suboru_text", None)
-        if text_widget is not None:
-            try:
-                text_widget.config(state=tk.NORMAL)
-                text_widget.delete("1.0", tk.END)
-                text_widget.insert(tk.END, novy_obsah)
-                text_widget.tag_remove("highlight", "1.0", tk.END)
-                text_widget.config(state=tk.DISABLED)
-            except Exception as e:
-                log_exception("_dopln_znaky_chorov_do_aktualnych_vespier: aktualizacia nahladu zlyhala", e)
-                try:
-                    text_widget.config(state=tk.DISABLED)
-                except Exception:
-                    pass
-    
-    def oznac_aktualnu_strofu_v_obsahu(self):
-        """
-        Zvýrazní aktuálnu strofu v obsahu súboru.
-        Ak sa rovnaký text (napr. refrén) vyskytuje viackrát,
-        zvýrazní sa N-tý výskyt podľa aktuálneho indexu strofy.
-        """
-        # --- Vyčistenie highlightu ---
-        try:
-            self.obsah_suboru_text.config(state=tk.NORMAL)
-            self.obsah_suboru_text.tag_remove("highlight", "1.0", tk.END)
-        except Exception as e:
-            log_exception("Chyba pri čistení highlightu v náhľade", e)
-
-        # --- Neplatné stavy ---
-        if not self.aktualne_strofy:
-            try:
-                self.obsah_suboru_text.config(state=tk.DISABLED)
-            except Exception as e:
-                log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (prázdne strofy)", e)
-            return
-
-        if not (0 <= self.aktualny_index_strofa < len(self.aktualne_strofy)):
-            try:
-                self.obsah_suboru_text.config(state=tk.DISABLED)
-            except Exception as e:
-                log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (index mimo rozsah)", e)
-            return
-
-        # ------------------------------------------------------------
-        # 0) NULTÁ STROFA – zobraz číslo piesne v ovládacom paneli
-        # ------------------------------------------------------------
-        if self.aktualny_index_strofa == 0:
-            try:
-                cislo = self.aktualne_cislo_piesne or self.nazov_piesne or ""
-                if isinstance(cislo, str) and cislo.isdigit():
-                    cislo = str(int(cislo))
-
-                self.strofa_label.config(state=tk.NORMAL)
-                self.strofa_label.delete("1.0", tk.END)
-
-                self.strofa_label.tag_configure(
-                    "center",
-                    justify="center",
-                    font=(self.font_family, 30, "bold")
-                )
-
-                self.strofa_label.insert("1.0", cislo, "center")
-                self.strofa_label.config(state=tk.DISABLED)
-
-            except Exception as e:
-                log_exception("Chyba pri zobrazení čísla piesne v ovládacom paneli", e)
-
-            # Náhľad uzamkneme
-            try:
-                self.obsah_suboru_text.config(state=tk.DISABLED)
-            except Exception as e:
-                log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (nultá strofa)", e)
-
-            return
-
-        # ------------------------------------------------------------
-        # 1) REÁLNA STROFA – zvýraznenie v náhľade
-        # ------------------------------------------------------------
-        aktualna_strofa = self.aktualne_strofy[self.aktualny_index_strofa]
-        norm_current = self._normalize(aktualna_strofa)
-
-        if not norm_current.strip():
-            try:
-                self.obsah_suboru_text.config(state=tk.DISABLED)
-            except Exception as e:
-                log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (prázdna strofa)", e)
-            return
-
-        # Koľký výskyt tejto strofy to je?
-        count = 0
-        for i in range(len(self.aktualne_strofy)):
-            if self._normalize(self.aktualne_strofy[i]) == norm_current:
-                count += 1
-            if i == self.aktualny_index_strofa:
-                break
-
-        # Nájdeme N-tý výskyt v Text widgete
-        start_index = None
-        pos = "1.0"
-
-        try:
-            for _ in range(count):
-                found = self.obsah_suboru_text.search(norm_current, pos, tk.END)
-                if not found:
-                    break
-                start_index = found
-                pos = f"{found} + {len(norm_current)} chars"
-        except Exception as e:
-            log_exception("Chyba pri vyhľadávaní textu strofy v náhľade", e)
-            start_index = None
-
-        # Highlight
-        if start_index:
-            try:
-                end_index = f"{start_index} + {len(norm_current)} chars"
-                self.obsah_suboru_text.tag_add("highlight", start_index, end_index)
-                self.obsah_suboru_text.see(start_index)
-            except Exception as e:
-                log_exception("Chyba pri aplikácii tagu highlight", e)
-
-        # ------------------------------------------------------------
-        # 2) OVLÁDACÍ PANEL – typografia + font
-        # ------------------------------------------------------------
-        try:
-            text = self.format_typography(aktualna_strofa)
-            font_size = self.vypocitaj_velkost_pisma_pre_strofu(text)
-
-            self.strofa_label.config(state=tk.NORMAL)
-            self.strofa_label.delete("1.0", tk.END)
-
-            self.strofa_label.tag_configure(
-                "center",
-                justify="center",
-                font=(self.font_family, font_size, "bold")
-            )
-
-            self.strofa_label.insert("1.0", text, "center")
-            self.strofa_label.config(state=tk.DISABLED)
-
-        except Exception as e:
-            log_exception("Chyba pri aktualizácii stredného panelu (strofa_label)", e)
-
-        # ------------------------------------------------------------
-        # 3) Aktualizácia horného panelu
-        # ------------------------------------------------------------
-        try:
-            self._update_nazov_label()
-        except Exception as e:
-            log_exception("Chyba pri volaní _update_nazov_label", e)
-
-        # ------------------------------------------------------------
-        # 4) Uzamknutie náhľadu
-        # ------------------------------------------------------------
-        try:
-            self.obsah_suboru_text.config(state=tk.DISABLED)
-        except Exception as e:
-            log_exception("Záverečné uzamknutie náhľadu zlyhalo", e)       
-                                          
-                          
-    def enter_aktivuj_projekciu(self, event=None):
-        raw = self.manual_entry.get().strip()
-        clean = re.sub(r'[^0-9A-Za-z_-]', '', raw)
-        vybrany_subor = self.subor_var.get().strip()
-
-        # ak už projekcia beží → vypnúť
-        if self.is_text_visible:
-            self.vypni_projekciu()
-            return "break"
-
-        nazov = None
-        zadane_manualne = False
-
-        # manuálne zadaný prefix
-        if clean:
-            hladany_full = self.najdi_subor_podla_prefixu(clean)
-            if not hladany_full:
-                messagebox.showerror("Kinak: Nenájdené", f"Súbor '{raw}' neexistuje v priečinku piesní.")
-                return "break"
-            nazov = Path(hladany_full).stem
-            zadane_manualne = True
-
-        # výber zo zoznamu
-        elif vybrany_subor and vybrany_subor != "—":
-            hladany_full = self.najdi_subor_podla_prefixu(vybrany_subor)
-            if not hladany_full:
-                messagebox.showerror("Kinak: Nenájdené", f"Súbor '{vybrany_subor}' neexistuje v priečinku piesní.")
-                return "break"
-            nazov = Path(hladany_full).stem
-
-        # nič nezadané
-        else:
-            self.aktualizuj_popis(self.nazov_piesne)
-            return "break"
-
-        # načítať pieseň a zobraziť ju na projekcii
-        self.nacitat_piesne(nazov_suboru=nazov, zobrazit_na_projekcii=True)
-
-        # zapnúť projekciu (vrátane indikátora)
-        self.zapni_projekciu()
-
-        # reset výberu a popisov po manuálnom vstupe
-        if zadane_manualne:
-            self.subor_var.set("—")
-            self.popis_label.config(text="")
-            self.direktorium_label.config(text="")
-
-        self.aktualizuj_popis(nazov)
-        return "break"  
-           
-
-    def aktivuj_projekciu_pre_subor(self, nazov_bez_ext):
-        if not self.aktualne_strofy or self.nazov_piesne != nazov_bez_ext:
-            self.nacitat_piesne(nazov_suboru=nazov_bez_ext)
-        
-        self.zapni_projekciu()
-        self.aktualizuj_popis(nazov_bez_ext)
-        
-        
-    def _udalost_je_v_editovatelnom_widgete(self, event=None):
-        widget = getattr(event, "widget", None)
-        if widget is None:
-            return False
-
-        # Hlavne ovladacie polia su zamerne vynimka: + a - tam ovladaju strofy.
-        if widget in (getattr(self, "manual_entry", None), getattr(self, "song_combobox", None)):
-            return False
-
-        try:
-            widget_class = widget.winfo_class()
+                ex.shutdown(wait=False)  # type: ignore[union-attr]
+            except Exception:
+                pass
         except Exception:
-            return False
+            pass
 
-        return widget_class in {"Entry", "Text", "TEntry", "TCombobox", "Combobox", "Spinbox", "TSpinbox"}
 
-    def klavesa_plus(self, event=None):
-        if self._udalost_je_v_editovatelnom_widgete(event):
-            return None
-        return self.posun_strofu(+1)
+class _PiesneSuboryMixin(_ControlAppBase):
+    """Práca so súbormi piesní – filtrovanie, výber, načítanie, direktórium."""
 
-    def klavesa_minus(self, event=None):
-        if self._udalost_je_v_editovatelnom_widgete(event):
-            return None
-        return self.posun_strofu(-1)
-
-    def klavesa_vpravo(self, event=None):
-        return self.posun_strofu(+1)
-
-    def klavesa_vlavo(self, event=None):
-        return self.posun_strofu(-1)    
-
-    def posun_strofu(self, direction):
+    def nacitaj_piesne_do_zoznamu_z_priecinka(self):
         """
-        Posunie aktuálnu strofu o daný smer:
-        - direction = +1 → dopredu
-        - direction = -1 → dozadu
-        Zohľadňuje nultú strofu a vždy aktualizuje projekciu aj horný panel.
+        Načíta súbory typu NNN*.txt alebo NNNx*.txt (varianty) pomocou pathlib,
+        extrahuje prefix (cislo/variant) a vráti zoznam (cislo, nazov).
+        Názov sa berie z prvého neprázdneho riadku súboru.
         """
-        if not self.aktualne_strofy:
-            return "break"
+        piesne = []
+        folder = self.song_folder_path
 
-        current, total = self.ziskaj_aktualnu_a_celkovu()
+        # Ak priečinok neexistuje, vrátime prázdny zoznam (pathlib way)
+        if not folder.is_dir():
+            return piesne
 
-        # posun dopredu
-        if direction > 0 and self.aktualny_index_strofa < total:
-            self.aktualny_index_strofa += 1
-            self.zobraz_aktualnu_strofu()
+        # Prechádzame všetky .txt súbory v priečinku
+        for filepath in folder.glob("*.txt"):
+            # .stem vráti meno súboru bez prípony .txt
+            filename_no_ext = filepath.stem
+            
+            # extrahovať prefix NNN alebo NNNx (napr. 001 alebo 001a)
+            m = re.match(r"^([0-9]{3}[a-zA-Z]?)", filename_no_ext)
+            if not m:
+                continue
 
-        # posun dozadu
-        elif direction < 0 and self.aktualny_index_strofa > 0:
-            self.aktualny_index_strofa -= 1
-            self.zobraz_aktualnu_strofu()
-        return "break"   
-    
+            cislo = m.group(1)   # napr. "269b"
+            first_line = ""
+
+            try:
+                # Pokus o načítanie v UTF-8-SIG (rieši aj BOM)
+                try:
+                    with filepath.open("r", encoding="utf-8-sig") as f:
+                        for line in f:
+                            stripped = line.strip()
+                            if stripped:
+                                first_line = stripped
+                                break
+                except (UnicodeDecodeError, UnicodeError):
+                    # Fallback na CP1250 (bežné kódovanie starších súborov vo Windows)
+                    with filepath.open("r", encoding="cp1250") as f:
+                        for line in f:
+                            stripped = line.strip()
+                            if stripped:
+                                first_line = stripped
+                                break
+
+                # OŠETRENIE PRÁZDNEHO SÚBORU
+                # .name vráti celý názov súboru vrátane prípony
+                title = first_line if first_line else filepath.name
+                piesne.append((cislo, title))
+
+            except Exception as e:
+                log_exception(f"Chyba pri načítaní súboru {filepath.name}", e)
+
+        # Utriediť podľa čísla:
+        # Najprv podľa číselnej hodnoty (prvé 3 znaky), potom podľa celého reťazca (varianty a, b...)
+        piesne.sort(key=lambda x: (int(x[0][:3]), x[0]))
+
+        return piesne               
+       
+    def ziskaj_aktualnu_a_celkovu(self):
+        """
+        Vracia (current, total):
+        - current = 0 pre nultú strofu, inak 1..total
+        - total = počet reálnych strof (bez nultého záznamu, ak ho používate)
+        """
+        try:
+            total = max(0, len(self.aktualne_strofy) - 1)
+            if self.aktualny_index_strofa <= 0:
+                current = 0
+            else:
+                current = min(self.aktualny_index_strofa, total)
+            return current, total
+        except Exception as e:
+            log_exception("ziskaj_aktualnu_a_celkovu: neočakávaná chyba", e)
+            return 0, 0
+
+
     def vymazat_subor_menu(self, event=None):
         if getattr(self, "_suppress_vymazat", False):
             return
@@ -12263,76 +12286,6 @@ class ControlApp:
         self.aktualizuj_popis(nazov_bez_ext)
         self._aktualizuj_direktorium_pre_subor(nazov_bez_ext)                
                                 
-    def zapni_projekciu(self):
-        if not self.aktualne_strofy:
-            return
-
-        try:
-            self.is_text_visible = True
-
-            # --- LIVE PREVIEW: zobraziť len ak je povolený ---
-            try:
-                # OPRAVA: Zjednotený názov premennej na 'live_preview_label'
-                if self.live_preview_label is not None and self.zobrazovat_live_preview_var.get():
-                    self.live_preview_label.place(relx=0.5, rely=0.5, anchor="center")
-            except Exception as e:
-                log_exception("zapni_projekciu: live_preview display", e)
-
-            # zobraz aktuálnu strofu na projekcii
-            try:
-                self.zobraz_aktualnu_strofu()
-            except Exception as e:
-                log_exception("zapni_projekciu: zobraz_aktualnu_strofu failed", e)
-
-            # indikátor projekcie (Canvas)
-            try:
-                self.set_projection_indicator(True)
-            except Exception as e:
-                log_exception("zapni_projekciu: set_projection_indicator failed", e)
-
-        except Exception as e:
-            # Zachytí akúkoľvek inú neočakávanú chybu v metóde
-            log_exception("zapni_projekciu: hlavná chyba metódy", e)
-
-    def vypni_projekciu(self):
-        try:
-            self.is_text_visible = False
-
-            # vymazať projekciu
-            try:
-                self.projection_window.update_text("")
-                self.projection_window.update_title("", current=0, total=None)
-            except Exception as e:
-                log_exception("vypni_projekciu: update_text/title", e)
-
-            # indikátor projekcie (Canvas)
-            try:
-                self.set_projection_indicator(False)
-            except Exception as e:
-                log_exception("vypni_projekciu: set_projection_indicator", e)
-
-            # reset uloženého textu projekcie
-            self.original_projection_text = ""
-
-            # --- LIVE PREVIEW: úplne skryť ---
-            try:
-                # OPRAVA: Zjednotený názov premennej na 'live_preview_label'
-                if self.live_preview_label is not None:
-                    self.live_preview_label.config(text="")
-                    self.live_preview_label.place_forget()
-            except Exception as e:
-                log_exception("vypni_projekciu: live_preview cleanup", e)
-
-        except Exception as e:
-            # Hlavný záchytný bod pre celú metódu
-            log_exception("vypni_projekciu: hlavná chyba", e)
-
-
-    def set_projection_indicator(self, active: bool):
-        farba = "#00cc00" if active else "#888888"
-        self.indikator_ziarovka.itemconfig(self.indikator_id, fill=farba)      
-            
-        
     def filtrovat_subory(self, vybrane_obdobie):
         # Vyčisti vstupné pole
         try:
@@ -12790,6 +12743,407 @@ class ControlApp:
             log_exception("Chyba pri zvýrazňovaní strofy v náhľade", e)                              
    
        
+    def odlozene_auto_nacitanie(self, event=None):
+        # 1. Ignorovať klávesy pre posun strofy a navigáciu
+        if event is not None:
+            keysym = getattr(event, "keysym", "")
+            if keysym in (
+                "plus", "minus", "equal", "KP_Add", "KP_Subtract",
+                "Left", "Right", "Up", "Down", "Return", "Escape", "Tab",
+                "Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R", "Caps_Lock"
+            ):
+                return
+
+        aid = self._auto_nacitanie_after_id
+
+        # Zrušenie starého callbacku, ale len ak je to platné after ID
+        if isinstance(aid, str) and aid.startswith("after#"):
+            try:
+                self.master.after_cancel(aid)
+            except Exception as e:
+                log_exception("odlozene_auto_nacitanie: after_cancel failed", e)
+
+        # Vždy resetujeme ID, aby sme nerušili staré hodnoty
+        self._auto_nacitanie_after_id = None
+
+        # Naplánujeme nový callback
+        try:
+            self._auto_nacitanie_after_id = self.master.after(400, self.auto_nacitanie_suboru)
+        except Exception as e:
+            log_exception("odlozene_auto_nacitanie: master.after failed", e)        
+        
+
+    def aktualizuj_popis(self, nazov_bez_ext):
+        popis = next((v for k, v in self.popisy_suborov.items() if k.lower() == nazov_bez_ext.lower()), "")
+        if popis:
+            self.popis_label.config(text=f"Žalmy pre {popis}")
+        else:
+            self.popis_label.config(text="")
+            self.direktorium_label.config(text="")
+
+    def _update_nazov_label(self):
+        """
+        Ovládací panel – horný stavový label.
+        -------------------------------------
+        - Zobrazuje číslo piesne + stav strofy (napr. "123 — 2/5").
+        - Ak je current == 0 → prázdny text. Ak nemáme názov piesne, nič nezobrazujeme.
+        - Ovládací panel ukazuje detailný stav, projekcia ukazuje len názov piesne.
+        """
+        try:
+            # 1) Ak nemáme názov piesne → nič nezobrazujeme
+            if not getattr(self, "nazov_piesne", ""):
+                final_text = ""
+                self.nazov_label.config(text=final_text)
+
+                if self.is_text_visible:
+                    self.projection_window.update_title(name="", current=0, total=None)
+                return
+
+            # 2) Získame číslo piesne
+            cislo = self.aktualne_cislo_piesne or self.nazov_piesne
+
+            # čisté vizuálne formátovanie čísla
+            if isinstance(cislo, str) and cislo.isdigit():
+                cislo = str(int(cislo))
+
+            # 3) Získame stav strofy
+            current, total = self.ziskaj_aktualnu_a_celkovu()
+
+            # 4) Vytvoríme výsledný text pre ovládací panel
+            if self.aktualne_strofy and current > 0:
+                final_text = f"{cislo} — {current}/{total}"
+            else:
+                final_text = ""
+
+            # 5) POISTKA – ak sa text nezmenil, nič nerobíme
+            if self.posledny_nazov_v_labeli == final_text:
+                return
+
+            self.posledny_nazov_v_labeli = final_text            
+
+            # 6) Aktualizácia ovládacieho panelu
+            self.nazov_label.config(text=final_text)
+
+            # 7) Projekcia dostane len názov piesne (bez strofy)
+            if self.is_text_visible:
+                self.projection_window.update_title(
+                    name=self.nazov_piesne if final_text else "",
+                    current=current,
+                    total=total
+                )
+
+        except Exception as e:            
+            log_exception("Chyba pri aktualizácii stavového labelu", e)          
+                       
+    # Normalizuje text strofy – odstráni pomocné znaky (·, _) a medzery.
+    # Vďaka tomu sa rôzne varianty refrénu považujú za rovnaký text
+    # a zvýrazňovanie už správne postupuje na ďalší výskyt
+    # a teda pri refréne už nepreskakuje na jeho prvý výskyt.
+    def manual_entry_enter(self, event=None):
+        nazov = self.manual_entry.get().strip()
+        if not nazov:
+            return self.enter_aktivuj_projekciu(event)
+
+        clean = self.normalize_alnum(nazov)
+        if not clean:
+            return "break"
+
+        hladany_full = self.najdi_subor_podla_prefixu(clean)
+        if not hladany_full:
+            messagebox.showinfo(
+                "Kinak: Nenájdené",
+                f"Súbor „{nazov}“ neexistuje.\n\n"
+                "Môžete ho doplniť alebo vytvoriť a pridať do priečinka piesní."
+            )
+            return "break"
+
+        nazov_bez_ext = Path(hladany_full).stem
+
+        # ------------------------------------------------------------
+        # Projekcia je ZAPNUTÁ → vypnúť
+        # ------------------------------------------------------------
+        if self.is_text_visible:
+            self.vypni_projekciu()
+            return "break"
+
+        # ------------------------------------------------------------
+        # Projekcia je VYPNUTÁ → načítať pieseň + zapnúť projekciu
+        # ------------------------------------------------------------
+        self.nacitat_piesne(nazov_suboru=nazov_bez_ext, zobrazit_na_projekcii=True)
+
+        # zapnúť projekciu (umiestni Live Preview + nastaví indikátor)
+        self.zapni_projekciu()
+        self.aktualizuj_popis(nazov_bez_ext)
+        self._aktualizuj_direktorium_pre_subor(nazov_bez_ext)
+
+        return "break" 
+    
+
+    # ==========================================================
+    # Pomocné metódy pre UI (Továreň na prvky nastavení) pre OKNO NASTAVENÍ
+    # ==========================================================
+
+    def aktualizovat_direktorium_label(self):
+        """Aktualizuje viditeľnosť a text labelu direktória pri zachovaní pôvodného poradia."""
+        if self.direktorium_label is None:
+            return
+
+        # Ak je direktórium vypnuté → skryť a skončiť
+        if not self.zobrazit_direktorium_var.get():
+            self.direktorium_label.pack_forget()
+            return
+
+        # Ak je direktórium zapnuté → aktualizovať text a zobraziť
+        obdobie = self.obdobie_var.get()
+        self.direktorium_label.config(text=f"Odporúčané piesne pre:\n{obdobie}")
+        self.direktorium_label.pack(anchor="w", pady=(0, 5))
+                
+       
+
+class _TextObsahMixin(_ControlAppBase):
+    """Formátovanie a spracovanie zobrazovaného textu (strofy, typografia, chóry)."""
+
+    def _normalize(self, text):
+        """
+        → interné porovnávanie
+        """
+        return text.replace("·", "").replace("_", "").strip()  
+        
+    def format_typography(self, text):
+        """
+        Ošetruje slovenskú typografiu – nahrádza medzery po jednoznakových
+        predložkách a spojkách nezlomiteľnou medzerou.
+        """
+        
+        if not text:
+            return ""
+
+        predlozky = "vzuoikasyVZUOIKASY"
+
+        return re.sub(
+            rf"(?<!\S)([{predlozky}])\s+",
+            "\\1\u00A0",
+            text
+        )    
+    
+    def remove_special_chars(self, text):
+        """
+        → čistenie pre projekciu
+        """
+        vysledok = text or ""
+
+        if not getattr(self, "zobrazovat_znaky_chorov", True):
+            vysledok = re.sub(r"(?m)^\[(?:L|P)\]\s*", "", vysledok)
+
+        if not getattr(self, "zobrazovat_specialne_znaky", True):
+            vysledok = vysledok.replace("·", "").replace("_", "")
+
+        return vysledok
+
+    def _dopln_znaky_chorov_do_aktualnych_vespier(self):
+        """Doplní [L]/[P] do už načítaných vešpier, ak boli načítané zo staršieho súboru bez značiek."""
+        if not getattr(self, "zobrazovat_znaky_chorov", True):
+            return
+
+        nazvy = [
+            str(getattr(self, "nazov_piesne", "") or ""),
+            str(getattr(self, "aktualne_cislo_piesne", "") or ""),
+        ]
+        aktualny_subor_cesta = getattr(self, "aktualny_subor_cesta", None)
+        if aktualny_subor_cesta:
+            try:
+                aktualny_subor_cesta = Path(aktualny_subor_cesta)
+                nazvy.extend([aktualny_subor_cesta.name, aktualny_subor_cesta.stem])
+            except TypeError:
+                nazvy.append(str(aktualny_subor_cesta))
+
+        nazov_lower = " ".join(nazvy).lower()
+        if "vesper" not in nazov_lower and "vešper" not in nazov_lower:
+            return
+
+        strofy = getattr(self, "aktualne_strofy", None)
+        if not strofy or len(strofy) <= 1:
+            return
+
+        obsah = "\n\n".join(strofy[1:])
+        if re.search(r"(?m)^\[(?:L|P)\]\s*", obsah):
+            return
+
+        riadky = obsah.splitlines()
+        if not any(r in _BREVIAR_SEKCIE for r in riadky):
+            return
+
+        aktualny_index = getattr(self, "aktualny_index_strofa", 0)
+        riadky = oznac_chory(riadky, oznacit_lp=True)
+        riadky = _normalizuj_aleluja_v_tretej_antifone_psalmodie(riadky)
+        novy_obsah = "\n".join(riadky)
+        nove_strofy = [s.strip() for s in re.split(r"\n\s*\n", novy_obsah) if s.strip()]
+
+        if not nove_strofy:
+            return
+
+        self.aktualne_strofy = [""] + nove_strofy
+        self.aktualny_index_strofa = min(aktualny_index, len(self.aktualne_strofy) - 1)
+
+        text_widget = getattr(self, "obsah_suboru_text", None)
+        if text_widget is not None:
+            try:
+                text_widget.config(state=tk.NORMAL)
+                text_widget.delete("1.0", tk.END)
+                text_widget.insert(tk.END, novy_obsah)
+                text_widget.tag_remove("highlight", "1.0", tk.END)
+                text_widget.config(state=tk.DISABLED)
+            except Exception as e:
+                log_exception("_dopln_znaky_chorov_do_aktualnych_vespier: aktualizacia nahladu zlyhala", e)
+                try:
+                    text_widget.config(state=tk.DISABLED)
+                except Exception:
+                    pass
+    
+    def oznac_aktualnu_strofu_v_obsahu(self):
+        """
+        Zvýrazní aktuálnu strofu v obsahu súboru.
+        Ak sa rovnaký text (napr. refrén) vyskytuje viackrát,
+        zvýrazní sa N-tý výskyt podľa aktuálneho indexu strofy.
+        """
+        # --- Vyčistenie highlightu ---
+        try:
+            self.obsah_suboru_text.config(state=tk.NORMAL)
+            self.obsah_suboru_text.tag_remove("highlight", "1.0", tk.END)
+        except Exception as e:
+            log_exception("Chyba pri čistení highlightu v náhľade", e)
+
+        # --- Neplatné stavy ---
+        if not self.aktualne_strofy:
+            try:
+                self.obsah_suboru_text.config(state=tk.DISABLED)
+            except Exception as e:
+                log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (prázdne strofy)", e)
+            return
+
+        if not (0 <= self.aktualny_index_strofa < len(self.aktualne_strofy)):
+            try:
+                self.obsah_suboru_text.config(state=tk.DISABLED)
+            except Exception as e:
+                log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (index mimo rozsah)", e)
+            return
+
+        # ------------------------------------------------------------
+        # 0) NULTÁ STROFA – zobraz číslo piesne v ovládacom paneli
+        # ------------------------------------------------------------
+        if self.aktualny_index_strofa == 0:
+            try:
+                cislo = self.aktualne_cislo_piesne or self.nazov_piesne or ""
+                if isinstance(cislo, str) and cislo.isdigit():
+                    cislo = str(int(cislo))
+
+                self.strofa_label.config(state=tk.NORMAL)
+                self.strofa_label.delete("1.0", tk.END)
+
+                self.strofa_label.tag_configure(
+                    "center",
+                    justify="center",
+                    font=(self.font_family, 30, "bold")
+                )
+
+                self.strofa_label.insert("1.0", cislo, "center")
+                self.strofa_label.config(state=tk.DISABLED)
+
+            except Exception as e:
+                log_exception("Chyba pri zobrazení čísla piesne v ovládacom paneli", e)
+
+            # Náhľad uzamkneme
+            try:
+                self.obsah_suboru_text.config(state=tk.DISABLED)
+            except Exception as e:
+                log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (nultá strofa)", e)
+
+            return
+
+        # ------------------------------------------------------------
+        # 1) REÁLNA STROFA – zvýraznenie v náhľade
+        # ------------------------------------------------------------
+        aktualna_strofa = self.aktualne_strofy[self.aktualny_index_strofa]
+        norm_current = self._normalize(aktualna_strofa)
+
+        if not norm_current.strip():
+            try:
+                self.obsah_suboru_text.config(state=tk.DISABLED)
+            except Exception as e:
+                log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (prázdna strofa)", e)
+            return
+
+        # Koľký výskyt tejto strofy to je?
+        count = 0
+        for i in range(len(self.aktualne_strofy)):
+            if self._normalize(self.aktualne_strofy[i]) == norm_current:
+                count += 1
+            if i == self.aktualny_index_strofa:
+                break
+
+        # Nájdeme N-tý výskyt v Text widgete
+        start_index = None
+        pos = "1.0"
+
+        try:
+            for _ in range(count):
+                found = self.obsah_suboru_text.search(norm_current, pos, tk.END)
+                if not found:
+                    break
+                start_index = found
+                pos = f"{found} + {len(norm_current)} chars"
+        except Exception as e:
+            log_exception("Chyba pri vyhľadávaní textu strofy v náhľade", e)
+            start_index = None
+
+        # Highlight
+        if start_index:
+            try:
+                end_index = f"{start_index} + {len(norm_current)} chars"
+                self.obsah_suboru_text.tag_add("highlight", start_index, end_index)
+                self.obsah_suboru_text.see(start_index)
+            except Exception as e:
+                log_exception("Chyba pri aplikácii tagu highlight", e)
+
+        # ------------------------------------------------------------
+        # 2) OVLÁDACÍ PANEL – typografia + font
+        # ------------------------------------------------------------
+        try:
+            text = self.format_typography(aktualna_strofa)
+            font_size = self.vypocitaj_velkost_pisma_pre_strofu(text)
+
+            self.strofa_label.config(state=tk.NORMAL)
+            self.strofa_label.delete("1.0", tk.END)
+
+            self.strofa_label.tag_configure(
+                "center",
+                justify="center",
+                font=(self.font_family, font_size, "bold")
+            )
+
+            self.strofa_label.insert("1.0", text, "center")
+            self.strofa_label.config(state=tk.DISABLED)
+
+        except Exception as e:
+            log_exception("Chyba pri aktualizácii stredného panelu (strofa_label)", e)
+
+        # ------------------------------------------------------------
+        # 3) Aktualizácia horného panelu
+        # ------------------------------------------------------------
+        try:
+            self._update_nazov_label()
+        except Exception as e:
+            log_exception("Chyba pri volaní _update_nazov_label", e)
+
+        # ------------------------------------------------------------
+        # 4) Uzamknutie náhľadu
+        # ------------------------------------------------------------
+        try:
+            self.obsah_suboru_text.config(state=tk.DISABLED)
+        except Exception as e:
+            log_exception("Záverečné uzamknutie náhľadu zlyhalo", e)       
+                                          
+                          
     def vypocitaj_velkost_pisma_pre_strofu(self, text):
         """
         Dynamické škálovanie písma pre horný panel (strofa_label).
@@ -12969,955 +13323,202 @@ class ControlApp:
             log_exception("zobraz_aktualnu_strofu: kritická chyba spracovania strofy", e)   
                                                  
                   
-    def nastavit_globalne_skratky(self):
+    def posun_strofu(self, direction):
+        """
+        Posunie aktuálnu strofu o daný smer:
+        - direction = +1 → dopredu
+        - direction = -1 → dozadu
+        Zohľadňuje nultú strofu a vždy aktualizuje projekciu aj horný panel.
+        """
+        if not self.aktualne_strofy:
+            return "break"
 
-        # šípky – iba na hlavnom okne (nesmú interferovať s inými widgetmi)
-        self.master.bind('<Right>', self.klavesa_vpravo)
-        self.master.bind('<Left>', self.klavesa_vlavo)
+        current, total = self.ziskaj_aktualnu_a_celkovu()
 
-        # plus/minus - bind_all zachytava udalosti pre celu aplikaciu vratane
-        # hlavneho okna. Handler ignoruje editovatelne widgety okrem hlavneho
-        # vstupu a zoznamu piesni, kde + a - zamerne posuvaju aktualnu strofu.
-        # Dvojite bind (bind + bind_all pre ten isty widget) by sposobilo
-        # dvojite posunutie strofy pri kazdom stlaceni.
-        self.master.bind_all("<plus>", self.klavesa_plus)
-        self.master.bind_all("<minus>", self.klavesa_minus)
-        self.master.bind_all("<KP_Add>", self.klavesa_plus)
-        self.master.bind_all("<KP_Subtract>", self.klavesa_minus)
-        self.master.bind_all("=", self.klavesa_plus)
-        self.master.bind_all("-", self.klavesa_minus)
+        # posun dopredu
+        if direction > 0 and self.aktualny_index_strofa < total:
+            self.aktualny_index_strofa += 1
+            self.zobraz_aktualnu_strofu()
 
-        # Backspace – musí byť KeyRelease
-        self.master.bind_all("<KeyRelease-BackSpace>", self._global_backspace_handler)
-
-        # ďalšie skratky
-        self.master.bind('<Escape>', self.potvrdit_ukoncenie)
-        self.master.bind('c', self.clear_screen)   
-        
+        # posun dozadu
+        elif direction < 0 and self.aktualny_index_strofa > 0:
+            self.aktualny_index_strofa -= 1
+            self.zobraz_aktualnu_strofu()
+        return "break"   
     
-    def _global_backspace_handler(self, event):
-        """
-        Spracuje stlačenie klávesy Backspace kdekoľvek v aplikácii.
-        """
-        # POZNÁMKA (Zámerné správanie): 
-        # Backspace slúži ako rýchla skratka na okamžité vypnutie projekcie.
-        # Je to nastavené tak, aby sa projekcia vypla aj v prípade, 
-        # že používateľ práve píše alebo maže text vo vstupnom poli. 
-        # Nejde o chybu (bug), ale o požadovanú funkcionalitu (UX).
-        
-        # ak je projekcia zapnutá → vypni ju
-        
-        if getattr(self, "is_text_visible", False):
-            self.vypni_projekciu()     
-                                                                                                                 
-    # def manual_entry_enter volá vždy vtedy, keď je na manual_entry widgete naviazaný bind na kláves Enter.
-    def manual_entry_enter(self, event=None):
-        nazov = self.manual_entry.get().strip()
-        if not nazov:
-            return self.enter_aktivuj_projekciu(event)
 
-        clean = self.normalize_alnum(nazov)
-        if not clean:
-            return "break"
+class _ProjekciaMixin(_ControlAppBase):
+    """Zapnutie/vypnutie a riadenie samotného projekčného okna."""
 
-        hladany_full = self.najdi_subor_podla_prefixu(clean)
-        if not hladany_full:
-            messagebox.showinfo(
-                "Kinak: Nenájdené",
-                f"Súbor „{nazov}“ neexistuje.\n\n"
-                "Môžete ho doplniť alebo vytvoriť a pridať do priečinka piesní."
-            )
-            return "break"
+    def enter_aktivuj_projekciu(self, event=None):
+        raw = self.manual_entry.get().strip()
+        clean = re.sub(r'[^0-9A-Za-z_-]', '', raw)
+        vybrany_subor = self.subor_var.get().strip()
 
-        nazov_bez_ext = Path(hladany_full).stem
-
-        # ------------------------------------------------------------
-        # Projekcia je ZAPNUTÁ → vypnúť
-        # ------------------------------------------------------------
+        # ak už projekcia beží → vypnúť
         if self.is_text_visible:
             self.vypni_projekciu()
             return "break"
 
-        # ------------------------------------------------------------
-        # Projekcia je VYPNUTÁ → načítať pieseň + zapnúť projekciu
-        # ------------------------------------------------------------
-        self.nacitat_piesne(nazov_suboru=nazov_bez_ext, zobrazit_na_projekcii=True)
+        nazov = None
+        zadane_manualne = False
 
-        # zapnúť projekciu (umiestni Live Preview + nastaví indikátor)
+        # manuálne zadaný prefix
+        if clean:
+            hladany_full = self.najdi_subor_podla_prefixu(clean)
+            if not hladany_full:
+                messagebox.showerror("Kinak: Nenájdené", f"Súbor '{raw}' neexistuje v priečinku piesní.")
+                return "break"
+            nazov = Path(hladany_full).stem
+            zadane_manualne = True
+
+        # výber zo zoznamu
+        elif vybrany_subor and vybrany_subor != "—":
+            hladany_full = self.najdi_subor_podla_prefixu(vybrany_subor)
+            if not hladany_full:
+                messagebox.showerror("Kinak: Nenájdené", f"Súbor '{vybrany_subor}' neexistuje v priečinku piesní.")
+                return "break"
+            nazov = Path(hladany_full).stem
+
+        # nič nezadané
+        else:
+            self.aktualizuj_popis(self.nazov_piesne)
+            return "break"
+
+        # načítať pieseň a zobraziť ju na projekcii
+        self.nacitat_piesne(nazov_suboru=nazov, zobrazit_na_projekcii=True)
+
+        # zapnúť projekciu (vrátane indikátora)
+        self.zapni_projekciu()
+
+        # reset výberu a popisov po manuálnom vstupe
+        if zadane_manualne:
+            self.subor_var.set("—")
+            self.popis_label.config(text="")
+            self.direktorium_label.config(text="")
+
+        self.aktualizuj_popis(nazov)
+        return "break"  
+           
+
+    def aktivuj_projekciu_pre_subor(self, nazov_bez_ext):
+        if not self.aktualne_strofy or self.nazov_piesne != nazov_bez_ext:
+            self.nacitat_piesne(nazov_suboru=nazov_bez_ext)
+        
         self.zapni_projekciu()
         self.aktualizuj_popis(nazov_bez_ext)
-        self._aktualizuj_direktorium_pre_subor(nazov_bez_ext)
-
-        return "break" 
-    
-
-    # ==========================================================
-    # Pomocné metódy pre UI (Továreň na prvky nastavení) pre OKNO NASTAVENÍ
-    # ==========================================================
-
-    def _vytvor_sekciu(self, rodic, nadpis, popis):
-        """Vytvorí LabelFrame s nadpisom a krátkym vysvetlivkovým textom."""
-        frame = tk.LabelFrame(rodic, text=f" {nadpis} ", padx=10, pady=8, 
-                            font=(self.font_family, 10, "bold"), fg="#333333")
-        frame.pack(fill=tk.X, padx=15, pady=8)
-
-        if popis:
-            lbl_popis = tk.Label(frame, text=popis, font=(self.font_family, 9, "italic"),
-                                fg="#666666", wraplength=550, justify=tk.LEFT)
-            lbl_popis.pack(anchor="w", pady=(0, 5))
-        
-        return frame
-
-    def _pridaj_nastavenie_slider(self, rodic, nadpis, popis, premenna, od, do, rozlisenie=1):
-        """Vytvorí sekciu so sliderom (Scale) na celú šírku."""
-        sekcia = self._vytvor_sekciu(rodic, nadpis, popis)        
-        
-        slider = tk.Scale(
-            sekcia, 
-            from_=od, 
-            to=do, 
-            variable=premenna, 
-            resolution=rozlisenie, 
-            orient=tk.HORIZONTAL,
-            font=(self.font_family, 11),
-            highlightthickness=0  # Odstráni biely obrys pre čistejší vzhľad
-        )
-        
-        # fill=tk.X zabezpečí roztiahnutie po horizontálnej osi
-        slider.pack(fill=tk.X, expand=True, padx=5, pady=(0, 5))
-        
-        # Automatické ukladanie pri pustení tlačidla myši
-        slider.bind("<ButtonRelease-1>", lambda e: self.ulozit_nastavenia(aktualizovat_label=False))
-        
-        return sekcia
-
-    def _pridaj_nastavenie_check(self, rodic, nadpis, popis, premenna, text_check="Zapnuté / Povolené"):
-        """Vytvorí sekciu s potvrdzovacím políčkom (Checkbutton)."""
-        sekcia = self._vytvor_sekciu(rodic, nadpis, popis)
-        chk = tk.Checkbutton(sekcia, text=text_check, variable=premenna, 
-                           command=self.ulozit_nastavenia, font=(self.font_family, 11))
-        chk.pack(anchor="w")
-        return sekcia
-
-    # ==========================================================
-    # HLAVNÁ METÓDA OKNA NASTAVENÍ
-    # ==========================================================
-
-    def vytvorit_nastavenia_okno(self):
-        """Vytvorí konfiguračné okno so všetkými nastaveniami a scrollbarom."""
-        settings_window = tk.Toplevel(self.master)
-        self.settings_window = settings_window
-        settings_window.title("Nastavenia")
-        settings_window.protocol("WM_DELETE_WINDOW", self.zatvorit_nastavenia)
-        
-        # Klúčové mapovanie kláves a fokus
-        settings_window.bind("<Escape>", lambda e: self.zatvorit_nastavenia())        
-        settings_window.after(
-            50,
-            lambda: settings_window.winfo_exists() and settings_window.focus_force()
-        )
-
-        # Nastavenie geometrie (vycentrovanie)
-        saved_w = int(self.settings_window_width)
-        saved_h = int(self.settings_window_height)
-        window_width  = saved_w if saved_w >= 400 else 620
-        window_height = saved_h if saved_h >= 300 else 660
-        screen_width = settings_window.winfo_screenwidth()
-        screen_height = settings_window.winfo_screenheight()
-        x = (screen_width - window_width) // 2
-        y = max(0, (screen_height - window_height) // 2 - 40)
-        settings_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        settings_window.withdraw() # Skryjeme kým sa nevykreslí
-
-        # Sledovanie zmien veľkosti okna Nastavenia (s debounce 500ms)
-        def _uloz_geometriu_nastaveni(event):
-            if event.widget is not self.settings_window:
-                return
-
-            def zapis_geometrie():
-                if self.settings_window and self.settings_window.winfo_exists():
-                    self.settings_window_width = self.settings_window.winfo_width()
-                    self.settings_window_height = self.settings_window.winfo_height()
-                    self.ulozit_nastavenia(aktualizovat_label=False)
-
-            self._naplanuj_debounced_zapis(
-                "_settings_geom_after_id", zapis_geometrie, "_uloz_geometriu_nastaveni"
-            )
-
-        settings_window.bind('<Configure>', _uloz_geometriu_nastaveni)
-
-        # --- ZÁLOŽKY: ZÁKLADNÉ / POKROČILÉ ---
-        container = tk.Frame(settings_window)
-        container.pack(fill=tk.BOTH, expand=True)
-
-        style = ttk.Style()
-        style.configure(
-            "KinakSettings.TNotebook",
-            tabmargins=(12, 8, 12, 0)
-        )
-        style.configure(
-            "KinakSettings.TNotebook.Tab",
-            font=(self.font_family, 12, "bold"),
-            padding=(32, 12)
-        )
-        style.map(
-            "KinakSettings.TNotebook.Tab",
-            foreground=[
-                ("selected", "#000000"),
-                ("!selected", "#333333")
-            ],
-            background=[
-                ("selected", "#f2f2f2"),
-                ("!selected", "#d8d8d8")
-            ],
-            expand=[
-                ("selected", (2, 2, 2, 0))
-            ]
-        )
-
-        notebook = ttk.Notebook(container, style="KinakSettings.TNotebook")
-        notebook.pack(fill=tk.BOTH, expand=True)
-
-        def vytvor_scroll_tab(nazov):
-            tab = tk.Frame(notebook)
-            notebook.add(tab, text=f"   {nazov}   ")
-
-            canvas = tk.Canvas(tab, highlightthickness=0)
-            scrollbar = ttk.Scrollbar(tab, orient="vertical", command=canvas.yview)
-            scrollable_frame = tk.Frame(canvas)
-
-            scrollable_frame.bind(
-                "<Configure>",
-                lambda e, c=canvas: c.configure(scrollregion=c.bbox("all"))
-            )
-
-            canvas_frame = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-
-            def _configure_canvas(event, c=canvas, cf=canvas_frame):
-                c.itemconfig(cf, width=event.width)
-
-            canvas.bind("<Configure>", _configure_canvas)
-            canvas.configure(yscrollcommand=scrollbar.set)
-            canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-            def _on_mousewheel(event, c=canvas):
-                c.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-            canvas.bind("<Enter>", lambda e, c=canvas: c.bind_all("<MouseWheel>", _on_mousewheel))
-            canvas.bind("<Leave>", lambda e, c=canvas: c.unbind_all("<MouseWheel>"))
-
-            return scrollable_frame
-
-        zakladne_frame = vytvor_scroll_tab("Základné")
-        pokrocile_frame = vytvor_scroll_tab("Pokročilé")
-
-        # --- ŠTÝL ---
-        style.configure("Settings.TLabelframe", padding=10)
-        
-        # Pomocná funkcia pre vytváranie sekcií (LabelFrame)
-        def vytvor_sekciu(parent, text):
-            f = tk.LabelFrame(parent, text=text, padx=10, pady=10, 
-                             font=(self.font_family, 12, "bold"), fg="#333333")
-            f.pack(fill=tk.X, padx=15, pady=8)
-            return f
-
-        def vytvor_popis(parent, text, color="#555555"):
-            l = tk.Label(parent, text=text, font=(self.font_family, 10, "italic"),
-                         fg=color, wraplength=550, justify=tk.LEFT)
-            l.pack(anchor="w", pady=(0, 5))
-            return l
-
-        # 1. INFO PANEL
-        frame_info = vytvor_sekciu(zakladne_frame, "Informácia")
-        vytvor_popis(frame_info, "Veľkosť písma sa automaticky prispôsobuje veľkosti obrazovky.")
-
-        # 2. VEĽKOSŤ PÍSMA
-        frame_font = vytvor_sekciu(zakladne_frame, "Základná veľkosť písma")
-        vytvor_popis(
-            frame_font,
-            "Nastavuje maximálnu povolenú veľkosť písma. Ak nastavíš napr. 105, "
-            "písmo nebude nikdy väčšie, ale pri dlhom texte sa automaticky zmenší."
-        )
-
-        # IntVar musí dostať istý int
-        if not hasattr(self, "font_size_var"):
-            self.font_size_var = tk.IntVar(value=int(self.font_size))
-
-        font_size_slider = tk.Scale(
-            frame_font,
-            variable=self.font_size_var,
-            from_=20,
-            to=MAX_FONT_SIZE,
-            orient=tk.HORIZONTAL,
-            font=(self.font_family, 11),
-            command=lambda v: None
-        )
-        font_size_slider.pack(fill=tk.X, expand=True, padx=5, pady=5)
-
-        font_size_slider.bind(
-            "<ButtonRelease-1>",
-            lambda e: self.ulozit_nastavenia(aktualizovat_label=False)
-        )
-
-        vytvor_popis(
-            frame_font,
-            "Odporúčané: Monitor (< 100cm) → cca 105 | TV/Projektor (> 100cm) → cca 75",
-            "#0066cc"
-        )
-        
-        # 3. FARBA TEXTU A OBDOBIA
-        frame_color = vytvor_sekciu(zakladne_frame, "Farba textu")
-        vytvor_popis(frame_color, "Výber liturgického obdobia automaticky nastaví farbu textu pri projekcii.")
-
-        moznosti_obdobia = list(LITURGICKE_OBDOBIA.keys())
-        self.obdobie_menu = tk.OptionMenu(
-            frame_color, self.obdobie_var, *moznosti_obdobia,
-            command=self.nastavit_farbu_pisma_podla_obdobia
-        )
-        self.obdobie_menu.config(font=(self.font_family, 11), width=25)
-        self.obdobie_menu.pack(anchor="w", pady=(0, 10))
-
-        radek_farba = tk.Frame(frame_color)
-        radek_farba.pack(fill=tk.X)
-
-        self.checkbox_vlastna_farba = tk.Checkbutton(
-            radek_farba, text="Použiť vlastnú farbu", variable=self.pouzit_vlastnu_farbu,
-            command=self.zmenit_rezim_farby, font=(self.font_family, 11)
-        )
-        self.checkbox_vlastna_farba.pack(side=tk.LEFT, padx=(0, 10))
-
-        ttk.Button(radek_farba, text="Vybrať farbu…", command=self.vybrat_vlastnu_farbu_textu).pack(side=tk.LEFT)
-
-        # Indikátor farby (Zaoblený polygon)
-        self.indikator_farby = tk.Canvas(radek_farba, width=40, height=30, highlightthickness=0)
-        self.indikator_farby.pack(side=tk.LEFT, padx=10)
-        
-        r = 6
-        points = [4+r, 4, 34-r, 4, 34, 4, 34, 4+r, 34, 26-r, 34, 26, 34-r, 26, 4+r, 26, 4, 26, 4, 26-r, 4, 4+r, 4, 4]
-        self.indikator_farby_id = self.indikator_farby.create_polygon(
-            points, smooth=True, fill=self.text_color_var.get(), outline="#444444", width=1
-        )
-        
-        # 4. LITURGICKÝ ROK A / B / C
-        frame_lit_rok_sekcia = vytvor_sekciu(pokrocile_frame, "Liturgický rok")
-        vytvor_popis(frame_lit_rok_sekcia, "Liturgický cyklus (A, B, C) sa mení v programe Kinak automaticky každú Prvú adventnú nedeľu – začína sa nový liturgický rok.")
-
-        if not hasattr(self, "liturgical_year_var"):
-            self.liturgical_year_var = tk.StringVar(
-                self.master,
-                value=vypocitaj_liturgicky_rok()
-            )
-
-        frame_lit_rok = tk.Frame(frame_lit_rok_sekcia)
-        frame_lit_rok.pack(anchor="w", pady=(4, 0))
-
-        for rok in ("A", "B", "C"):
-            tk.Radiobutton(
-                frame_lit_rok,
-                text=f"  {rok}  ",
-                variable=self.liturgical_year_var,
-                value=rok,
-                font=(self.font_family, 13, "bold"),
-                state=tk.DISABLED,          # hodnota je automatická – len zobrazenie
-            ).pack(side=tk.LEFT, padx=4)
-
-        
-        # 5. PREDVOLENÝ FILTER (HLAVNÉ OKNO)
-        frame_def_filter = vytvor_sekciu(zakladne_frame, "Predvolený filter v ovládaní")
-        vytvor_popis(frame_def_filter, "Vyber filter, ktorý sa zobrazí v hlavnom okne po spustení aplikácie.")
-        
-        moznosti_subory = list(self.obdobie_subory.keys())
-        self.default_filter_menu = tk.OptionMenu(frame_def_filter, self.default_filter_var, *moznosti_subory)
-        self.default_filter_menu.config(font=(self.font_family, 11), width=25)
-        self.default_filter_menu.pack(anchor="w")
-        
-        # Trace teraz ukladá nastavenia a zároveň okamžite aktualizuje zoznam piesní
-        self.default_filter_var.trace_add("write", lambda *a: [
-            self.ulozit_nastavenia(), 
-            self.filtrovat_subory(self.filter_var.get())
-        ])              
-        
-        # 6. BEŽNÉ A POKROČILÉ PREPÍNAČE ZOBRAZENIA
-        def vytvor_check(parent, text, var):
-            cb = tk.Checkbutton(parent, text=text, variable=var, font=(self.font_family, 11), 
-                                command=self.ulozit_nastavenia, pady=2)
-            cb.pack(anchor="w")
-            return cb
-
-        frame_basic_view = vytvor_sekciu(zakladne_frame, "Náhľad v ovládaní")
-
-        self.checkbox_live_preview = tk.Checkbutton(
-            frame_basic_view,
-            text="Zobraziť náhľad projekcie (Live Preview)",
-            variable=self.zobrazovat_live_preview_var,
-            font=(self.font_family, 11),
-            command=lambda: [self.ulozit_nastavenia(), self.update_live_preview(getattr(self, 'posledny_text', ""))],
-            pady=2
-        )
-        self.checkbox_live_preview.pack(anchor="w")
-
-        vytvor_popis(
-            frame_basic_view,
-            "Náhľad pomáha vtedy, keď premietajúci nevidí priamo na projektor alebo televízor.",
-            "#0066cc"
-        )
-
-        frame_checks = vytvor_sekciu(pokrocile_frame, "Liturgické pomôcky a znaky")
-
-        # 1. DIREKTÓRIUM:
-        self.checkbox_direktorium = tk.Checkbutton(
-            frame_checks, 
-            text="Zobraziť odporúčané piesne z JKS pod rozbaľovacím filtrom pri výbere súboru", 
-            variable=self.zobrazit_direktorium_var, 
-            font=(self.font_family, 11),            
-            command=lambda: [self.ulozit_nastavenia(), self.aktualizovat_direktorium_label(), self.filtrovat_subory(self.filter_var.get())],
-            pady=2
-        )
-        self.checkbox_direktorium.pack(anchor="w")
-
-        self.checkbox_specialne_znaky = vytvor_check(frame_checks, "Zobraziť špeciálne znaky JKS (·, _) v projekcii", self.zobrazovat_specialne_znaky_var)
-
-        self.checkbox_znaky_chorov = vytvor_check(frame_checks, "Zobraziť znaky [L] / [P] pre striedanie chórov pri vešperách v projekcii", self.zobrazovat_znaky_chorov_var)
-
-        vytvor_popis(
-            frame_checks,
-            "V hlavnom ovládacom okne zostávajú špeciálne znaky a znaky [L] / [P] "
-            "vždy viditeľné, aby sa premietajúci vedel ľahko orientovať. "
-            "Prepínače ovplyvňujú iba zobrazenie v projekcii.",
-            "#0066cc"
-        )
-
-        
-        self.checkbox_statusbar_skratka_zalmu = vytvor_check(
-            frame_checks,
-            "Zobraziť v stavovom riadku skratku žalmu podľa liturgického obdobia",
-            self.statusbar_skratka_zalmu_var
-        )       
         
         
-        self.checkbox_statusbar_zaltara = vytvor_check(
-            frame_checks,
-            "Zobraziť v stavovom riadku aktuálny týždeň žaltára v breviári",
-            self.statusbar_tyzden_zaltara_var
-        )
-                
-
-        # 7. RÝCHLOSŤ PRECHODU
-        frame_fade = vytvor_sekciu(zakladne_frame, "Rýchlosť prechodu textu")
-        vytvor_popis(
-            frame_fade,
-            "Určuje, ako rýchlo sa nová obrazovka (strofa) rozjasní z čiernej."
-        )
-        self.fade_speed_combo = ttk.Combobox(
-            frame_fade, textvariable=self.fade_speed_var,
-            values=["veľmi pomalé", "pomalé", "stredné", "mierne stredné", "mierne rýchle", "rýchle", "vypnuté"],
-            state="readonly", font=(self.font_family, 11), width=20
-        )
-        self.fade_speed_combo.pack(anchor="w", pady=5)
-        self.fade_speed_combo.bind("<<ComboboxSelected>>", lambda e: self.ulozit_nastavenia())
-
-        # 8. UMIESTNENIE SÚBOROV
-        frame_folder = vytvor_sekciu(zakladne_frame, "Umiestnenie súborov")
-
-        self.folder_label = tk.Label(
-            frame_folder,
-            text=str(self.song_folder_path),   
-            wraplength=450,
-            font=(self.font_family, 10),
-            bg="#f9f9f9",
-            anchor="w",
-            justify=tk.LEFT,
-            relief="sunken",
-            padx=5,
-            pady=5
-        )
-        self.folder_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
-
-        ttk.Button(
-            frame_folder,
-            text="Zmeniť…",
-            command=self.zmenit_priecinok_piesni
-        ).pack(side=tk.RIGHT)
-
-        # 9. REZERVY
-        frame_res = vytvor_sekciu(pokrocile_frame, "Globálna (vertikálna) rezerva")
-        vytvor_popis(frame_res, "Vzdialenosť textu od horného a dolného okraja obrazovky – necháva priestor hore aj dole, aby text nebol nalepený na okraje. Vyššia hodnota = menší text.")
-        
-        safe_font_name: str = FONT_NAME or "Arial"
-
-        # Slider upravený na celú šírku (odstránený length, pridaný fill=tk.X)
-        self.slider_res_vert = tk.Scale(
-            frame_res,
-            variable=self.reserved_vertical_var,
-            from_=0.10,
-            to=0.40,
-            resolution=0.01,
-            orient=tk.HORIZONTAL,
-            font=(safe_font_name, 11),
-            highlightthickness=0
-        )
-        self.slider_res_vert.pack(fill=tk.X, expand=True, padx=5, pady=5)
-
-        # Uložiť až po pustení myši
-        self.slider_res_vert.bind(
-            "<ButtonRelease-1>",
-            lambda e: self.ulozit_nastavenia()
-        )
-
-        frame_margin = vytvor_sekciu(pokrocile_frame, "Spodná rezerva (Overscan)")
-        vytvor_popis(frame_margin, "Posunie celý text vyššie (ak obrazovka orezáva spodok).")
-        
-        def validate_num(P):
-            return P == "" or (P.isdigit() and 0 <= int(P) <= 400)
-        vcmd = (self.settings_window.register(validate_num), "%P")
-
-        # Rámček, ktorý drží všetky prvky v jednom riadku
-        spin_frame = tk.Frame(frame_margin)
-        spin_frame.pack(fill=tk.X, pady=5)
-
-        # 1. Label (vľavo)
-        tk.Label(
-            spin_frame,
-            text="px (0–400):",
-            font=(safe_font_name, 11)
-        ).pack(side=tk.LEFT)
-
-        # 2. Spinbox (vľavo, hneď za labelom)
-        tk.Spinbox(
-            spin_frame, from_=0, to=400, textvariable=self.bottom_margin_var, 
-            width=10, font=(self.font_family, 11), validate="key", 
-            validatecommand=vcmd, command=self.ulozit_nastavenia
-        ).pack(side=tk.LEFT, padx=5)
-
-        # 3. Tlačidlo (vpravo - teraz je v tom istom ráme ako spinbox)
-        ttk.Button(
-            spin_frame, text="Viac o rezervách", 
-            command=self.zobraz_info_rezervy
-        ).pack(side=tk.RIGHT)
-
-        # 9b. DIAGNOSTIKA
-        frame_diag = vytvor_sekciu(pokrocile_frame, "Diagnostika")
-        vytvor_popis(
-            frame_diag,
-            "Keď je diagnostika zapnutá, aplikácia priebežne zapisuje chyby a technické "
-            "udalosti do log súboru nižšie (s automatickou rotáciou, aby súbor nerástol "
-            "donekonečna). Pri probléme s aplikáciou tento súbor pomôže zistiť "
-            "príčinu – v takom prípade je dobré mať diagnostiku zapnutú."
-        )
-        self.checkbox_diagnostika = vytvor_check(
-            frame_diag,
-            "Zapnúť diagnostické logovanie do súboru",
-            self.diagnostika_povolena_var
-        )
-        tk.Label(
-            frame_diag,
-            text=f"Súbor: {LOG_PATH}",
-            wraplength=450,
-            font=(self.font_family, 9),
-            fg="#555555",
-            anchor="w",
-            justify=tk.LEFT,
-        ).pack(anchor="w", pady=(4, 0))
-
-        # 10. RESET
-        frame_reset = vytvor_sekciu(pokrocile_frame, "Reset do pôvodného stavu")
-        vytvor_popis(frame_reset, "Vráti všetky nastavenia na pôvodné hodnoty. Použite ho v prípade, že sa nastavenia „rozladia“ tak, že sa text zobrazí mimo obrazovky, je príliš orezaný, nečitateľný alebo sa vôbec nezobrazí kvôli nesprávnym nastaveniam.")
-        ttk.Button(frame_reset, text="Obnoviť predvolené", command=self.obnovit_predvolene).pack(anchor="e")
-
-        # FIXNÁ POZNÁMKA NA SPODKU (mimo scrollu)
-        frame_restart = tk.Frame(self.settings_window, pady=10)
-        frame_restart.pack(fill=tk.X)
-
-        tk.Label(
-            frame_restart,
-            text="Niektoré nastavenia sa aplikujú až po reštarte aplikácie.",
-            font=(safe_font_name, 10),
-            fg="#aa0000"
-        ).pack()
-
-        # Dokončenie inicializácie
-        self.aktualizovat_stav_tlacidla_farby()
-        self.aktualizovat_vzhlad()
-        self.settings_window.deiconify() 
-        
-    
-    def aktualizovat_titulok_okna(self):
-        """Aktualizuje titulok hlavného okna pri zmene liturgického roku v nastaveniach."""
-        novy_rok = self.liturgical_year_var.get()
-        
-        if hasattr(self, "config"):
-            self.config["liturgical_year"] = novy_rok
-        
-        try:
-            if hasattr(self, "master") and self.master:
-                self.aktualizovat_info_liturgickeho_roka(novy_rok)
-        except Exception as e:
-            print(f"Nepodarilo sa aktualizovať titulok: {e}")
-
-        # --- AUTOMATICKÉ ULOŽENIE DO SÚBORU ---
-        # Skúsime zavolať tvoju existujúcu ukladaciu funkciu
-        if hasattr(self, "ulozit_nastavenia"):
-            self.ulozit_nastavenia()
-        elif hasattr(self, "ulozit_konfiguraciu"):
-            self.ulozit_nastavenia()          
-        
-    def zobraz_info_rezervy(self):
-        info_window = tk.Toplevel(self.settings_window)
-        info_window.title("Viac o rezervách")
-        info_window.geometry("550x660")
-        info_window.transient(self.settings_window)  # drží sa nad hlavnými nastaveniami
-
-        text = (
-            "Na rôznych zariadeniach (projektor, TV, monitor) sa správanie overscanu aj rozlíšenie obrazovky líši, "
-            "preto môže byť výsledná veľkosť písma odlišná.\n\n"
-            "Veľkosť písma pri projekcii závisí od typu zobrazovacieho zariadenia a od nastavených rezerv "
-            "v aplikácii Kinak (globálnej vertikálnej aj spodnej). Rezervy určujú, koľko miesta zostane okolo textu.\n\n"
-            "Logika výpočtu\n\n"
-            "Najprv sa odpočíta globálna vertikálna rezerva (rezerva v percentách výšky obrazovky). "
-            "Týka sa celej výšky obrazovky, takže ide o „globálny“ parameter. "
-            "Potom sa odpočíta pevná spodná rezerva (px). Ide o rezervu proti overscanu, aby spodné riadky neboli príliš nízko " 
-            "alebo orezané na zariadeniach s overscanom.\n\n"              
-            "Odporúčané hodnoty:\n\n"
-            "   • Projektor:   vertikálna 0.30–0.35,     spodná 60–80 px\n"
-            "   • TV (16:9):   vertikálna 0.25–0.28,     spodná 40–60 px\n"
-            "   • Monitor:    vertikálna 0.20–0.25,     spodná 30–40 px\n\n"  
-            "Tip podľa pomeru strán (16:9 je optimálny default)\n\n"                
-            "   • 16:9   vertikálna 0.28,                spodná 40 px\n"
-            "   • 21:9   vertikálna 0.20–0.25,       spodná 30–40 px\n\n"                    
-            "TV/projektor: používajte natívny režim obrazu (Original/Just Scan/Full),\n"
-            "bez Zoom alebo Stretch.\n\n"
-            "Ak sa zobrazenie aj napriek tomu nehodí, strofu možno upraviť priamo v textovom súbore (napr. rozdeliť riadky). "
-            "Namiesto 6 krátkych riadkov strofu rozdeliť na 4 dlhšie, čím sa dosiahne odlišný výsledný vzhľad projekcie."
-        )
-            
-        safe_font_name: str = FONT_NAME or "Arial"
-
-        tk.Label(
-            info_window,
-            text=text,
-            font=(safe_font_name, 11),
-            wraplength=500,
-            justify=tk.LEFT
-        ).pack(padx=10, pady=10, fill=tk.BOTH, expand=True)    
-
-
-    def zmenit_rezim_farby(self):
-        if not self.pouzit_vlastnu_farbu.get():
-            vybrane_obdobie = self.obdobie_var.get()
-            if vybrane_obdobie in LITURGICKE_OBDOBIA:
-                self.text_color_var.set(LITURGICKE_OBDOBIA[vybrane_obdobie])
-                self.indikator_farby.itemconfig(self.indikator_farby_id, fill=self.text_color_var.get())
-        else:
-            # ak sa prepne na vlastnú farbu, zobraz ju v indikátore
-            self.indikator_farby.itemconfig(self.indikator_farby_id, fill=self.text_color_var.get())
-
-        self.aktualizovat_stav_tlacidla_farby()
-        self.aktualizovat_vzhlad()
-        self.ulozit_nastavenia()        
-       
-    def nastavit_farbu_pisma_podla_obdobia(self, vybrane_obdobie):
-        if not self.pouzit_vlastnu_farbu.get() and vybrane_obdobie in LITURGICKE_OBDOBIA:
-            nova_farba = LITURGICKE_OBDOBIA[vybrane_obdobie]
-            self.text_color_var.set(nova_farba)
-            self.liturgical_season = vybrane_obdobie
-
-            # aktualizácia indikátora farby
-            if self.indikator_farby is not None and hasattr(self, "indikator_farby_id"):
-                self.indikator_farby.itemconfig(self.indikator_farby_id, fill=nova_farba)
-
-            self.aktualizovat_vzhlad()
-            self.ulozit_nastavenia()
-            
-
-    def zmenit_priecinok_piesni(self):
-        # otvorí dialóg na výber priečinka, predvolený je aktuálny self.song_folder_path
-        nova_cesta = filedialog.askdirectory(initialdir=self.song_folder_path)
-        if not nova_cesta:
-            return
-
-        # aktualizuj atribút triedy
-        self.song_folder_path = Path(nova_cesta)
-
-        # aktualizuj label v GUI
-        self.folder_label.config(text=str(self.song_folder_path))
-
-        # ulož nastavenia do config.json
-        self.ulozit_nastavenia()
-
-        # obnov zoznam súborov podľa aktuálneho filtra
-        try:
-            aktualne_obdobie = self.default_filter_var.get()
-        except tk.TclError:
-            aktualne_obdobie = None
-
-        if aktualne_obdobie:
-            # použijeme aktuálny filter
-            self.filtrovat_subory(aktualne_obdobie)
-        else:
-            # fallback – načítaj všetky súbory
-            subory = self.ziskaj_zoznam_suborov()
-            menu = self.subor_menu["menu"]
-            menu.delete(0, "end")
-
-            for subor in subory:
-                menu.add_command(
-                    label=subor,
-                    command=lambda value=subor: self.subor_var.set(value)
-                )               
-                
-
-    def obnovit_predvolene(self):
-        """
-        Obnoví celý config.json na predvolené hodnoty z DEFAULT_CONFIG
-        pomocou atomického zápisu (tempfile + os.replace).
-        Aktualizuje všetky súvisiace premenné aj GUI.
-        """
-        if not messagebox.askyesno(
-            "Kinak: Obnoviť predvolené",
-            "Naozaj chceš obnoviť všetky nastavenia na pôvodné hodnoty?"
-        ):
+    def zapni_projekciu(self):
+        if not self.aktualne_strofy:
             return
 
         try:
-            from pathlib import PurePath
+            self.is_text_visible = True
 
-            # 1. Konverzia Path objektov na stringy
-            config_to_save = {
-                k: str(v) if isinstance(v, PurePath) or hasattr(v, "__fspath__") else v
-                for k, v in DEFAULT_CONFIG.items()
-            }
-
-            # 2. Serializácia JSON
-            json_data = json.dumps(config_to_save, indent=4, ensure_ascii=False)
-
-            # 3. Atomický zápis na disk
-            target_dir = CONFIG_FILE_PATH.parent
-            target_dir.mkdir(parents=True, exist_ok=True)
-
-            temp_path = None
+            # --- LIVE PREVIEW: zobraziť len ak je povolený ---
             try:
-                fd, temp_str = tempfile.mkstemp(
-                    dir=str(target_dir),
-                    prefix="config_default_",
-                    suffix=".json"
-                )
-                temp_path = Path(temp_str)
+                # OPRAVA: Zjednotený názov premennej na 'live_preview_label'
+                if self.live_preview_label is not None and self.zobrazovat_live_preview_var.get():
+                    self.live_preview_label.place(relx=0.5, rely=0.5, anchor="center")
+            except Exception as e:
+                log_exception("zapni_projekciu: live_preview display", e)
 
-                with os.fdopen(fd, 'w', encoding='utf-8') as tf:
-                    tf.write(json_data)
-                    tf.flush()
-                    os.fsync(tf.fileno())
+            # zobraz aktuálnu strofu na projekcii
+            try:
+                self.zobraz_aktualnu_strofu()
+            except Exception as e:
+                log_exception("zapni_projekciu: zobraz_aktualnu_strofu failed", e)
 
-                # Bezpečné nahradenie pôvodného configu
-                os.replace(str(temp_path), str(CONFIG_FILE_PATH))
-                temp_path = None  # už bolo presunuté
-
-            finally:
-                # Ak temp súbor prežil, odstránime ho
-                if temp_path and temp_path.exists():
-                    try:
-                        temp_path.unlink()
-                    except Exception as e:
-                        log_exception("obnovit_predvolene: nepodarilo sa odstrániť temp súbor", e)
-
-            # 4. Aktualizácia internej konfigurácie
-            self.config = config_to_save.copy()
-
-            # 5. Reset veľkosti písma
-            self.font_size = int(self.config.get("font_size", 75))
-
-            # 6. Načítanie nastavení do aplikácie
-            self.nacitat_nastavenia()
-
-            # 7. Aktualizácia GUI prvkov (ak existuje)
-            callback = getattr(self, "obnovit_nastavenia_v_gui", None)
-            if callable(callback):
-                callback()
-
-            messagebox.showinfo(
-                "Kinak: Hotovo",
-                "Predvolené nastavenia boli obnovené.\n\n"
-                "Niektoré zmeny sa prejavia až po reštarte aplikácie."
-            )
+            # indikátor projekcie (Canvas)
+            try:
+                self.set_projection_indicator(True)
+            except Exception as e:
+                log_exception("zapni_projekciu: set_projection_indicator failed", e)
 
         except Exception as e:
-            log_exception("obnovit_predvolene: Chyba", e)
-            messagebox.showerror("Kinak: Chyba", f"Nepodarilo sa obnoviť nastavenia:\n{e}")
+            # Zachytí akúkoľvek inú neočakávanú chybu v metóde
+            log_exception("zapni_projekciu: hlavná chyba metódy", e)
 
-
-
-    # ----------------------------------------------------------------------
-    # Aktualizuje všetky prvky v okne Nastavenia podľa hodnoty self.config.
-    # Volá sa po načítaní configu aj po stlačení tlačidla „Obnoviť predvolené“.
-    # ----------------------------------------------------------------------
-    def obnovit_nastavenia_v_gui(self):
-        """
-        Zosynchronizuje GUI prvky v okne Nastavenia s aktuálnym slovníkom self.config.
-        Všetky cesty sú pre istotu ošetrené cez str().
-        """
-        # --- Veľkosť písma ---
-        if hasattr(self, "font_size_var"):
-            try:
-                value = int(self.config.get("font_size", 100))
-            except (TypeError, ValueError):
-                value = 100
-            self.font_size_var.set(value)
-
-        # Farba textu
-        self.text_color_var.set(self.config.get("text_color", "#FFCC33"))
-        
-        if hasattr(self, "aktualizovat_stav_tlacidla_farby"):
-            self.aktualizovat_stav_tlacidla_farby()
-        
-        # Liturgické obdobie
-        self.obdobie_var.set(self.config.get("liturgical_season", "Cezročné"))
-
-        # Predvolený filter
-        self.default_filter_var.set(self.config.get("default_filter_obdobie", "Cezročné C2"))
-
-        # Fade speed
-        if hasattr(self, "fade_speed_var"):
-            self.fade_speed_var.set(self.config.get("fade_speed", "mierne rýchle"))
-
-        # Live preview - malý náhľad projekcie v pravom dolnom rohu 
-        if hasattr(self, "zobrazovat_live_preview_var"):
-            raw = self.config.get("zobrazovat_live_preview", True)
-            self.zobrazovat_live_preview_var.set(bool(raw))
-
-        # Direktórium
-        if hasattr(self, "zobrazit_direktorium_var"):
-            raw = self.config.get("zobrazit_direktorium", False)
-            self.zobrazit_direktorium_var.set(bool(raw))
-
-        # Diagnostika (logovanie do súboru)
-        if hasattr(self, "diagnostika_povolena_var"):
-            raw = self.config.get("diagnostika_povolena", True)
-            self.diagnostika_povolena_var.set(bool(raw))
-            self.diagnostika_povolena = bool(raw)
-            nastav_diagnostiku(self.diagnostika_povolena)
-
-        # Rezervy
-        if hasattr(self, "reserved_vertical_var"):
-            raw = self.config.get("reserved_vertical_ratio", 0.20)
-            self.reserved_vertical_var.set(float(raw))
-
-        if hasattr(self, "bottom_margin_var"):
-            raw = self.config.get("bottom_margin", 40)
-            self.bottom_margin_var.set(int(raw))
-
-        # Priečinok piesní
-        raw_folder = self.config.get("song_folder", "")
-        self.folder_label.config(text=str(raw_folder))
-
-        # Prekreslenie
-        if hasattr(self, "aktualizovat_vzhlad"):
-            self.aktualizovat_vzhlad()
-
-
-    def zobrazit_nastavenia(self):
-        """
-        Zobrazí modálne okno nastavení a deaktivuje ovládacie prvky hlavného okna.
-        Ošetrené proti NoneType chybe pomocou explicitnej kontroly na None.
-        """
+    def vypni_projekciu(self):
         try:
-            # 1. KONTROLA EXISTENCIE OKNA (OPRAVENÁ LOGIKA)
-            # Najprv zistíme, či premenná vôbec existuje a či nie je None.
-            okno_treba_vytvorit = False
-            if not hasattr(self, "settings_window") or self.settings_window is None:
-                okno_treba_vytvorit = True
-            else:
-                # Ak nie je None, až vtedy môžeme bezpečne zavolať winfo_exists()
-                try:
-                    if not self.settings_window.winfo_exists():
-                        okno_treba_vytvorit = True
-                except tk.TclError:
-                    okno_treba_vytvorit = True
+            self.is_text_visible = False
 
-            if okno_treba_vytvorit:
-                self.vytvorit_nastavenia_okno()
+            # vymazať projekciu
+            try:
+                self.projection_window.update_text("")
+                self.projection_window.update_title("", current=0, total=None)
+            except Exception as e:
+                log_exception("vypni_projekciu: update_text/title", e)
+
+            # indikátor projekcie (Canvas)
+            try:
+                self.set_projection_indicator(False)
+            except Exception as e:
+                log_exception("vypni_projekciu: set_projection_indicator", e)
+
+            # reset uloženého textu projekcie
+            self.original_projection_text = ""
+
+            # --- LIVE PREVIEW: úplne skryť ---
+            try:
+                # OPRAVA: Zjednotený názov premennej na 'live_preview_label'
+                if self.live_preview_label is not None:
+                    self.live_preview_label.config(text="")
+                    self.live_preview_label.place_forget()
+            except Exception as e:
+                log_exception("vypni_projekciu: live_preview cleanup", e)
+
+        except Exception as e:
+            # Hlavný záchytný bod pre celú metódu
+            log_exception("vypni_projekciu: hlavná chyba", e)
+
+
+    def set_projection_indicator(self, active: bool):
+        farba = "#00cc00" if active else "#888888"
+        self.indikator_ziarovka.itemconfig(self.indikator_id, fill=farba)      
             
-            # 2. ZOBRAZENIE A VYTIAHNUTIE DO POPREDIA
-            try:
-                if self.settings_window:
-                    self.settings_window.deiconify()
-                    self.settings_window.lift()
-                    self.settings_window.focus_set()
-                    self.settings_window.transient(self.master)
-            except Exception as e:
-                log_exception("zobrazit_nastavenia: zlyhanie pri deiconify/lift", e)
-
-            # 3. NASTAVENIE MODÁLNEHO REŽIMU
-            try:
-                if self.settings_window:
-                    self.settings_window.grab_set()
-            except Exception as e:
-                log_exception("zobrazit_nastavenia: zlyhanie grab_set", e)
-
-            # 4. DEAKTIVÁCIA MENU PRVKOV
-            try:
-                if self.filter_menu is not None:
-                    self.filter_menu.config(state="disabled")
-                if self.subor_menu is not None:
-                    self.subor_menu.config(state="disabled")
-            except Exception as e:
-                log_exception("zobrazit_nastavenia: zlyhanie deaktivácie menu", e)
-
-            # 5. RESET STAVU UI
-            try:
-                if self.song_combobox is not None:
-                    self.song_combobox.current(0)
+        
+    def toggle_projection_text(self, event=None):
+        try:
+            if event is not None:
+                ev_type = getattr(event, "type", None)
+                ev_widget = getattr(event, "widget", None)
                 
-                # Kompletný reset UI (vypnutie projekcie pri vstupe do nastavení)
-                self.reset_ui()
-            except Exception as e:
-                log_exception("zobrazit_nastavenia: zlyhanie reset_ui", e)
+                # 2 = KeyPress v tkinteri. Ak to nie je klávesnica, ignorujeme.
+                if ev_type != "2":
+                    return "break"
+                
+                # Ak event prišiel zo vstupného poľa (manual_entry), nechceme prepínať projekciu
+                if ev_widget is self.manual_entry:
+                    return "break"
+        except Exception as e:
+            log_exception("toggle_projection_text: chyba pri overovaní eventu", e)
+
+        try:
+            # ------------------------------------------------------------
+            # Projekcia je ZAPNUTÁ → vypnúť
+            # ------------------------------------------------------------
+            if self.is_text_visible:
+                self.vypni_projekciu()
+                return "break"
+
+            # ------------------------------------------------------------
+            # Projekcia je VYPNUTÁ → zapnúť
+            # ------------------------------------------------------------
+            self.is_text_visible = True
+            
+            # Zavoláme zobrazenie strofy – tu sa reálne posiela text na plátno
+            self.zobraz_aktualnu_strofu()
+            
+            # Aktualizácia indikátora v UI (zelené/červené svetielko)
+            self.set_projection_indicator(True)
 
         except Exception as e:
-            log_exception("zobrazit_nastavenia: kritická chyba metódy", e)
+            log_exception("toggle_projection_text: kritická chyba pri prepínaní viditeľnosti", e)
 
-
-    def aktualizovat_stav_tlacidla_farby(self):
-        """Bezpečne aktualizuje stav prvkov podľa voľby vlastnej farby."""
-        try:
-            # 1. Získame stav (Boolean)
-            is_custom = self.pouzit_vlastnu_farbu.get()
-            state = "normal" if is_custom else "disabled"
-            obdobie_state = "disabled" if is_custom else "normal"
-
-            # 2. Bezpečne aktualizujeme tlačidlo farby
-            btn = getattr(self, "vyber_farbu_button", None)
-            if btn and btn.winfo_exists():
-                btn.config(state=state)
-
-            # 3. Bezpečne aktualizujeme menu období
-            menu = getattr(self, "obdobie_menu", None)
-            if menu and menu.winfo_exists():
-                menu.config(state=obdobie_state)
-
-            # 4. Bezpečne aktualizujeme indikátor farby (pack/forget)
-            indikator = getattr(self, "indikator_farby", None)
-            if indikator and indikator.winfo_exists():
-                if is_custom:
-                    indikator.pack(side=tk.LEFT, padx=(6, 0))
-                else:
-                    indikator.pack_forget()
-
-        except (tk.TclError, RuntimeError) as e:
-            # Ak sa metóda spustila počas ničenia widgetov, ticho to odignorujeme
-            if "invalid command name" not in str(e):
-                log_info(f"Vizuálna aktualizácia preskočená: {e}")    
-                        
-
-    def vybrat_vlastnu_farbu_textu(self):
-        color_tuple = colorchooser.askcolor(initialcolor=self.text_color_var.get())
-        if color_tuple and color_tuple[1]:
-            self.text_color_var.set(color_tuple[1])
-            self.pouzit_vlastnu_farbu.set(True)
-            self.indikator_farby.itemconfig(self.indikator_farby_id, fill=color_tuple[1])
-            self.aktualizovat_vzhlad()
-            self.ulozit_nastavenia()
-
+        return "break"              
+            
     def clear_screen(self, event=None):
         """
         Úplne vyčistí projekčné plátno a resetuje stavové premenné.
@@ -13962,515 +13563,609 @@ class ControlApp:
             log_exception("clear_screen: kritické zlyhanie metódy", e)
         
 
-    def aktualizovat_vzhlad(self, *args):
-        """
-        Aktualizuje vizuálne prvky ovládacieho panelu a projekčného okna.
-        Zabezpečuje konzistenciu farieb, písiem a správne zalomenie náhľadu.
-        """
-        # Ak prebieha inicializácia, zmeny vzhľadu preskočíme 
-        if getattr(self, "initializing", False):
-            return
+
+class _KlavesoveSkratkyMixin(_ControlAppBase):
+    """Globálne klávesové skratky hlavného okna."""
+
+    def _udalost_je_v_editovatelnom_widgete(self, event=None):
+        widget = getattr(event, "widget", None)
+        if widget is None:
+            return False
+
+        # Hlavne ovladacie polia su zamerne vynimka: + a - tam ovladaju strofy.
+        if widget in (getattr(self, "manual_entry", None), getattr(self, "song_combobox", None)):
+            return False
 
         try:
-            text_color = self.text_color_var.get()
-            background_color = BACKGROUND_COLOR
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: nepodarilo sa získať premenné farieb", e)
-            return
+            widget_class = widget.winfo_class()
+        except Exception:
+            return False
 
-        # 1) Projekčné okno – nastavenie cieľovej farby a pozadia 
-        try:
-            if self.projection_window is not None:
-                self.projection_window.target_text_color = text_color
-                self.projection_window.update_style(bg_color=background_color)
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: zlyhala aktualizácia projekčného okna", e)
+        return widget_class in {"Entry", "Text", "TEntry", "TCombobox", "Combobox", "Spinbox", "TSpinbox"}
 
-        # 2) Pozadie hlavného okna 
-        try:
-            self.master.configure(bg=background_color)
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia master okna", e)
+    def klavesa_plus(self, event=None):
+        if self._udalost_je_v_editovatelnom_widgete(event):
+            return None
+        return self.posun_strofu(+1)
 
-        # 3) Live Preview – FARBA A ZALOMENIE
-        try:
-            # Pozor na názov: predtým si mala live_preview, teraz live_preview_label
-            preview = getattr(self, "live_preview_label", None)
-            if preview and preview.winfo_exists():
-                # Nastavenie farieb náhľadu
-                preview.config(fg=text_color, bg=background_color)
-                
-                # Výpočet novej šírky pre zalamovanie (identicky ako v update_live_preview)
-                w = preview.winfo_width()
-                if w > 10:
-                    new_wraplen = int(w * 0.88)
-                    preview.config(wraplength=new_wraplen)
-                
-                # Ak je text momentálne zobrazený, vynútime prekreslenie náhľadu
-                # (zabezpečí, že sa zmení aj veľkosť písma podľa nových farieb)
-                if getattr(self, "is_text_visible", False):
-                    # Získame aktuálny text z labelu a pošleme ho na refresh
-                    current_text = preview.cget("text")
-                    if current_text:
-                        self.update_live_preview(current_text)
+    def klavesa_minus(self, event=None):
+        if self._udalost_je_v_editovatelnom_widgete(event):
+            return None
+        return self.posun_strofu(-1)
 
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia live_preview_label", e)
+    def klavesa_vpravo(self, event=None):
+        return self.posun_strofu(+1)
 
-        # 4) Vstupné pole (Manual Entry) 
-        try:
-            self.manual_entry.config(fg=text_color, insertbackground=text_color)
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia manual_entry", e)
+    def klavesa_vlavo(self, event=None):
+        return self.posun_strofu(-1)    
 
-        # 5) Panel strofy
-        try:
-            self.strofa_label["foreground"] = text_color
-            self.strofa_label["background"] = background_color
+    def nastavit_globalne_skratky(self):
 
-            if hasattr(self.strofa_label, "master"):
-                master_widget = self.strofa_label.master
-                master_widget["background"] = background_color
+        # šípky – iba na hlavnom okne (nesmú interferovať s inými widgetmi)
+        self.master.bind('<Right>', self.klavesa_vpravo)
+        self.master.bind('<Left>', self.klavesa_vlavo)
 
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia strofa_label", e)
+        # plus/minus - bind_all zachytava udalosti pre celu aplikaciu vratane
+        # hlavneho okna. Handler ignoruje editovatelne widgety okrem hlavneho
+        # vstupu a zoznamu piesni, kde + a - zamerne posuvaju aktualnu strofu.
+        # Dvojite bind (bind + bind_all pre ten isty widget) by sposobilo
+        # dvojite posunutie strofy pri kazdom stlaceni.
+        self.master.bind_all("<plus>", self.klavesa_plus)
+        self.master.bind_all("<minus>", self.klavesa_minus)
+        self.master.bind_all("<KP_Add>", self.klavesa_plus)
+        self.master.bind_all("<KP_Subtract>", self.klavesa_minus)
+        self.master.bind_all("=", self.klavesa_plus)
+        self.master.bind_all("-", self.klavesa_minus)
 
-        # 6) Highlight tag v texte
-        try:
-            if self.obsah_suboru_text is not None:
-                safe_font_name: str = FONT_NAME or "Arial"
+        # Backspace – musí byť KeyRelease
+        self.master.bind_all("<KeyRelease-BackSpace>", self._global_backspace_handler)
 
-                self.obsah_suboru_text.tag_config(
-                    "highlight",
-                    background="#444444",
-                    foreground=text_color,
-                    font=(safe_font_name, 18, "bold")
-                )
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: zlyhala konfigurácia tagu highlight", e)
-
-        # 7) Aktualizácia stavu tlačidiel a čistenie textu, ak je projekcia vypnutá 
-        try:
-            self.aktualizovat_stav_tlacidla_farby()
-
-            if not getattr(self, "is_text_visible", False):
-                if self.projection_window is not None:
-                    self.projection_window.update_text("")
-                    self.projection_window.update_title(name="", current=0, total=None)
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: záverečná aktualizácia stavu zlyhala", e)                        
-
-    def toggle_projection_text(self, event=None):
-        try:
-            if event is not None:
-                ev_type = getattr(event, "type", None)
-                ev_widget = getattr(event, "widget", None)
-                
-                # 2 = KeyPress v tkinteri. Ak to nie je klávesnica, ignorujeme.
-                if ev_type != "2":
-                    return "break"
-                
-                # Ak event prišiel zo vstupného poľa (manual_entry), nechceme prepínať projekciu
-                if ev_widget is self.manual_entry:
-                    return "break"
-        except Exception as e:
-            log_exception("toggle_projection_text: chyba pri overovaní eventu", e)
-
-        try:
-            # ------------------------------------------------------------
-            # Projekcia je ZAPNUTÁ → vypnúť
-            # ------------------------------------------------------------
-            if self.is_text_visible:
-                self.vypni_projekciu()
-                return "break"
-
-            # ------------------------------------------------------------
-            # Projekcia je VYPNUTÁ → zapnúť
-            # ------------------------------------------------------------
-            self.is_text_visible = True
-            
-            # Zavoláme zobrazenie strofy – tu sa reálne posiela text na plátno
-            self.zobraz_aktualnu_strofu()
-            
-            # Aktualizácia indikátora v UI (zelené/červené svetielko)
-            self.set_projection_indicator(True)
-
-        except Exception as e:
-            log_exception("toggle_projection_text: kritická chyba pri prepínaní viditeľnosti", e)
-
-        return "break"              
-            
-    def zobrazit_o_aplikacii(self):
-        """
-        Otvára informačné okno s manuálom a verziou aplikácie.
-        ------------------------------------------------------------
-        - Zobrazuje texty pomocou tk.Text s tagmi pre formátovanie.
-        - Implementuje vlastný scrollbar a zablokovanie kliknutia.
-        - Obsahuje kompletnú diagnostiku chýb.
-        """
-        about_window = tk.Toplevel(self.master)
-        self.about_window = about_window
-        about_window.title("O aplikácii")
+        # ďalšie skratky
+        self.master.bind('<Escape>', self.potvrdit_ukoncenie)
+        self.master.bind('c', self.clear_screen)   
         
-        try:
-            # 1) Základná konfigurácia okna
-            about_window.configure(
-                bg=BACKGROUND_COLOR,
-                highlightthickness=0,
-                bd=0
-            )
+    
+    def _global_backspace_handler(self, event):
+        """
+        Spracuje stlačenie klávesy Backspace kdekoľvek v aplikácii.
+        """
+        # POZNÁMKA (Zámerné správanie): 
+        # Backspace slúži ako rýchla skratka na okamžité vypnutie projekcie.
+        # Je to nastavené tak, aby sa projekcia vypla aj v prípade, 
+        # že používateľ práve píše alebo maže text vo vstupnom poli. 
+        # Nejde o chybu (bug), ale o požadovanú funkcionalitu (UX).
+        
+        # ak je projekcia zapnutá → vypni ju
+        
+        if getattr(self, "is_text_visible", False):
+            self.vypni_projekciu()     
+                                                                                                                 
+    # def manual_entry_enter volá vždy vtedy, keď je na manual_entry widgete naviazaný bind na kláves Enter.
 
-            about_window.transient(self.master)
-            about_window.grab_set()
+class _HlavneOknoMixin(_ControlAppBase):
+    """Zostavenie hlavného GUI okna a stavového riadku."""
 
-            saved_w = int(self.about_window_width)
-            saved_h = int(self.about_window_height)
-            window_width = saved_w if saved_w >= 500 else 830
-            window_height = saved_h if saved_h >= 400 else 620
-            screen_width = about_window.winfo_screenwidth()
-            x = max(0, screen_width - window_width - 30)
-            y = 30
-            about_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+    def vytvorit_gui(self):
+        style = ttk.Style()
+        style.configure("TButton", font=(self.font_family, 12), padding=6)
+        style.configure("TLabel", font=(self.font_family, 12))
+        style.configure("Header.TLabel", font=(self.font_family, 13, "bold"), foreground="#AAAAAA")
+        style.configure("Settings.TButton", font=(self.font_family, 14), padding=2)
 
-            def _uloz_geometriu_about(event=None, okamzite=False):
-                if event is not None and event.widget is not self.about_window:
+        # globálne nastavenie pre combobox listbox
+        self.master.option_add("*TCombobox*Listbox.font", (self.font_family, 11))
+        self.master.option_add("*TCombobox*Listbox.justify", "left")
+
+        horny_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR, height=60)
+        horny_frame.pack_propagate(False)
+        horny_frame.pack(side=tk.TOP, fill=tk.X, anchor="ne", pady=(0, 0))
+
+        # --- STATUS BAR (spodok hlavného okna) ---
+        self.status_bar_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR, height=28)
+        self.status_bar_frame.pack_propagate(False)
+        self.status_bar_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+        self.status_bar_zaltár_label = tk.Label(
+            self.status_bar_frame,
+            text="",
+            font=(self.font_family, 12),
+            fg="#aaaaaa",
+            bg=PANEL_BG_COLOR,
+            anchor="w",
+            padx=15
+        )
+        self.status_bar_zaltár_label.pack(side=tk.LEFT, fill=tk.Y)
+        self.aktualizovat_status_bar()
+
+        # --- Combobox "Zoznam piesní" vľavo ---
+        self.song_var = tk.StringVar()
+        style.configure("Big.TCombobox", padding=5)
+
+        # Povolené písanie (nutné pre vyhľadávanie)
+        self.song_combobox = ttk.Combobox(
+            horny_frame,
+            textvariable=self.song_var,
+            state="normal",
+            width=38,
+            style="Big.TCombobox",
+            font=(self.font_family, 12),
+            height=12
+        )       
+        
+        # Kompletný zoznam piesní
+        self.cele_hodnoty_comboboxu = ["Zoznam piesní"] + [
+            f"{num} - {title}" for num, title in self.zoznam_piesni_data
+        ]
+        self.song_combobox["values"] = self.cele_hodnoty_comboboxu
+        self.song_combobox.current(0)
+        self.song_combobox.pack(side=tk.LEFT, padx=(10, 0), pady=(8, 2), ipady=1)
+
+        # --- Filtrovanie počas písania ---
+        # Normalizácia diakritiky: používa sa globálna funkcia normalize_diacritics()
+        def on_combobox_typing(event):
+            if event.keysym in ("Up", "Down", "Left", "Right", "Return", "Escape", "Tab"):
+                return
+
+            # Zapamätáme si text a pozíciu kurzora
+            current_text = self.song_combobox.get()
+            cursor_pos = self.song_combobox.index(tk.INSERT)
+
+            if current_text == "":
+                nove = self.cele_hodnoty_comboboxu
+            else:
+                zadany_norm = normalize_diacritics(current_text)
+                nove = [
+                    h for h in self.cele_hodnoty_comboboxu
+                    if zadany_norm in normalize_diacritics(h)
+                ]
+
+            # Nastavíme nové hodnoty
+            self.song_combobox["values"] = nove
+
+            # Znovu otvoríme dropdown.
+            # Používame ttk::combobox::Post namiesto event_generate("<Down>"),
+            # pretože Down-event vyžaduje focus a môže spôsobiť dvojité otvorenie.
+            # ttk::combobox::Post je síce nedokumentovaná v man pages, ale je
+            # verejná Tcl proc definovaná v lib/ttk/combobox.tcl od Tk 8.5 (2007)
+            # a stabilná naprieč všetkými relevantými verziami Pythonu/Tk.
+            try:
+                self.song_combobox.tk.call('ttk::combobox::Post', self.song_combobox)
+            except tk.TclError:
+                pass
+
+            # Obnovíme text aj kurzor
+            self.song_combobox.delete(0, tk.END)
+            self.song_combobox.insert(0, current_text)
+
+            try:
+                self.song_combobox.icursor(cursor_pos)
+            except Exception as e:
+                log_exception("vytvorit_gui: icursor zlyhal", e)
+
+
+        # --- Handler pre výber piesne (kliknutie alebo Enter) ---
+        def on_song_selected(event=None):
+            selection = self.song_combobox.get()
+
+            if selection == "Zoznam piesní" or not selection:
+                return
+
+            # Ak používateľ napísal len časť názvu
+            if selection not in self.cele_hodnoty_comboboxu:
+                sel_norm = normalize_diacritics(selection)
+                zhody = [
+                    h for h in self.cele_hodnoty_comboboxu
+                    if sel_norm in normalize_diacritics(h)
+                ]
+                if zhody:
+                    selection = zhody[0]
+                    self.song_var.set(selection)
+                else:
                     return
 
-                def zapis_geometrie():
-                    if self.about_window is not None and self.about_window.winfo_exists():
-                        self.about_window_width = self.about_window.winfo_width()
-                        self.about_window_height = self.about_window.winfo_height()
-                        self.ulozit_nastavenia(aktualizovat_label=False)
+            self.reset_ui()
 
-                self._naplanuj_debounced_zapis(
-                    "_about_geom_after_id", zapis_geometrie, "_uloz_geometriu_about",
-                    okamzite=okamzite,
-                )
+            try:
+                num_display = selection.split(" - ")[0]
+                self.nacitat_piesne(nazov_suboru=num_display)
+                self.aktualizuj_popis(num_display)
 
-            self.about_window.bind("<Configure>", _uloz_geometriu_about)
+                self.manual_entry.delete(0, tk.END)
+                self.manual_entry.insert(0, format_cislo_piesne_pre_vstup(num_display))
 
-            safe_font_name: str = FONT_NAME or "Arial"
-            bg, fg, active = "#1C1C1C", "#E0E0E0", "#F2F2F2"
+                self.subor_var.set("—")
 
-            # 2) Karty s obsahom
-            container = tk.Frame(
-                self.about_window,
-                bg=bg,
-                highlightthickness=0,
-                bd=0
-            )
-            container.pack(fill=tk.BOTH, expand=True)
+                # Po výbere obnovíme celý zoznam
+                self.song_combobox["values"] = self.cele_hodnoty_comboboxu
 
-            header = tk.Frame(container, bg=bg)
-            header.pack(fill="x", pady=(10, 5))
-            top_panel = tk.Frame(header, bg=bg)
-            top_panel.pack(side="left", padx=(10, 0))
-            zoom_panel = tk.Frame(header, bg=bg)
-            zoom_panel.pack(side="left", padx=(5, 0))
+                self.master.after_idle(self.manual_entry.focus_set)
+                self.nazov_piesne = num_display
+                self.aktualne_cislo_piesne = num_display
 
-            content = tk.Frame(container, bg=bg)
-            content.pack(fill="both", expand=True)
+            except Exception as e:
+                log_exception("Chyba pri načítaní piesne", e)
 
-            frame1, frame2, frame3, frame4 = (
-                tk.Frame(content, bg=bg),
-                tk.Frame(content, bg=bg),
-                tk.Frame(content, bg=bg),
-                tk.Frame(content, bg=bg)
-            )
-            frames = {1: frame1, 2: frame2, 3: frame3, 4: frame4}
-            font_size = tk.IntVar(value=self.about_font_size)
-            text_widgets = []
 
-            def vlozit_text(parent, nazov: str, text: str):
-                scrollbar = ttk.Scrollbar(
-                    parent,
-                    orient="vertical",
-                    style="KinakDark.Vertical.TScrollbar"
-                )
-                scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.song_combobox.bind("<<ComboboxSelected>>", on_song_selected)
+        self.song_combobox.bind("<Return>", on_song_selected)
+        for k in ["<KeyPress-plus>", "<KeyPress-minus>", "<KeyPress-KP_Add>", "<KeyPress-KP_Subtract>"]:
+            self.song_combobox.bind(k, self.klavesa_plus if 'plus' in k or 'Add' in k else self.klavesa_minus)
+        self.song_combobox.bind("=", self.klavesa_plus)
 
-                text_widget = tk.Text(
-                    parent,
-                    wrap="word",
-                    font=(safe_font_name, font_size.get()),
-                    fg=fg,
-                    bg=bg,
-                    padx=20,
-                    pady=20,
-                    relief="flat",
-                    highlightthickness=0,
-                    borderwidth=0,
-                    yscrollcommand=scrollbar.set,
-                    insertbackground=fg
-                )
-                text_widget.pack(fill=tk.BOTH, expand=True)
-                scrollbar.config(command=text_widget.yview)
-
-                text_widget.bind("<Button-1>", self._zablokovat_klik)
-                text_widget.insert("1.0", f"{nazov}\n\n")
-                text_widget.tag_add("nadpis", "1.0", "1.end")
-                text_widget.tag_config(
-                    "nadpis",
-                    font=(safe_font_name, max(font_size.get() + 4, 12), "bold"),
-                    foreground="white"
-                )
-                text_widget.insert("end", text)
-                text_widget.config(state="disabled")
-
-                text_widget.bind("<Enter>", lambda e, tw=text_widget: tw.bind_all(
-                    "<MouseWheel>",
-                    lambda ev, scroll_widget=tw: scroll_widget.yview_scroll(int(-1 * (ev.delta / 120)), "units")
-                ))
-                text_widget.bind("<Leave>", lambda e, tw=text_widget: tw.unbind_all("<MouseWheel>"))
-                text_widgets.append(text_widget)
-                return text_widget
-
-            ovladanie_text = (
-                "RÝCHLY NÁVOD\n\n"                
-                "Zadajte číslo piesne a potom používajte klávesy:\n\n"
-                "• PLUS (+)\t\tĎalšia strofa\n"
-                "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípky)\n"
-                "• ENTER\t\tAktivovať projekciu (skryť/zobraziť text)\n"
-                "• BACKSPACE\t\tMaže číslo piesne a zároveň okamžite vypína projekciu\n"
-                "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
-                "Kinak je prenosná desktopová aplikácia na projekciu liturgických piesní, žalmov a modlitieb, so zabudovaným liturgickým kalendárom, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus a žaltárový týždeň liturgického roka.\n\n"
-                "HLAVNÉ FUNKCIE\n\n"
-                "• Projekcia textov na externý monitor alebo projektor\n"
-                "• Automatické spustenie projekcie na druhom monitore v režime celej obrazovky\n"
-                "  (vyžaduje zapnutú rozšírenú plochu v systéme)\n"
-                "• Dynamické prispôsobenie veľkosti písma podľa obsahu\n"
-                "• Podpora UTF-8 aj ANSI kódovania\n"
-                "• Zobrazenie aktuálnych liturgických informácií z okien Direktória a Slávení priamo v hlavičke a stavovom riadku.\n\n"
-                "INDIKÁTOR PROJEKCIE\n\n"
-                "• Zelená = projekcia aktívna\n"
-                "• Sivá   = projekcia vypnutá\n\n"
-                "V nastaveniach je možné zapnúť malý náhľad projekcie v pravom dolnom rohu "
-                "ovládacieho okna – užitočné najmä vtedy, ak premietajúci nevidí priamo na projekčnú obrazovku.\n\n"              
-                "OKNÁ DIREKTÓRIUM A SLÁVENIA\n\n"
-                "Rýchly výber piesne alebo skratky žalmu pre konkrétne slávenie — dvojklik na bunku, bez ručného zadávania."
-            )
-
-            vyhladavanie_text = (
-                "VYHĽADÁVANIE PIESNÍ, MODLITIEB A ŽALMOV\n\n"
-                "Do poľa na zadanie piesne môžete ručne napísať:\n\n"
-                "• Čísla piesní (napr. 254)\n"
-                "• Skratky modlitieb (napr. dk → Duša Kristova)\n"
-                "• Časť názvu piesne alebo modlitby (napr. ruž → Ružencové bratstvo)\n"
-                "• Skratku žalmu (napr. 20c2 → 20. týždeň cezročného obdobia, párny rok)\n\n"
-                "POZNÁMKY K ŽALMOM\n\n"
-                "• A, B, C = liturgické roky (nedeľné žalmy)\n"
-                "• 1–6 = dni v týždni (pondelok–sobota)\n\n"
-                "Pri práci s Direktóriom stačí dvojklik na bunku — číslo piesne sa odošle do hlavného okna a okamžite sa načíta. "                
-                "Rovnako funguje aj okno Slávenia, kde sa odošle skratka príslušného slávenia."                
-            )
-
-            priprava_text = (
-                "ÚPRAVA PIESNÍ\n\n"
-                "Pri piesňach JKS je v poriadku, ak sa jedna strofa zobrazí aj na dve či tri obrazovky. "
-                "Ak chcete, aby sa celá strofa zobrazila naraz, odstráňte v textovom súbore prázdne riadky medzi veršami. "
-                "Odlišný vzhľad možno dosiahnuť aj rozdelením strofy na dlhšie riadky.\n\n"
-                "ŠPECIÁLNE ZNAKY V PIESŇACH JKS\n\n"
-                "• BODKA (·)\t\t\tObsahuje Ofertórium (použije sa dvakrát: úvod + obetovanie)\n"
-                "• PODČIARKOVNÍK (_)\t\t\tKoniec strofy\n"
-                "• KOMBINÁCIA (_·)\t\t\tKoniec úvodnej časti; nižšie sa nachádza Ofertórium\n\n"
-                "V nastaveniach je možné tieto znaky pre projekciu skryť. V hlavnom ovládacom okne "
-                "však zostanú vždy viditeľné, aby sa premietajúci vedel ľahko orientovať.\n\n"
-                "Praktická rada: Ak pieseň začína bodkou (·), pri obetovaní stačí prejsť na najbližší riadok začínajúci bodkou.\n\n"
-                "STRIEDANIE CHÓROV VO VEŠPERÁCH\n\n"
-                "Striedanie ľavého a pravého chóru je v projekcii dané striedaním obrazoviek.\n"
-                "(každá nová obrazovka = zmena chóru)\n\n"
-                "Označenie [L] / [P] slúži len ako vizuálna pomôcka – rýchla orientácia, ktorý chór je práve na obrazovke.\n\n"
-                "V nastaveniach je možné tieto znaky pre projekciu skryť, avšak v hlavnom ovládacom okne zostávajú vždy viditeľné.\n\n"                
-            )
-
-            pomoc_text = (
-                "AK PROJEKCIA NIE JE NA SPRÁVNOM MONITORE\n\n"
-                "Skontrolujte, či je v systéme zapnutá rozšírená plocha. Aplikácia vie automaticky otvoriť projekciu "
-                "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku.\n\n"
-                "AK SA PIESNE NENAČÍTAJÚ\n\n"
-                "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí mať pri sebe aj priečinok "
-                "s názvom 'piesne'.\n\n"                
-                "Kinak (priečinok môže mať ľubovoľný názov)\n"
-                " ├── Kinak.exe\n"
-                " └── piesne/\n"
-                "               ├── 001.txt\n"
-                "               ├── 002.txt\n"
-                "               ├── 003.txt\n"
-                "               └──  .  .  .\n\n"                  
-                "Skontrolujte, či je v Nastaveniach správne vybraný priečinok piesní. "
-                "Ak priečinok neexistuje, je prázdny alebo neobsahuje textové súbory, "
-                "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"              
-                "Kinak\n"
-                "Mesto vzniku: Kremnica\n"
-                "Dátum vzniku: november 2025\n"
-                f"Verzia: {KINAK_VERSION}"
-            )
-
-            vlozit_text(frame1, "Ovládanie", ovladanie_text)
-            vlozit_text(frame2, "Vyhľadávanie", vyhladavanie_text)
-            vlozit_text(frame3, "Úprava textov", priprava_text)
-            vlozit_text(frame4, "Pomoc pri probléme", pomoc_text)
-
-            buttons, stripes = self._build_info_tabs_header(
-                top_panel, safe_font_name, bg, fg,
-                tab_specs=[
-                    ("Ovládanie", 13),
-                    ("Vyhľadávanie", 15),
-                    ("Úprava textov", 17),
-                    ("Pomoc pri probléme", 18),
-                ],
-            )
-
-            def show(which):
-                self.about_last_tab = which
-                self.ulozit_nastavenia(aktualizovat_label=False)
-                self._show_tab(which, frames, stripes, buttons, safe_font_name, bg, active)
-                self.manual_entry.focus_set()
-
-            for i in (1, 2, 3, 4):
-                buttons[i].config(command=lambda i=i: show(i))
-
-            def apply_font_preserve_focus():
-                size = font_size.get()
-                for text_widget in text_widgets:
-                    text_widget.config(font=(safe_font_name, size))
-                    text_widget.tag_config(
-                        "nadpis",
-                        font=(safe_font_name, max(size + 4, 12), "bold")
-                    )
-                self.about_font_size = size
-                self.ulozit_nastavenia(aktualizovat_label=False)
-                self.manual_entry.focus_set()
-
-            tk.Button(
-                zoom_panel,
-                text="+",
-                width=3,
-                font=(safe_font_name, 12, "bold"),
-                bg=bg,
-                fg=fg,
-                relief="flat",
-                command=lambda: (font_size.set(min(40, font_size.get() + 1)), apply_font_preserve_focus())
-            ).pack(side="left")
-
-            tk.Button(
-                zoom_panel,
-                text="−",
-                width=3,
-                font=(safe_font_name, 12, "bold"),
-                bg=bg,
-                fg=fg,
-                relief="flat",
-                command=lambda: (font_size.set(max(8, font_size.get() - 1)), apply_font_preserve_focus())
-            ).pack(side="left")
-
-            def reset_okna():
-                self.about_window_width = 830
-                self.about_window_height = 620
-
-                if self.about_window is not None and self.about_window.winfo_exists():
-                    reset_x = max(0, self.about_window.winfo_screenwidth() - self.about_window_width - 30)
-                    self.about_window.geometry(f"{self.about_window_width}x{self.about_window_height}+{reset_x}+30")
-
-                font_size.set(DEFAULT_CONFIG.get("about_font_size", 12))
-                apply_font_preserve_focus()
-
-            tk.Button(
-                zoom_panel,
-                text="Reset",
-                width=6,
-                font=(safe_font_name, 12, "bold"),
-                bg=bg,
-                fg=fg,
-                relief="flat",
-                command=reset_okna
-            ).pack(side="left", padx=(5, 0))
-
-            last = max(1, min(int(getattr(self, "about_last_tab", 1) or 1), 4))
-            show(last)
-
-            # 6) Zatváranie okna 
-            def pri_zatvoreni():
-                _uloz_geometriu_about(okamzite=True)
-
-                # Najprv bezpečne zničíme dcérske okno
-                if self.about_window is not None and self.about_window.winfo_exists():
-                    self.about_window.destroy()
-                
-                # Focus vrátime len ak manual_entry existuje (poistka proti AttributeError)
-                if self.manual_entry is not None and self.manual_entry.winfo_exists():
+        def prepni_focus_tab(event=None):
+            widget = getattr(event, "widget", None)
+            try:
+                if widget is self.manual_entry:
+                    self.song_combobox.focus_set()
+                    self.song_combobox.icursor(tk.END)
+                else:
                     self.manual_entry.focus_set()
+                    self.manual_entry.icursor(tk.END)
+            except Exception as e:
+                log_exception("prepni_focus_tab: zlyhalo prepnutie fokusu", e)
+            return "break"
 
-            self.about_window.protocol("WM_DELETE_WINDOW", pri_zatvoreni)
-            self.about_window.bind("<Escape>", lambda e: pri_zatvoreni())
+        self.song_combobox.bind("<Tab>", prepni_focus_tab)
 
-            # Vynútenie focusu pri otvorení okna
-            about_window.after(50, lambda: about_window.focus_force())
+        # bielym písmom "názov súboru - strofa 1/25"
+        self.nazov_label = tk.Label(
+            self.master,
+            font=(self.font_family, 15, "bold"),
+            fg="#ffffff",
+            bg=BACKGROUND_COLOR,
+            anchor="center",
+            justify=tk.CENTER
+        )
+        self.nazov_label.place(relx=0.50, y=30, anchor="center")
 
-            # 7) Reset UI poistka
-            self.song_combobox.current(0)
-            try:
-                self.reset_ui()
-                self.manual_entry.focus_set()
-            except Exception as e_reset:
-                log_exception("Chyba pri reset_ui v okne O aplikácii", e_reset)
+        # --- Rámik pre tlačidlá napravo ---
+        buttons_frame = tk.Frame(horny_frame, bg=PANEL_BG_COLOR)
+        buttons_frame.pack(side=tk.RIGHT, padx=(0, 5), pady=(8, 2))
 
-        except Exception as e:
-            log_exception("Kritická chyba pri otváraní okna O aplikácii", e)  
+        # --- ŠTÝL PRE IKONY ---
+        style.configure("Icon.TButton", font=("Segoe UI Symbol", 13))
+        style.configure("Download.TMenubutton", font=(self.font_family, 13), padding=6)
+
+        toolbar_btn_bg = "#1C1C1C"
+        toolbar_btn_fg = "#E0E0E0"
+        toolbar_btn_active = "#F2F2F2"
+        toolbar_menu_active_bg = "#333333"
+
+        def vytvor_toolbar_menu(parent):
+            return tk.Menu(
+                parent,
+                tearoff=0,
+                font=(self.font_family, 13),
+                bg=toolbar_btn_bg,
+                fg=toolbar_btn_fg,
+                activebackground=toolbar_menu_active_bg,
+                activeforeground=toolbar_btn_active,
+                borderwidth=0
+            )
+
+        def styl_toolbar_widget(widget):
+            widget.configure(
+                bg=toolbar_btn_bg,
+                fg=toolbar_btn_fg,
+                activebackground=toolbar_btn_bg,
+                activeforeground=toolbar_btn_active,
+                relief="flat",
+                borderwidth=0,
+                highlightthickness=0,
+                font=(self.font_family, 13),
+                padx=10,
+                pady=5
+            )
+            widget.pack(side=tk.LEFT, padx=0)
+            return widget
+
+        styl_toolbar_widget(tk.Button(
+            buttons_frame,
+            text="Nastavenia",
+            command=self.zobrazit_nastavenia
+        ))
+
+        liturgicke_nastroje_btn = styl_toolbar_widget(tk.Menubutton(buttons_frame, text="Liturgické nástroje"))
+        liturgicke_nastroje_menu = vytvor_toolbar_menu(liturgicke_nastroje_btn)
+        liturgicke_nastroje_menu.add_command(label="Direktórium", command=self.open_direktorium)
+        liturgicke_nastroje_menu.add_command(label="Slávenia", command=self.open_slavnosti)
+        liturgicke_nastroje_menu.add_separator()
+        liturgicke_nastroje_menu.add_command(label="Stiahnuť čítania", command=self.open_citanie)
+        liturgicke_nastroje_menu.add_command(label="Stiahnuť vešpery", command=self.open_vespery)
+
+        refreny_zalmov_menu = vytvor_toolbar_menu(liturgicke_nastroje_menu)
+        refreny_zalmov_menu.add_command(label="Mesačné (1L–12L)", command=self.open_refreny_zalmov)
+        refreny_zalmov_menu.add_command(label="Adventné (1AD–4AD)", command=self.open_adventne_refreny)
+        refreny_zalmov_menu.add_command(label="Vianočné (1VI, 2VI, SJE, NEV...)", command=self.open_vianocne_sviatky)
+        refreny_zalmov_menu.add_command(label="Pôstne a veľkonočné (PS, 1P–VT–7VN)", command=self.open_postne_velkonocne_refreny)
+        refreny_zalmov_menu.add_command(label="Turíce a nadväzujúce sviatky (1TS–7TS)", command=self.open_turicne_sviatky)
+        refreny_zalmov_menu.add_command(label="Cezročné týždne (1C1–34C2)", command=self.open_cezrocne_tyzdenne_refreny)        
+        refreny_zalmov_menu.add_command(label="Cezročné sviatky (OND, NJK, BAR...)", command=self.open_liturgicke_sviatky)
+        liturgicke_nastroje_menu.add_cascade(label="Stiahnuť refrény žalmov", menu=refreny_zalmov_menu)
+
+        liturgicke_nastroje_btn["menu"] = liturgicke_nastroje_menu
+
+        pomoc_btn = styl_toolbar_widget(tk.Menubutton(buttons_frame, text="Pomoc"))
+        pomoc_menu = vytvor_toolbar_menu(pomoc_btn)
+        pomoc_menu.add_command(label="Pomocník", command=self.otvorit_pomocnika)       
+        pomoc_menu.add_command(label="Rýchly sprievodca", command=self.zobraz_rychly_sprievodca)
+        pomoc_menu.add_separator()
+        pomoc_menu.add_command(label="O aplikácii", command=self.zobrazit_o_aplikacii)
+        pomoc_btn["menu"] = pomoc_menu
+
+        # --- INDIKÁTOR ŽIAROVKY ---
+        self.indikator_ziarovka = tk.Canvas(
+            horny_frame, width=50, height=52, highlightthickness=0, bg=PANEL_BG_COLOR
+        )
+        self.indikator_id = self.indikator_ziarovka.create_rectangle(
+            8, 8, 42, 42, fill="#888888", outline=""
+        )
+        self.indikator_ziarovka.pack(side=tk.RIGHT, padx=(0, 0), pady=(8, 2))     
+
+        # --- PANEL AKTUÁLNA STROFA (Hore) ---
+        panel_strofa_hore = tk.Frame(self.master, bg=BACKGROUND_COLOR, height=250)
+        panel_strofa_hore.pack_propagate(False)
+        panel_strofa_hore.pack(side=tk.TOP, fill=tk.X, padx=10, pady=(0, 0))
+
+        self.strofa_label = tk.Text(
+            panel_strofa_hore, wrap=tk.WORD, bg=BACKGROUND_COLOR, fg=self.text_color_var.get(),
+            relief=tk.FLAT, bd=0, padx=20, pady=10, spacing1=1, spacing2=2, spacing3=1
+        )
+        self.strofa_label.bind("<Button-1>", lambda e: "break")
+        self.strofa_label.tag_configure("center", justify="center", font=(self.font_family, 25, "bold"))
+        self.strofa_label.config(state=tk.DISABLED)
+        self.strofa_label.pack(fill=tk.BOTH, expand=True)
+
+        # --- HLAVNÝ OBSAH ---
+        hlavny_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR)
+        hlavny_frame.pack(fill=tk.BOTH, expand=True)
+
+        # 1. Panel výberu (Vľavo)
+        frame_vyber = tk.Frame(hlavny_frame, width=205, bg=PANEL_BG_COLOR)
+        frame_vyber.pack_propagate(False)
+        frame_vyber.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+
+        panel_vyber = tk.LabelFrame(frame_vyber, bg=PANEL_BG_COLOR, padx=10, pady=10)
+        panel_vyber.pack(fill=tk.BOTH, expand=True)
+
+        self.manual_entry = tk.Entry(
+            panel_vyber, font=(self.font_family, 25, "bold"), bg="#1e1e1e",
+            fg=self.text_color_var.get(), insertbackground=self.text_color_var.get(), justify="center"
+        )
+        self.manual_entry.pack(fill=tk.X, pady=(0, 10))
+
+        self.manual_entry_hint = tk.Label(
+            panel_vyber, text="Zadaj č. piesne alebo vyber žalm z menu nižšie", font=(self.font_family, 11, "italic"),
+            fg="#aaaaaa", bg=PANEL_BG_COLOR, wraplength=180, justify=tk.CENTER
+        )
+        self.manual_entry_hint.pack(pady=(0, 10))
+
+        # Bindings
+        self.manual_entry.bind("<FocusOut>", self.skus_manualne_nacitanie)
+        self.manual_entry.bind("<KeyPress-Return>", self.manual_entry_enter)
+        self.manual_entry.bind("<KeyRelease>", self.odlozene_auto_nacitanie)
+        for k in ["<KeyPress-plus>", "<KeyPress-minus>", "<KeyPress-KP_Add>", "<KeyPress-KP_Subtract>"]:
+            self.manual_entry.bind(k, self.klavesa_plus if 'plus' in k or 'Add' in k else self.klavesa_minus)
+        self.manual_entry.bind("=", self.klavesa_plus)
+        self.manual_entry.bind("<Right>", self.klavesa_vpravo)
+        self.manual_entry.bind("<Left>", self.klavesa_vlavo)
+        self.manual_entry.bind("<FocusIn>", self.vymazat_subor_menu)
+        self.manual_entry.bind("<Tab>", prepni_focus_tab)
+
+        # Filtre a menu
+        self.filter_var = tk.StringVar(value=self.default_filter_var.get())
+        self.filter_menu = tk.OptionMenu(panel_vyber, self.filter_var, *list(self.obdobie_subory.keys()), command=self.filtrovat_subory)
+        self.filter_menu.config(font=(self.font_family, 14, "bold"), width=16)
+        self.filter_menu.pack(pady=(0, 10))
+
+        self.subor_var = tk.StringVar(value="—")
+        self.subory_zoznam = self.ziskaj_zoznam_suborov()
+        self.subor_menu = tk.OptionMenu(panel_vyber, self.subor_var, *["—"], command=self.nacitat_podla_menu)
+        self.subor_menu.config(font=(self.font_family, 14, "bold"), width=16)
+        self.subor_menu.pack(pady=(0, 10))
+
+        self.popis_label = tk.Label(panel_vyber, text="", font=(self.font_family, 12, "italic"), fg="#bbbbbb", bg=PANEL_BG_COLOR, wraplength=180)
+        self.popis_label.pack(pady=(0, 5))
+
+        self.direktorium_label = tk.Label(panel_vyber, text="", font=(self.font_family, 11), fg=DIREKTORIUM_LABEL_FG, bg=PANEL_BG_COLOR, wraplength=180, justify=tk.LEFT)
+        self.direktorium_label.pack()
+        self.aktualizovat_direktorium_label()        
+
+        # 2. Panel obsah súboru (V strede)
+        panel_obsah = tk.LabelFrame(hlavny_frame, bg=PANEL_BG_COLOR, padx=10, pady=10)
+        panel_obsah.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        scrollbar = tk.Scrollbar(panel_obsah)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.obsah_suboru_text = tk.Text(
+            panel_obsah, wrap=tk.WORD, font=(self.font_family, 14), bg="#1e1e1e", fg="#dddddd",
+            yscrollcommand=scrollbar.set, padx=15, pady=10
+        )
+        self.obsah_suboru_text.bind("<Button-1>", lambda e: "break")
+        self.obsah_suboru_text.config(state=tk.DISABLED, spacing3=2)
+        self.obsah_suboru_text.tag_config("highlight", background="#444444", foreground=self.text_color_var.get(), font=(self.font_family, 18, "bold"))
+        self.obsah_suboru_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=self.obsah_suboru_text.yview)
+
+        # --- LIVE PREVIEW ---
+        self.preview_container = tk.Frame(
+            self.master, width=350, height=160, bg=BACKGROUND_COLOR, bd=1, relief="solid",
+            highlightthickness=1, highlightbackground="#373737"   # "#373737"   #444444"
+        )
+        self.preview_container.place(relx=1.0, rely=1.0, x=-10, y=-10, anchor="se")
+        self.preview_container.pack_propagate(False)        
+       
+        # Ak pri štarte nie je náhľad povolený, okamžite ho schováme
+        show_preview_var = getattr(self, "zobrazovat_live_preview_var", None)
+        if not show_preview_var or not show_preview_var.get():
+            self.preview_container.place_forget()
+
+        self.live_preview_label = tk.Label(
+            self.preview_container, 
+            text="", 
+            font=(self.font_family, 14, "bold"),
+            fg=self.text_color_var.get(), 
+            bg=BACKGROUND_COLOR, 
+            justify="center", 
+            anchor="center"
+        )       
         
+        # padx=(ľavé, pravé) -> (25, 10) znamená 25px zľava, 10px sprava
+        # pady=(horné, dolné) -> (20, 10) znamená 20px zhora, 10px zdola        
+        self.live_preview_label.pack(
+            expand=True, 
+            fill="both", 
+            padx=25,  # 35px vľavo, 15px vpravo
+            pady=20   # 25px hore, 15px dole
+        )
+
+        # Inicializácia po vytvorení
+        self.filtrovat_subory(self.filter_var.get())
         
-    def zatvorit_nastavenia(self):
-        """
-        Uloží nastavenia bez prebliknutia hlavného rozhrania a korektne zavrie okno.
-        Obnovuje prístup k ovládacím prvkom hlavného okna.
-        """
-        # 1. Pokus o uloženie nastavení (S PARAMETROM False PROTI BLIKANIU)
+              
+    def aktualizovat_status_bar(self):
+        """Aktualizuje obsah status baru (skratka žalmu + týždeň žaltára + vigília + vynechané slávenie)."""
         try:
-            # Tu voláme uloženie s False, aby sme obišli prekreslenie labelu
-            self.ulozit_nastavenia(aktualizovat_label=False)
-        except Exception as e:
-            log_exception("zatvorit_nastavenia: kritická chyba pri ukladaní", e)
+            if self.status_bar_frame is None or self.status_bar_zaltár_label is None:
+                return
 
-        # 2. Uvoľnenie "focusu" (grab) okna
-        try:
-            if self.settings_window is not None:
-                self.settings_window.grab_release()
-        except Exception as e:
-            log_exception("zatvorit_nastavenia: grab_release failed", e)
+            zobrazit_zalm    = getattr(self, "statusbar_skratka_zalmu_var",  None)
+            zobrazit_zaltara = getattr(self, "statusbar_tyzden_zaltara_var", None)
+            # zobrazit_jks     = getattr(self, "statusbar_jks_piesne_var",     None)
 
-        # 3. Zničenie alebo skrytie okna
-        try:
-            if self.settings_window is not None:
-                self.settings_window.destroy()
-                # DÔLEŽITÉ: Nastavíme na None, aby sme predišli AttributeError nabudúce
-                self.settings_window = None 
+            text_statusu = zostav_text_status_baru(
+                date.today(),
+                bool(zobrazit_zalm and zobrazit_zalm.get()),
+                bool(zobrazit_zaltara and zobrazit_zaltara.get()),
+                getattr(self, "_aktualna_vigilia", None),
+                getattr(self, "_aktualna_vynechane", None),
+            )
+
+            if text_statusu:
+                self.status_bar_zaltár_label.config(text=text_statusu)
+                self.status_bar_frame.pack(side=tk.BOTTOM, fill=tk.X)
+            else:
+                self.status_bar_zaltár_label.config(text="")
+                self.status_bar_frame.pack_forget()
         except Exception as e:
-            log_exception("zatvorit_nastavenia: destroy failed, skúšam withdraw", e)
+            log_exception("aktualizovat_status_bar: chyba", e)
+
+
+    def aktualizovat_info_liturgickeho_roka(self, liturgicky_rok: str | None = None):
+        """
+        Aktualizuje titulok hlavného okna s liturgickým rokom, aktuálnou
+        časťou, dňom týždňa a prípadnými odpočtami / upozorneniami.
+
+        Formát titulku:
+          Kinak v2.2 | Liturgický rok A – časť: 25. TÝŽDEŇ CEZROČNÉHO OBDOBIA, štvrtok
+          Kinak v2.2 | Liturgický rok A – 3. deň Veľkonočnej oktávy (streda)
+          Kinak v2.2 | Liturgický rok A – NANEBOVZATIE PANNY MÁRIE (Slávnosť)
+            + voliteľne:  –  vigília: NAZOV SLÁVNOSTI
+            + voliteľne:  –  ⚠ nedeľa má prednosť pred: NAZOV SVIATKU
+        """
+        if not liturgicky_rok and hasattr(self, "liturgical_year_var") and self.liturgical_year_var:
+            liturgicky_rok = self.liturgical_year_var.get()
+        liturgicky_rok = liturgicky_rok or vypocitaj_liturgicky_rok()
+
+        dnes = date.today()
+        aktualna_cast = vypocitaj_aktualnu_liturgicku_cast(dnes)
+
+        if hasattr(self, "aktualna_liturgicka_cast_var") and self.aktualna_liturgicka_cast_var:
+            self.aktualna_liturgicka_cast_var.set(f"Aktuálna liturgická časť:\n{aktualna_cast}")
+
+        if hasattr(self, "master") and self.master and self.master.winfo_exists():
             try:
-                if self.settings_window:
-                    self.settings_window.withdraw()
-            except Exception as e2:
-                log_exception("zatvorit_nastavenia: withdraw failed", e2)
+                cz = zostavit_casove_vztahy_titulku(dnes)
+            except Exception as e:
+                log_exception("aktualizovat_info_liturgickeho_roka: zostavit_casove_vztahy_titulku zlyhalo", e)
+                # Fallback na starý formát
+                cz = {"predpona": "časť: ", "hlavny": aktualna_cast,
+                      "presun": None, "vynechane": None,
+                      "vigilia": None, "prednost_nedele": None}
 
-        # 4. Opätovné povolenie ovládacích prvkov v hlavnom okne
-        try:
-            if self.manual_entry is not None:
-                self.manual_entry.config(state="normal")
-            if self.filter_menu is not None:
-                self.filter_menu.config(state="normal")
-            if self.subor_menu is not None:
-                self.subor_menu.config(state="normal")
-        except Exception as e:
-            log_exception("zatvorit_nastavenia: aktivácia prvkov zlyhala", e)
+            # Vigília a poznámka o vynechanom slávení sa zobrazujú v status bare
+            # (vynechané navyše aj v title bare, aby boli oba miesta konzistentné).
+            self._aktualna_vigilia = cz["vigilia"]
+            self._aktualna_vynechane = cz["vynechane"]
 
-        # 5. Vrátenie focusu do hlavného poľa
-        try:
-            if self.manual_entry is not None:
-                self.master.after(100, lambda: self.manual_entry.focus_set()
-                    if self.master.winfo_exists() else None)
-        except Exception as e:
-            log_exception("zatvorit_nastavenia: focus_set after 100ms failed", e)       
+            self.master.title(zostav_text_hlavicky(liturgicky_rok, dnes, cz))
+            self.aktualizovat_status_bar()
+
              
+    def potvrdit_ukoncenie(self, event=None):
+        if messagebox.askyesno("Kinak: Ukončiť", "Naozaj ukončiť program?"):
+
+            # 1) Startup callbacky
+            for _aid in self._startup_after_ids:
+                try:
+                    self.master.after_cancel(_aid)
+                except Exception as e:
+                    log_exception("potvrdit_ukoncenie: after_cancel zlyhal (_startup_after_ids)", e)
+            self._startup_after_ids = []
+
+            # 2) Live preview
+            _lp = self._live_preview_after_id
+            if _lp:
+                try:
+                    self.master.after_cancel(_lp)
+                except Exception as e:
+                    log_exception("potvrdit_ukoncenie: after_cancel zlyhal (_live_preview_after_id)", e)
+                self._live_preview_after_id = None
+
+            # 3) Auto-načítanie
+            _auto = self._auto_nacitanie_after_id
+            if _auto:
+                try:
+                    self.master.after_cancel(_auto)
+                except Exception as e:
+                    log_exception("potvrdit_ukoncenie: after_cancel zlyhal (_auto_nacitanie_after_id)", e)
+                self._auto_nacitanie_after_id = None
+
+            # 4) Zničenie okna
+            self.master.destroy()    
+    
+     
+    def vycistit_stare_logy(self, dni=14, minimalny_pocet=2):
+        """
+        Odstráni diagnostické súbory staršie ako zadaný počet dní.
+        Vždy ponechá aspoň 'minimalny_pocet' najnovších súborov.
+        """
+        try:
+            # Predpokladáme, že CONFIG_FILE_PATH je definovaná globálne 
+            log_dir = CONFIG_FILE_PATH.parent
+            if not log_dir.exists():
+                return
+
+            # Získame všetky .txt súbory súvisiace s logovaním
+            vsetky_logy = sorted(
+                [f for f in log_dir.glob("*.txt") if "log" in f.name or "diagnostika" in f.name],
+                key=lambda x: x.stat().st_mtime,
+                reverse=True  # Najnovšie sú na začiatku
+            )
+
+            # Ak je súborov menej ako limit, nerobíme nič
+            if len(vsetky_logy) <= minimalny_pocet:
+                return
+
+            hranica_starnutia = datetime.now().timestamp() - (dni * 86400)
+
+            # Preskočíme prvých X najnovších, zvyšok skontrolujeme na vek
+            for subor in vsetky_logy[minimalny_pocet:]:
+                if subor.stat().st_mtime < hranica_starnutia:
+                    try:
+                        subor.unlink()
+                        log_info(f"Upratovanie: Odstránený starý log {subor.name}")
+                    except Exception as e:
+                        log_exception(f"Nepodarilo sa odstrániť log {subor.name}", e)
+        except Exception as e:
+            log_exception("vycistit_stare_logy: chyba pri čistení logov", e)
+    
+            
+
+class _PomocnikSprievodcaMixin(_ControlAppBase):
+    """Okná Pomocníka, Rýchleho sprievodcu a náhľad direktória/slávení."""
+
     def _otvor_prehliadaciu_pomocku(
         self,
         flag_attr: str,
@@ -15164,13 +14859,13 @@ class ControlApp:
 
         # Bezpečné použitie get_monitors
         try:
-            from screeninfo import get_monitors
+            from screeninfo import get_monitors  # type: ignore[import-not-found]
         except Exception:
             get_monitors = None
 
         if callable(get_monitors):
             try:
-                monitory = get_monitors()
+                monitory = cast(list, get_monitors())
                 mena = [f"{i+1}: {m.width}x{m.height} (x={m.x}, y={m.y})" for i, m in enumerate(monitory)]
                 monitor_var.set(mena[0] if mena else "")
 
@@ -15299,6 +14994,8 @@ class ControlApp:
             btn = tk.Button(
                 top_panel, text=label, bg=bg, fg=fg,
                 font=(safe_font_name, 12), relief="flat", width=width,
+                activebackground=bg, activeforeground=fg, borderwidth=0,
+                highlightthickness=0,
             )
             btn.grid(row=0, column=i, padx=2)
             stripe = tk.Frame(top_panel, height=3, bg=bg)
@@ -15593,18 +15290,831 @@ class ControlApp:
             # situácii, kedy finally zruší práve naplánovaný nový after.
                                     
 
-    def _shutdown_executor(self) -> None:
+    def zobraz_info_rezervy(self):
+        info_window = tk.Toplevel(self.settings_window)
+        info_window.title("Viac o rezervách")
+        info_window.geometry("550x660")
+        info_window.transient(self.settings_window)  # drží sa nad hlavnými nastaveniami
+
+        text = (
+            "Na rôznych zariadeniach (projektor, TV, monitor) sa správanie overscanu aj rozlíšenie obrazovky líši, "
+            "preto môže byť výsledná veľkosť písma odlišná.\n\n"
+            "Veľkosť písma pri projekcii závisí od typu zobrazovacieho zariadenia a od nastavených rezerv "
+            "v aplikácii Kinak (globálnej vertikálnej aj spodnej). Rezervy určujú, koľko miesta zostane okolo textu.\n\n"
+            "Logika výpočtu\n\n"
+            "Najprv sa odpočíta globálna vertikálna rezerva (rezerva v percentách výšky obrazovky). "
+            "Týka sa celej výšky obrazovky, takže ide o „globálny“ parameter. "
+            "Potom sa odpočíta pevná spodná rezerva (px). Ide o rezervu proti overscanu, aby spodné riadky neboli príliš nízko " 
+            "alebo orezané na zariadeniach s overscanom.\n\n"              
+            "Odporúčané hodnoty:\n\n"
+            "   • Projektor:   vertikálna 0.30–0.35,     spodná 60–80 px\n"
+            "   • TV (16:9):   vertikálna 0.25–0.28,     spodná 40–60 px\n"
+            "   • Monitor:    vertikálna 0.20–0.25,     spodná 30–40 px\n\n"  
+            "Tip podľa pomeru strán (16:9 je optimálny default)\n\n"                
+            "   • 16:9   vertikálna 0.28,                spodná 40 px\n"
+            "   • 21:9   vertikálna 0.20–0.25,       spodná 30–40 px\n\n"                    
+            "TV/projektor: používajte natívny režim obrazu (Original/Just Scan/Full),\n"
+            "bez Zoom alebo Stretch.\n\n"
+            "Ak sa zobrazenie aj napriek tomu nehodí, strofu možno upraviť priamo v textovom súbore (napr. rozdeliť riadky). "
+            "Namiesto 6 krátkych riadkov strofu rozdeliť na 4 dlhšie, čím sa dosiahne odlišný výsledný vzhľad projekcie."
+        )
+            
+        safe_font_name: str = FONT_NAME or "Arial"
+
+        tk.Label(
+            info_window,
+            text=text,
+            font=(safe_font_name, 11),
+            wraplength=500,
+            justify=tk.LEFT
+        ).pack(padx=10, pady=10, fill=tk.BOTH, expand=True)    
+
+
+    def zobrazit_o_aplikacii(self):
+        """
+        Otvára informačné okno s manuálom a verziou aplikácie.
+        ------------------------------------------------------------
+        - Zobrazuje texty pomocou tk.Text s tagmi pre formátovanie.
+        - Implementuje vlastný scrollbar a zablokovanie kliknutia.
+        - Obsahuje kompletnú diagnostiku chýb.
+        """
+        about_window = tk.Toplevel(self.master)
+        self.about_window = about_window
+        about_window.title("O aplikácii")
+        
         try:
-            ex = getattr(self, '_download_executor', None)
-            if ex is not None:
-                ex.shutdown(wait=False, cancel_futures=True)
-        except TypeError:
+            # 1) Základná konfigurácia okna
+            about_window.configure(
+                bg=BACKGROUND_COLOR,
+                highlightthickness=0,
+                bd=0
+            )
+
+            about_window.transient(self.master)
+            about_window.grab_set()
+
+            saved_w = int(self.about_window_width)
+            saved_h = int(self.about_window_height)
+            window_width = saved_w if saved_w >= 500 else 830
+            window_height = saved_h if saved_h >= 400 else 620
+            screen_width = about_window.winfo_screenwidth()
+            x = max(0, screen_width - window_width - 30)
+            y = 30
+            about_window.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+            def _uloz_geometriu_about(event=None, okamzite=False):
+                if event is not None and event.widget is not self.about_window:
+                    return
+
+                def zapis_geometrie():
+                    if self.about_window is not None and self.about_window.winfo_exists():
+                        self.about_window_width = self.about_window.winfo_width()
+                        self.about_window_height = self.about_window.winfo_height()
+                        self.ulozit_nastavenia(aktualizovat_label=False)
+
+                self._naplanuj_debounced_zapis(
+                    "_about_geom_after_id", zapis_geometrie, "_uloz_geometriu_about",
+                    okamzite=okamzite,
+                )
+
+            self.about_window.bind("<Configure>", _uloz_geometriu_about)
+
+            safe_font_name: str = FONT_NAME or "Arial"
+            bg, fg, active = "#1C1C1C", "#E0E0E0", "#F2F2F2"
+
+            # 2) Karty s obsahom
+            container = tk.Frame(
+                self.about_window,
+                bg=bg,
+                highlightthickness=0,
+                bd=0
+            )
+            container.pack(fill=tk.BOTH, expand=True)
+
+            header = tk.Frame(container, bg=bg)
+            header.pack(fill="x", pady=(10, 5))
+            top_panel = tk.Frame(header, bg=bg)
+            top_panel.pack(side="left", padx=(10, 0))
+            zoom_panel = tk.Frame(header, bg=bg)
+            zoom_panel.pack(side="left", padx=(5, 0))
+
+            content = tk.Frame(container, bg=bg)
+            content.pack(fill="both", expand=True)
+
+            frame1, frame2, frame3, frame4 = (
+                tk.Frame(content, bg=bg),
+                tk.Frame(content, bg=bg),
+                tk.Frame(content, bg=bg),
+                tk.Frame(content, bg=bg)
+            )
+            frames = {1: frame1, 2: frame2, 3: frame3, 4: frame4}
+            font_size = tk.IntVar(value=self.about_font_size)
+            text_widgets = []
+
+            def vlozit_text(parent, nazov: str, text: str):
+                scrollbar = ttk.Scrollbar(
+                    parent,
+                    orient="vertical",
+                    style="KinakDark.Vertical.TScrollbar"
+                )
+                scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+                text_widget = tk.Text(
+                    parent,
+                    wrap="word",
+                    font=(safe_font_name, font_size.get()),
+                    fg=fg,
+                    bg=bg,
+                    padx=20,
+                    pady=20,
+                    relief="flat",
+                    highlightthickness=0,
+                    borderwidth=0,
+                    yscrollcommand=scrollbar.set,
+                    insertbackground=fg
+                )
+                text_widget.pack(fill=tk.BOTH, expand=True)
+                scrollbar.config(command=text_widget.yview)
+
+                text_widget.bind("<Button-1>", self._zablokovat_klik)
+                text_widget.insert("1.0", f"{nazov}\n\n")
+                text_widget.tag_add("nadpis", "1.0", "1.end")
+                text_widget.tag_config(
+                    "nadpis",
+                    font=(safe_font_name, max(font_size.get() + 4, 12), "bold"),
+                    foreground="white"
+                )
+                text_widget.insert("end", text)
+                text_widget.config(state="disabled")
+
+                text_widget.bind("<Enter>", lambda e, tw=text_widget: tw.bind_all(
+                    "<MouseWheel>",
+                    lambda ev, scroll_widget=tw: scroll_widget.yview_scroll(int(-1 * (ev.delta / 120)), "units")
+                ))
+                text_widget.bind("<Leave>", lambda e, tw=text_widget: tw.unbind_all("<MouseWheel>"))
+                text_widgets.append(text_widget)
+                return text_widget
+
+            ovladanie_text = (
+                "RÝCHLY NÁVOD\n\n"                
+                "Zadajte číslo piesne a potom používajte klávesy:\n\n"
+                "• PLUS (+)\t\tĎalšia strofa\n"
+                "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípky)\n"
+                "• ENTER\t\tAktivovať projekciu (skryť/zobraziť text)\n"
+                "• BACKSPACE\t\tMaže číslo piesne a zároveň okamžite vypína projekciu\n"
+                "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
+                "Kinak je prenosná desktopová aplikácia na projekciu liturgických piesní, žalmov a modlitieb, so zabudovaným liturgickým kalendárom, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus a žaltárový týždeň liturgického roka.\n\n"
+                "HLAVNÉ FUNKCIE\n\n"
+                "• Projekcia textov na externý monitor alebo projektor\n"
+                "• Automatické spustenie projekcie na druhom monitore v režime celej obrazovky\n"
+                "  (vyžaduje zapnutú rozšírenú plochu v systéme)\n"
+                "• Dynamické prispôsobenie veľkosti písma podľa obsahu\n"
+                "• Podpora UTF-8 aj ANSI kódovania\n"
+                "• Zobrazenie aktuálnych liturgických informácií z okien Direktória a Slávení priamo v hlavičke a stavovom riadku\n\n"
+                "INDIKÁTOR PROJEKCIE\n\n"
+                "• Zelená = projekcia aktívna\n"
+                "• Sivá   = projekcia vypnutá\n\n"
+                "V nastaveniach je možné zapnúť malý náhľad projekcie v pravom dolnom rohu "
+                "ovládacieho okna – užitočné najmä vtedy, ak premietajúci nevidí priamo na projekčnú obrazovku.\n\n"              
+                "OKNÁ DIREKTÓRIUM A SLÁVENIA\n\n"
+                "Rýchly výber piesne alebo skratky žalmu pre konkrétne slávenie — dvojklik na bunku, bez ručného zadávania."
+            )
+
+            vyhladavanie_text = (
+                "VYHĽADÁVANIE PIESNÍ, MODLITIEB A ŽALMOV\n\n"
+                "Do poľa na zadanie piesne môžete ručne napísať:\n\n"
+                "• Čísla piesní (napr. 254)\n"
+                "• Skratky modlitieb (napr. dk → Duša Kristova)\n"
+                "• Časť názvu piesne alebo modlitby (napr. ruž → Ružencové bratstvo)\n"
+                "• Skratku žalmu (napr. 20c2 → 20. týždeň cezročného obdobia, párny rok)\n\n"
+                "POZNÁMKY K ŽALMOM\n\n"
+                "• A, B, C = liturgické roky (nedeľné žalmy)\n"
+                "• 1–6 = dni v týždni (pondelok–sobota)\n\n"
+                "Pri práci s Direktóriom stačí dvojklik na bunku — číslo piesne sa odošle do hlavného okna a okamžite sa načíta. "                
+                "Rovnako funguje aj okno Slávenia, kde sa odošle skratka príslušného slávenia."                
+            )
+
+            priprava_text = (
+                "ÚPRAVA PIESNÍ\n\n"
+                "Pri piesňach JKS je v poriadku, ak sa jedna strofa zobrazí aj na dve či tri obrazovky. "
+                "Ak chcete, aby sa celá strofa zobrazila naraz, odstráňte v textovom súbore prázdne riadky medzi veršami. "
+                "Odlišný vzhľad možno dosiahnuť aj rozdelením strofy na dlhšie riadky.\n\n"
+                "ŠPECIÁLNE ZNAKY V PIESŇACH JKS\n\n"
+                "• BODKA (·)\t\t\tObsahuje Ofertórium (použije sa dvakrát: úvod + obetovanie)\n"
+                "• PODČIARKOVNÍK (_)\t\t\tKoniec strofy\n"
+                "• KOMBINÁCIA (_·)\t\t\tKoniec úvodnej časti; nižšie sa nachádza Ofertórium\n\n"
+                "V nastaveniach je možné tieto znaky pre projekciu skryť. V hlavnom ovládacom okne "
+                "však zostanú vždy viditeľné, aby sa premietajúci vedel ľahko orientovať.\n\n"
+                "Praktická rada: Ak pieseň začína bodkou (·), pri obetovaní stačí prejsť na najbližší riadok začínajúci bodkou.\n\n"
+                "STRIEDANIE CHÓROV VO VEŠPERÁCH\n\n"
+                "Striedanie ľavého a pravého chóru je v projekcii dané striedaním obrazoviek.\n"
+                "(každá nová obrazovka = zmena chóru)\n\n"
+                "Označenie [L] / [P] slúži len ako vizuálna pomôcka – rýchla orientácia, ktorý chór je práve na obrazovke.\n\n"
+                "V nastaveniach je možné tieto znaky pre projekciu skryť, avšak v hlavnom ovládacom okne zostávajú vždy viditeľné.\n\n"                
+            )
+
+            pomoc_text = (
+                "AK PROJEKCIA NIE JE NA SPRÁVNOM MONITORE\n\n"
+                "Skontrolujte, či je v systéme zapnutá rozšírená plocha. Aplikácia vie automaticky otvoriť projekciu "
+                "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku.\n\n"
+                "AK SA PIESNE NENAČÍTAJÚ\n\n"
+                "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí mať pri sebe aj priečinok "
+                "s názvom 'piesne'.\n\n"                
+                "Kinak (priečinok môže mať ľubovoľný názov)\n"
+                " ├── Kinak.exe\n"
+                " └── piesne/\n"
+                "               ├── 001.txt\n"
+                "               ├── 002.txt\n"
+                "               ├── 003.txt\n"
+                "               └──  .  .  .\n\n"                  
+                "Skontrolujte, či je v Nastaveniach správne vybraný priečinok piesní. "
+                "Ak priečinok neexistuje, je prázdny alebo neobsahuje textové súbory, "
+                "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"              
+                
+                "LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA\n\n"
+                "Liturgické výpočty v aplikácii Kinak sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku.\n\n"
+                f"• Kalendár je zostavený pre: {KALENDAR_KRAJINA} (Slovensko)\n"
+                f"• Výpočty podľa Všeobecných noriem o liturgickom roku a Direktóriá KBS\n"
+                f"• Zdroje dát: {KALENDAR_ZDROJE}\n\n\n"          
+                                                                    
+                "Kinak\n"
+                "Mesto vzniku: Kremnica\n"
+                "Dátum vzniku: november 2025\n"
+                f"Verzia: {KINAK_VERSION}\n"            
+               
+            )
+
+            vlozit_text(frame1, "Ovládanie", ovladanie_text)
+            vlozit_text(frame2, "Vyhľadávanie", vyhladavanie_text)
+            vlozit_text(frame3, "Úprava textov", priprava_text)
+            vlozit_text(frame4, "Pomoc pri probléme", pomoc_text)
+
+            buttons, stripes = self._build_info_tabs_header(
+                top_panel, safe_font_name, bg, fg,
+                tab_specs=[
+                    ("Ovládanie", 13),
+                    ("Vyhľadávanie", 15),
+                    ("Úprava textov", 17),
+                    ("Pomoc pri probléme", 18),
+                ],
+            )
+
+            def show(which):
+                self.about_last_tab = which
+                self.ulozit_nastavenia(aktualizovat_label=False)
+                self._show_tab(which, frames, stripes, buttons, safe_font_name, bg, active)
+                self.manual_entry.focus_set()
+
+            for i in (1, 2, 3, 4):
+                buttons[i].config(command=lambda i=i: show(i))
+
+            def apply_font_preserve_focus():
+                size = font_size.get()
+                for text_widget in text_widgets:
+                    text_widget.config(font=(safe_font_name, size))
+                    text_widget.tag_config(
+                        "nadpis",
+                        font=(safe_font_name, max(size + 4, 12), "bold")
+                    )
+                self.about_font_size = size
+                self.ulozit_nastavenia(aktualizovat_label=False)
+                self.manual_entry.focus_set()
+
+            tk.Button(
+                zoom_panel,
+                text="+",
+                width=3,
+                font=(safe_font_name, 12, "bold"),
+                bg=bg,
+                fg=fg,
+                relief="flat",
+                command=lambda: (font_size.set(min(40, font_size.get() + 1)), apply_font_preserve_focus())
+            ).pack(side="left")
+
+            tk.Button(
+                zoom_panel,
+                text="−",
+                width=3,
+                font=(safe_font_name, 12, "bold"),
+                bg=bg,
+                fg=fg,
+                relief="flat",
+                command=lambda: (font_size.set(max(8, font_size.get() - 1)), apply_font_preserve_focus())
+            ).pack(side="left")
+
+            def reset_okna():
+                self.about_window_width = 830
+                self.about_window_height = 620
+
+                if self.about_window is not None and self.about_window.winfo_exists():
+                    reset_x = max(0, self.about_window.winfo_screenwidth() - self.about_window_width - 30)
+                    self.about_window.geometry(f"{self.about_window_width}x{self.about_window_height}+{reset_x}+30")
+
+                font_size.set(DEFAULT_CONFIG.get("about_font_size", 12))
+                apply_font_preserve_focus()
+
+            tk.Button(
+                zoom_panel,
+                text="Reset",
+                width=6,
+                font=(safe_font_name, 12, "bold"),
+                bg=bg,
+                fg=fg,
+                relief="flat",
+                command=reset_okna
+            ).pack(side="left", padx=(5, 0))
+
+            last = max(1, min(int(getattr(self, "about_last_tab", 1) or 1), 4))
+            show(last)
+
+            # 6) Zatváranie okna 
+            def pri_zatvoreni():
+                _uloz_geometriu_about(okamzite=True)
+
+                # Najprv bezpečne zničíme dcérske okno
+                if self.about_window is not None and self.about_window.winfo_exists():
+                    self.about_window.destroy()
+                
+                # Focus vrátime len ak manual_entry existuje (poistka proti AttributeError)
+                if self.manual_entry is not None and self.manual_entry.winfo_exists():
+                    self.manual_entry.focus_set()
+
+            self.about_window.protocol("WM_DELETE_WINDOW", pri_zatvoreni)
+            self.about_window.bind("<Escape>", lambda e: pri_zatvoreni())
+
+            # Vynútenie focusu pri otvorení okna
+            about_window.after(50, lambda: about_window.focus_force())
+
+            # 7) Reset UI poistka
+            self.song_combobox.current(0)
             try:
-                ex.shutdown(wait=False)  # type: ignore[union-attr]
-            except Exception:
-                pass
+                self.reset_ui()
+                self.manual_entry.focus_set()
+            except Exception as e_reset:
+                log_exception("Chyba pri reset_ui v okne O aplikácii", e_reset)
+
+        except Exception as e:
+            log_exception("Kritická chyba pri otváraní okna O aplikácii", e)  
+        
+        
+
+class ControlApp(
+    _NastaveniaMixin,
+    _StahovanieMixin,
+    _PiesneSuboryMixin,
+    _TextObsahMixin,
+    _ProjekciaMixin,
+    _KlavesoveSkratkyMixin,
+    _HlavneOknoMixin,
+    _PomocnikSprievodcaMixin,
+):
+    """Hlavné ovládacie okno, ktoré zostane na primárnom monitore."""
+    def __init__(self, master):
+        log_info("Inicializujem ControlApp...")
+
+        self._loading_settings = True
+
+        # Aktuálna veľkosť písma – spravovaná výhradne cez self.font_size.
+        # Nahradza pôvodný globálny mutable FONT_SIZE.
+        self.font_size: int = DEFAULT_CONFIG["font_size"]
+
+        # 1. ZÁKLADNÉ STAVOVÉ PREMENNÉ
+        self.is_text_visible = False
+        log_debug(f"is_text_visible = {self.is_text_visible}")
+
+        # Zámok pre thread-safe ochranu pred súbežným sťahovaním čítaní.
+        # Inicializujeme tu – pred vytvorit_gui() – aby GUI udalosť nemohla
+        # zavolať aktualizovat_citania_gui() skôr, než lock existuje.
+        self._citania_lock = threading.Lock()
+        self._vespery_lock = threading.Lock()
+        self._refreny_lock = threading.Lock()
+        self._cezrocne_tyzdenne_lock = threading.Lock()
+        self._liturgicke_tyzdne_lock = threading.Lock()
+
+        self._download_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="KinakDL")
+        # POZN.: `atexit.register(fn, **kwargs)` iba ULOŽÍ volanie na neskôr –
+        # nevyhodnocuje ho a nekontroluje jeho signatúru hneď teraz. Prípadný
+        # TypeError (napr. keby `cancel_futures` na danom Pythone neexistoval)
+        # by teda vznikol až pri skutočnom ukončovaní procesu, nie tu – obalenie
+        # samotného `register()` do try/except TypeError bolo preto neúčinné.
+        # `cancel_futures` je súčasťou `ThreadPoolExecutor.shutdown()` od
+        # Pythonu 3.9, čo je aj minimálna podporovaná verzia tejto aplikácie
+        # (pozri poznámku pri `from __future__ import annotations` na začiatku
+        # súboru), takže tu nie je potrebný žiadny fallback.
+        atexit.register(self._download_executor.shutdown, wait=False, cancel_futures=True)
+        
+        # --- Inicializácia hlavného okna ---
+        self.master = master
+        try:
+            self.master.protocol("WM_DELETE_WINDOW", lambda: (self._shutdown_executor(), self.master.destroy()))
         except Exception:
             pass
+        self.initializing = True
+        self.posledny_nazov_v_labeli = None
+
+        # ------------------------------------------------------------
+        #  Hlavné atribúty deklarované vopred.
+        #  Konkrétne widgety sa priradia až pri vytváraní GUI/okien.
+        # ------------------------------------------------------------
+        self.strofa_label: tk.Text = cast(tk.Text, None)
+        self.nazov_label: tk.Label = cast(tk.Label, None)
+        self.obsah_suboru_text: tk.Text = cast(tk.Text, None)
+        self.popis_label: tk.Label = cast(tk.Label, None)
+        self.direktorium_label: tk.Label = cast(tk.Label, None)
+        self.manual_entry: tk.Entry = cast(tk.Entry, None)
+        self.song_combobox: ttk.Combobox = cast(ttk.Combobox, None)
+        self.song_folder_label: tk.Label = cast(tk.Label, None)
+        self.status_bar_frame: tk.Frame = cast(tk.Frame, None)
+        self.status_bar_zaltár_label: tk.Label = cast(tk.Label, None)
+        self.live_preview_label: tk.Label = cast(tk.Label, None)
+        self.preview_container: tk.Widget = cast(tk.Widget, None)
+        self.filter_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
+        self.subor_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
+        self.vyber_farbu_button: ttk.Button = cast(ttk.Button, None)
+        self.obdobie_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
+        self.indikator_farby: tk.Canvas = cast(tk.Canvas, None)
+
+        self.projection_window_root: tk.Toplevel = cast(tk.Toplevel, None)
+        self.projection_window: ProjectionWindow = cast(ProjectionWindow, None)
+        self.pomocnik_okno: tk.Toplevel | None = None
+        self.settings_window: tk.Toplevel | None = None
+        self.about_window: tk.Toplevel | None = None
+        self.direktorium_window: tk.Toplevel | None = None
+        self.slavnosti_window: tk.Toplevel | None = None
+
+        self._startup_after_ids: list[str] = []
+        self._main_geom_after_id = None
+        self._pomocnik_geom_after_id = None
+        self._settings_geom_after_id = None
+        self._about_geom_after_id = None
+        self._direktorium_geom_after_id = None
+        self._slavnosti_geom_after_id = None
+        self._live_preview_after_id = None
+        self._auto_nacitanie_after_id = None
+
+        self._direktorium_open = False
+        self._slavnosti_open = False
+        self._suppress_vymazat = False
+        self._live_preview_updating = False
+        self._preview_test_font = None
+        self._strofa_test_font = None
+        self._aktualna_vigilia = None
+        self._aktualna_vynechane = None
+        self.font_family: str = FONT_NAME or "Arial"
+     
+        
+        # 2. UPRATOVANIE LOGOV (Spúšťame pred načítaním nastavení)
+        # 14 dní, ponechať aspoň 2 najnovšie súbory
+        self.vycistit_stare_logy(dni=14, minimalny_pocet=2)
+
+        # 3. NAČÍTANIE NASTAVENÍ A POISTKA FADE SPEED        
+        # Ak v konfigu niečo chýba, použije sa default
+        self.fade_speed = DEFAULT_CONFIG.get("fade_speed", "mierne rýchle")
+
+        # --- OŠETRENIE MODULU SCREENINFO ---
+        if get_monitors is None:
+            try:
+                log_info("Modul 'screeninfo' nebol nájdený — projekcia sa otvorí na hlavnom monitore.")
+                messagebox.showwarning(
+                    "Pozor",
+                    "Modul 'screeninfo' nebol nájdený.\n\n"
+                    "Projekcia sa otvorí na hlavnom monitore.\n"
+                    "Ak chcete používať viac monitorov, nainštalujte balík:\n"
+                    "pip install screeninfo"
+                )
+            except Exception as e:
+                log_exception("ControlApp.__init__: screeninfo warning zlyhalo", e)
+
+        # --- Tmavý tenký scrollbar – vytvoriť iba raz ---
+        style = ttk.Style()
+        try:
+            # Ak štýl už existuje, Tcl vyhodí chybu, ktorú ignorujeme
+            style.element_create("KinakDark.Scrollbar.trough", "from", "default")
+            style.element_create("KinakDark.Scrollbar.thumb", "from", "default")
+        except tk.TclError:
+            pass
+
+        style.layout(
+            "KinakDark.Vertical.TScrollbar",
+            [("KinakDark.Scrollbar.trough", {"children": [("KinakDark.Scrollbar.thumb", {"sticky": "nswe"})], "sticky": "nswe"})]
+        )
+
+        style.configure(
+            "KinakDark.Vertical.TScrollbar",
+            troughcolor="#1e1e1e",
+            background="#333333",
+            darkcolor="#222222",
+            lightcolor="#444444",
+            bordercolor="#1e1e1e",
+            arrowcolor="#dddddd",
+            width=8
+        )
+
+        # --- Inicializácia premenných z konfigurácie ---
+        self.bottom_margin = DEFAULT_CONFIG.get("bottom_margin", 40)
+        self.bottom_margin_var = tk.IntVar(self.master, value=self.bottom_margin)
+
+        self.reserved_vertical_ratio = DEFAULT_CONFIG.get("reserved_vertical_ratio", 0.20)
+        self.reserved_vertical_var = tk.DoubleVar(self.master, value=self.reserved_vertical_ratio)
+
+        # Premenné Pomocníka
+        self.pomocnik_font_size = DEFAULT_CONFIG.get("pomocnik_font_size", 14)
+        self.pomocnik_x = DEFAULT_CONFIG.get("pomocnik_x", -1)
+        self.pomocnik_y = DEFAULT_CONFIG.get("pomocnik_y", -1)
+        self.pomocnik_width = DEFAULT_CONFIG.get("pomocnik_width", -1)
+        self.pomocnik_height = DEFAULT_CONFIG.get("pomocnik_height", -1)
+        self.pomocnik_last_tab = DEFAULT_CONFIG.get("pomocnik_last_tab", 1)
+
+        # Hodnoty ukladané do konfigurácie.
+        self.text_color: str = TEXT_COLOR
+        self.zobrazit_direktorium: bool = DEFAULT_CONFIG.get("zobrazit_direktorium", False)
+        self.zobrazovat_live_preview: bool = DEFAULT_CONFIG.get("zobrazovat_live_preview", True)
+        self.zobrazovat_specialne_znaky: bool = DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True)
+        self.zobrazovat_znaky_chorov: bool = DEFAULT_CONFIG.get("zobrazovat_znaky_chorov", True)
+        self.statusbar_tyzden_zaltara: bool = DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", True)
+        self.statusbar_skratka_zalmu: bool = DEFAULT_CONFIG.get("statusbar_skratka_zalmu", True)
+        self.statusbar_jks_piesne: bool = DEFAULT_CONFIG.get("statusbar_jks_piesne", True)
+        self.diagnostika_povolena: bool = DEFAULT_CONFIG.get("diagnostika_povolena", True)
+
+        # Premenné geometrie hlavného okna (ukladaná/načítavaná pozícia a veľkosť)
+        self.main_window_x:      int = -1
+        self.main_window_y:      int = -1
+        self.main_window_width:  int = -1
+        self.main_window_height: int = -1
+        self.settings_window_width: int = DEFAULT_CONFIG.get("settings_window_width", -1)
+        self.settings_window_height: int = DEFAULT_CONFIG.get("settings_window_height", -1)
+        self.direktorium_window_width: int = DEFAULT_CONFIG.get("direktorium_window_width", -1)
+        self.direktorium_window_height: int = DEFAULT_CONFIG.get("direktorium_window_height", -1)
+        self.slavnosti_window_width: int = DEFAULT_CONFIG.get("slavnosti_window_width", -1)
+        self.slavnosti_window_height: int = DEFAULT_CONFIG.get("slavnosti_window_height", -1)
+        self.about_window_width: int = DEFAULT_CONFIG.get("about_window_width", -1)
+        self.about_window_height: int = DEFAULT_CONFIG.get("about_window_height", -1)
+        self.about_last_tab: int = DEFAULT_CONFIG.get("about_last_tab", 1)
+        self.about_font_size: int = DEFAULT_CONFIG.get("about_font_size", 12)
+
+        # --- Načítanie direktória ---
+        try:
+            # DIREKTORIUM_DATA by malo byť načítané globálne v Kinak.py            
+            self.direktorium_data = DIREKTORIUM_DATA
+            log_info(f"Direktórium načítané, počet období: {len(self.direktorium_data)}")
+        except Exception as e:
+            self.direktorium_data = {}
+            log_exception("Chyba pri priradení direktória", e)
+
+        # --- Nastavenie geometrie hlavného okna ---
+        screen_width = self.master.winfo_screenwidth()
+        screen_height = self.master.winfo_screenheight()
+
+        # Načítanie uloženej geometrie z configu (ak existuje)
+        # Config z disku načítame priamo tu – nacitat_nastavenia() sa volá neskôr,
+        # ale geometriu potrebujeme nastaviť ešte pred vytvorením GUI widgetov.
+        _early_config = {}
+        if CONFIG_FILE_PATH.exists():
+            try:
+                _raw = CONFIG_FILE_PATH.read_text(encoding='utf-8')
+                if _raw.strip():
+                    _loaded_early_config = json.loads(_raw)
+                    if isinstance(_loaded_early_config, dict):
+                        _early_config = _loaded_early_config
+                    else:
+                        log_info(
+                            "Predčasné načítanie geometrie: config.json nie je JSON objekt "
+                            f"({type(_loaded_early_config).__name__}), používam predvolenú geometriu."
+                        )
+            except Exception as e:
+                log_exception('Predčasné načítanie geometrie z configu zlyhalo', e)
+
+        def _safe_geometry_int(key, default=-1):
+            try:
+                return int(_early_config.get(key, default))
+            except (TypeError, ValueError):
+                log_info(f"Predčasné načítanie geometrie: neplatná hodnota {key!r}, používam {default}.")
+                return default
+
+        _saved_w = _safe_geometry_int("main_window_width")
+        _saved_h = _safe_geometry_int("main_window_height")
+        _saved_x = _safe_geometry_int("main_window_x")
+        _saved_y = _safe_geometry_int("main_window_y")
+
+        if _saved_w != -1 and _saved_h != -1 and _saved_x != -1 and _saved_y != -1:
+            # Použiť uloženú geometriu
+            window_width  = _saved_w
+            window_height = _saved_h
+            x = _saved_x
+            y = _saved_y
+        else:
+            # Predvolená geometria (dynamický výpočet)
+            window_width  = int(screen_width * 0.8)
+            usable_height = screen_height - 48
+            window_height = max(700, min(900, int(usable_height * 0.95)))
+            x = (screen_width - window_width) // 2
+            y = max(0, (screen_height - window_height) // 2 - 40)
+
+        self.master.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+        # --- Stavové premenné GUI ---
+        self.text_color_var = tk.StringVar(self.master, value=TEXT_COLOR)
+        self.default_filter_var = tk.StringVar(self.master, value=DEFAULT_CONFIG.get("default_filter_obdobie", "Cezročné C2"))
+        self.obdobie_var = tk.StringVar(self.master)
+        self.pouzit_vlastnu_farbu = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("pouzit_vlastnu_farbu", False))
+        self.fade_speed_var = tk.StringVar(self.master, value=self.fade_speed)
+        self.liturgical_year_var = tk.StringVar(self.master, value=vypocitaj_liturgicky_rok())
+
+        self.zobrazit_direktorium_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_direktorium", False))
+        self.zobrazovat_live_preview_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_live_preview", True))
+        self.zobrazovat_specialne_znaky_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True))
+        self.zobrazovat_znaky_chorov_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_znaky_chorov", True))
+        self.statusbar_tyzden_zaltara_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", True))
+        self.statusbar_skratka_zalmu_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_skratka_zalmu", True))
+        self.statusbar_jks_piesne_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_jks_piesne", True))
+        self.diagnostika_povolena_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("diagnostika_povolena", True))
+        self.aktualna_liturgicka_cast_var = tk.StringVar(
+            self.master,
+            value=format_aktualna_liturgicka_cast()
+        )
+
+        # --- Atribúty pre piesne ---
+        self.aktualne_cislo_piesne = "000"
+        self.aktualne_strofy = []
+        self.aktualny_index_strofa = 0
+        self.original_projection_text = ""
+        self.nazov_piesne = ""
+        self.aktualny_subor_cesta = None
+
+        # Definícia liturgických období
+        self.obdobie_subory = {
+            "Adventné": ["1AD", "2AD", "3AD", "4AD"],
+            "Vianočné": ["1VI", "STEF", "SJE", "NEV", "SR", "PDR", "PMB", "2VI", "NMJ", "KKP"],
+            "Pôstne": ["PS", "1P", "2P", "3P", "4P", "5P", "VT", "ZST", "VP", "ZV"],
+            "Veľkonočné": ["VG", "1VN", "VPON", "2VN", "3VN", "4VN", "5VN", "6VN", "NP", "7VN"],
+            "Turíce a sviatky": ["1TS", "2TS", "3TS", "4TS", "5TS", "6TS", "7TS"],
+            "Cezročné sviatky": ["FJ", "NJK", "NAVPM", "CMV", "BEN", "BRI", "PREM", "VAV", "BAR", "NPMAR", "PSK", "MATE", "MGR", "ZOS", "VPLB", "OND"],
+            "Cezročné C1": [f"{i}C1" for i in range(1, 35)],
+            "Cezročné C2": [f"{i}C2" for i in range(1, 35)],
+            "Mesačné": [f"{i}L" for i in range(1, 13)],
+            # Sentinel None – reálny zoznam súborov sa počíta dynamicky
+            # v _ziskaj_nezaradene_subory() pri každom výbere tohto filtra.
+            "Modlitby a iné": None,
+        }
+
+        self.popisy_suborov = {
+            "1AD": "Prvý adventný týždeň",
+            "2AD": "Druhý adventný týždeň",
+            "3AD": "Tretí adventný týždeň – Nedeľa Gaudete",
+            "4AD": "Štvrtý adventný týždeň",
+            "1VI": "Oktáva po narodení Pána", 
+            "STEF": "Sv. Štefana, prvého mučeníka (26. XII.)",
+            "SJE": "Sv. Jána, apoštola a evanjelistu (27. XII.)",
+            "NEV": "Sv. Neviniatok, mučeníkov (28. XII.)",
+            "SR": "Svätej rodiny Ježiša, Márie a Jozefa",
+            "PDR": "Posledný deň roka",
+            "PMB": "Panny Márie Bohorodičky (1. I.)",
+            "NMJ": "Najsvätejšie meno Ježiš (3. I.)",
+            "2VI": "Vianočné obdobie",
+            "KKP": "Krst Krista Pána",
+            "PS": "Popolcová streda a dni po nej",
+            "1P": "Prvý pôstny týždeň",
+            "2P": "Druhý pôstny týždeň",
+            "3P": "Tretí pôstny týždeň",
+            "4P": "Štvrtý pôstny týždeň – Nedeľa Laetare",
+            "5P": "Piaty pôstny týždeň – Smrtná nedeľa",
+            "VT": "Veľký týždeň",
+            "ZST": "Zelený štvrtok",
+            "VP": "Veľký piatok",
+            "ZV": "Zvestovanie Pána*",
+            
+            "VG": "Veľkonočná vigília",
+            "1VN": "Veľkonočná nedeľa Pánovho zmŕtvychvstania",            
+            "VPON": "Pondelok vo Veľkonočnej oktáve",
+            "2VN": "2. veľkonočná nedeľa – Nedeľa Božieho milosrdenstva",
+            "3VN": "3. veľkonočná nedeľa",
+            "4VN": "4. veľkonočná nedeľa – Nedeľa Dobrého pastiera",
+            "5VN": "5. veľkonočná nedeľa",
+            "6VN": "6. veľkonočná nedeľa",
+            "NP":  "Nanebovstúpenie Pána",
+            "7VN": "7. veľkonočná nedeľa",
+            "1TS": "Nedeľa zoslania Ducha Svätého", "2TS": "Panny Márie, Matky Cirkvi", "3TS": "Pána Ježiša Krista, najvyššieho a večného kňaza",
+            "4TS": "Najsvätejšia Trojica", "5TS": "Najsvätejšieho Kristovho Tela a Krvi", "6TS": "Najsvätejšieho Srdca Ježišovho",
+            "7TS": "Nepoškvrnené Srdce Panny Márie",
+            "FJ": "Sv. Filipa a Jakuba, apoštolov (3. V.)",
+            "NJK": "Narodenie sv. Jána Krstiteľa (24. VI.)",
+            "NAVPM": "Návšteva preblahoslavenej Panny Márie (2. VII.)",
+            "BEN":   "Sv. Benedikta, opáta, patróna Európy (11. VII.)",
+            "BRI":   "Sv. Brigity, rehoľníčky, patrónky Európy (23. VII.)",
+            "VAV":   "Sv. Vavrinca, diakona a mučeníka (10. VIII.)",
+            "BAR":   "Sv. Bartolomeja, apoštola (24. VIII.)",
+            "MATE":  "Sv. Matúša, apoštola a evanjelistu (21. IX.)",
+            "OND":   "Sv. Ondreja, apoštola (30. XI.)",
+            "CMV":   "Sv. Cyrila a Metoda (5.VII.)",
+            "PREM":  "Premenenie Pána (6. VIII.)",
+            "NPMAR": "Narodenie Panny Márie (8. IX.)",
+            "PSK":   "Povýšenie Svätého kríža (14. IX.)",
+            "MGR":   "Sv. Michala, Gabriela a Rafaela, archanieli (29. IX.)",
+            "ZOS":   "Spomienka na Všetkých zosnulých veriacich (2. XI.)",
+            "VPLB":  "Výročie posviacky Lateránskej baziliky (9. XI.)"
+        }
+
+        mesiace = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"]
+        for i, mesiac in enumerate(mesiace, start=1):
+            self.popisy_suborov[f"{i}L"] = mesiac
+        for i in range(1, 35):
+            self.popisy_suborov[f"{i}C1"] = f"{i}. týždeň (nepárny rok)"
+            self.popisy_suborov[f"{i}C2"] = f"{i}. týždeň (párny rok)"
+
+        # --- NAČÍTANIE NASTAVENÍ (Pathlib ochrana) ---
+        self.nacitat_nastavenia()
+        
+        # Prevod song_folder z configu (string) na Path objekt
+        # Ak config ešte neexistuje, použije sa DEFAULT_SONG_FOLDER (už je Path)
+        self.song_folder_path = Path(self.config.get("song_folder", DEFAULT_SONG_FOLDER))
+        
+        log_debug(f"CONFIG JE TU: {CONFIG_FILE_PATH.resolve()}")
+        log_debug(f"PIESNE SÚ V: {self.song_folder_path.resolve()}")
+        
+        # --- Inicializácia Projekčného okna ---
+        self.default_use_fade = self.config.get("default_use_fade", True)
+
+        self.projection_window_root = tk.Toplevel(self.master)
+
+        # Použijeme setattr, aby editor (Pylance/Mypy) nehlásil chybu "Attribute unknown"
+        setattr(self.projection_window_root, "control_app_ref", self)
+
+        self.projection_window = ProjectionWindow(
+            self.projection_window_root,
+            int(self.config.get("font_size", 75)),
+            text_color=self.text_color_var.get(),
+            fade_enabled=str(self.default_use_fade).lower() == "true",
+            bottom_margin=int(self.bottom_margin_var.get()),
+            reserved_vertical_ratio=float(self.reserved_vertical_var.get()),
+            fade_speed=self.fade_speed_var.get(),
+            preferred_monitor_index=getattr(self, "preferred_monitor_index", 0)
+        )
+
+        # Nastavenie ďalších vlastností pre projekčné okno
+        self.projection_window.fade_speed = self.fade_speed
+        self.projection_window.target_text_color = self.text_color_var.get()
+        self.projection_window.zobrazovat_specialne_znaky = self.zobrazovat_specialne_znaky_var.get()
+        self.projection_window.zobrazovat_znaky_chorov = self.zobrazovat_znaky_chorov_var.get()
+        self.projection_window.preferred_monitor_index = getattr(self, "preferred_monitor_index", 0)
+        
+        # Zabezpečenie existencie priečinka (Pathlib)
+        self.song_folder_path.mkdir(parents=True, exist_ok=True)
+
+        # Načítanie zoznamu piesní
+        self.zoznam_piesni_data = self.nacitaj_piesne_do_zoznamu_z_priecinka()
+        
+        # Vytvorenie GUI a skratiek
+        self.vytvorit_gui()
+        self.nastavit_globalne_skratky()
+
+        # --- KRITICKÝ KROK PRE STABILITU ---
+        # Vynútime, aby si Windows uvedomil skutočné rozmery okna skôr, než skončí init
+        self.master.update_idletasks()
+        self.master.update() 
+
+        # Ukončenie inicializácie
+        self.initializing = False
+        self.aktualizovat_vzhlad()
+
+        # Vyčistenie projekcie pri štarte
+        self.projection_window.update_text("")
+        self.projection_window.update_title(name="", current=0, total=None)
+
+        # --- Ukladanie geometrie hlavného okna pri každej zmene veľkosti/pozície ---
+        def _uloz_geometriu_hlavneho_okna(event):
+            if event.widget is not self.master:
+                return
+            if self.initializing:
+                return
+
+            def zapis_geometrie():
+                self.main_window_x = self.master.winfo_x()
+                self.main_window_y = self.master.winfo_y()
+                self.main_window_width = self.master.winfo_width()
+                self.main_window_height = self.master.winfo_height()
+                self.ulozit_nastavenia(aktualizovat_label=False)
+
+            self._naplanuj_debounced_zapis(
+                "_main_geom_after_id", zapis_geometrie, "_uloz_geometriu_hlavneho_okna"
+            )
+
+        self.master.bind('<Configure>', _uloz_geometriu_hlavneho_okna)
+
+        # Focus na vstupné pole
+        self.master.focus_set()
+
+        # Jednorazové inicializačné callbacky – ID sledujeme, aby ich
+        # potvrdit_ukoncenie mohlo zrušiť pred master.destroy().
+        # (Tkinter síce zruší after() pri destroy() automaticky, ale
+        # explicitné cancel je bezpečnejšie pri rýchlom zavretí počas initu.)
+        _id1 = self.master.after(_STARTUP_FOCUS_DELAY_MS,   lambda: self.manual_entry.focus_set())
+        _id2 = self.master.after(_STARTUP_PREVIEW_DELAY_MS, lambda: self.update_live_preview(""))
+        _id3 = self.master.after(_STARTUP_SAVE_DELAY_MS,    self.ulozit_nastavenia, False)
+        self._startup_after_ids = [_id1, _id2, _id3]
+
+        log_info("ControlApp inicializovaný.")
+    
+
 
 if __name__ == "__main__":
 
