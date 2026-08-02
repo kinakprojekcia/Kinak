@@ -15521,7 +15521,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí mať pri sebe aj priečinok "
                 "s názvom 'piesne'.\n\n"              
                                          
-                                                             
+                "Ak priečinok premenujete (napr. na Kinak_večeradlo), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/).\n\n"                                         
                 "Kinak (priečinok môže mať ľubovoľný názov)\n"
                 " ├── Kinak.exe\n"
                 " └── piesne/\n"
@@ -15549,9 +15549,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Kinak\n"
                 "Mesto vzniku: Kremnica\n"
                 "Dátum vzniku: november 2025\n"
-                f"Verzia: {KINAK_VERSION}\n"            
-               
-            )
+                f"Verzia: {KINAK_VERSION}\n"         
+            ) 
+            
 
             vlozit_text(frame1, "Ovládanie", ovladanie_text)
             vlozit_text(frame2, "Vyhľadávanie", vyhladavanie_text)
