@@ -126,6 +126,8 @@ Spustite a choďte do menu Pomoc → Rýchly sprievodca
 
 Ak priečinok premenujete (napr. na Kinak_večeradlo), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/).
 
+Nezabudnite v Nastaveniach správne vybrať cestu k priečinku piesne: Kinak_večeradlo/piesne
+
 LICENCIA
 
 MIT License - pozri súbor LICENSE 
