@@ -15519,7 +15519,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku.\n\n"
                 "AK SA PIESNE NENAČÍTAJÚ\n\n"
                 "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí mať pri sebe aj priečinok "
-                "s názvom 'piesne'.\n\n"                
+                "s názvom 'piesne'.\n\n"              
+                                         
+                                                             
                 "Kinak (priečinok môže mať ľubovoľný názov)\n"
                 " ├── Kinak.exe\n"
                 " └── piesne/\n"
@@ -15529,8 +15531,15 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "               └──  .  .  .\n\n"                  
                 "Skontrolujte, či je v Nastaveniach správne vybraný priečinok piesní. "
                 "Ak priečinok neexistuje, je prázdny alebo neobsahuje textové súbory, "
-                "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"              
+                "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"  
                 
+                "NEČITATEĽNÁ DIAKRITIKA\n\n"
+                "Databáza textov je uložená v priečinku piesne. Textové súbory používajú kódovanie ANSI alebo UTF‑8. "
+                "Ak sa súbor z nejakého dôvodu poškodí, môže sa stať, že sa na obrazovke zobrazia nečitateľné znaky diakritiky.\n\n"
+                "Riešenie je jednoduché:\n\n"
+                "otvorte súbor v Notepade, zvoľte Uložiť ako… a vyberte kódovanie ANSI alebo UTF‑8.\n"
+                "Po uložení sa text zobrazí správne.\n\n"               
+                                          
                 "LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA\n\n"
                 "Liturgické výpočty v aplikácii Kinak sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku.\n\n"
                 f"• Kalendár je zostavený pre: {KALENDAR_KRAJINA} (Slovensko)\n"
