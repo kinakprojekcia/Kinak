@@ -106,7 +106,7 @@ Pre bežného používateľa (Windows)
 
 Stiahnite si celý priečinok Kinak_v3.1
 
-Súbor Kinak.exe musí mať pri sebe aj priečinok s názvom piesne
+Kinak.exe musí mať pri sebe aj priečinok s názvom piesne
 
 Kinak (priečinok môže mať ľubovoľný názov)
 
