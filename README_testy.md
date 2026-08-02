@@ -46,6 +46,4 @@ liturgických pravidiel opísaných v docstringoch `Kinak.py` a ručne
 prepočítané (nie skopírované z výstupu testovanej funkcie) – pozri komentáre
 pri jednotlivých testoch.
 
-Funkčnosť sady bola overená aj "mutation testingom" – dočasné zámerné
-pokazenie Veľkonočného algoritmu aj vrátenie opraveného mŕtveho kódu `"OP"`
-spôsobilo presne očakávané zlyhania príslušných testov.
+
