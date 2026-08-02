@@ -114,13 +114,13 @@ Kinak (priečinok môže mať ľubovoľný názov)
 
 └── piesne/
 
-    ├── 001.txt
+      ├── 001.txt
     
-    ├── 002.txt
+      ├── 002.txt
     
-    ├── 003.txt
+      ├── 003.txt
     
-    └── ...
+      └── ...
 
 Spustite a choďte do menu Pomoc → Rýchly sprievodca
 
