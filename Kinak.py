@@ -8380,6 +8380,7 @@ if TYPE_CHECKING:
         def reset_ui(self, *args: Any, **kwargs: Any) -> Any: ...
         def rozdel_text_na_bloky(self, *args: Any, **kwargs: Any) -> Any: ...
         def set_projection_indicator(self, *args: Any, **kwargs: Any) -> Any: ...
+        def skonvertovat_piesne_do_utf8(self, *args: Any, **kwargs: Any) -> Any: ...
         def skus_manualne_nacitanie(self, *args: Any, **kwargs: Any) -> Any: ...
         def toggle_projection_text(self, *args: Any, **kwargs: Any) -> Any: ...
         def ulozit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9345,6 +9346,13 @@ class _NastaveniaMixin(_ControlAppBase):
 
         # 8. UMIESTNENIE SÚBOROV
         frame_folder = vytvor_sekciu(zakladne_frame, "Umiestnenie súborov")
+        vytvor_popis(
+            frame_folder,
+            "Ak sa v piesňach niekedy namiesto diakritiky zobrazujú nečitateľné "
+            "znaky (napr. „Ã¡“ namiesto „á“), použi tlačidlo „Skonvertovať do "
+            "UTF-8…“ – bezpečne prevedie všetky .txt súbory v priečinku na "
+            "správne UTF-8 kódovanie. Originály sa pred tým zálohujú."
+        )
 
         self.folder_label = tk.Label(
             frame_folder,
@@ -9365,6 +9373,12 @@ class _NastaveniaMixin(_ControlAppBase):
             text="Zmeniť…",
             command=self.zmenit_priecinok_piesni
         ).pack(side=tk.RIGHT)
+
+        ttk.Button(
+            frame_folder,
+            text="Skonvertovať do UTF-8…",
+            command=self.skonvertovat_piesne_do_utf8
+        ).pack(side=tk.RIGHT, padx=(0, 6))
 
         # 9. REZERVY
         frame_res = vytvor_sekciu(pokrocile_frame, "Globálna (vertikálna) rezerva")
@@ -9807,6 +9821,138 @@ class _NastaveniaMixin(_ControlAppBase):
                     command=lambda value=subor: self.subor_var.set(value)
                 )               
                 
+
+    def skonvertovat_piesne_do_utf8(self):
+        """
+        Prejde všetky .txt súbory v aktuálnom priečinku piesní (self.song_folder_path)
+        a prevedie ich na čisté UTF-8 bez BOM – rovnaká logika ako v pomocnom
+        skripte konvertuj_na_utf8.py. Súbor sa najprv skúsi prečítať ako UTF-8
+        (aj s BOM), a ak to zlyhá, predpokladá sa staršie ANSI kódovanie
+        (Windows-1250), bežné u súborov, ktoré sa "pokazili" a namiesto
+        diakritiky zobrazujú nečitateľné znaky.
+
+        Pred prepísaním sa každý pôvodný súbor zálohuje (nezmenené bajty) do
+        podpriečinka "_zaloha_original", aby bol prevod v prípade problému
+        vratný.
+        """
+        folder = self.song_folder_path
+
+        if not folder.is_dir():
+            messagebox.showerror(
+                "Priečinok neexistuje",
+                f"Priečinok s piesňami neexistuje:\n{folder}\n\n"
+                "Skontroluj nastavenie umiestnenia súborov."
+            )
+            return
+
+        subory = sorted((f for f in folder.glob("*.txt") if f.is_file()), key=lambda x: x.name.lower())
+        total = len(subory)
+
+        if total == 0:
+            messagebox.showinfo(
+                "Skonvertovať do UTF-8",
+                f"V priečinku\n{folder}\nsa nenašli žiadne .txt súbory."
+            )
+            return
+
+        if not messagebox.askyesno(
+            "Skonvertovať do UTF-8",
+            f"Prevedie sa {total} súborov .txt v priečinku:\n{folder}\n\n"
+            "Každý súbor sa najprv zálohuje (pôvodné bajty, nezmenené) do "
+            "podpriečinka „_zaloha_original“ a následne sa prepíše v čistom "
+            "UTF-8 kódovaní bez BOM.\n\n"
+            "Toto pomôže, ak sa diakritika v piesňach niekedy zobrazuje ako "
+            "nečitateľné znaky.\n\nPokračovať?",
+            icon="question",
+        ):
+            return
+
+        backup_folder = folder / "_zaloha_original"
+        try:
+            backup_folder.mkdir(exist_ok=True)
+        except Exception as e:
+            log_exception("skonvertovat_piesne_do_utf8: vytvorenie zálohy zlyhalo", e)
+            messagebox.showerror("Chyba", f"Nepodarilo sa vytvoriť zálohovací priečinok:\n{e}")
+            return
+
+        def precitaj_auto(cesta: Path) -> tuple[str, str]:
+            """Precita subor a vrati (text, nazov_povodneho_kodovania)."""
+            raw = cesta.read_bytes()
+
+            # UTF-8 s BOM
+            if raw.startswith(b"\xef\xbb\xbf"):
+                return raw.decode("utf-8-sig"), "UTF-8 (s BOM)"
+
+            # Skús čisté UTF-8
+            try:
+                return raw.decode("utf-8"), "UTF-8"
+            except UnicodeDecodeError:
+                pass
+
+            # Inak predpokladáme ANSI = Windows-1250 (stredoeurópske Windows)
+            return raw.decode("cp1250"), "ANSI (Windows-1250)"
+
+        stats: dict[str, int] = {}
+        chyby: list[tuple[str, str]] = []
+
+        for subor in subory:
+            try:
+                text, detected = precitaj_auto(subor)
+                stats[detected] = stats.get(detected, 0) + 1
+
+                # záloha originálu (raw bajty, nezmenené)
+                shutil.copy2(subor, backup_folder / subor.name)
+
+                # zápis vždy ako čisté UTF-8 bez BOM, newline='', aby sa
+                # nezdvojili konce riadkov
+                with subor.open("w", encoding="utf-8", newline="") as f:
+                    f.write(text)
+
+            except Exception as e:
+                chyby.append((subor.name, str(e)))
+                log_exception(f"skonvertovat_piesne_do_utf8: chyba pri {subor.name}", e)
+
+        log_info(
+            f"Skonvertovaných {total - len(chyby)}/{total} súborov piesní do UTF-8 "
+            f"(priečinok: {folder})."
+        )
+
+        # Obnov zoznam piesní, aby sa v GUI hneď zobrazila prípadne opravená
+        # diakritika (rovnaká logika ako po zmene priečinka piesní).
+        try:
+            aktualne_obdobie = self.default_filter_var.get()
+        except tk.TclError:
+            aktualne_obdobie = None
+
+        try:
+            if aktualne_obdobie:
+                self.filtrovat_subory(aktualne_obdobie)
+            else:
+                subory_zoznam = self.ziskaj_zoznam_suborov()
+                menu = self.subor_menu["menu"]
+                menu.delete(0, "end")
+                for s in subory_zoznam:
+                    menu.add_command(
+                        label=s,
+                        command=lambda value=s: self.subor_var.set(value)
+                    )
+        except Exception as e:
+            log_exception("skonvertovat_piesne_do_utf8: obnovenie zoznamu súborov zlyhalo", e)
+
+        zhrnutie_riadky = "\n".join(f"  • {k}: {v}" for k, v in stats.items())
+        sprava = (
+            f"Hotovo! Skontrolovaných súborov: {total}\n\n"
+            f"Pôvodné kódovanie:\n{zhrnutie_riadky}\n\n"
+            f"Originály sú zálohované v:\n{backup_folder}"
+        )
+
+        if chyby:
+            sprava += f"\n\nSúbory s chybou ({len(chyby)}):\n" + "\n".join(
+                f"  • {nazov}: {chyba}" for nazov, chyba in chyby
+            )
+            messagebox.showwarning("Skonvertovať do UTF-8 – dokončené s chybami", sprava)
+        else:
+            messagebox.showinfo("Skonvertovať do UTF-8 – hotovo", sprava)
 
     def zmenit_rezim_farby(self):
         if not self.pouzit_vlastnu_farbu.get():
@@ -15538,7 +15684,12 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Ak sa súbor z nejakého dôvodu poškodí, môže sa stať, že sa na obrazovke zobrazia nečitateľné znaky diakritiky.\n\n"
                 "Riešenie je jednoduché:\n\n"
                 "otvorte súbor v Notepade, zvoľte Uložiť ako… a vyberte kódovanie ANSI alebo UTF‑8.\n"
-                "Po uložení sa text zobrazí správne.\n\n"               
+                "Po uložení sa text zobrazí správne.\n\n"
+                "HROMADNÉ SKONVERTOVANIE CELÉHO PRIEČINKA\n\n"
+                "Ak sa chybná diakritika vyskytne vo viacerých súboroch, nemusíte ich opravovať jednotlivo. "
+                "V Nastaveniach → Umiestnenie súborov kliknite na „Skonvertovať do UTF‑8…“. Aplikácia "
+                "automaticky prevedie všetky .txt súbory v priečinku na čisté UTF‑8 a pôvodné verzie uloží do "
+                "podpriečinka „_zaloha_original“, takže prevod možno vrátiť späť.\n\n"                               
                                           
                 "LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA\n\n"
                 "Liturgické výpočty v aplikácii Kinak sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku.\n\n"
