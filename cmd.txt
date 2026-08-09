@@ -1,0 +1,37 @@
+Spustenie projektu cez príkazový riadok (cmd)
+
+cd C:\Kinak
+python Kinak.py
+
+Keďže súbor má názov Kinak.py, konfigurácia (aj diagnostika) sa automaticky ukladá do:
+C:\Users\root\AppData\Local\Kinak\config.json
+C:\Users\root\AppData\Local\Kinak\diagnostika.txt
+
+
+Vytvorenie EXE súboru
+Priečinok Kinak musí obsahovať súbory Kinak.py a Kinak.spec a tiež priečinok icons
+
+Kinak (priečinok)
+                 ├── Kinak.py
+		 ├── Kinak.spec
+                 └── icons/
+                               ├── Kinak_128r.png
+                               ├── Kinak32.ico
+
+Čistý build (vymazanie starých výstupov)
+
+rmdir /s /q build
+rmdir /s /q dist
+python -m PyInstaller Kinak.spec
+
+Ak by build zlyhal: 
+
+python -m PyInstaller --clean Kinak.spec
+
+Spustenie výsledného EXE:
+
+C:\Kinak\dist>Kinak.exe
+
+
+
+
