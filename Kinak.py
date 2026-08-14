@@ -375,8 +375,8 @@ def je_neposkvrnene_srdce_pm_prekazane(datum: date) -> bool:
         return True
 
     # 1) DIREKTORIUM_DATA – vyzaduj_prednost=False, lebo tu neriešime prednosť
-    #    pred nedeľou (datum aj tak nikdy nie je nedeľa, keďže NSPM pripadá
-    #    vždy na utorok), len samotnú existenciu pevného slávenia v tento deň.
+    #    pred nedeľou (NSPM pripadá na sobotu po druhej nedeli po Turícach),
+    #    len samotnú existenciu pevného slávenia v tento deň.
     z_direktoria = najdi_presny_datum_v_direktoriu(datum, vyzaduj_prednost=False)
     if z_direktoria is not None:
         _, nazov_z_direktoria = z_direktoria
@@ -485,7 +485,7 @@ def popis_vynechaneho_slavenia(dnes: date | None = None) -> str | None:
     if je_sv_neviniatka_prekazane(dnes):
         return "Sv. Neviniatka, mučeníci vynechaní (sviatok Svätej rodiny má prednosť)"
     if je_svata_rodina_presunuta_na_pdr(dnes):
-        return "Sviatok Svätej rodiny presunutý z 31.12. (Narodenie Pána pripadlo na nedeľu)"
+        return "Sviatok Svätej rodiny slávený 30.12. (Narodenie Pána pripadlo na nedeľu)"
     return None
 
 
