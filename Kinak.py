@@ -91,8 +91,13 @@ KINAK_VERSION = "3.1"
 KALENDAR_KRAJINA = "SK"
 KALENDAR_ZDROJE = "lc.kbs.sk, breviar.kbs.sk"
 
-GREGORIANSKY_MIN_ROK = 1583
+GREGORIANSKY_MIN_ROK = 1584
 GREGORIANSKY_MAX_ROK = 9999
+# Poznámka: gregoriánsky kalendár bol zavedený už v roku 1582/1583, ale
+# vypocitaj_tyzden_zaltara() interne potrebuje aj predchádzajúci rok
+# (napr. pre rok 1583 by potrebovala rok 1582), ktorý by tak musel byť
+# tiež v podporovanom rozsahu. Aby malo verejné API jeden jasný a skutočne
+# funkčný rozsah pre všetky funkcie, minimum je posunuté na 1584.
 
 def _over_gregoriansky_rok(rok: int) -> None:
     if not isinstance(rok, int):
@@ -167,8 +172,9 @@ def velkonocna_nedela(rok: int) -> date:
     prednosť, žaltár...), preto sa oplatí výsledok si zapamätať.
     """
     # Validácia rozsahu (algoritmus platí len pre gregoriánsky kalendár, rok
-    # 1583-9999) je centralizovaná v _over_gregoriansky_rok, aby nevznikali
-    # dve nezávislé miesta s rovnakým pravidlom, ktoré sa môžu časom rozísť.
+    # 1584-9999 – pozri komentár pri GREGORIANSKY_MIN_ROK) je centralizovaná
+    # v _over_gregoriansky_rok, aby nevznikali dve nezávislé miesta s rovnakým
+    # pravidlom, ktoré sa môžu časom rozísť.
     _over_gregoriansky_rok(rok)
 
     a = rok % 19
@@ -248,6 +254,23 @@ def datum_zvestovania_pana(rok: int) -> date:
         2007 – 25.3. = 5. pôstna nedeľa    → presun na 26.3. (prípad 2)
         2012 – 25.3. = 5. pôstna nedeľa    → presun na 26.3. (prípad 2)
         2057 – 25.3. = pôstna nedeľa       → presun na 26.3. (prípad 2)
+
+    VAROVANIE – obmedzený rozsah implementácie:
+        Táto funkcia NEIMPLEMENTUJE všeobecné pravidlo "najbližší voľný deň"
+        podľa celej tabuľky poradia liturgických dní (I.–VIII. trieda,
+        Všeobecné normy liturgického roka a kalendára, čl. 59–61). Rieši
+        iba dve vyššie uvedené, dnes jediné reálne možné kolízie v rámci
+        univerzálneho rímskeho kalendára a slovenského národného kalendára.
+        Ak by sa v budúcnosti do aplikácie doplnil diecézny alebo farský
+        kalendár (alebo akékoľvek ďalšie vlastné slávenie), ktoré by mohlo
+        pripadnúť na 25. marec (alebo na deň, na ktorý táto funkcia
+        Zvestovanie presúva) a malo by vyššiu alebo rovnakú prednosť, táto
+        funkcia by kolíziu nezistila a ticho by vrátila liturgicky
+        nesprávny dátum. Pred takýmto rozšírením kalendára je nutné túto
+        funkciu (a analogické funkcie: datum_narodenia_jana_krstitela,
+        datum_sv_jozefa_zenicha, datum_neposkvrneneho_pocatia – tie majú
+        rovnaké obmedzenie a rovnaké varovanie) prehodnotiť alebo nahradiť
+        všeobecným riešičom tabuľky poradia.
     """
     _over_gregoriansky_rok(rok)
     zv = date(rok, 3, 25)
@@ -333,7 +356,16 @@ POHYBLIVE_SLAVNOSTI_PANA: tuple[str, ...] = (
 
 
 def datum_narodenia_jana_krstitela(rok: int) -> date:
-    """Narodenie sv. Jána Krstiteľa; pri kolízii s pohyblivou slávnosťou Pána sa presúva na 23.6."""
+    """
+    Narodenie sv. Jána Krstiteľa; pri kolízii s pohyblivou slávnosťou Pána sa presúva na 23.6.
+
+    VAROVANIE – obmedzený rozsah implementácie: rieši iba kolíziu so
+    slávnosťami v POHYBLIVE_SLAVNOSTI_PANA, nie všeobecné pravidlo
+    "najbližší voľný deň" podľa celej tabuľky poradia liturgických dní
+    (I.–VIII. trieda). Pri budúcom rozšírení kalendára (diecézny/farský)
+    môže ticho vrátiť nesprávny dátum – pozri rovnaké varovanie a
+    podrobnejšie vysvetlenie v datum_zvestovania_pana.
+    """
     _over_gregoriansky_rok(rok)
     povodny_datum = date(rok, 6, 24)
     pohyblive = vypocitaj_datum_pohyblivych_slaveni(rok)
@@ -490,7 +522,15 @@ def popis_vynechaneho_slavenia(dnes: date | None = None) -> str | None:
 
 
 def datum_sv_jozefa_zenicha(rok: int) -> date:
-    """Sv. Jozef, ženích; ak 19.3. prekáža nedeľa alebo Veľký týždeň, presúva sa."""
+    """
+    Sv. Jozef, ženích; ak 19.3. prekáža nedeľa alebo Veľký týždeň, presúva sa.
+
+    VAROVANIE – obmedzený rozsah implementácie: rieši iba tieto dve dnes
+    reálne možné kolízie, nie všeobecné pravidlo "najbližší voľný deň"
+    podľa celej tabuľky poradia liturgických dní. Pri budúcom rozšírení
+    kalendára (diecézny/farský) môže ticho vrátiť nesprávny dátum – pozri
+    rovnaké varovanie a podrobnejšie vysvetlenie v datum_zvestovania_pana.
+    """
     povodny_datum = date(rok, 3, 19)
     velka_noc = velkonocna_nedela(rok)
     palmova_nedela = velka_noc - timedelta(days=7)
@@ -521,6 +561,12 @@ def datum_neposkvrneneho_pocatia(rok: int) -> date:
        vždy nasledujúci deň.
     Overené aj priamo oproti lc.kbs.sk a kbs.sk/tkkbs.sk pre roky 2019 a 2024
     (oba roky mali 8.12. v nedeľu) – slávnosť sa reálne slávila 9.12.
+
+    VAROVANIE – obmedzený rozsah implementácie: body 1–2 vyššie platia iba
+    pre dnešný rímsky a slovenský kalendár. Ak by sa v budúcnosti doplnil
+    diecézny/farský kalendár s vlastnou fixnou slávnosťou na 9.12., táto
+    funkcia by kolíziu nezistila a ticho by vrátila nesprávny dátum – pozri
+    rovnaké varovanie v datum_zvestovania_pana.
     """
     povodny_datum = date(rok, 12, 8)
     if povodny_datum.weekday() == 6:
@@ -1406,11 +1452,16 @@ def format_skratku_liturgickej_casti(kod: str, datum: date) -> str:
 
 def format_skratky_liturgickej_casti(dnes: date | None = None) -> str:
     dnes = dnes or date.today()
-    zajtra = dnes + timedelta(days=1)
     dnes_kod = vypocitaj_kod_liturgickej_casti(dnes)
+    dnesny_text = format_skratku_liturgickej_casti(dnes_kod, dnes)
+    if dnes >= date.max:
+        # Pri dnes == date.max nie je možné vypočítať "zajtra" (date.max + 1 deň
+        # by spôsobilo OverflowError, keďže rok presahuje podporovaný rozsah).
+        return dnesny_text
+    zajtra = dnes + timedelta(days=1)
     zajtra_kod = vypocitaj_kod_liturgickej_casti(zajtra)
     return (
-        f"{format_skratku_liturgickej_casti(dnes_kod, dnes)} "
+        f"{dnesny_text} "
         f"zajtra {format_skratku_liturgickej_casti(zajtra_kod, zajtra)}"
     )
 
@@ -1767,7 +1818,6 @@ def vypocitaj_tyzden_zaltara(dnes: date | None = None) -> str:
     # Zistíme, v ktorom liturgickom roku sa nachádzame
     # (nový liturgický rok začína 1. adventnou nedeľou)
     ad_tento = prva_adventna_nedela(rok)
-    ad_minuly = prva_adventna_nedela(rok - 1)
 
     if dnes >= ad_tento:
         # Sme po začiatku nového liturgického roka (adventné obdobie)
@@ -1814,16 +1864,31 @@ def vypocitaj_tyzden_zaltara(dnes: date | None = None) -> str:
             if match:
                 tyzden = ((int(match.group(1)) - 1) % 4) + 1
             else:
+                # Záložná vetva pre prípad, že by kód nezodpovedal vzoru "nC"
+                # (za bežnej prevádzky by nemala nastať). ad_minuly (1. adventná
+                # nedeľa PREDCHÁDZAJÚCEHO roka) sa počíta až tu, lenivo, keďže
+                # ide o jediné miesto v tejto vetve, ktoré ju potrebuje.
+                ad_minuly = prva_adventna_nedela(rok - 1)
                 dni_od_adventu = (dnes - ad_minuly).days
                 tyzden = (dni_od_adventu // 7 % 4) + 1
-        elif dnes >= ad_minuly:
-            # Vianočné obdobie a cezročné dni pred pôstom sa odvíjajú od
-            # začiatku aktuálneho liturgického roka (minuloročného adventu).
-            dni_od_adventu = (dnes - ad_minuly).days
-            tyzden = (dni_od_adventu // 7 % 4) + 1
         else:
-            # Záloha pre neštandardný vstup mimo očakávaných rozsahov.
-            tyzden = 1
+            # Vianočné obdobie pred Krstom Pána (zvyčajne prvé dni januára)
+            # patrí liturgicky do liturgického roka, ktorý sa začal 1.
+            # adventnou nedeľou PREDCHÁDZAJÚCEHO kalendárneho roka – preto tu
+            # (a iba tu, spolu so záložnou vetvou vyššie) potrebujeme
+            # ad_minuly. Počítame ho lenivo, až keď sme túto vetvu skutočne
+            # dosiahli, aby zvyšok roka (drvivá väčšina dní) fungoval aj pre
+            # GREGORIANSKY_MIN_ROK bez nutnosti overovať rok
+            # GREGORIANSKY_MIN_ROK - 1, ktorý je mimo podporovaného rozsahu.
+            ad_minuly = prva_adventna_nedela(rok - 1)
+            if dnes >= ad_minuly:
+                # Vianočné obdobie a cezročné dni pred pôstom sa odvíjajú od
+                # začiatku aktuálneho liturgického roka (minuloročného adventu).
+                dni_od_adventu = (dnes - ad_minuly).days
+                tyzden = (dni_od_adventu // 7 % 4) + 1
+            else:
+                # Záloha pre neštandardný vstup mimo očakávaných rozsahov.
+                tyzden = 1
 
     return _RIMSKE.get(tyzden, "I.")
 
@@ -3075,11 +3140,18 @@ def _over_internet_socket(timeout: float = 2.0) -> bool:
     úplne všetky – jeden zablokovaný host/port tak appku už neblokuje
     falošne, pokiaľ je aspoň jeden z cieľov (vrátane reálnych serverov
     lc.kbs.sk/breviar.kbs.sk) reálne dosiahnuteľný.
+
+    Socket sa explicitne zatvára cez `with` (predtým sa spoliehalo na to,
+    že ho zavrie CPython refcounting GC pri __del__) – bez toho Python pri
+    GC/finalizácii socketu hlási "ResourceWarning: unclosed socket" na
+    každé volanie tejto funkcie, čo pri opakovaných kontrolách zbytočne
+    zaťažuje logy/stderr a spolieha sa na implementačný detail CPythonu
+    (refcounting), nie na jazykom garantované správanie.
     """
     for host, port in _INTERNET_KONTROLA_HOSTY:
         try:
-            socket.create_connection((host, port), timeout=timeout)
-            return True
+            with socket.create_connection((host, port), timeout=timeout):
+                return True
         except OSError:
             continue
     return False
@@ -3698,15 +3770,22 @@ def _vytvor_lc_kbs_session() -> Any:
         return None
     if HTTPAdapter is not None and Retry is not None:
         try:
-            retry = Retry(
-                total=LC_KBS_REFRENY_MAX_POKUSOV,
-                connect=LC_KBS_REFRENY_MAX_POKUSOV,
-                read=LC_KBS_REFRENY_MAX_POKUSOV,
-                backoff_factor=LC_KBS_REFRENY_RETRY_DELAY_S,
-                status_forcelist=tuple(LC_KBS_DOCASNE_HTTP_STATUSY),
-                allowed_methods=frozenset(["GET", "HEAD"]),
-                raise_on_status=False,
-            )
+            # ZÁMERNE total=0 (žiadny automatický retry na úrovni
+            # urllib3/HTTPAdapter). Predtým tu bol nakonfigurovaný aj
+            # automatický retry s status_forcelist=LC_KBS_DOCASNE_HTTP_STATUSY,
+            # ktorý sa prekrýval s manuálnou 'for pokus in range(...)' slučkou
+            # v _stiahni_lc_kbs_soup – obe vrstvy opakovali tie isté dočasné
+            # HTTP statusy, čím sa počet skutočných HTTP požiadaviek na jeden
+            # dátum násobil (overené testom: až 12 požiadaviek namiesto
+            # očakávaných LC_KBS_REFRENY_MAX_POKUSOV=3, pri zlyhávajúcom
+            # serveri navyše ~4x dlhšie čakanie kvôli zdvojenému backoffu).
+            #
+            # Retry je teraz úmyselne JEDINÁ vrstva v manuálnej slučke – tá
+            # rieši úplne všetko: dočasné HTTP statusy aj nízkoúrovňové
+            # zlyhania spojenia (timeout, výpadok siete, prerušené spojenie).
+            # HTTPAdapter tu zostáva výhradne kvôli connection poolingu
+            # (pool_connections/pool_maxsize), nie kvôli retry.
+            retry = Retry(total=0)
             adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
             session.mount("https://", adapter)
             session.mount("http://", adapter)
@@ -3731,16 +3810,26 @@ def _lc_kbs_headers(ucel: str = "") -> dict:
     }
 
 
-def _stiahni_lc_kbs_soup(datum: date, timeout: tuple[int, int] = (5, 20)) -> Any | None:
+def _stiahni_lc_kbs_soup(datum: date, session: Any = None, timeout: tuple[int, int] = (5, 20)) -> Any | None:
     """
     Stiahne a naparsuje stránku lc.kbs.sk pre daný dátum.
 
-    Retry na úrovni HTTPAdapter/urllib3.Retry (nastavený v _vytvor_lc_kbs_session)
-    rieši nižšie-úrovňové zlyhania spojenia; táto slučka navyše pokrýva prípady,
-    kde spojenie prebehlo, ale server vrátil dočasnú chybu (LC_KBS_DOCASNE_HTTP_STATUSY),
-    alebo požiadavka zlyhala inak (timeout, výpadok siete, prerušené spojenie) –
-    s osobitným logovaním pre každý typ chyby, aby bolo pri diagnostike jasné,
-    kde presne sťahovanie zlyhalo.
+    session: voliteľná už existujúca `requests.Session` (napr. vytvorená raz
+    na úrovni celej dávky cez `_RefrenyKontext` a zdieľaná pre všetky dátumy
+    v dávke – pozri _RefrenyKontext.session). Ak nie je zadaná (None), funkcia
+    si pre spätnú kompatibilitu (samostatné volania mimo dávky) vytvorí a na
+    konci sama zatvorí VLASTNÚ session – presne ako predtým. Ak JE zadaná,
+    funkcia ju NEZATVÁRA (životný cyklus session patrí volajúcemu/dávke).
+
+    Retry je zámerne implementovaný len na JEDNEJ vrstve – v tejto manuálnej
+    slučke. HTTPAdapter/urllib3.Retry (nastavený v _vytvor_lc_kbs_session) má
+    total=0 a sám nič neopakuje; slúži tam už len na connection pooling.
+    Táto slučka preto rieši úplne všetko: dočasné HTTP statusy vrátené
+    serverom (LC_KBS_DOCASNE_HTTP_STATUSY) aj nízkoúrovňové zlyhania
+    (timeout, výpadok siete, prerušené spojenie) – s osobitným logovaním pre
+    každý typ chyby, aby bolo pri diagnostike jasné, kde presne sťahovanie
+    zlyhalo. (Predtým tu boli retry vrstvy dve a prekrývali sa – pozri
+    komentár v _vytvor_lc_kbs_session.)
     """
     _over_gregoriansky_datum(datum)
     if chybaju_kniznice_pre_stahovanie():
@@ -3751,7 +3840,9 @@ def _stiahni_lc_kbs_soup(datum: date, timeout: tuple[int, int] = (5, 20)) -> Any
     assert requests_module is not None and beautiful_soup is not None
 
     datum_str = datum.strftime("%Y-%m-%d")
-    session = _vytvor_lc_kbs_session()
+    session_vytvorena_lokalne = session is None
+    if session_vytvorena_lokalne:
+        session = _vytvor_lc_kbs_session()
 
     request_exception_type = getattr(requests_module, "RequestException", Exception)
     http_error_type = getattr(requests_module, "HTTPError", request_exception_type)
@@ -3823,9 +3914,11 @@ def _stiahni_lc_kbs_soup(datum: date, timeout: tuple[int, int] = (5, 20)) -> Any
         return None
 
     finally:
-        # Session sa zatvára VŽDY (úspech aj zlyhanie) – predtým sa pri
-        # úspešnom sťahovaní na prvý pokus session nezatvárala vôbec.
-        if session is not None:
+        # Zatvára sa VÝHRADNE session, ktorú si táto funkcia vytvorila sama
+        # (session_vytvorena_lokalne). Session zdieľanú naprieč dávkou
+        # (poslanú cez parameter `session`) zatvára jej vlastník –
+        # _RefrenyKontext.zavri_session() na konci celej dávky.
+        if session_vytvorena_lokalne and session is not None:
             try:
                 session.close()
             except Exception:
@@ -3952,8 +4045,8 @@ def _najdi_datum_cezrocneho_vs_dna(tyzden: int, den_index: int, parita: int, pre
     return None
 
 
-def _stiahni_prvy_refren_lc_kbs(datum: date) -> str | None:
-    soup = _stiahni_lc_kbs_soup(datum)
+def _stiahni_prvy_refren_lc_kbs(datum: date, session: Any = None) -> str | None:
+    soup = _stiahni_lc_kbs_soup(datum, session=session)
     refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
     return refreny[0] if refreny else None
 
@@ -3991,6 +4084,8 @@ def stiahni_cezrocne_tyzdenne_refreny_pre_rok(rok: int, vystup_priecinok: Path, 
             ctx.zapis_bloky(ctx.aktualny_subor, bloky)
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Cezročné týždenné refrény {rok}: predčasne ukončené – {e}")
+    finally:
+        ctx.zavri_session()
 
     log_info(
         f"[LC-KBS] Cezročné týždenné refrény {rok} – súhrn: "
@@ -4208,7 +4303,7 @@ def stiahni_liturgicke_tyzdne_refreny(rok: int, vystup_priecinok: Path, progress
         for datum_vt, nazov_vt in polozky_vt:
             ctx.pocitadlo.aktualny_slot += 1
             ctx.progress(f"VT – {nazov_vt}: sťahujem {datum_vt.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
-            soup_vt = _stiahni_lc_kbs_soup(datum_vt)
+            soup_vt = _stiahni_lc_kbs_soup(datum_vt, session=ctx.session)
             refreny_vt = _extrahuj_refreny_zalmov_lc_kbs(soup_vt)
             time.sleep(REFRENY_DELAY_S)
             ctx.zaznamenaj_vysledok(bool(refreny_vt))
@@ -4247,6 +4342,8 @@ def stiahni_liturgicke_tyzdne_refreny(rok: int, vystup_priecinok: Path, progress
             ctx.zapis_bloky(ctx.aktualny_subor, bloky)
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Liturgické týždne {rok}: predčasne ukončené – {e}")
+    finally:
+        ctx.zavri_session()
 
     log_info(f"[LC-KBS] Liturgické týždne {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, chyby {ctx.pocitadlo.chyby}.")
     ctx.progress(f"Hotovo. Spracovaných položiek: {ctx.pocitadlo.aktualny_slot}, chyby: {ctx.pocitadlo.chyby}.", ctx.pocitadlo.aktualny_slot, celkovo)
@@ -4275,7 +4372,7 @@ class _PocitadloSlotov:
         self.chyby = 0
 
 
-def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_slotov, progress_callback, na_vysledok=None):
+def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_slotov, progress_callback, na_vysledok=None, session: Any = None):
     """
     Vytvorí funkciu spracuj_slot(label, datum) používanú pri sťahovaní
     jednotlivých dátumových "slotov" (nedele/férie) v
@@ -4294,6 +4391,10 @@ def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_
       (pozri _RefrenyKontext.zaznamenaj_vysledok). Volá sa iba pri
       skutočnom sieťovom pokuse, nie keď `datum` nebolo vôbec nájdené
       (to je zlyhanie vyhľadávacej logiky, nie servera).
+    - session: voliteľná `requests.Session` zdieľaná pre všetky sloty v
+      rámci jednej dávky (pozri _RefrenyKontext.session) – posiela sa
+      ďalej do _stiahni_prvy_refren_lc_kbs, aby sa pre každý dátum
+      nevytvárala nová session.
     """
     def spracuj_slot(label, datum):
         pocitadlo.aktualny_slot += 1
@@ -4307,7 +4408,7 @@ def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_
             return "[dátum sa nepodarilo nájsť]"
         update_progress(progress_callback, f"{label}: sťahujem {datum.strftime('%d.%m.%Y')}...",
                          pocitadlo.aktualny_slot, celkovo_slotov)
-        refren = _stiahni_prvy_refren_lc_kbs(datum)
+        refren = _stiahni_prvy_refren_lc_kbs(datum, session=session)
         time.sleep(REFRENY_DELAY_S)
         if refren:
             if na_vysledok:
@@ -4400,6 +4501,14 @@ class _RefrenyKontext:
         self.backup = _BackupManager(self.vystup, backup_prefix, rok)
         self.progress_callback = progress_callback
 
+        # Jedna session vytvorená RAZ pre celú dávku (nie pre každý dátum) –
+        # zdieľa sa naprieč všetkými sťahovaniami v rámci tohto behu, aby sa
+        # znovupoužilo TCP/TLS spojenie (keep-alive) namiesto toho, aby si
+        # každý jeden dátum vybavoval vlastný handshake nanovo. Zatvára sa
+        # explicitne cez zavri_session() na konci dávky (pozri volania v
+        # jednotlivých stiahni_*_pre_rok funkciách).
+        self.session = _vytvor_lc_kbs_session()
+
         self.pocitadlo = _PocitadloSlotov()
         self.chybne_kody: list[str] = []
         self.preskocene_kody: list[str] = []
@@ -4411,6 +4520,16 @@ class _RefrenyKontext:
         # Circuit breaker proti kaskádovému zlyhaniu pri výpadku servera.
         self.po_sebe_zlyhani = 0
         self.predcasne_ukoncene = False
+
+    def zavri_session(self) -> None:
+        """Zatvorí session zdieľanú naprieč celou dávkou. Volať VŽDY na konci
+        každej stiahni_*_pre_rok funkcie (typicky vo finally), bez ohľadu na
+        to, či dávka skončila úspechom, chybou, alebo predčasným ukončením."""
+        if self.session is not None:
+            try:
+                self.session.close()
+            except Exception:
+                pass
 
     @property
     def aktualny_subor(self) -> str:
@@ -4449,6 +4568,7 @@ class _RefrenyKontext:
             celkovo_slotov,
             self.progress_callback,
             na_vysledok=self.zaznamenaj_vysledok,
+            session=self.session,
         )
 
         if not pocitaj_datumy_nezistene:
@@ -4544,7 +4664,7 @@ def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress
         for datum_vt, nazov_vt in polozky_vt:
             ctx.pocitadlo.aktualny_slot += 1
             ctx.progress(f"VT – {nazov_vt}: sťahujem {datum_vt.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
-            soup_vt = _stiahni_lc_kbs_soup(datum_vt)
+            soup_vt = _stiahni_lc_kbs_soup(datum_vt, session=ctx.session)
             refreny_vt = _extrahuj_refreny_zalmov_lc_kbs(soup_vt)
             time.sleep(REFRENY_DELAY_S)
             ctx.zaznamenaj_vysledok(bool(refreny_vt))
@@ -4596,7 +4716,7 @@ def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress
                 log_info(f"[LC-KBS] {kod}: vynechaný v roku {rok}.")
                 continue
             ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
-            soup = _stiahni_lc_kbs_soup(datum)
+            soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
             time.sleep(REFRENY_DELAY_S)
             ctx.zaznamenaj_vysledok(bool(refreny))
@@ -4612,6 +4732,8 @@ def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress
             log_info(f"[LC-KBS] {kod} ({datum}): uložené.")
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Pôstne/veľkonočné refrény {rok}: predčasne ukončené – {e}")
+    finally:
+        ctx.zavri_session()
 
     log_info(
         f"[LC-KBS] Pôstne/veľkonočné refrény {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, "
@@ -4660,6 +4782,8 @@ def stiahni_adventne_vianocne_refreny(rok: int, vystup_priecinok: Path, progress
             ctx.zapis_bloky(ctx.aktualny_subor, bloky)
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Adventné/vianočné refrény {rok}: predčasne ukončené – {e}")
+    finally:
+        ctx.zavri_session()
 
     log_info(
         f"[LC-KBS] Adventné/vianočné refrény {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, chyby {ctx.pocitadlo.chyby}"
@@ -4750,7 +4874,7 @@ def stiahni_turicne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_c
                 log_info(f"[LC-KBS] {kod}: vynechaný v roku {rok}.")
                 continue
             ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
-            soup = _stiahni_lc_kbs_soup(datum)
+            soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
             time.sleep(REFRENY_DELAY_S)
             ctx.zaznamenaj_vysledok(bool(refreny))
@@ -4766,6 +4890,8 @@ def stiahni_turicne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_c
             log_info(f"[LC-KBS] {kod} ({datum}): uložené.")
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Turíce a nadväzujúce sviatky {rok}: predčasne ukončené – {e}")
+    finally:
+        ctx.zavri_session()
 
     log_info(
         f"[LC-KBS] Turíce a nadväzujúce sviatky {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, "
@@ -4806,7 +4932,7 @@ def stiahni_refreny_zalmov_pre_rok(rok: int, vystup_priecinok: Path, progress_ca
     try:
         for idx, datum in enumerate(dni, start=1):
             ctx.progress(f"{datum.strftime('%d.%m.%Y')}: sťahujem...", idx, celkovo)
-            soup = _stiahni_lc_kbs_soup(datum)
+            soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
             time.sleep(REFRENY_DELAY_S)
             ctx.zaznamenaj_vysledok(bool(refreny))
@@ -4818,6 +4944,8 @@ def stiahni_refreny_zalmov_pre_rok(rok: int, vystup_priecinok: Path, progress_ca
             vysledky[datum.month].append(f"{datum.day}. {text_refrenu}")
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Refrény {rok}: predčasne ukončené – {e}")
+    finally:
+        ctx.zavri_session()
 
     for mesiac in range(1, 13):
         kod = REFRENY_MESIACE_SUBORY[mesiac]
@@ -4999,7 +5127,7 @@ def stiahni_liturgicke_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progres
                 continue
             ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", idx, celkovo)
             ctx.backup.zalohuj(kod)
-            soup = _stiahni_lc_kbs_soup(datum)
+            soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
             time.sleep(REFRENY_DELAY_S)
             ctx.zaznamenaj_vysledok(bool(refreny))
@@ -5014,6 +5142,8 @@ def stiahni_liturgicke_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progres
             stiahnutych += 1
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Liturgické sviatky {rok}: predčasne ukončené – {e}")
+    finally:
+        ctx.zavri_session()
 
     log_info(
         f"[LC-KBS] Liturgické sviatky {rok} – súhrn: stiahnutých {stiahnutych}/{celkovo}, preskočených {ctx.preskocenych}"
@@ -5034,7 +5164,7 @@ def stiahni_liturgicke_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progres
     }
 
 
-def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]], na_vysledok=None) -> tuple[str, int, int]:
+def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]], na_vysledok=None, session: Any = None) -> tuple[str, int, int]:
     """
     Zostaví text kompilovaného viacdňového súboru (napr. 1VI.txt, 2VI.txt)
     z už vopred pripravených dvojíc (dátum, názov). Po sebe idúce dni s
@@ -5043,6 +5173,8 @@ def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]], na_vysledo
 
     na_vysledok: voliteľný callback(uspech: bool) – circuit breaker (pozri
     _RefrenyKontext.zaznamenaj_vysledok), volaný po každom stiahnutom dni.
+    session: voliteľná zdieľaná `requests.Session` z volajúcej dávky (pozri
+    _RefrenyKontext.session) – posiela sa ďalej do _stiahni_lc_kbs_soup.
 
     Vráti (obsah, počet úspešne stiahnutých dní, počet dní s chybou).
     """
@@ -5060,7 +5192,7 @@ def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]], na_vysledo
         aktualne_riadky = []
 
     for datum, nazov in polozky:
-        soup = _stiahni_lc_kbs_soup(datum)
+        soup = _stiahni_lc_kbs_soup(datum, session=session)
         refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
         time.sleep(REFRENY_DELAY_S)
         if na_vysledok:
@@ -5118,7 +5250,7 @@ def stiahni_vianocne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_
                 continue
             ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", idx, celkovo)
             ctx.backup.zalohuj(kod)
-            soup = _stiahni_lc_kbs_soup(datum)
+            soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
             time.sleep(REFRENY_DELAY_S)
             ctx.zaznamenaj_vysledok(bool(refreny))
@@ -5144,7 +5276,7 @@ def stiahni_vianocne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_
             polozky_1vi.append((datum_dna, nazov_dna))
         polozky_1vi.append((date(rok + 1, 1, 1), "SLÁVNOSŤ PANNY MÁRIE BOHORODIČKY (8. deň oktávy)"))
         ctx.backup.zalohuj("1VI")
-        obsah_1vi, ok_1vi, chyby_1vi = _zostav_text_kompilovaneho_useku(polozky_1vi, na_vysledok=ctx.zaznamenaj_vysledok)
+        obsah_1vi, ok_1vi, chyby_1vi = _zostav_text_kompilovaneho_useku(polozky_1vi, na_vysledok=ctx.zaznamenaj_vysledok, session=ctx.session)
         ctx.zapis_obsah("1VI", obsah_1vi)
         if ok_1vi > 0:
             stiahnutych += 1
@@ -5166,7 +5298,7 @@ def stiahni_vianocne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_
                 d = zaciatok_2vi + timedelta(days=i)
                 polozky_2vi.append((d, vypocitaj_aktualnu_liturgicku_cast(d)))
         ctx.backup.zalohuj("2VI")
-        obsah_2vi, ok_2vi, chyby_2vi = _zostav_text_kompilovaneho_useku(polozky_2vi, na_vysledok=ctx.zaznamenaj_vysledok)
+        obsah_2vi, ok_2vi, chyby_2vi = _zostav_text_kompilovaneho_useku(polozky_2vi, na_vysledok=ctx.zaznamenaj_vysledok, session=ctx.session)
         ctx.zapis_obsah("2VI", obsah_2vi)
         if ok_2vi > 0:
             stiahnutych += 1
@@ -5175,6 +5307,8 @@ def stiahni_vianocne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_
             ctx.chybne_kody.append("2VI")
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Vianočné obdobie {rok}/{rok + 1}: predčasne ukončené – {e}")
+    finally:
+        ctx.zavri_session()
 
     log_info(
         f"[LC-KBS] Vianočné obdobie {rok}/{rok + 1} – súhrn: stiahnutých {stiahnutych}/{celkovo}, preskočených {ctx.preskocenych}"
