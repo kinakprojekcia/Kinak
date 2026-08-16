@@ -66,6 +66,8 @@ except ImportError:
 # ==========================================================
 
 KINAK_VERSION = "3.1"
+KINAK_WEB_URL = "https://kinakprojekcia.github.io/Kinak/"
+KINAK_QR_BASE64 = """iVBORw0KGgoAAAANSUhEUgAAAhwAAAIcCAYAAAC9/nd8AABOsElEQVR4nO3daZMk13Xm+f+51z0il1qwFXaRFHdxl0iKiyhRlNQSpVG3uq27zcZkPTZv5iPMx5hPMP22bczGxrrN1Npaau2iuImkxA1cBa7YCFQBtWVmhPs9Z15c98gEQIHIQroQUfH8YIkCsjIjPCOXePLec8+x6K4FIiIiIhNKr/YFiIiIyO1PgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyuebVvoBX6v967Vtf7Uu4rfyf3/v6qd5+0x//qT/eTX88T3v9pzX1x7tun9/TWrfH57TW7et50039+ZqaVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtTe9Ff1rrNoth02crbPrHu27Xv+nfj1PPXpn687Vus2M2/evhtNbt58PUtMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5LZulspprVuv+22bNXBa6/b4TH096zY7Y92uZ2rr9vldt8dnavr5vFm0wiEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkNEtFXpGpZxls26yKdZsNMbWpZ7Wc1tTXc9rbX7frEXkltMIh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wCEiIiKTU+AQERGRyW38LBV5da3b7IZ1m5WwbrNsprZus410PS9t3a7ntNbt+rft+/20tMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5JpX+wJeqXWb5bHpTturf916+6/b18NpH5/TXv+6zZKY+uM9rXX7+jytdft6Pq11+/o8rU1//NeNVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtdevVP7WpZwFMPSth3W5/alN/fa7b7JJ1+3i37etn3b4e1s2mX/+60QqHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik9u6WSqntemzEtbNpj+e6zab5rTWbXbJulm32Svr9v2uz6+8ElrhEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHKapSKvyLbN5pj64123x/O017Pp179ts2zWbRbMun2/r9v1bPpsF61wiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjnNUpFXZOrZCutm0z/eTZ9tcVqb/vna9OvfdOs2+2bTaYVDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyWmWyk+g2QQvbdNnc6zbrIqpr2fqx3/dvl9O+/Fu+uO/bp/fdXs8N/37d9NphUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJbd0slXWb5SG3t03/etu2WQ/rNhtl3a5n3WajnNa6zTpZt+uZmlY4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZxFdy1e7YsQERGR25tWOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyf3/haLfJyAgMggAAAAASUVORK5CYII="""
 
 # ==========================================================
 # LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA
@@ -5440,7 +5442,7 @@ def stiahni_citania_z_lc_kbs(datum: date, vystup_cesta: Path | str) -> bool:
                 pass
 
 
-def _lc_kbs_ocakava_dve_citania(datum, nazov_info) -> bool:
+def _lc_kbs_ocakava_dve_citania(datum: date, nazov_info: list[str] | None) -> bool:
     """Nedele a slávnosti majú mať dve čítania pred evanjeliom."""
     if datum.weekday() == 6:
         return True
@@ -8267,6 +8269,7 @@ if TYPE_CHECKING:
         `ControlApp.__init__` a v jednotlivých mixinoch, presne tak, ako doteraz.
         """
         _about_geom_after_id: Any
+        _about_qr_photo_ref: Any
         _aktualna_vigilia: Any
         _aktualna_vynechane: Any
         _auto_nacitanie_after_id: Any
@@ -8799,7 +8802,7 @@ class _NastaveniaMixin(_ControlAppBase):
                 # Okno O aplikácii – uložené rozmery
                 self.about_window_width  = full_config.get("about_window_width", -1)
                 self.about_window_height = full_config.get("about_window_height", -1)
-                self.about_last_tab = max(1, min(full_config.get("about_last_tab", 1), 4))
+                self.about_last_tab = max(1, min(full_config.get("about_last_tab", 1), 5))
                 self.about_font_size = max(8, min(full_config.get("about_font_size", 12), 40))
 
                 # Preferovaný monitor – načítanie z configu
@@ -14886,6 +14889,13 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 bg=bg,
                 fg=fg,
                 relief="flat",
+                borderwidth=0,
+                highlightthickness=0,
+                highlightbackground=bg,
+                highlightcolor=bg,
+                activebackground=bg,
+                activeforeground=fg,
+                takefocus=0,
                 command=lambda: (font_size.set(font_size.get() + 1), apply_font_preserve_focus())
             ).pack(side="left")
 
@@ -14897,6 +14907,13 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 bg=bg,
                 fg=fg,
                 relief="flat",
+                borderwidth=0,
+                highlightthickness=0,
+                highlightbackground=bg,
+                highlightcolor=bg,
+                activebackground=bg,
+                activeforeground=fg,
+                takefocus=0,
                 command=lambda: (font_size.set(max(8, font_size.get() - 1)), apply_font_preserve_focus())
             ).pack(side="left")
 
@@ -14928,6 +14945,13 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 bg=bg,
                 fg=fg,
                 relief="flat",
+                borderwidth=0,
+                highlightthickness=0,
+                highlightbackground=bg,
+                highlightcolor=bg,
+                activebackground=bg,
+                activeforeground=fg,
+                takefocus=0,
                 command=reset_okna
             ).pack(side="left", padx=(5, 0))
 
@@ -15255,7 +15279,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         return "break"
 
 
-    def _build_info_tabs_header(self, top_panel, safe_font_name, bg, fg, tab_specs):
+    def _build_info_tabs_header(self, top_panel, safe_font_name, bg, fg, tab_specs, medzera=2):
         """
         Vytvorí riadok záložkových tlačidiel a farebné pásiky pod nimi –
         presne v štýle používanom v oknách "O aplikácii" a "Pomocník"
@@ -15267,6 +15291,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         dvoch okien.
 
         tab_specs: zoznam (label, width) dvojíc, jedna položka na záložku.
+        medzera: horizontálna medzera (padx) medzi záložkami v pixeloch.
         Vracia (buttons, stripes), oba slovníky indexované od 1.
         """
         buttons, stripes = {}, {}
@@ -15277,7 +15302,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 activebackground=bg, activeforeground=fg, borderwidth=0,
                 highlightthickness=0,
             )
-            btn.grid(row=0, column=i, padx=2)
+            btn.grid(row=0, column=i, padx=medzera)
             stripe = tk.Frame(top_panel, height=3, bg=bg)
             stripe.grid(row=1, column=i, sticky="ew")
             buttons[i + 1], stripes[i + 1] = btn, stripe
@@ -15635,8 +15660,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             saved_w = int(self.about_window_width)
             saved_h = int(self.about_window_height)
-            window_width = saved_w if saved_w >= 500 else 830
-            window_height = saved_h if saved_h >= 400 else 620
+            window_width = saved_w if saved_w >= 500 else 1050
+            window_height = saved_h if saved_h >= 400 else 650
             screen_width = about_window.winfo_screenwidth()
             x = max(0, screen_width - window_width - 30)
             y = 30
@@ -15681,13 +15706,14 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             content = tk.Frame(container, bg=bg)
             content.pack(fill="both", expand=True)
 
-            frame1, frame2, frame3, frame4 = (
+            frame1, frame2, frame3, frame4, frame5 = (
+                tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg)
             )
-            frames = {1: frame1, 2: frame2, 3: frame3, 4: frame4}
+            frames = {1: frame1, 2: frame2, 3: frame3, 4: frame4, 5: frame5}
             font_size = tk.IntVar(value=self.about_font_size)
             text_widgets = []
 
@@ -15843,14 +15869,69 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             vlozit_text(frame3, "Úprava textov", priprava_text)
             vlozit_text(frame4, "Pomoc pri probléme", pomoc_text)
 
+            # --- 5. karta: Web / QR kód ---
+            try:
+                qr_header = tk.Label(frame5, text="Stiahnuť a zdieľať", font=(safe_font_name, max(font_size.get() + 4, 12), "bold"), fg="white", bg=bg)
+                qr_header.pack(pady=(20, 10))
+                qr_url_label = tk.Label(frame5, text=KINAK_WEB_URL, font=(safe_font_name, 10), fg="#C9A96E", bg=bg, cursor="hand2")
+                qr_url_label.pack()
+                def _open_web(event=None):
+                    import webbrowser
+                    try:
+                        webbrowser.open(KINAK_WEB_URL)
+                    except Exception:
+                        pass
+                qr_url_label.bind("<Button-1>", _open_web)
+
+                qr_desc = tk.Label(frame5, text="", font=(safe_font_name, 11), fg=fg, bg=bg, justify="center")
+                qr_desc.pack(pady=(5, 5))
+
+                # QR obrázok z base64
+                try:
+                    import base64 as _b64
+                    qr_data = _b64.b64decode(KINAK_QR_BASE64)
+                    # Ulož do temp a načítaj ako PhotoImage
+                    import tempfile, os
+                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+                    tmp.write(qr_data)
+                    tmp.close()
+                    qr_photo = tk.PhotoImage(file=tmp.name)
+                    # Zmenši ak je príliš veľký
+                    # PhotoImage zoom/subsample
+                    # Ak je väčší ako 260px, zmenši
+                    if qr_photo.width() > 260:
+                        factor = max(1, qr_photo.width() // 260)
+                        qr_photo = qr_photo.subsample(factor, factor)
+                    qr_label = tk.Label(frame5, image=qr_photo, bg=bg)
+                    self._about_qr_photo_ref = qr_photo  # drž referenciu (mimo Label, kvôli typovej kontrole)
+                    qr_label.pack(pady=(5, 10))
+                    # cleanup temp after
+                    def _cleanup_qr_tmp():
+                        try:
+                            os.unlink(tmp.name)
+                        except Exception:
+                            pass
+                    frame5.after(5000, _cleanup_qr_tmp)
+                except Exception as e_qr:
+                    err_lbl = tk.Label(frame5, text=f"QR kód sa nepodarilo načítať: {e_qr}", fg="#ff8888", bg=bg, font=(safe_font_name, 10))
+                    err_lbl.pack(pady=10)
+            except Exception as e_qr_tab:
+                try:
+                    tk.Label(frame5, text=f"Chyba QR karty: {e_qr_tab}", bg=bg, fg="#ff8888").pack()
+                except Exception:
+                    pass
+
+
             buttons, stripes = self._build_info_tabs_header(
                 top_panel, safe_font_name, bg, fg,
                 tab_specs=[
-                    ("Ovládanie", 13),
-                    ("Vyhľadávanie", 15),
-                    ("Úprava textov", 17),
-                    ("Pomoc pri probléme", 18),
+                    ("Ovládanie", 11),
+                    ("Vyhľadávanie", 12),
+                    ("Úprava textov", 12),
+                    ("Pomoc", 8),
+                    ("Web", 6),
                 ],
+                medzera=8,
             )
 
             def show(which):
@@ -15859,7 +15940,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 self._show_tab(which, frames, stripes, buttons, safe_font_name, bg, active)
                 self.manual_entry.focus_set()
 
-            for i in (1, 2, 3, 4):
+            for i in (1, 2, 3, 4, 5):
                 buttons[i].config(command=lambda i=i: show(i))
 
             def apply_font_preserve_focus():
@@ -15882,6 +15963,13 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 bg=bg,
                 fg=fg,
                 relief="flat",
+                borderwidth=0,
+                highlightthickness=0,
+                highlightbackground=bg,
+                highlightcolor=bg,
+                activebackground=bg,
+                activeforeground=fg,
+                takefocus=0,
                 command=lambda: (font_size.set(min(40, font_size.get() + 1)), apply_font_preserve_focus())
             ).pack(side="left")
 
@@ -15893,16 +15981,30 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 bg=bg,
                 fg=fg,
                 relief="flat",
+                borderwidth=0,
+                highlightthickness=0,
+                highlightbackground=bg,
+                highlightcolor=bg,
+                activebackground=bg,
+                activeforeground=fg,
+                takefocus=0,
                 command=lambda: (font_size.set(max(8, font_size.get() - 1)), apply_font_preserve_focus())
             ).pack(side="left")
 
             def reset_okna():
-                self.about_window_width = 830
-                self.about_window_height = 620
+                self.about_window_height = 650
 
                 if self.about_window is not None and self.about_window.winfo_exists():
+                    # Zisti skutočne potrebnú šírku hlavičky (karty + zoom panel s tlačidlom Reset),
+                    # aby okno po resete bolo len tak široké, aby bolo vidno celé tlačidlo Reset.
+                    self.about_window.update_idletasks()
+                    potrebna_sirka = header.winfo_reqwidth() + 30
+                    self.about_window_width = max(potrebna_sirka, 500)
+
                     reset_x = max(0, self.about_window.winfo_screenwidth() - self.about_window_width - 30)
                     self.about_window.geometry(f"{self.about_window_width}x{self.about_window_height}+{reset_x}+30")
+                else:
+                    self.about_window_width = 1050
 
                 font_size.set(DEFAULT_CONFIG.get("about_font_size", 12))
                 apply_font_preserve_focus()
@@ -15915,10 +16017,17 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 bg=bg,
                 fg=fg,
                 relief="flat",
+                borderwidth=0,
+                highlightthickness=0,
+                highlightbackground=bg,
+                highlightcolor=bg,
+                activebackground=bg,
+                activeforeground=fg,
+                takefocus=0,
                 command=reset_okna
             ).pack(side="left", padx=(5, 0))
 
-            last = max(1, min(int(getattr(self, "about_last_tab", 1) or 1), 4))
+            last = max(1, min(int(getattr(self, "about_last_tab", 1) or 1), 5))
             show(last)
 
             # 6) Zatváranie okna 
@@ -16492,7 +16601,6 @@ if __name__ == "__main__":
             log_exception("Zlyhanie UI pri zobrazení kritickej chyby", e_ui)
             print(f"Úplné zlyhanie UI: {e_ui}")
             print(f"Pôvodná chyba:\n{error_msg}")
-
 
 
 
