@@ -37,6 +37,18 @@
   footer{border-top:1px solid rgba(26,26,26,0.06);height:56px;display:flex;align-items:center;justify-content:center;padding:0 24px;text-align:center}
   footer p{font-size:11px;color:rgba(26,26,26,0.4)}
   @media(max-width:600px){h1{font-size:56px} header{padding:0 24px}}
+
+  .instructions{margin-top:32px;width:100%;max-width:440px;background:rgba(255,255,255,0.9);border-radius:20px;border:1px solid rgba(26,26,26,0.06);padding:24px 24px 20px;text-align:left}
+  .instructions h3{font-size:20px;font-weight:400;margin-bottom:16px}
+  .instructions ol{padding-left:20px;font-size:13.5px;line-height:22px;color:rgba(26,26,26,0.8)}
+  .instructions ol li{margin-bottom:8px}
+  .instructions code{background:#FFFBF2;border:1px solid rgba(26,26,26,0.08);border-radius:6px;padding:1px 6px;font-size:12.5px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
+  .tree-wrap{margin-top:16px;background:#1A1A1A;color:#FFFBF2;border-radius:12px;padding:16px 18px;overflow-x:auto}
+  .tree-label{font-size:12.5px;font-weight:600;letter-spacing:0.02em;margin-bottom:10px;color:rgba(255,251,242,0.9)}
+  .tree-label span{font-weight:400;color:rgba(255,251,242,0.5);font-size:11.5px}
+  .tree{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12.5px;line-height:18px;margin:0;white-space:pre;color:#E8DDC5}
+  .steps-last{margin-top:18px;font-size:13.5px;line-height:22px;background:#FFFBF2;border:1px dashed rgba(201,169,110,0.4);border-radius:10px;padding:10px 14px}
+
 </style>
 </head>
 <body>
@@ -62,6 +74,25 @@
     </a>
     <div class="hint">Stačí rozbaliť a spustiť Kinak.exe</div>
   </div>
+
+  <div class="instructions">
+    <h3 class="serif">Ako spustiť</h3>
+    <ol>
+      <li><strong>Stiahnite si celý priečinok Kinak_v3.1</strong> – stlačte tlačidlo hore a rozbaľte ZIP.</li>
+      <li>Súbor <code>Kinak.exe</code> musí mať pri sebe aj priečinok s názvom <code>piesne</code></li>
+    </ol>
+    <div class="tree-wrap">
+      <div class="tree-label">Kinak <span>(priečinok môže mať ľubovoľný názov)</span></div>
+      <pre class="tree">├── Kinak.exe
+└── piesne/
+    ├── 001.txt
+    ├── 002.txt
+    ├── 003.txt
+    └── ...</pre>
+    </div>
+    <p class="steps-last">Spustite <code>Kinak.exe</code> a choďte do menu <strong>Pomoc → Rýchly sprievodca</strong></p>
+  </div>
+
 </main>
 <footer><p>MIT License • Zdroj dát: lc.kbs.sk, breviar.kbs.sk • 2026 Kinak – Kremnica</p></footer>
 </body>
