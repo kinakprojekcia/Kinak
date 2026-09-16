@@ -11289,10 +11289,27 @@ class _StahovanieMixin(_ControlAppBase):
                 except RuntimeError:
                     pass
 
+        if getattr(self, "_closing", False):
+            zrusit_zobrazenie()
+            try:
+                lock.release()
+            except RuntimeError as e:
+                log_exception(f"{kontext}: lock už bol uvoľnený pri ukončovaní", e)
+            log_info(f"{kontext}: sťahovanie sa nespustilo, aplikácia sa ukončuje.")
+            return False
+
         try:
             self._download_executor.submit(vlakno)
-        except RuntimeError:
-            threading.Thread(target=vlakno, daemon=True).start()
+        except RuntimeError as e:
+            zrusit_zobrazenie()
+            try:
+                lock.release()
+            except RuntimeError as e_lock:
+                log_exception(f"{kontext}: lock už bol uvoľnený po zlyhaní submit", e_lock)
+            log_exception(f"{kontext}: executor neprijal novú úlohu", e)
+            if not getattr(self, "_closing", False):
+                messagebox.showerror("Chyba", "Sťahovanie sa nepodarilo spustiť. Skúste program reštartovať.")
+            return False
         return True
 
 
@@ -12517,10 +12534,33 @@ class _StahovanieMixin(_ControlAppBase):
                 except RuntimeError as e2:
                     log_exception(f"{kontext}: lock už bol uvoľnený", e2)
 
+        if getattr(self, "_closing", False):
+            try:
+                self.master.config(cursor="")
+            except tk.TclError:
+                pass
+            try:
+                lock.release()
+            except RuntimeError as e:
+                log_exception(f"{kontext}: lock už bol uvoľnený pri ukončovaní", e)
+            log_info(f"{kontext}: sťahovanie sa nespustilo, aplikácia sa ukončuje.")
+            return False
+
         try:
             self._download_executor.submit(vlakno)
-        except RuntimeError:
-            threading.Thread(target=vlakno, daemon=True).start()
+        except RuntimeError as e:
+            try:
+                self.master.config(cursor="")
+            except tk.TclError:
+                pass
+            try:
+                lock.release()
+            except RuntimeError as e_lock:
+                log_exception(f"{kontext}: lock už bol uvoľnený po zlyhaní submit", e_lock)
+            log_exception(f"{kontext}: executor neprijal novú úlohu", e)
+            if not getattr(self, "_closing", False):
+                messagebox.showerror("Chyba", "Sťahovanie sa nepodarilo spustiť. Skúste program reštartovať.")
+            return False
         return True
 
 
@@ -12642,6 +12682,7 @@ class _StahovanieMixin(_ControlAppBase):
         )
 
     def _shutdown_executor(self) -> None:
+        self._closing = True
         try:
             ex = getattr(self, '_download_executor', None)
             if ex is not None:
@@ -15062,6 +15103,12 @@ class _HlavneOknoMixin(_ControlAppBase):
              
     def potvrdit_ukoncenie(self, event=None):
         if messagebox.askyesno("Kinak: Ukončiť", "Naozaj ukončiť program?"):
+            # POZN.: `self._closing = True` sa nastavuje až v `_shutdown_executor()`
+            # (krok 4 nižšie) – je to jediné miesto, ktoré tento príznak nastavuje,
+            # keďže `_shutdown_executor()` sa volá aj z `atexit` mimo tejto metódy.
+            # Kroky 1–3 bežia synchrónne v Tk mainloop vlákne, takže medzi nimi
+            # nemôže žiadny iný callback spustiť nové sťahovanie – skoré
+            # nastavenie príznaku by tu bolo len duplicitné.
 
             # 1) Startup callbacky
             for _aid in self._startup_after_ids:
@@ -15089,7 +15136,10 @@ class _HlavneOknoMixin(_ControlAppBase):
                     log_exception("potvrdit_ukoncenie: after_cancel zlyhal (_auto_nacitanie_after_id)", e)
                 self._auto_nacitanie_after_id = None
 
-            # 4) Zničenie okna
+            # 4) Zastavenie prijímania nových sťahovaní
+            self._shutdown_executor()
+
+            # 5) Zničenie okna
             self.master.destroy()    
     
      
@@ -16579,7 +16629,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• PODČIARKOVNÍK (_)\t\t\tKoniec strofy\n"
                 "• KOMBINÁCIA (_·)\t\t\tKoniec úvodnej časti; nižšie sa nachádza Ofertórium\n\n"
                 "V nastaveniach je možné tieto znaky pre projekciu skryť. V hlavnom ovládacom okne "
-                "však zostanú vždy viditeľné, aby sa premietajúci vedel ľahko orientovať.\n\n"
+                "však zostanú vždy viditeľné, aby sa premietajúci vedel ľahko orientovať. "
+                "Je to užitočné najmä pri piesňach z JKS, kde môže byť jedna strofa rozdelená na viac obrazoviek. Značky vám pomôžu vidieť, kde končí strofa, aby ste nezačali ďalšiu práve vtedy,  keď už len dokončujete aktuálnu strofu a liturgia sa posúva ďalej.\n\n"
                 "Praktická rada: Ak pieseň začína bodkou (·), pri obetovaní stačí prejsť na najbližší riadok začínajúci bodkou.\n\n"
                 "STRIEDANIE CHÓROV VO VEŠPERÁCH\n\n"
                 "Striedanie ľavého a pravého chóru je v projekcii dané striedaním obrazoviek.\n"
@@ -16899,6 +16950,7 @@ class ControlApp(
         log_info("Inicializujem ControlApp...")
 
         self._loading_settings = True
+        self._closing = False
 
         # Aktuálna veľkosť písma – spravovaná výhradne cez self.font_size.
         # Nahradza pôvodný globálny mutable FONT_SIZE.
@@ -16927,7 +16979,7 @@ class ControlApp(
         # Pythonu 3.9, čo je aj minimálna podporovaná verzia tejto aplikácie
         # (pozri poznámku pri `from __future__ import annotations` na začiatku
         # súboru), takže tu nie je potrebný žiadny fallback.
-        atexit.register(self._download_executor.shutdown, wait=False, cancel_futures=True)
+        atexit.register(self._shutdown_executor)
         
         # --- Inicializácia hlavného okna ---
         self.master = master
@@ -17460,7 +17512,6 @@ if __name__ == "__main__":
             log_exception("Zlyhanie UI pri zobrazení kritickej chyby", e_ui)
             print(f"Úplné zlyhanie UI: {e_ui}")
             print(f"Pôvodná chyba:\n{error_msg}")
-
 
 
 
