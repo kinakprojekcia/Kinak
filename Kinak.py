@@ -12592,7 +12592,7 @@ class _StahovanieMixin(_ControlAppBase):
                 messagebox.showinfo(
                     "Čítania aktualizované",
                     f"Čítania pre {datum.strftime('%d.%m.%Y')} boli úspešne stiahnuté!\n\n"
-                    f"Zdroj: Konferencia biskupov Slovenska\n"
+                    f"Zdroj: lc.kbs.sk\n"
                     f"Súbor: {vystup_cesta.name}\n\n"
                     f"Čítania boli pripravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
                     f"(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi."
