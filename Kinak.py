@@ -9824,7 +9824,7 @@ class _NastaveniaMixin(_ControlAppBase):
         # 1. DIREKTÓRIUM:
         self.checkbox_direktorium = tk.Checkbutton(
             frame_checks, 
-            text="Zobraziť odporúčané piesne z JKS pod rozbaľovacím filtrom pri výbere súboru", 
+            text="Zobraziť odporúčané piesne z JKS pod rozbaľovacím filtrom pri výbere žalmu", 
             variable=self.zobrazit_direktorium_var, 
             font=(self.font_family, 11),            
             command=lambda: [self.ulozit_nastavenia(), self.aktualizovat_direktorium_label(), self.filtrovat_subory(self.filter_var.get())],
