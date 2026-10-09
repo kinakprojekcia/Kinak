@@ -2,7 +2,7 @@
 Liturgický projekčný program - zdarma pre všetky farnosti na Slovensku
 
 🌐 **Web:** [kinak.sk](https://kinak.sk/)  
-⬇️ **Stiahnuť:** [Kinak_v3.2.zip](https://kinak.sk/Kinak_v3.2.zip)
+⬇️ **Stiahnuť:** [Kinak_v3.2.zip](https://github.com/kinakprojekcia/Kinak/releases/latest/download/Kinak_v3.2.zip)
 
 License: MIT  
 Platform: Windows  
@@ -107,7 +107,7 @@ Liturgia hodín / vešpery: [breviar.kbs.sk](https://breviar.kbs.sk/)
 
 Pre bežného používateľa (Windows)
 
-Stiahnite si [Kinak_v3.2.zip](https://kinak.sk/Kinak_v3.2.zip) a rozbaľte ho.
+Stiahnite si [Kinak_v3.2.zip](https://github.com/kinakprojekcia/Kinak/releases/latest/download/Kinak_v3.2.zip) a rozbaľte ho.
 
 Súbor Kinak.exe musí mať pri sebe aj priečinok s názvom piesne
 
