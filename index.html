@@ -8,6 +8,32 @@
 <link rel="canonical" href="https://kinak.sk/">
 <link rel="icon" href="/favicon.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/favicon.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Kinak",
+  "description": "Liturgický projekčný program na premietanie piesní, žalmov a čítaní v kostole počas omše. Automaticky vypočíta liturgický deň, funguje offline a je zadarmo pre farnosti.",
+  "url": "https://kinak.sk/",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Windows",
+  "softwareVersion": "3.2",
+  "inLanguage": "sk",
+  "downloadUrl": "https://kinak.sk/Kinak_v3.2.zip",
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Kinak – Kremnica",
+    "url": "https://kinak.sk/"
+  }
+}
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
@@ -56,6 +82,9 @@
   .features ul{list-style:none;display:flex;flex-direction:column;gap:12px}
   .features li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:21px;color:rgba(26,26,26,0.8)}
   .features li svg{flex-shrink:0;margin-top:2px;color:#2E7D32}
+  .features p{font-size:13.5px;line-height:22px;color:rgba(26,26,26,0.8);margin-bottom:10px}
+  .features p:last-child{margin-bottom:0}
+  .features p strong{color:#1A1A1A}
 
 </style>
 </head>
@@ -129,6 +158,20 @@
         <span>Ovládanie na diaľku je možné pomocou bezdrôtovej (numerickej) klávesnice. Okno programu však musí byť aktívne.</span>
       </li>
     </ul>
+  </div>
+
+  <div class="features">
+    <h3 class="serif">Pre koho je Kinak</h3>
+    <p>Kinak je určený pre premietačov piesní na plátno alebo TV a pre farnosti, ktoré chcú mať čítania, vešpery, žalmy, piesne a modlitby pripravené automaticky.</p>
+    <p>Kinak automaticky vypočíta liturgický deň, zohľadní presuny slávení, určí cyklus A/B/C aj týždeň žaltára a ponúkne odporúčané piesne podľa žalmu.</p>
+  </div>
+
+  <div class="features">
+    <h3 class="serif">Často kladené otázky</h3>
+    <p><strong>Je Kinak naozaj zadarmo?</strong><br>Áno. Je to slobodný softvér s licenciou MIT, ktorý môžu farnosti zdarma používať, upravovať a šíriť.</p>
+    <p><strong>Potrebuje Kinak internet?</strong><br>Nie, funguje offline. Internet treba len na stiahnutie čítaní a vešpier na daný deň. Po stiahnutí sú uložené v počítači.</p>
+    <p><strong>Na akom systéme Kinak beží?</strong><br>Na počítačoch s Windowsom. Stačí rozbaliť ZIP a spustiť Kinak.exe, inštalácia nie je potrebná.</p>
+    <p><strong>Odkiaľ sú texty čítaní a vešpier?</strong><br>Sťahujú sa z lc.kbs.sk a breviar.kbs.sk. Nie sú súčasťou programu a slúžia na osobnú potrebu farnosti.</p>
   </div>
 
 </main>
