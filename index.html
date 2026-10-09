@@ -37,6 +37,11 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&display=swap');
   *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  .nav{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 20px;padding:0 24px;font-size:12.5px}
+  .nav a{color:rgba(26,26,26,0.6);text-decoration:none}
+  .nav a:hover{color:#8B1A1A;text-decoration:underline}
+  [id]{scroll-margin-top:16px}
   body{background:#FFFBF2;color:#1A1A1A;font-family:"Inter",system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;}
   .serif{font-family:"Instrument Serif",Georgia,serif}
   header{max-width:980px;margin:0 auto;width:100%;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px}
@@ -64,10 +69,11 @@
   .hint{font-size:12px;color:rgba(26,26,26,0.45);margin-top:14px}
   footer{border-top:1px solid rgba(26,26,26,0.06);height:56px;display:flex;align-items:center;justify-content:center;padding:0 24px;text-align:center}
   footer p{font-size:11px;color:rgba(26,26,26,0.4)}
+  footer a{color:inherit}
   @media(max-width:600px){h1{font-size:56px} header{padding:0 24px}}
 
   .instructions{margin-top:32px;width:100%;max-width:440px;background:rgba(255,255,255,0.9);border-radius:20px;border:1px solid rgba(26,26,26,0.06);padding:24px 24px 20px;text-align:left}
-  .instructions h3{font-size:20px;font-weight:400;margin-bottom:16px}
+  .instructions h2{font-size:20px;font-weight:400;margin-bottom:16px}
   .instructions ol{padding-left:20px;font-size:13.5px;line-height:22px;color:rgba(26,26,26,0.8)}
   .instructions ol li{margin-bottom:8px}
   .instructions code{background:#FFFBF2;border:1px solid rgba(26,26,26,0.08);border-radius:6px;padding:1px 6px;font-size:12.5px;font-family:ui-monospace, SFMono-Regular, Menlo, monospace}
@@ -78,7 +84,7 @@
   .steps-last{margin-top:18px;font-size:13.5px;line-height:22px;background:#FFFBF2;border:1px dashed rgba(201,169,110,0.4);border-radius:10px;padding:10px 14px}
 
   .features{margin-top:32px;width:100%;max-width:440px;background:rgba(255,255,255,0.9);border-radius:20px;border:1px solid rgba(26,26,26,0.06);padding:24px 24px 22px;text-align:left}
-  .features h3{font-size:20px;font-weight:400;margin-bottom:14px}
+  .features h2{font-size:20px;font-weight:400;margin-bottom:14px}
   .features ul{list-style:none;display:flex;flex-direction:column;gap:12px}
   .features li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;line-height:21px;color:rgba(26,26,26,0.8)}
   .features li svg{flex-shrink:0;margin-top:2px;color:#2E7D32}
@@ -92,6 +98,7 @@
 <header>
   <div class="brand">KINAK <span class="sep"></span> <small>v3.2</small></div>
 </header>
+<nav class="nav" aria-label="Rýchla navigácia"><a href="#stiahnut">Stiahnuť</a><a href="#spustenie">Ako spustiť</a><a href="#vyhody">Výhody</a><a href="#pre-koho">Pre koho</a><a href="#otazky">Otázky</a></nav>
 <main>
   <div class="hero">
     <div class="logo-lg-wrap"><img src="data:image/png;base64,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" alt="Kinak logo" class="logo-lg"></div>
@@ -101,7 +108,7 @@
     <div class="badges"><span>Windows</span><span class="dot"></span><span>MIT</span><span class="dot"></span><span>Zdarma</span></div>
   </div>
 
-  <div class="card">
+  <div class="card" id="stiahnut">
     <div class="pill"><i></i> Pripravené na stiahnutie</div>
     <h2>Kinak_v3.2.zip</h2>
     <p class="small">Kompletný balík — obsahuje Kinak.exe + priečinok piesne/</p>
@@ -112,8 +119,8 @@
     <div class="hint">Stačí rozbaliť a spustiť Kinak.exe</div>
   </div>
 
-  <div class="instructions">
-    <h3 class="serif">Ako spustiť</h3>
+  <div class="instructions" id="spustenie">
+    <h2 class="serif">Ako spustiť</h2>
     <ol>
       <li><strong>Stiahnite si celý priečinok Kinak_v3.2</strong> – stlačte tlačidlo hore a rozbaľte ZIP.</li>
       <li>Súbor <code>Kinak.exe</code> musí mať pri sebe aj priečinok s názvom <code>piesne</code></li>
@@ -130,8 +137,8 @@
     <p class="steps-last">Spustite <code>Kinak.exe</code> a choďte do menu <strong>Pomoc → Rýchly sprievodca</strong></p>
   </div>
 
-  <div class="features">
-    <h3 class="serif">Kinak – slovenský projekčný program pre liturgiu</h3>
+  <div class="features" id="vyhody">
+    <h2 class="serif">Kinak – slovenský projekčný program pre liturgiu</h2>
     <ul>
       <li>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -160,14 +167,14 @@
     </ul>
   </div>
 
-  <div class="features">
-    <h3 class="serif">Pre koho je Kinak</h3>
+  <div class="features" id="pre-koho">
+    <h2 class="serif">Pre koho je Kinak</h2>
     <p>Kinak je určený pre premietačov piesní na plátno alebo TV a pre farnosti, ktoré chcú mať čítania, vešpery, žalmy, piesne a modlitby pripravené automaticky.</p>
     <p>Kinak automaticky vypočíta liturgický deň, zohľadní presuny slávení, určí cyklus A/B/C aj týždeň žaltára a ponúkne odporúčané piesne podľa žalmu.</p>
   </div>
 
-  <div class="features">
-    <h3 class="serif">Často kladené otázky</h3>
+  <div class="features" id="otazky">
+    <h2 class="serif">Často kladené otázky</h2>
     <p><strong>Je Kinak naozaj zadarmo?</strong><br>Áno. Je to slobodný softvér s licenciou MIT, ktorý môžu farnosti zdarma používať, upravovať a šíriť.</p>
     <p><strong>Potrebuje Kinak internet?</strong><br>Nie, funguje offline. Internet treba len na stiahnutie čítaní a vešpier na daný deň. Po stiahnutí sú uložené v počítači.</p>
     <p><strong>Na akom systéme Kinak beží?</strong><br>Na počítačoch s Windowsom. Stačí rozbaliť ZIP a spustiť Kinak.exe, inštalácia nie je potrebná.</p>
@@ -175,6 +182,6 @@
   </div>
 
 </main>
-<footer><p>MIT License • Zdroj dát: lc.kbs.sk, breviar.kbs.sk • 2026 Kinak – Kremnica</p></footer>
+<footer><p>MIT License • Zdroj dát: lc.kbs.sk, breviar.kbs.sk • <a href="https://github.com/kinakprojekcia/Kinak">Zdrojový kód na GitHube</a> • 2026 Kinak – Kremnica</p></footer>
 </body>
 </html>
