@@ -12,6 +12,8 @@ Zdarma pre všetky farnosti na Slovensku. Dáta čítaní, vešpier a žalmov: z
 
 Reálny program, ktorý počas liturgie beží vo všetkých kostoloch v Kremnici. Vznikol ako dobrovoľnícky projekt pre našu farnosť a je voľne k dispozícii pre všetky farnosti.
 
+Kinak je teda projekčný softvér určený na vizuálne sprevádzanie liturgie. Pomáha farnostiam premietať texty piesní, modlitieb a čítaní tak, aby sa veriaci mohli ľahšie zapojiť do slávenia.
+
 ## PREČO VZNIKOL KINAK
 
 Premietač počas omše často žongluje s Wordom, mobilom, tromi rôznymi stránkami s čítaniami, knižkou žalmov a lístočkom, na ktorý si včera ceruzkou napísal: „Aký je dnes žalm?“ Je sviatok? Má prednosť slávnosť? Cyklus A, B alebo C? Párny či nepárny rok? 20c1 alebo 20c2?
@@ -35,7 +37,7 @@ Kinak urobí všetko plne automaticky, aby mal premietač všetko pripravené na
 
 • v stavovom riadku zobrazí skratku žalmu na dnes aj zajtrajšok
 
-• ponúkne odporúčané piesne z JKS podľa žalmu
+• ponúkne odporúčané piesne z JKS podľa zvoleného žalmu
 
 • prepojí žalm priamo s oknom Slávenia a Direktória
 
