@@ -27,7 +27,7 @@ A presne preto vznikol Kinak.
 
 Kinak urobí všetko plne automaticky, aby mal premietač všetko pripravené na 2 kliky:
 
-• funguje offline, bez internetu
+• Funguje offline, takže nepotrebuje internetové pripojenie priamo v kostole
 
 • automaticky vypočíta liturgický deň
 
