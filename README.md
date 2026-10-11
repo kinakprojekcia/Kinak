@@ -27,7 +27,7 @@ A presne preto vznikol Kinak.
 
 Kinak urobí všetko plne automaticky, aby mal premietač všetko pripravené na 2 kliky:
 
-• Funguje offline, takže nepotrebuje internetové pripojenie priamo v kostole
+• funguje offline, bez internetu
 
 • automaticky vypočíta liturgický deň
 
@@ -106,6 +106,8 @@ Obsah čítaní a vešpier nie je súčasťou programu. Sťahuje sa na požiadan
 Liturgický kalendár a čítania: [lc.kbs.sk](https://lc.kbs.sk/) (Konferencia biskupov Slovenska)
 
 Liturgia hodín / vešpery: [breviar.kbs.sk](https://breviar.kbs.sk/)
+
+Mládežnícke piesne: [mladeznickyspevnik.sk](http://www.mladeznickyspevnik.sk)
 
 ## INŠTALÁCIA
 
