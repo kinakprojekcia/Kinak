@@ -73,6 +73,8 @@ A premietač môže konečne prežívať omšu, nie len premietať.
 
 • Piesne – rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica
 
+• Databáza piesní – ponúka piesne z Jednotného katolíckeho spevníka (JKS), ale aj mládežnícke piesne a piesne Večeradla
+
 • Liturgický kalendár pre Slovensko – automatický výpočet:
   - Veľkonočná nedeľa (Meeus-Jones-Butcher)
   - adventná nedeľa, Advent, Vianoce, Pôst, Veľká noc
