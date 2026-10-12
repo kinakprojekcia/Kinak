@@ -33,8 +33,8 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
   žaltára I–IV, liturgického roka A/B/C a cyklu I/II
 - **Presuny slávení** pri kolízii s významnejším slávením (Zvestovanie,
   sv. Jozef, Narodenie Jána Krstiteľa a i.)
-- **Žalmy:** skratka žalmu na dnes aj zajtra v stavovom riadku, odporúčané
-  piesne z JKS, prepojenie s oknom Slávenia a Direktória
+- **Žalmy:** - **Žalmy:** skratka na dnes aj zajtra v stavovom riadku, odporúčané piesne
+  z JKS podľa zvoleného žalmu a prepojenie s oknom Slávenia a Direktória
 - **Čítania a vešpery:** sťahovanie na daný deň (offline cache)
 - **Funguje offline** po prvom stiahnutí
 
