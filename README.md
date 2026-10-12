@@ -1,151 +1,93 @@
 # Kinak
-Liturgický projekčný program - zdarma pre všetky farnosti na Slovensku
 
-🌐 **Web:** [kinak.sk](https://kinak.sk/)  
-⬇️ **Stiahnuť:** [Kinak_v3.2.zip](https://github.com/kinakprojekcia/Kinak/releases/latest/download/Kinak_v3.2.zip)
+**Liturgický projekčný program pre farnosti na Slovensku – zdarma.**
 
-License: MIT  
-Platform: Windows  
-Krajina: SK
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![Platform: Windows](https://img.shields.io/badge/platform-Windows-blue)
 
-Zdarma pre všetky farnosti na Slovensku. Dáta čítaní, vešpier a žalmov: zdroj lc.kbs.sk / breviar.kbs.sk
+🌐 [kinak.sk](https://kinak.sk/) · ⬇️ [Stiahnuť najnovšie vydanie](https://github.com/kinakprojekcia/Kinak/releases/latest)
 
-Reálny program, ktorý počas liturgie beží vo všetkých kostoloch v Kremnici. Vznikol ako dobrovoľnícky projekt pre našu farnosť a je voľne k dispozícii pre všetky farnosti.
+Kinak je projekčný softvér na vizuálne sprevádzanie liturgie: premieta texty
+piesní, modlitieb, čítaní a žalmov, aby sa veriaci mohli ľahšie zapojiť do
+slávenia. Počas svätej omše beží vo všetkých kostoloch v Kremnici a vznikol
+ako dobrovoľnícky projekt pre našu farnosť.
 
-Kinak je teda projekčný softvér určený na vizuálne sprevádzanie liturgie. Pomáha farnostiam premietať texty piesní, modlitieb a čítaní tak, aby sa veriaci mohli ľahšie zapojiť do slávenia.
+![Screenshot](docs/screenshot.png)
 
-## PREČO VZNIKOL KINAK
+## Prečo Kinak
 
-Premietač počas omše často žongluje s Wordom, mobilom, tromi rôznymi stránkami s čítaniami, knižkou žalmov a lístočkom, na ktorý si včera ceruzkou napísal: „Aký je dnes žalm?“ Je sviatok? Má prednosť slávnosť? Cyklus A, B alebo C? Párny či nepárny rok? 20c1 alebo 20c2?
+Premietač počas svätej omše často žongluje s Wordom, mobilom, viacerými
+stránkami s čítaniami, knižkou žalmov a lístočkom s poznámkou. Je sviatok?
+Má prednosť slávnosť? Rok A, B alebo C? Párny či nepárny rok?
 
-Stále dokola prepisovať texty z Wordu do Wordu, listovať v direktóriu, hľadať správny žalm a zisťovať, či má sviatok prednosť…
-Proste zmätok.
+Kinak to vypočíta automaticky a offline, takže premietač má všetko pripravené
+na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
 
-A presne preto vznikol Kinak.
+## Funkcie
 
-## ČO KINAK RIEŠI
+- **Premietanie** na druhý monitor alebo projektor (farby, veľkosť, prelínanie)
+- **Piesne:** rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica,
+  databáza JKS, mládežnícke piesne a piesne Večeradla
+- **Liturgický kalendár pre Slovensko:** automatický výpočet liturgického dňa,
+  Veľkonočnej nedele (Meeus-Jones-Butcher), liturgických období, týždňa
+  žaltára I–IV, liturgického roka A/B/C a cyklu I/II
+- **Presuny slávení** pri kolízii s významnejším slávením (Zvestovanie,
+  sv. Jozef, Narodenie Jána Krstiteľa a i.)
+- **Žalmy:** skratka žalmu na dnes aj zajtra v stavovom riadku, odporúčané
+  piesne z JKS, prepojenie s oknom Slávenia a Direktória
+- **Čítania a vešpery:** sťahovanie na daný deň (offline cache)
+- **Funguje offline** po prvom stiahnutí
 
-Kinak urobí všetko plne automaticky, aby mal premietač všetko pripravené na 2 kliky:
+## Inštalácia (Windows)
 
-• funguje offline, bez internetu
+1. Stiahnite si ZIP z [Releases](https://github.com/kinakprojekcia/Kinak/releases/latest) a rozbaľte ho.
+2. Vedľa `Kinak.exe` musí byť priečinok `piesne/`:
 
-• automaticky vypočíta liturgický deň
+   ```
+   Kinak/
+   ├── Kinak.exe
+   └── piesne/
+       ├── 001.txt
+       ├── 002.txt
+       └── ...
+   ```
 
-• zohľadní presuny slávení, ak sa kryjú s významnejšími sláveniami
+   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_večeradlo`), ak zostane
+   zachovaná táto štruktúra.
+3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
+4. V **Nastaveniach** nastavte cestu k priečinku `piesne`
+   (napr. `Kinak_večeradlo/piesne`).
 
-• vie, či je cyklus A/B/C a či je rok párny/nepárny
+## Liturgický kalendár – špecifikácia
 
-• v stavovom riadku zobrazí skratku žalmu na dnes aj zajtrajšok
+Výpočty sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku, nie
+americkým modelom.
 
-• ponúkne odporúčané piesne z JKS podľa zvoleného žalmu
+- **Krajina / provincia:** Slovensko (SK)
+- **Kalendár:** všeobecný rímsky + vlastné slávenia slovenskej provincie
+  (sv. Cyril a Metod 5. 7., Sedembolestná Panna Mária 15. 9. a i.)
+- **Smernice:** Všeobecné normy o liturgickom roku a o kalendári + Direktórium KBS
 
-• prepojí žalm priamo s oknom Slávenia a Direktória
+**Kľúčový rozdiel oproti US modelu:** Zjavenie Pána je na Slovensku pevne
+6. januára (prikázaný sviatok, štátny sviatok) a nepresúva sa na nedeľu.
+Preto je Krst Krista Pána v nedeľu PO 6. 1., aj keď je 6. 1. nedeľa
+(napr. 13. 1. 2019, 13. 1. 2030).
 
-Už žiadne:
+## Zdroje dát a licencia
 
-• prepisovanie textov z Wordu do Wordu
+- Čítania: [lc.kbs.sk](https://lc.kbs.sk/) (Konferencia biskupov Slovenska)
+- Vešpery: [breviar.kbs.sk](https://breviar.kbs.sk/)
+- Mládežnícke piesne: [mladeznickyspevnik.sk](http://www.mladeznickyspevnik.sk)
 
-• listovanie v direktóriu
+Obsah čítaní a vešpier nie je súčasťou programu. Sťahuje sa na požiadanie pre
+osobnú potrebu farnosti a nespadá pod licenciu programu.
 
-• hľadanie v knižkách a pokrčených papierikoch
+Program je pod [MIT License](LICENSE), © 2026 Kinak – Kremnica. Môžete ho
+zdarma používať, upravovať a šíriť, aj na komerčné účely, pod podmienkou
+zachovania informácie o autorovi a licencii.
 
-• stres pred omšou
+## Kontakt a podpora
 
-## PREČO JE TO DÔLEŽITÉ
+Chyby a nápady nahlasujte cez [Issues](https://github.com/kinakprojekcia/Kinak/issues).
 
-Premietač už nemusí riešiť chaos.
-Nemusí hľadať, prepisovať, kontrolovať, porovnávať.
-
-Kinak to urobí automaticky. Spoľahlivo. Offline.
-
-Len dva kliky — a všetko je pripravené.
-A premietač môže konečne prežívať omšu, nie len premietať.
-
-## PRE KOHO JE KINAK?
-
-• pre premietačov piesní na plátno / TV
-
-• pre farnosti, ktoré chcú mať čítania, vešpery, žalmy, piesne a rôzne modlitby pripravené automaticky
-
-## ČO VIE KINAK?
-
-• Premietanie na druhý monitor / projektor s nastavením farieb, veľkosti, prelínania
-
-• Piesne – rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica
-
-• Databáza piesní – ponúka piesne z Jednotného katolíckeho spevníka (JKS), ale aj mládežnícke piesne a piesne Večeradla
-
-• Liturgický kalendár pre Slovensko – automatický výpočet:
-  - Veľkonočná nedeľa (Meeus-Jones-Butcher)
-  - adventná nedeľa, Advent, Vianoce, Pôst, Veľká noc
-
-• Presuny slávení: Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa atď. Ak slávnosť koliduje s významnejším slávením, program automaticky zohľadní jej presun.
-
-• Týždeň žaltára I.-IV., liturgické roky A/B/C, cyklus I/II
-
-• Sťahovanie čítaní a vešpier na daný deň (offline cache)
-
-• Funguje bez internetu – po prvom stiahnutí
-
-## LITURGICKÝ KALENDÁR – ŠPECIFIKÁCIA
-
-Liturgické výpočty sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku, nie americkým modelom.
-
-• Krajina / provincia: Slovensko (SK)
-
-• Kalendár: všeobecný rímsky + vlastné slávenia slovenskej provincie (sv. Cyril a Metod 5.7., Sedembolestná Panna Mária 15.9. a i.)
-
-• Smernice: Všeobecné normy o liturgickom roku a o kalendári + Direktórium KBS
-
-Kľúčový rozdiel oproti US modelu: Zjavenie Pána je na Slovensku pevne 6. januára (prikázaný sviatok, štátny sviatok) a nepresúva sa na nedeľu. Preto Krst Krista Pána = nedeľa PO 6.1., aj keď 6.1. je nedeľa (napr. 13.1.2019, 13.1.2030).
-
-## ZDROJE DÁT
-
-Obsah čítaní a vešpier nie je súčasťou programu. Sťahuje sa na požiadanie pre osobnú potrebu farnosti:
-
-Liturgický kalendár a čítania: [lc.kbs.sk](https://lc.kbs.sk/) (Konferencia biskupov Slovenska)
-
-Liturgia hodín / vešpery: [breviar.kbs.sk](https://breviar.kbs.sk/)
-
-Mládežnícke piesne: [mladeznickyspevnik.sk](http://www.mladeznickyspevnik.sk)
-
-## INŠTALÁCIA
-
-Pre bežného používateľa (Windows)
-
-Stiahnite si [Kinak_v3.2.zip](https://github.com/kinakprojekcia/Kinak/releases/latest/download/Kinak_v3.2.zip) a rozbaľte ho.
-
-Súbor Kinak.exe musí mať pri sebe aj priečinok s názvom piesne
-
-```
-Kinak (priečinok môže mať ľubovoľný názov)
-├── Kinak.exe
-└── piesne/
-    ├── 001.txt
-    ├── 002.txt
-    ├── 003.txt
-    └── ...
-```
-
-Spustite a choďte do menu Pomoc → Rýchly sprievodca
-
-Ak priečinok premenujete (napr. na Kinak_večeradlo), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/).
-
-Následne nezabudnite v Nastaveniach správne vybrať cestu k priečinku piesne: Kinak_večeradlo/piesne
-
-## LICENCIA
-
-MIT License - pozri súbor [LICENSE](LICENSE)
-
-Vysvetlenie v skratke:
-Toto je slobodný softvér. Môžete ho zdarma používať, upravovať a šíriť pre všetky farnosti na Slovensku aj inde, aj na komerčné účely. Jediná podmienka je zachovať informáciu o autorovi a licencii.
-
-Zdarma pre všetky farnosti na Slovensku. Dáta čítaní: zdroj lc.kbs.sk / breviar.kbs.sk
-
-Copyright (c) 2026 Kinak - Kremnica
-
-## KONTAKT
-
-Vytvorené ako dobrovoľnícky projekt pre farnosť Kremnica.
-
-Web: [kinak.sk](https://kinak.sk/)
+Dobrovoľnícky projekt farnosti Kremnica · [kinak.sk](https://kinak.sk/)
