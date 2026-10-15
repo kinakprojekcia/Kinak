@@ -65,7 +65,7 @@ except ImportError:
 # ZÁKLADNÉ NASTAVENIA
 # ==========================================================
 
-KINAK_VERSION = "3.2"
+KINAK_VERSION = "3.3"
 KINAK_WEB_URL = "https://kinak.sk"    #"https://kinakprojekcia.github.io/Kinak/"
 KINAK_QR_BASE64 = """iVBORw0KGgoAAAANSUhEUgAAAhwAAAIcCAYAAAC9/nd8AABOsElEQVR4nO3daZMk13Xm+f+51z0il1qwFXaRFHdxl0iKiyhRlNQSpVG3uq27zcZkPTZv5iPMx5hPMP22bczGxrrN1Npaau2iuImkxA1cBa7YCFQBtWVmhPs9Z15c98gEQIHIQroQUfH8YIkCsjIjPCOXePLec8+x6K4FIiIiIhNKr/YFiIiIyO1PgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyuebVvoBX6v967Vtf7Uu4rfyf3/v6qd5+0x//qT/eTX88T3v9pzX1x7tun9/TWrfH57TW7et50039+ZqaVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtTe9Ff1rrNoth02crbPrHu27Xv+nfj1PPXpn687Vus2M2/evhtNbt58PUtMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5LZulspprVuv+22bNXBa6/b4TH096zY7Y92uZ2rr9vldt8dnavr5vFm0wiEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkNEtFXpGpZxls26yKdZsNMbWpZ7Wc1tTXc9rbX7frEXkltMIh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wCEiIiKTU+AQERGRyW38LBV5da3b7IZ1m5WwbrNsprZus410PS9t3a7ntNbt+rft+/20tMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5JpX+wJeqXWb5bHpTturf916+6/b18NpH5/TXv+6zZKY+uM9rXX7+jytdft6Pq11+/o8rU1//NeNVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtdevVP7WpZwFMPSth3W5/alN/fa7b7JJ1+3i37etn3b4e1s2mX/+60QqHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik9u6WSqntemzEtbNpj+e6zab5rTWbXbJulm32Svr9v2uz6+8ElrhEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHKapSKvyLbN5pj64123x/O017Pp179ts2zWbRbMun2/r9v1bPpsF61wiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjnNUpFXZOrZCutm0z/eTZ9tcVqb/vna9OvfdOs2+2bTaYVDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyWmWyk+g2QQvbdNnc6zbrIqpr2fqx3/dvl9O+/Fu+uO/bp/fdXs8N/37d9NphUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJbd0slXWb5SG3t03/etu2WQ/rNhtl3a5n3WajnNa6zTpZt+uZmlY4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZxFdy1e7YsQERGR25tWOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyf3/haLfJyAgMggAAAAASUVORK5CYII="""
 
@@ -1512,8 +1512,15 @@ def zostav_text_status_baru(
     casti: list[str] = []
 
     if zobrazit_zalm:
-        skratky = format_skratky_liturgickej_casti(dnes)
-        casti.append(f"Žalm z {skratky} / xL?")  # xL? je tu fixne zobrazené zámerne. xL = mesačné sviatky podľa mesiacov (1L–12L). Užívateľ ho použije ak nenašiel vhodný žalm v navrhovaných skratkách.
+        dnesny_kod = vypocitaj_kod_liturgickej_casti(dnes)
+        casti.append(f"Dnes: žalm {format_skratku_liturgickej_casti(dnesny_kod, dnes)}")
+        if dnes < date.max:
+            zajtra_den = dnes + timedelta(days=1)
+            zajtrajsi_kod = vypocitaj_kod_liturgickej_casti(zajtra_den)
+            casti.append(f"Zajtra: žalm {format_skratku_liturgickej_casti(zajtrajsi_kod, zajtra_den)}")
+        # xL je tu fixne zobrazené zámerne. xL = mesačné sviatky podľa mesiacov (1L–12L).
+        # Užívateľ ho použije, ak nenašiel vhodný žalm v navrhovaných skratkách.
+        casti.append("Mesačné sviatky: xL (1L–12L)")
 
     if zobrazit_zaltara:
         tyzden = vypocitaj_tyzden_zaltara(dnes)
@@ -1563,7 +1570,7 @@ def zostav_text_status_baru(
     if prednost:
         casti.append(f"nedeľa má prednosť pred: {prednost}")
 
-    return "  " + "  |  ".join(casti) if casti else ""
+    return "  " + "   |   ".join(casti) if casti else ""
 
 def zostavit_casove_vztahy_titulku(dnes: date | None = None) -> dict:
     """
@@ -1676,7 +1683,7 @@ def zostavit_casove_vztahy_titulku(dnes: date | None = None) -> dict:
 
     zajtra_presny = najdi_presny_datum_v_direktoriu(zajtra)
     if vigilia is None and zajtra_presny:
-        z_kod, z_nazov = zajtra_presny
+        _z_kod, z_nazov = zajtra_presny
         z_stupen = ziskaj_stupen_liturgickeho_dna(z_nazov)
         povodny_jan = date(zajtra.year, 6, 24)
         presny_datum_plati = not (
@@ -3599,15 +3606,70 @@ def _inicializovat_fonty() -> None:
 
 # TEXT_COLOR, BACKGROUND_COLOR a DEFAULT_USE_FADE sú aktívne konštanty:
 # používajú sa v ProjectionWindow.__init__ a ControlApp (nie len ako init hodnoty).
-TEXT_COLOR = "#ffffff"
-BACKGROUND_COLOR = "#1e1e1e"
-PANEL_BG_COLOR = "#1e1e1e"
+TEXT_COLOR = "#e0e0e6"
+BACKGROUND_COLOR = "#121212"
+PANEL_BG_COLOR = "#121212"
 
-# Farba textu labelu odporúčaných piesní z direktória (svetlomodrá).
+# Text zobrazený v rozbaľovacom menu súborov, keď nie je nič vybrané.
+SUBOR_ZIADNY = "Žiadna"
+COMBO_HLAVICKA = "Hľadať číslo alebo názov…"
+
+# Tmavý vzhľad rozbaľovacích tlačidiel (OptionMenu) v ľavom paneli.
+MENU_BTN_BG = "#1a1a1a"
+MENU_BTN_FG = "#e0e0e6"
+MENU_BTN_ACTIVE_BG = "#262626"
+MENU_BTN_BORDER = "#2a2a2a"
+
+# Paleta ovládacieho okna (podľa vzoru vzhľadu) – nemení farby projekcie.
+UI_WINDOW_BG = "#0e0e0e"       # pozadie okna / medzery medzi panelmi - ako VS Code #0e0e0e
+UI_BAR_BG = "#1a1a1a"          # horný panel nástrojov a stavový riadok - sidebar #1a1a1a z obrázku
+UI_PANEL_BG = "#181818"        # pravý panel s textom piesne (tmavý) - #181818
+UI_LEFT_PANEL_BG = "#1a1a1a"   # ľavý navigačný panel – ako sidebar #1a1a1a
+UI_BTN_BG = "#1e1e1e"          # ploché tlačidlá - #1e1e1e - svetlejší odtieň ako sidebar
+UI_BTN_ACTIVE_BG = "#262626"   # tlačidlá pri nabehnutí myši - highlight #262626
+UI_BTN_FG = "#e0e0e6"
+UI_ENTRY_BG = "#101010"        # pole s číslom piesne - #101010
+UI_PREVIEW_HDR_BG = "#121212"  # pásik "Náhľad projekcie" - #121212
+UI_MUTED_FG = "#6a6a75"        # pomocné texty
+UI_THUMB = "#604d13"           # posuvník
+
+# Akcentová farba (hover/focus rámik a šípka v zozname piesní) – odtieň sivej.
+KINAK_AKCENT = "#8c8c8c"
+KINAK_AKCENT_TEXT = "#101216"  # text na akcentovom pozadí (výber textu)
+
+
+def stylizuj_optionmenu_tmavo(option_menu):
+    """Nastaví tmavé farby pre tk.OptionMenu aj jeho rozbaľovací zoznam."""
+    try:
+        option_menu.config(
+            bg=MENU_BTN_BG, fg=MENU_BTN_FG,
+            activebackground=MENU_BTN_ACTIVE_BG, activeforeground=MENU_BTN_FG,
+            highlightthickness=1, highlightbackground=MENU_BTN_BORDER,
+            highlightcolor=MENU_BTN_BORDER, relief="flat", bd=0,
+            anchor="w", justify=tk.LEFT, padx=10,
+        )
+        try:
+            option_menu["menu"].config(
+                bg=MENU_BTN_BG, fg=MENU_BTN_FG,
+                activebackground=MENU_BTN_ACTIVE_BG, activeforeground=MENU_BTN_FG,
+                bd=0,
+                font=(FONT_NAME or "Arial", 12),
+            )
+        except Exception:
+            option_menu["menu"].config(
+                bg=MENU_BTN_BG, fg=MENU_BTN_FG,
+                activebackground=MENU_BTN_ACTIVE_BG, activeforeground=MENU_BTN_FG,
+                bd=0,
+            )
+    except Exception:
+        pass
+
+# Farba textu labelu odporúčaných piesní z direktória.
+# Pôvodne svetlomodrá "#aaddff", zmenené na farbu stavového riadku "#e0e0e6" (UI_BTN_FG).
 # Definovaná ako konštanta, aby ju `.config(fg=...)` pri mazaní textu
 # neprepísalo späť na bielu.
-DIREKTORIUM_LABEL_FG = "#aaddff"
-TEXT_PANEL_BG = "#2e2e2e"
+DIREKTORIUM_LABEL_FG = "#e0e0e6"  # rovnaká ako UI_BTN_FG / stavový riadok
+TEXT_PANEL_BG = "#1e1e1e"
 
 WRAP_PADDING_RATIO = 0.06
 MIN_WRAP = 240
@@ -3641,15 +3703,25 @@ LITURGICKE_OBDOBIA = {
     "Cezročné": "#80FF00"
 }
 
+# Zjemnené farby pre hlavné okno (nie projekciu) - ZJEDNOTENÉ s projekciou podľa Kinak_x.py
+# Pôvodne: #D47BC6 / #DCB862 / #8FD16A, teraz rovnaké ako LITURGICKE_OBDOBIA pre zhodu s Kinak_x.py
+LITURGICKE_OBDOBIA_JEMNE = {
+    "Adventné": "#FF80FF",
+    "Vianočné": "#FFCC33",
+    "Pôstne":   "#FF80FF",
+    "Veľkonočné": "#FFCC33",
+    "Cezročné": "#80FF00"
+}
+
 # Pevná modrá farba textu v projekcii pri aktívnom filtri "Večeradlo"
 # (voliteľné cez Nastavenia; svetlejší odtieň modrej, dobre čitateľný
 # na tmavom pozadí BACKGROUND_COLOR).
 VECERADLO_PROJEKCIA_MODRA = "#66B2FF"
 
 # Farba textu v comboboxe pri aktívnom filtri "Mládež"
-# (teplá oranžová – energia, radosť, mladosť; dobre kontrastuje s modrou Večeradla)
-MLADEZ_COMBOBOX_FARBA = "#FF8C00"
-MLADEZ_COMBOBOX_FARBA_TMAVSIA = "#E67E22"  # pre focus/hover ak by bolo treba
+# (pôvodne oranžová, teraz zjednotená na odtieň bielej podľa požiadavky - #e0e0e6)
+MLADEZ_COMBOBOX_FARBA = "#e0e0e6"
+MLADEZ_COMBOBOX_FARBA_TMAVSIA = "#d0d0d8"  # pre focus/hover
 
 DEFAULT_CONFIG = {
     # Poznámka: "base_dir" sa ukladá do JSON len pre informáciu.
@@ -3668,6 +3740,7 @@ DEFAULT_CONFIG = {
     # _zostav_config_dict r. ~9063) a táto konštanta sa pri tom nikde nečíta.
     "liturgical_year": "",
     "default_filter_obdobie": "Cezročné C2",
+    "auto_filter_podla_dnes": False,
     "pouzit_vlastnu_farbu": False,
     "bottom_margin": 40,
     "reserved_vertical_ratio": 0.20,
@@ -3689,6 +3762,7 @@ DEFAULT_CONFIG = {
     "statusbar_tyzden_zaltara": True,
     "statusbar_skratka_zalmu": True,
     "statusbar_jks_piesne": True,
+    "cislo_strofy_v_strede": True,
     "main_window_x": -1,
     "main_window_y": -1,
     "main_window_width": -1,
@@ -3697,8 +3771,10 @@ DEFAULT_CONFIG = {
     "settings_window_height": -1,
     "direktorium_window_width": -1,
     "direktorium_window_height": -1,
+    "direktorium_font_size": 12,
     "slavnosti_window_width": -1,
     "slavnosti_window_height": -1,
+    "slavnosti_font_size": 12,
     "about_window_width": -1,
     "about_window_height": -1,
     "about_last_tab": 1,
@@ -7160,7 +7236,7 @@ class ProjectionWindow:
             anchor="n",
             justify=tk.CENTER,
             bg=BACKGROUND_COLOR,
-            fg="#000000"
+            fg="#121212"
         )
         self.title_label.pack(side=tk.TOP, fill=tk.X, padx=20, pady=(20, 0))
 
@@ -7174,7 +7250,7 @@ class ProjectionWindow:
             anchor="center",
             justify=tk.CENTER,
             bg=BACKGROUND_COLOR,
-            fg="#000000",
+            fg="#121212",
             wraplength=self._compute_wraplength()  # dynamicky podľa rozlíšenia
         )
         self.text_label.pack(
@@ -7184,7 +7260,7 @@ class ProjectionWindow:
             pady=(0, self.bottom_margin)
         )
 
-        self.current_color = "#000000"
+        self.current_color = "#121212"
 
         # maximalizácia na cieľový monitor
         self.move_and_maximize()
@@ -7686,6 +7762,72 @@ class ProjectionWindow:
             self._stop_fade_animation(widget)         
             
       
+def _vytvor_info_tabs_header(top_panel, safe_font_name, bg, fg, tab_specs, medzera=2):
+    """
+    Vytvorí riadok záložkových tlačidiel a farebné pásiky pod nimi – štýl
+    používaný v oknách „O aplikácii“, „Pomocník“ a „Slávenia“.
+
+    tab_specs: zoznam (label, width) dvojíc, jedna položka na záložku.
+    medzera: horizontálna medzera (padx) medzi záložkami v pixeloch.
+    Vracia (buttons, stripes), oba slovníky indexované od 1.
+    """
+    buttons, stripes = {}, {}
+    for i, (label, width) in enumerate(tab_specs):
+        btn = tk.Button(
+            top_panel, text=label, bg=bg, fg=fg,
+            font=(safe_font_name, 12), relief="flat", width=width,
+            activebackground=bg, activeforeground=fg, borderwidth=0,
+            highlightthickness=0,
+        )
+        btn.grid(row=0, column=i, padx=medzera)
+        stripe = tk.Frame(top_panel, height=3, bg=bg)
+        stripe.grid(row=1, column=i, sticky="ew")
+        buttons[i + 1], stripes[i + 1] = btn, stripe
+    return buttons, stripes
+
+
+def _zabezpec_tmave_scrollbary(style):
+    """
+    Vlastné štýly KinakSlav.{Vertical,Horizontal}.TScrollbar pre okná
+    Direktórium a Slávenia – vzhľadom zhodné s „KinakDark“ (tenký, tmavý),
+    ale navyše so stavom `disabled` (celý zoznam sa zmestí na obrazovku):
+    ttk by ho inak nakreslilo predvolenou svetlosivou, čo by na tmavom okne
+    rušilo. Samostatné štýly zaručia, že sa nezmení vzhľad iných okien.
+    """
+    try:
+        style.element_create("KinakDark.Scrollbar.trough", "from", "default")
+        style.element_create("KinakDark.Scrollbar.thumb", "from", "default")
+    except tk.TclError:
+        pass  # prvky už existujú (vytvoril ich ControlApp alebo iné okno)
+
+    for orientacia in ("Vertical", "Horizontal"):
+        nazov = f"KinakSlav.{orientacia}.TScrollbar"
+        style.layout(
+            nazov,
+            [("KinakDark.Scrollbar.trough", {
+                "children": [("KinakDark.Scrollbar.thumb", {"sticky": "nswe"})],
+                "sticky": "nswe",
+            })]
+        )
+        style.configure(
+            nazov,
+            troughcolor="#1a1a1a",
+            background="#1e1e1e",
+            darkcolor="#1e1e1e",
+            lightcolor="#1e1e1e",
+            bordercolor="#1a1a1a",
+            arrowcolor="#1a1a1a",
+            width=10
+        )
+        # Priblížený k ploche panela #1a1a1a, trochu hrubší
+        style.map(
+            nazov,
+            background=[("active", "#242424"), ("pressed", "#242424"), ("disabled", "#1a1a1a"), ("!active", "#1e1e1e")],
+            darkcolor=[("active", "#242424"), ("disabled", "#1a1a1a"), ("!active", "#1e1e1e")],
+            lightcolor=[("active", "#242424"), ("disabled", "#1a1a1a"), ("!active", "#1e1e1e")],
+        )
+
+
 def _vytvor_on_close_handler(top: tk.Toplevel, on_close_callback):
     """
     Vytvorí obsluhu zatvorenia okna, ktorá pred jeho zničením zaznamená
@@ -7709,19 +7851,61 @@ def _vytvor_on_close_handler(top: tk.Toplevel, on_close_callback):
 
 
 class DirektoriumApp:
-    """Samostatné okno pre zobrazenie tabuľky direktória piesní."""
+    """
+    Samostatné okno pre zobrazenie tabuľky direktória piesní – tmavý vzhľad
+    zjednotený s oknami „Pomocník“, „O aplikácii“ a „Slávenia“ (pozadie
+    #1C1C1C, zoom + / − / Reset, tmavé scrollbary). Pastelové farby období
+    a farba tlačidla Verzia A/B ostávajú zachované.
+    """
+
+    TREE_STYLE = "KinakDir.Treeview"    # vlastný štýl – neovplyvní iné okná
+    DEFAULT_FONT_SIZE = 12
+    DEFAULT_WIDTH = 1100
+    DEFAULT_HEIGHT = 660
+    TEXT_NA_PASTELE = "#1a1a1a"         # tmavý text na pastelových riadkoch
+    HLAVICKA_BG = "#262626"
+
+    # (id stĺpca, nadpis, základná šírka v px pri písme 11 pt)
+    # "#0" je stĺpec „Liturgický deň“ (text riadku), ostatné sú dátové stĺpce.
+    STLPCE = [
+        ("#0", "Liturgický deň", 350),
+        ("uvod", "Úvodný spev", 140),
+        ("ofert", "Ofertórium", 130),
+        ("prij", "Na prijímanie", 120),
+        ("kant", "Kant.", 105),
+        ("po_omsi", "Po omši", 130),
+    ]
 
     def __init__(self, master, direktorium_data, aktualna_verzia="A", on_verzia_change=None,
-                 init_width=None, init_height=None, on_close_callback=None, on_song_select=None):
+                 init_width=None, init_height=None, on_close_callback=None, on_song_select=None,
+                 init_font_size=None, on_font_change=None):
         self.top = tk.Toplevel(master)
         self.top.title("Direktórium (Odporúčané piesne z JKS na jednotlivé nedele a sviatky liturgického roka)")
 
-        win_w = init_width  if (init_width  and init_width  >= 400) else 1000
-        win_h = init_height if (init_height and init_height >= 300) else 660
+        # Rovnaká paleta ako v oknách Pomocník, O aplikácii a Slávenia
+        bg, fg, active = "#1a1a1a", "#E0E0E0", "#F2F2F2"
+        self.bg, self.fg, self.active = bg, fg, active
+        self.top.configure(bg=bg, highlightthickness=0, bd=0)
+
+        win_w = init_width  if (init_width  and init_width  >= 400) else self.DEFAULT_WIDTH
+        win_h = init_height if (init_height and init_height >= 300) else self.DEFAULT_HEIGHT
         screen_w = self.top.winfo_screenwidth()
         x = max(0, screen_w - win_w - 20)
         y = 20
         self.top.geometry(f"{win_w}x{win_h}+{x}+{y}")
+
+        self.font_family: str = FONT_NAME or "Arial"
+        ff = self.font_family
+
+        start_size = self.DEFAULT_FONT_SIZE
+        if init_font_size is not None:
+            try:
+                start_size = int(init_font_size)
+            except (TypeError, ValueError):
+                start_size = self.DEFAULT_FONT_SIZE
+        start_size = max(8, min(40, start_size))
+        self.font_size = tk.IntVar(self.top, value=start_size)
+        self.on_font_change = on_font_change
 
         # --- MODÁLNE OKNO ---
         self.top.transient(master)
@@ -7747,18 +7931,26 @@ class DirektoriumApp:
         self.aktualna_verzia = "B" if str(aktualna_verzia).strip().upper() == "B" else "A"
         self.on_verzia_change = on_verzia_change
 
+        # ------------------------------------------------------------
+        #  KOSTRA OKNA: hlavička (vyhľadávanie + verzia + zoom), obsah
+        # ------------------------------------------------------------
+        container = tk.Frame(self.top, bg=bg, highlightthickness=0, bd=0)
+        container.pack(fill="both", expand=True)
+
+        header = tk.Frame(container, bg=bg)
+        header.pack(fill="x", pady=(10, 5))
+        zoom_panel = tk.Frame(header, bg=bg)
+        zoom_panel.pack(side="right", padx=(5, 10))
+        search_frame = tk.Frame(header, bg=bg)
+        search_frame.pack(side="left", fill="x", expand=True, padx=(15, 0))
+
+        content = tk.Frame(container, bg=bg)
+        content.pack(fill="both", expand=True)
+
         # --- vyhľadávací panel ---
-        search_frame = tk.Frame(self.top)
-        search_frame.pack(fill="x", padx=5, pady=5)
-
-        tk.Label(search_frame, text="Vyhľadaj:").pack(side="left")
+        # Tlačidlá sa packujú sprava ešte pred poľom, aby pri úzkom okne
+        # ostali vždy viditeľné; pole na vyhľadávanie vyplní zvyšné miesto.
         self.search_var = tk.StringVar()
-        search_entry = tk.Entry(search_frame, textvariable=self.search_var)
-        search_entry.pack(side="left", fill="x", expand=True, padx=5)
-        search_entry.bind("<Return>", lambda event: self.search())
-
-        tk.Button(search_frame, text="Hľadaj", command=self.search).pack(side="left", padx=5)
-        tk.Button(search_frame, text="Reset", command=self.reset).pack(side="left")
 
         # --- tlačidlo prepínania verzie A / B databázy čísel piesní ---
         # Prepína IBA čísla piesní (uvodny/ofertorium/prijimanie/kant/po_omsi)
@@ -7768,89 +7960,213 @@ class DirektoriumApp:
             text=self._popis_verzie_tlacidla(),
             command=self.prepnut_verziu,
             width=12,
+            font=(ff, 11, "bold"),
+            relief="flat", borderwidth=0, highlightthickness=0,
+            pady=4, cursor="hand2", takefocus=0,
         )
-        self.verzia_button.pack(side="left", padx=(15, 0))
+        self.verzia_button.pack(side="right", padx=(15, 0))
         self._aktualizuj_tlacidlo_verzie()
 
-        # --- tabuľka ---
-        frame = tk.Frame(self.top)
-        frame.pack(fill="both", expand=True)
+        def akcne_tlacidlo(text, command, padx):
+            tk.Button(
+                search_frame, text=text, command=command,
+                bg="#262626", fg="white", font=(ff, 11, "bold"),
+                relief="flat", borderwidth=0, highlightthickness=0,
+                padx=12, pady=4,
+                activebackground="#2a2a2a", activeforeground="white",
+                cursor="hand2", takefocus=0
+            ).pack(side="right", padx=padx)
 
+        akcne_tlacidlo("Zobraziť všetko", self.reset, 3)
+        akcne_tlacidlo("Hľadaj", self.search, 3)
+
+        tk.Label(search_frame, text="Vyhľadaj:", font=(ff, 12), bg=bg, fg=fg).pack(side="left")
+        search_entry = tk.Entry(
+            search_frame, textvariable=self.search_var, font=(ff, 12), width=8,
+            bg="#262626", fg=fg, insertbackground=fg,
+            selectbackground="#2a2a2a", selectforeground="white",
+            relief="flat", highlightthickness=1,
+            highlightbackground="#262626", highlightcolor="#8c8c8c"
+        )
+        search_entry.pack(side="left", fill="x", expand=True, padx=8, ipady=3)
+        search_entry.bind("<Return>", lambda event: self.search())
+
+        # ------------------------------------------------------------
+        #  NADPIS + TABUĽKA
+        # ------------------------------------------------------------
+        self.nadpis = tk.Label(
+            content, text="Direktórium",
+            font=(ff, max(start_size + 4, 12), "bold"),
+            fg="white", bg=bg, anchor="w"
+        )
+        self.nadpis.pack(fill="x", padx=20, pady=(12, 8))
+
+        table_frame = tk.Frame(content, bg=bg)
+        table_frame.pack(fill="both", expand=True, padx=(10, 0), pady=(0, 10))
+
+        # Vlastná tmavá hlavička stĺpcov: natívna hlavička ttk.Treeview sa na
+        # Windows (téma „vista“) nedá zafarbiť, preto sa kreslí na plátno,
+        # ktoré sa posúva spolu s tabuľkou (pozri _pri_xscroll).
+        head_row = tk.Frame(table_frame, bg=self.HLAVICKA_BG)
+        head_row.pack(side="top", fill="x")
+        self.heading_canvas = tk.Canvas(
+            head_row, bg=self.HLAVICKA_BG, height=28,
+            highlightthickness=0, bd=0
+        )
+        self.heading_canvas.pack(side="left", fill="x", expand=True)
+        head_spacer = tk.Frame(head_row, bg=self.HLAVICKA_BG)
+        head_spacer.pack(side="right", fill="y")
+
+        body = tk.Frame(table_frame, bg=bg)
+        body.pack(side="top", fill="both", expand=True)
+
+        # ------------------------------------------------------------
+        #  ŠTÝLY (tmavé) – vlastné názvy, aby sa nemenil globálny "Treeview"
+        # ------------------------------------------------------------
+        self.style = ttk.Style(self.top)
+        _zabezpec_tmave_scrollbary(self.style)
+
+        scroll_y = ttk.Scrollbar(body, orient="vertical",
+                                 style="KinakSlav.Vertical.TScrollbar")
+        scroll_y.pack(side="right", fill="y")
+        self.scroll_x = ttk.Scrollbar(body, orient="horizontal",
+                                      style="KinakSlav.Horizontal.TScrollbar")
+        self.scroll_x.pack(side="bottom", fill="x")
+
+        self.style.configure(
+            self.TREE_STYLE,
+            background=bg, fieldbackground=bg, foreground=fg,
+            borderwidth=0, relief="flat",
+        )
+        self.style.map(
+            self.TREE_STYLE,
+            background=[("selected", "#2a2a2a")],
+            foreground=[("selected", "#FFFFFF")],
+        )
+
+        # show="tree" → stĺpec #0 (Liturgický deň) + dátové stĺpce, bez
+        # natívnej hlavičky (tú nahrádza plátno vyššie).
         self.tree = ttk.Treeview(
-            frame,
-            columns=("den", "uvod", "ofert", "prij", "kant", "po_omsi"),
-            show="headings"
+            body,
+            style=self.TREE_STYLE,
+            columns=tuple(c[0] for c in self.STLPCE[1:]),
+            show="tree",
+            yscrollcommand=scroll_y.set,
+            xscrollcommand=self._pri_xscroll
         )
         self.tree.pack(side="left", fill="both", expand=True)
 
-        v_scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.tree.yview)
-        v_scrollbar.pack(side="right", fill="y")
-        self.tree.configure(yscrollcommand=v_scrollbar.set)
+        scroll_y.config(command=self.tree.yview)
+        self.scroll_x.config(command=self.tree.xview)
 
-        h_scrollbar = ttk.Scrollbar(self.top, orient="horizontal", command=self.tree.xview)
-        h_scrollbar.pack(side="bottom", fill="x")
-        self.tree.configure(xscrollcommand=h_scrollbar.set)
+        # šírka medzery pod hlavičkou = šírka vertikálneho posuvníka
+        self.top.update_idletasks()
+        head_spacer.config(width=max(scroll_y.winfo_reqwidth(), 8))
 
-        style = ttk.Style(self.top)
+        # ------------------------------------------------------------
+        #  TAGY – farby riadkov (pastelové farby podľa Direktória ostávajú)
+        # ------------------------------------------------------------
+        self.tree.tag_configure("obdobie", background="#1a1a1a", foreground="white")
 
-        safe_font_name: str = FONT_NAME or "Arial"
+        pastel = self.TEXT_NA_PASTELE
+        for tag, farba in (
+            ("Adventné1", "#e6ccff"), ("Adventné2", "#d1b3ff"),
+            ("Vianočné1", "#ffffcc"), ("Vianočné2", "#fff799"),
+            ("Veľkonočné1", "#ffffcc"), ("Veľkonočné2", "#fff799"),
+            ("Cezročné1", "#ccffcc"), ("Cezročné2", "#99ff99"),
+            ("Pôstne1", "#f2ccff"), ("Pôstne2", "#e0b3ff"),
+        ):
+            self.tree.tag_configure(tag, background=farba, foreground=pastel)
 
-        style.configure("Treeview", font=(safe_font_name, 11))
-        style.configure("Treeview.Heading", font=(safe_font_name, 11, "bold"))
+        # Zebra fallback (pre obdobia bez priradenej farby) – tmavá, aby
+        # nerušila tmavý vzhľad okna.
+        self.tree.tag_configure("riadok1", background="#1a1a1a", foreground=fg)
+        self.tree.tag_configure("riadok2", background="#121212", foreground=fg)
 
-        # hlavičky
-        self.tree.heading("den", text="Liturgický deň", anchor="w")
-        self.tree.heading("uvod", text="Úvodný spev", anchor="w")
-        self.tree.heading("ofert", text="Ofertórium", anchor="w")
-        self.tree.heading("prij", text="Na prijímanie", anchor="w")
-        self.tree.heading("kant", text="Kant.", anchor="w")
-        self.tree.heading("po_omsi", text="Po omši", anchor="w")
-
-        # stĺpce
-        self.tree.column("den", width=350, anchor="w", stretch=False)
-        self.tree.column("uvod", width=140, anchor="w", stretch=False)
-        self.tree.column("ofert", width=130, anchor="w", stretch=False)
-        self.tree.column("prij", width=120, anchor="w", stretch=False)
-        self.tree.column("kant", width=105, anchor="w", stretch=False)
-        self.tree.column("po_omsi", width=130, anchor="w", stretch=False)
-
-        # štýly pre hlavičky období
-        self.tree.tag_configure(
-            "obdobie",
-            background="#000033",
-            foreground="white",
-            font=(safe_font_name, 11, "bold")
-        )
-
-        # Pastelové farby podľa obdobia
-        self.tree.tag_configure("Adventné1", background="#e6ccff")
-        self.tree.tag_configure("Adventné2", background="#d1b3ff")
-
-        self.tree.tag_configure("Vianočné1", background="#ffffcc")
-        self.tree.tag_configure("Vianočné2", background="#fff799")
-
-        self.tree.tag_configure("Veľkonočné1", background="#ffffcc")
-        self.tree.tag_configure("Veľkonočné2", background="#fff799")
-
-        self.tree.tag_configure("Cezročné1", background="#ccffcc")
-        self.tree.tag_configure("Cezročné2", background="#99ff99")
-
-        self.tree.tag_configure("Pôstne1", background="#f2ccff")
-        self.tree.tag_configure("Pôstne2", background="#e0b3ff")
-
-        # default sivé zebra riadky
-        self.tree.tag_configure("riadok1", background="#f0f0f0")
-        self.tree.tag_configure("riadok2", background="#ffffff")
-        
         # ------------------------------------------------------------
         #  ODSADENIE (rovnaké ako v SlavnostiApp, ale bez šípky)
         # ------------------------------------------------------------
         self.INDENT = "  "
 
-        # načítanie obsahu
+        # ------------------------------------------------------------
+        #  ZOOM: + / − / Reset (rovnako ako v ostatných informačných oknách)
+        # ------------------------------------------------------------
+        def vytvor_zoom_tlacidlo(text, width, command, padx: Any = 0):
+            tk.Button(
+                zoom_panel, text=text, width=width,
+                font=(ff, 12, "bold"),
+                bg=bg, fg=fg, relief="flat",
+                borderwidth=0, highlightthickness=0,
+                highlightbackground=bg, highlightcolor=bg,
+                activebackground=bg, activeforeground=fg,
+                takefocus=0, command=command
+            ).pack(side="left", padx=padx)
+
+        def reset_okna():
+            w, h = self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT
+            rx = max(0, self.top.winfo_screenwidth() - w - 20)
+            self.top.geometry(f"{w}x{h}+{rx}+20")
+            self._nastav_velkost_pisma(self.DEFAULT_FONT_SIZE)
+
+        vytvor_zoom_tlacidlo("+", 3, lambda: self._nastav_velkost_pisma(self.font_size.get() + 1))
+        vytvor_zoom_tlacidlo("−", 3, lambda: self._nastav_velkost_pisma(self.font_size.get() - 1))
+        vytvor_zoom_tlacidlo("Reset", 6, reset_okna, padx=(5, 0))
+
+        # načítanie obsahu + prvé nastavenie písma
+        self._nastav_velkost_pisma(start_size, uloz=False)
         self.reset()
 
         self.tree.bind("<Double-1>", self.vyber_piesen_z_kliknutej_bunky)
+
+    # ------------------------------------------------------------
+    #  Posun hlavičky spolu s tabuľkou (horizontálne)
+    # ------------------------------------------------------------
+    def _pri_xscroll(self, first, last):
+        self.scroll_x.set(first, last)
+        try:
+            self.heading_canvas.xview_moveto(first)
+        except tk.TclError:
+            pass
+
+    # ------------------------------------------------------------
+    #  ZOOM: veľkosť písma, výška riadkov, šírky stĺpcov, hlavička
+    # ------------------------------------------------------------
+    def _nastav_velkost_pisma(self, size, uloz=True):
+        size = max(8, min(40, int(size)))
+        self.font_size.set(size)
+        ff = self.font_family
+
+        self.style.configure(
+            self.TREE_STYLE,
+            font=(ff, size),
+            rowheight=max(22, round(size * 2.2)),
+        )
+        self.tree.tag_configure("obdobie", font=(ff, size, "bold"))
+        self.nadpis.config(font=(ff, max(size + 4, 12), "bold"))
+
+        # šírky stĺpcov sa menia úmerne s písmom
+        sirky = [max(40, round(zaklad * size / 11)) for _id, _nazov, zaklad in self.STLPCE]
+        for (cid, _nazov, _zaklad), sirka in zip(self.STLPCE, sirky):
+            self.tree.column(cid, width=sirka, minwidth=sirka, anchor="w", stretch=False)
+
+        # tmavá hlavička stĺpcov
+        c = self.heading_canvas
+        vyska = max(26, round(size * 2.4))
+        c.delete("all")
+        c.config(height=vyska)
+        x = 0
+        for (cid, nazov, _zaklad), sirka in zip(self.STLPCE, sirky):
+            c.create_text(x + 5, vyska // 2, text=nazov, anchor="w",
+                          fill=self.fg, font=(ff, size, "bold"))
+            x += sirka
+            c.create_line(x - 1, 5, x - 1, vyska - 5, fill="#4a4a4a")
+        c.config(scrollregion=(0, 0, x, vyska))
+
+        if uloz and callable(self.on_font_change):
+            try:
+                self.on_font_change(size)
+            except Exception as e:
+                log_exception("DirektoriumApp: uloženie veľkosti písma zlyhalo", e)
 
     def vyber_piesen_z_kliknutej_bunky(self, event=None):
         on_song_select = getattr(self, "on_song_select", None)
@@ -7866,12 +8182,11 @@ class DirektoriumApp:
             if not item_id:
                 return
 
-            values = self.tree.item(item_id, "values")
-            if not values:
-                return
+            # Stĺpec „Liturgický deň“ je #0 (text riadku), dátové stĺpce sú #1…#5.
+            values = (self.tree.item(item_id, "text"),) + tuple(self.tree.item(item_id, "values") or ())
 
             try:
-                column_index = int(str(column).lstrip("#")) - 1
+                column_index = int(str(column).lstrip("#"))
             except Exception:
                 column_index = 1
 
@@ -7902,7 +8217,7 @@ class DirektoriumApp:
     #  Pomocná funkcia: vloženie hlavičky sekcie
     # ------------------------------------------------------------
     def insert_section_header(self, obdobie):
-        self.tree.insert("", "end", values=(obdobie, "", "", "", "", ""), tags=("obdobie",))
+        self.tree.insert("", "end", text=obdobie, values=("", "", "", "", ""), tags=("obdobie",))
 
     # ------------------------------------------------------------
     #  RESET – pôvodné zobrazenie
@@ -7915,7 +8230,6 @@ class DirektoriumApp:
 
             for i, riadok in enumerate(riadky):
                 values = (
-                    self.INDENT + riadok.get("den", ""),   # ← ODSADENIE
                     riadok.get("uvodny", ""),
                     riadok.get("ofertorium", ""),
                     riadok.get("prijimanie", ""),
@@ -7923,7 +8237,11 @@ class DirektoriumApp:
                     riadok.get("po_omsi", "")
                 )
                 tag = self.get_tag(obdobie, i)
-                self.tree.insert("", "end", values=values, tags=(tag,))
+                self.tree.insert(
+                    "", "end",
+                    text=self.INDENT + riadok.get("den", ""),   # ← ODSADENIE
+                    values=values, tags=(tag,)
+                )
 
     # ------------------------------------------------------------
     #  SEARCH – filtrovanie podľa textu
@@ -7945,7 +8263,6 @@ class DirektoriumApp:
 
                 for i, riadok in enumerate(matched):
                     values = (
-                        self.INDENT + riadok.get("den", ""),
                         riadok.get("uvodny", ""),
                         riadok.get("ofertorium", ""),
                         riadok.get("prijimanie", ""),
@@ -7953,7 +8270,11 @@ class DirektoriumApp:
                         riadok.get("po_omsi", "")
                     )
                     tag = self.get_tag(obdobie, i)
-                    self.tree.insert("", "end", values=values, tags=(tag,))         
+                    self.tree.insert(
+                        "", "end",
+                        text=self.INDENT + riadok.get("den", ""),
+                        values=values, tags=(tag,)
+                    )         
 
     # ------------------------------------------------------------
     #  VERZIA A / B – prepínanie databázy čísel piesní
@@ -8016,12 +8337,51 @@ class DirektoriumApp:
 
 
 class SlavnostiApp:
+    """
+    Okno „Slávenia“ – tmavý vzhľad zjednotený s oknami „Pomocník“ a
+    „O aplikácii“ (pozadie #1C1C1C, záložky s farebným prúžkom, zoom
+    + / − / Reset, tmavý scrollbar). Farebná štruktúra liturgických období
+    (fialová, zlatá, zelená, pastelové riadky) ostáva zachovaná.
+    """
+
+    # Farba prúžku pod aktívnou filtrovou záložkou.
+    # Fialová = advent/pôst, zlatá = Vianoce/Veľká noc, zelená = cezročné obdobie.
+    FARBY_PRUZKOV = {
+        "Adventné": "#820fef",
+        "Vianočné": "#FFBF00",
+        "Pôstne": "#820fef",
+        "Veľkonočné": "#FFBF00",
+        "Cezročné": "#07BA07",
+        None: "#8c8c8c",
+    }
+
+    # (text záložky, filter, šírka tlačidla)
+    FILTRE = [
+        ("Všetko", None, 9),
+        ("Adventné", "Adventné", 11),
+        ("Vianočné", "Vianočné", 11),
+        ("Pôstne", "Pôstne", 9),
+        ("Veľkonočné", "Veľkonočné", 12),
+        ("Cezročné", "Cezročné", 11),
+    ]
+
+    TREE_STYLE = "KinakSlav.Treeview"   # vlastný štýl – neovplyvní okno Direktórium
+    DEFAULT_FONT_SIZE = 12
+    TEXT_NA_PASTELE = "#1a1a1a"         # tmavý text na pastelových riadkoch
+
     # ------------------------------------------------------------
     #  KONŠTRUKTOR
     # ------------------------------------------------------------
-    def __init__(self, master, slavnosti_data, neprikazane_data, pohyblive_data, init_width=None, init_height=None, on_close_callback=None, on_song_select=None):
+    def __init__(self, master, slavnosti_data, neprikazane_data, pohyblive_data,
+                 init_width=None, init_height=None, on_close_callback=None,
+                 on_song_select=None, init_font_size=None, on_font_change=None):
         self.top = tk.Toplevel(master)
         self.top.title("Liturgické slávenia pre celý rok")
+
+        # Rovnaká paleta ako v oknách Pomocník a O aplikácii
+        bg, fg, active = "#1a1a1a", "#E0E0E0", "#F2F2F2"
+        self.bg, self.fg, self.active = bg, fg, active
+        self.top.configure(bg=bg, highlightthickness=0, bd=0)
 
         win_w = init_width  if (init_width  and init_width  >= 400) else 960
         win_h = init_height if (init_height and init_height >= 300) else 680
@@ -8029,9 +8389,20 @@ class SlavnostiApp:
         x = max(0, screen_w - win_w - 20)
         y = 20
         self.top.geometry(f"{win_w}x{win_h}+{x}+{y}")
-        
+
         # Centrálna premenná pre font – používa sa v celom okne
         self.font_family: str = FONT_NAME or "Arial"
+        ff = self.font_family
+
+        start_size = self.DEFAULT_FONT_SIZE
+        if init_font_size is not None:
+            try:
+                start_size = int(init_font_size)
+            except (TypeError, ValueError):
+                start_size = self.DEFAULT_FONT_SIZE
+        start_size = max(8, min(40, start_size))
+        self.font_size = tk.IntVar(self.top, value=start_size)
+        self.on_font_change = on_font_change
 
         # --- MODÁLNE OKNO ---
         self.top.transient(master)
@@ -8054,116 +8425,111 @@ class SlavnostiApp:
         self.on_song_select = on_song_select
 
         # ------------------------------------------------------------
-        #  FILTRE – tlačidlá s rovnakou šírkou + hrubý rámik pri aktívnom
+        #  KOSTRA OKNA: hlavička (záložky + zoom), pätička, obsah
         # ------------------------------------------------------------
-        filter_frame = tk.Frame(self.top)
-        filter_frame.pack(fill="x", padx=10, pady=(5, 0))
+        container = tk.Frame(self.top, bg=bg, highlightthickness=0, bd=0)
+        container.pack(fill="both", expand=True)
 
-        BUTTON_WIDTH = 14   # rovnaká šírka tlačidiel
+        header = tk.Frame(container, bg=bg)
+        header.pack(fill="x", pady=(10, 5))
+        top_panel = tk.Frame(header, bg=bg)
+        top_panel.pack(side="left", padx=(10, 0))
+        zoom_panel = tk.Frame(header, bg=bg)
+        zoom_panel.pack(side="left", padx=(5, 0))
+        self._header = header
 
+        # Pätička sa packuje pred obsahom (rovnako ako v Pomocníkovi),
+        # aby ostala viditeľná aj pri malom okne.
+        footer = tk.Frame(container, bg=bg)
+        footer.pack(fill="x", side="bottom", pady=(0, 10))
+
+        content = tk.Frame(container, bg=bg)
+        content.pack(fill="both", expand=True)
+
+        # ------------------------------------------------------------
+        #  FILTRE – záložky s farebným prúžkom (štýl Pomocníka)
+        # ------------------------------------------------------------
+        buttons, stripes = _vytvor_info_tabs_header(
+            top_panel, ff, bg, fg,
+            tab_specs=[(nazov, sirka) for nazov, _, sirka in self.FILTRE],
+            medzera=2,
+        )
         self.filter_buttons = {}
-
-        def make_btn(name, obdobie):
-            # Kontajner pre prúžok hore + tlačidlo
-            wrapper = tk.Frame(filter_frame)
-            wrapper.pack(side="left", padx=0)
-
-            # Farebný prúžok hore (default neviditeľný)
-            stripe = tk.Frame(wrapper, height=4, width=130, bg=self.top.cget("bg"))
-            stripe.pack(side="bottom")
-
-            # Samotné tlačidlo
-            btn = tk.Button(
-                wrapper,
-                text=name,
-                font=(self.font_family, 12),
-                width=BUTTON_WIDTH,
-                relief="flat",
-                bd=0,
-                highlightthickness=0
-            )
-            btn.config(command=lambda: self.apply_filter(obdobie))
-            btn.pack(side="top", padx=4)
-
-            # Hover efekt – jemné zosvetlenie
-            btn.bind("<Enter>", lambda e, b=btn: b.config(bg="#e6e6e6"))
-            btn.bind("<Leave>", lambda e, b=btn: b.config(bg=self.top.cget("bg")))
-
-            # Uložíme oba prvky
-            self.filter_buttons[name] = (btn, stripe)
-
-        make_btn("Všetko", None)
-        make_btn("Adventné", "Adventné")
-        make_btn("Vianočné", "Vianočné")
-        make_btn("Pôstne", "Pôstne")
-        make_btn("Veľkonočné", "Veľkonočné")
-        make_btn("Cezročné", "Cezročné")
+        for i, (nazov, obdobie, _sirka) in enumerate(self.FILTRE, start=1):
+            buttons[i].config(command=lambda o=obdobie: self.apply_filter(o), takefocus=0)
+            self.filter_buttons[nazov] = (buttons[i], stripes[i])
 
         # ------------------------------------------------------------
-        #  TABUĽKA
+        #  NADPIS + TABUĽKA
         # ------------------------------------------------------------
-        table_frame = tk.Frame(self.top)
-        table_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        self.nadpis = tk.Label(
+            content, text="Liturgické slávenia pre celý rok",
+            font=(ff, max(start_size + 4, 12), "bold"),
+            fg="white", bg=bg, anchor="w"
+        )
+        self.nadpis.pack(fill="x", padx=20, pady=(12, 8))
 
-        scroll_y = ttk.Scrollbar(table_frame, orient="vertical")
+        table_frame = tk.Frame(content, bg=bg)
+        table_frame.pack(fill="both", expand=True, padx=(10, 0), pady=(0, 5))
+
+        # ------------------------------------------------------------
+        #  ŠTÝLY (tmavé) – vlastné názvy, aby sa nemenil globálny "Treeview"
+        # ------------------------------------------------------------
+        self.style = ttk.Style(self.top)
+        _zabezpec_tmave_scrollbary(self.style)
+
+        scroll_y = ttk.Scrollbar(table_frame, orient="vertical",
+                                 style="KinakSlav.Vertical.TScrollbar")
         scroll_y.pack(side="right", fill="y")
-        scroll_x = ttk.Scrollbar(table_frame, orient="horizontal")
+        scroll_x = ttk.Scrollbar(table_frame, orient="horizontal",
+                                 style="KinakSlav.Horizontal.TScrollbar")
         scroll_x.pack(side="bottom", fill="x")
 
+        self.style.configure(
+            self.TREE_STYLE,
+            background=bg, fieldbackground=bg, foreground=fg,
+            borderwidth=0, relief="flat",
+        )
+        self.style.map(
+            self.TREE_STYLE,
+            background=[("selected", "#2a2a2a")],
+            foreground=[("selected", "#FFFFFF")],
+        )
+
+        # show="tree" → jediný stĺpec (#0) bez natívnej hlavičky, ktorá by sa
+        # na Windows (téma „vista“) nedala zafarbiť do tmavej.
         self.tree = ttk.Treeview(
             table_frame,
-            columns=("feast",),
-            show="headings",
+            style=self.TREE_STYLE,
+            show="tree",
             yscrollcommand=scroll_y.set,
             xscrollcommand=scroll_x.set
         )
         self.tree.pack(side="left", fill="both", expand=True)
+        self.tree.column("#0", width=1150, anchor="w", stretch=True)
 
         scroll_y.config(command=self.tree.yview)
         scroll_x.config(command=self.tree.xview)
 
         # ------------------------------------------------------------
-        #  ŠTÝLY TABUĽKY
+        #  TAGY – farby riadkov (pastelové farby podľa Direktória ostávajú)
         # ------------------------------------------------------------
-        style = ttk.Style(self.top)
-        style.configure("Treeview", font=(self.font_family, 11), rowheight=38)
-        style.configure("Treeview.Heading", font=(self.font_family, 11, "bold"))
+        self.tree.tag_configure("obdobie", background="#121212", foreground="white")
 
-        self.tree.heading("feast", text="Slávenia", anchor="w")
-        self.tree.column("feast", width=1150, anchor="w", stretch=True)
+        pastel = self.TEXT_NA_PASTELE
+        for tag, farba in (
+            ("Adventné1", "#e6ccff"), ("Adventné2", "#d1b3ff"),
+            ("Vianočné1", "#ffffcc"), ("Vianočné2", "#fff799"),
+            ("Veľkonočné1", "#ffffcc"), ("Veľkonočné2", "#fff799"),
+            ("Cezročné1", "#ccffcc"), ("Cezročné2", "#99ff99"),
+            ("Pôstne1", "#f2ccff"), ("Pôstne2", "#e0b3ff"),
+        ):
+            self.tree.tag_configure(tag, background=farba, foreground=pastel)
 
-        # ------------------------------------------------------------
-        #  TAGY – farby riadkov
-        # ------------------------------------------------------------
-        self.tree.tag_configure("obdobie",
-            background="#000033",
-            foreground="white",
-            font=(self.font_family, 11, "bold")
-        )
-
-        # Pastelové farby podľa Direktória
-        self.tree.tag_configure("Adventné1", background="#e6ccff")
-        self.tree.tag_configure("Adventné2", background="#d1b3ff")
-
-        self.tree.tag_configure("Vianočné1", background="#ffffcc")
-        self.tree.tag_configure("Vianočné2", background="#fff799")
-
-        self.tree.tag_configure("Veľkonočné1", background="#ffffcc")
-        self.tree.tag_configure("Veľkonočné2", background="#fff799")
-
-        self.tree.tag_configure("Cezročné1", background="#ccffcc")
-        self.tree.tag_configure("Cezročné2", background="#99ff99")
-
-        self.tree.tag_configure("Pôstne1", background="#f2ccff")
-        self.tree.tag_configure("Pôstne2", background="#e0b3ff")
-
-        # Sivá zebra fallback
-        self.tree.tag_configure("riadok1", background="#f0f0f0")
-        self.tree.tag_configure("riadok2", background="#ffffff")
-
-        # Bold text
-        self.tree.tag_configure("bold", font=(self.font_family, 11, "bold"))
-        self.tree.tag_configure("note", font=(self.font_family, 11))
+        # Zebra fallback (pre slávenia bez priradeného obdobia) – tmavá, aby
+        # nerušila tmavý vzhľad okna.
+        self.tree.tag_configure("riadok1", background="#1a1a1a", foreground=fg)
+        self.tree.tag_configure("riadok2", background="#121212", foreground=fg)
 
         # ------------------------------------------------------------
         #  ODSADENIE
@@ -8238,77 +8604,119 @@ class SlavnostiApp:
         }
 
         # ------------------------------------------------------------
-        #  NAČÍTANIE TABUĽKY (bez filtra)
+        #  PÄTIČKA – poznámky (tmavá karta) + prepínač
         # ------------------------------------------------------------
+        note_bg, note_border = "#262626", "#262626"
+        self._note_labels = []
+
+        self.toggle_btn = tk.Button(
+            footer,
+            text="Poznámky ▼",
+            font=(ff, 12),
+            bg=bg, fg="#CDB00C",
+            relief="flat", borderwidth=0, highlightthickness=0,
+            activebackground=bg, activeforeground=active,
+            cursor="hand2", takefocus=0,
+            command=self.toggle_notes
+        )
+        self.toggle_btn.pack(anchor="w", padx=(15, 0))
+
+        def vytvor_poznamku(text_riadky):
+            ram = tk.Frame(
+                footer, bg=note_bg,
+                highlightbackground=note_border, highlightcolor=note_border,
+                highlightthickness=1
+            )
+            for text, bold in text_riadky:
+                lbl = tk.Label(
+                    ram, text=text, wraplength=900, justify="left", anchor="w",
+                    bg=note_bg, fg=(active if bold else fg), font=((ff, 12, "bold") if bold else (ff, 12)), padx=10, pady=2
+                )
+                lbl.pack(fill="x")
+                self._note_labels.append((lbl, bold))
+            return ram
+
+        self.note_frame1 = vytvor_poznamku([
+            ("Pozn. č. 1: Pohyblivé sviatky sú tie, ktoré nemajú stály dátum slávenia a takmer všetky závisia od pohyblivého sviatku Veľká noc. "
+             "Nicejský snem v roku 325 nariadil, že Veľká noc sa má sláviť v nedeľu po prvom jarnom splne mesiaca.", False),
+            ("Veľkonočná nedeľa je teda prvá nedeľa po prvom splne po jarnej rovnodnovosti (po 21. marci),", True),
+            ("čo môže pripadnúť na jednu z nedieľ od 22. marca do 25. apríla. Termín sviatkov Veľkej noci je pohyblivý "
+             "a je závislý od lunárneho cyklu. Následne sú známe aj dátumy Zeleného štvrtka, Veľkého piatku, Bielej soboty "
+             "a Veľkonočného pondelka a tiež ostatných pohyblivých sviatkov.", False),
+        ])
+        self.note_frame2 = vytvor_poznamku([
+            ("Pozn. č. 2: Keď dátum 25. marca (slávnosť Zvestovania Pána) pripadne na niektorý deň Veľkého týždňa alebo veľkonočnej oktávy, "
+             "slávnosť sa presúva na najbližší deň po veľkonočnej oktáve.", False),
+        ])
+        self.notes_visible = False
+
+        # Zalamovanie poznámok podľa šírky okna
+        def prisposob_zalamovanie(event):
+            wl = max(300, event.width - 70)
+            for lbl, _bold in self._note_labels:
+                lbl.config(wraplength=wl)
+        footer.bind("<Configure>", prisposob_zalamovanie)
+
+        # ------------------------------------------------------------
+        #  ZOOM: + / − / Reset (rovnako ako v Pomocníkovi a O aplikácii)
+        # ------------------------------------------------------------
+        def vytvor_zoom_tlacidlo(text, width, command, padx: Any = 0):
+            tk.Button(
+                zoom_panel, text=text, width=width,
+                font=(ff, 12, "bold"),
+                bg=bg, fg=fg, relief="flat",
+                borderwidth=0, highlightthickness=0,
+                highlightbackground=bg, highlightcolor=bg,
+                activebackground=bg, activeforeground=fg,
+                takefocus=0, command=command
+            ).pack(side="left", padx=padx)
+
+        def reset_okna():
+            self.top.update_idletasks()
+            w = max(960, self._header.winfo_reqwidth() + 30)
+            h = 680
+            rx = max(0, self.top.winfo_screenwidth() - w - 20)
+            self.top.geometry(f"{w}x{h}+{rx}+20")
+            self._nastav_velkost_pisma(self.DEFAULT_FONT_SIZE)
+
+        vytvor_zoom_tlacidlo("+", 3, lambda: self._nastav_velkost_pisma(self.font_size.get() + 1))
+        vytvor_zoom_tlacidlo("−", 3, lambda: self._nastav_velkost_pisma(self.font_size.get() - 1))
+        vytvor_zoom_tlacidlo("Reset", 6, reset_okna, padx=(5, 0))
+
+        # ------------------------------------------------------------
+        #  NAČÍTANIE TABUĽKY (bez filtra) + prvé nastavenie písma
+        # ------------------------------------------------------------
+        self._nastav_velkost_pisma(start_size, uloz=False)
         self.apply_filter(None)
         self.tree.bind("<Double-1>", self.vyber_slavenie_z_kliknuteho_riadku)
 
-        # ------------------------------------------------------------
-        #  POZNÁMKY – pergamen + rámik
-        # ------------------------------------------------------------
-        self.note_frame1 = tk.Frame(
-            self.top,
-            bg="#f3e7d3",
-            highlightbackground="#d6c7b4",
-            highlightcolor="#d6c7b4",
-            highlightthickness=1
+    # ------------------------------------------------------------
+    #  ZOOM: veľkosť písma tabuľky, nadpisu a poznámok
+    # ------------------------------------------------------------
+    def _nastav_velkost_pisma(self, size, uloz=True):
+        size = max(8, min(40, int(size)))
+        self.font_size.set(size)
+        ff = self.font_family
+
+        self.style.configure(
+            self.TREE_STYLE,
+            font=(ff, size),
+            rowheight=max(24, round(size * 3.2)),   # 12 pt → 38 px (pôvodná výška)
         )
+        self.tree.tag_configure("obdobie", font=(ff, size, "bold"))
+        self.tree.tag_configure("bold", font=(ff, size, "bold"))
+        self.tree.tag_configure("note", font=(ff, size))
 
-        tk.Label(
-            self.note_frame1,
-            text="Pozn. č. 1: Pohyblivé sviatky sú tie, ktoré nemajú stály dátum slávenia a takmer všetky závisia od pohyblivého sviatku Veľká noc. "
-                 "Nicejský snem v roku 325 nariadil, že Veľká noc sa má sláviť v nedeľu po prvom jarnom splne mesiaca.",
-            wraplength=950, justify="left", anchor="w",
-            font=(self.font_family, 11, "italic"),
-            bg="#f3e7d3", fg="#5a4632"
-        ).pack(fill="x")
+        self.nadpis.config(font=(ff, max(size + 4, 12), "bold"))
+        for lbl, bold in self._note_labels:
+            lbl.config(font=(ff, max(8, size), "bold") if bold else (ff, max(8, size)))   # písmo ako v stavovom riadku (zoom mení veľkosť)
 
-        tk.Label(
-            self.note_frame1,
-            text="Veľkonočná nedeľa je teda prvá nedeľa po prvom splne po jarnej rovnodnovosti (po 21. marci),",
-            wraplength=950, justify="left", anchor="w",
-            font=(self.font_family, 11, "bold"),
-            bg="#f3e7d3", fg="#3d2f22"
-        ).pack(fill="x")
+        if uloz and callable(self.on_font_change):
+            try:
+                self.on_font_change(size)
+            except Exception as e:
+                log_exception("SlavnostiApp: uloženie veľkosti písma zlyhalo", e)
 
-        tk.Label(
-            self.note_frame1,
-            text="čo môže pripadnúť na jednu z nedieľ od 22. marca do 25. apríla. Termín sviatkov Veľkej noci je pohyblivý "
-                 "a je závislý od lunárneho cyklu. Následne sú známe aj dátumy Zeleného štvrtka, Veľkého piatku, Bielej soboty "
-                 "a Veľkonočného pondelka a tiež ostatných pohyblivých sviatkov.",
-            wraplength=950, justify="left", anchor="w",
-            font=(self.font_family, 11, "italic"),
-            bg="#f3e7d3", fg="#5a4632"
-        ).pack(fill="x")
-
-        self.note_frame2 = tk.Frame(
-            self.top,
-            bg="#f3e7d3",
-            highlightbackground="#d6c7b4",
-            highlightcolor="#d6c7b4",
-            highlightthickness=1
-        )
-
-        tk.Label(
-            self.note_frame2,
-            text="Pozn. č. 2: Keď dátum 25. marca (slávnosť Zvestovania Pána) pripadne na niektorý deň Veľkého týždňa alebo veľkonočnej oktávy, "
-                 "slávnosť sa presúva na najbližší deň po veľkonočnej oktáve.",
-            wraplength=950, justify="left", anchor="w",
-            font=(self.font_family, 11, "italic"),
-            bg="#f3e7d3", fg="#5a4632"
-        ).pack(fill="x")
-
-        # ------------------------------------------------------------
-        #  TLAČIDLO NA SKRYTIE / ZOBRAZENIE POZNÁMOK
-        # ------------------------------------------------------------
-        self.notes_visible = False
-        self.toggle_btn = tk.Button(
-            self.top,
-            text="Poznámky ▼",
-            font=(self.font_family, 11),
-            command=self.toggle_notes
-        )
-        self.toggle_btn.pack(fill="x", padx=10, pady=5)
 
     def vyber_slavenie_z_kliknuteho_riadku(self, event=None):
         on_song_select = getattr(self, "on_song_select", None)
@@ -8327,19 +8735,16 @@ class SlavnostiApp:
             if tags and "obdobie" in tags:
                 return
 
-            values = self.tree.item(item_id, "values")
-            if not values:
+            nazov = str(self.tree.item(item_id, "text")).strip()
+            if not nazov:
                 return
-
-            nazov = str(values[0]).strip()
             if nazov.startswith("↳"):
                 previous_id = self.tree.prev(item_id)
                 if not previous_id:
                     return
-                previous_values = self.tree.item(previous_id, "values")
-                if not previous_values:
+                nazov = str(self.tree.item(previous_id, "text")).strip()
+                if not nazov:
                     return
-                nazov = str(previous_values[0]).strip()
 
             kod = SLAVNOSTI_KODY_PRE_VYBER.get(nazov)
             if kod:
@@ -8370,54 +8775,17 @@ class SlavnostiApp:
     #  FUNKCIA: FARBY TLAČIDIEL FILTROV
     # ------------------------------------------------------------
     def update_filter_button_colors(self, active):
-        farby = {
-            "Adventné": "#820fef",
-            "Vianočné": "#FFBF00",
-            "Pôstne": "#820fef",
-            "Veľkonočné": "#FFBF00",
-            "Cezročné": "#07BA07",
-            None: "#666666"
-        }
-
         for key, (btn, stripe) in self.filter_buttons.items():
             obdobie = None if key == "Všetko" else key
 
             if obdobie == active:
-                # Aktívne tlačidlo – hover vypnúť
-                btn.unbind("<Enter>")
-                btn.unbind("<Leave>")
-
-                # Stabilné pozadie
-                btn.config(
-                    bg=self.top.cget("bg"),
-                    highlightthickness=0,
-                    bd=0,
-                    relief="flat"
-                )
-
-                # Farebný prúžok hore
-                stripe.config(bg=farby[active])
-
+                # Aktívna záložka: tučné písmo + farebný prúžok (ako v Pomocníkovi)
+                btn.config(font=(self.font_family, 12, "bold"))
+                stripe.config(bg=self.FARBY_PRUZKOV.get(active, self.FARBY_PRUZKOV[None]))
             else:
-                # Neaktívne tlačidlá – najprv odstrániť staré handlery
-                btn.unbind("<Enter>")
-                btn.unbind("<Leave>")
+                btn.config(font=(self.font_family, 12))
+                stripe.config(bg=self.bg)
 
-                # Potom pridať nové hover handlery
-                btn.bind("<Enter>", lambda e, b=btn: b.config(bg="#e6e6e6"))
-                btn.bind("<Leave>", lambda e, b=btn: b.config(bg=self.top.cget("bg")))
-
-                btn.config(
-                    bg=self.top.cget("bg"),
-                    highlightthickness=0,
-                    bd=0,
-                    relief="flat"
-                )
-
-                # Prúžok skryť
-                stripe.config(bg=self.top.cget("bg"))
-               
-           
     # ------------------------------------------------------------
     #  FUNKCIA: APLIKOVANIE FILTRA
     # ------------------------------------------------------------
@@ -8451,7 +8819,7 @@ class SlavnostiApp:
             self.tree.insert(
                 "",
                 "end",
-                values=(f"{title} ({len(filtered)})",),
+                text=f"{title} ({len(filtered)})",
                 tags=("obdobie",)
             )
 
@@ -8459,12 +8827,12 @@ class SlavnostiApp:
             for feast, datum_str in filtered:       # ← date → datum_str
                 # Názov slávnosti (tučný)
                 color_tag = self.get_fixed_color(feast, row_index)
-                self.tree.insert("", "end", values=("  " + feast,), tags=("bold", color_tag))
+                self.tree.insert("", "end", text="  " + feast, tags=("bold", color_tag))
                 row_index += 1
 
                 # Dátum (normálne písmo)
                 color_tag = self.get_fixed_color(feast, row_index)
-                self.tree.insert("", "end", values=(self.DATE_PREFIX + datum_str,), tags=(color_tag,))
+                self.tree.insert("", "end", text=self.DATE_PREFIX + datum_str, tags=(color_tag,))
                 row_index += 1
 
         # Výpočet dátumov pohyblivých slávení pre aktuálny rok
@@ -8502,13 +8870,13 @@ class SlavnostiApp:
             self.note_frame2.pack_forget()
             self.toggle_btn.config(text="Poznámky ▼")
         else:
-            self.note_frame1.pack(fill="x", padx=10, pady=5)
-            self.note_frame2.pack(fill="x", padx=10, pady=5)
+            self.note_frame1.pack(fill="x", padx=15, pady=(6, 0))
+            self.note_frame2.pack(fill="x", padx=15, pady=(6, 0))
             self.toggle_btn.config(text="Poznámky ▲")
 
         self.notes_visible = not self.notes_visible
-        
- 
+
+
 class Tooltip:
     # Tooltip zobrazí krátky popis pri prechode myšou nad widgetom.
     def __init__(self, widget, text):
@@ -8533,7 +8901,7 @@ class Tooltip:
         label = tk.Label(
             tw,
             text=self.text,
-            background="#555555",
+            background="#2a2a2a",
             foreground="white",
             relief="solid",
             borderwidth=1,
@@ -8574,153 +8942,165 @@ if TYPE_CHECKING:
         skutočne nenastavuje. Reálne hodnoty sa nastavujú výhradne v
         `ControlApp.__init__` a v jednotlivých mixinoch, presne tak, ako doteraz.
         """
-        _about_geom_after_id: Any
-        _about_qr_photo_ref: Any
-        _aktualna_vigilia: Any
-        _aktualna_vynechane: Any
-        _auto_nacitanie_after_id: Any
-        _cezrocne_tyzdenne_lock: Any
-        _citania_lock: Any
-        _direktorium_geom_after_id: Any
-        _direktorium_open: Any
-        _download_executor: Any
-        _liturgicke_tyzdne_lock: Any
-        _live_preview_after_id: Any
-        _live_preview_updating: Any
-        _loading_settings: Any
-        _main_geom_after_id: Any
-        _pomocnik_geom_after_id: Any
-        _preview_test_font: Any
-        _refreny_lock: Any
-        _settings_geom_after_id: Any
-        _slavnosti_geom_after_id: Any
-        _slavnosti_open: Any
-        _startup_after_ids: Any
-        _strofa_test_font: Any
-        _suppress_vymazat: Any
-        _vespery_lock: Any
-        _wizard_monitor_combo: Any
-        about_font_size: Any
-        about_last_tab: Any
-        about_window: Any
-        about_window_height: Any
-        about_window_width: Any
-        aktualna_liturgicka_cast_var: Any
-        aktualne_cislo_piesne: Any
-        aktualne_strofy: Any
-        aktualny_index_strofa: Any
-        aktualny_subor_cesta: Any
-        bottom_margin: Any
-        bottom_margin_var: Any
-        cele_hodnoty_comboboxu: Any
-        checkbox_diagnostika: Any
-        checkbox_direktorium: Any
-        checkbox_live_preview: Any
-        checkbox_specialne_znaky: Any
-        checkbox_statusbar_skratka_zalmu: Any
-        checkbox_statusbar_zaltara: Any
-        checkbox_vlastna_farba: Any
-        checkbox_znaky_chorov: Any
-        config: Any
-        default_filter_menu: Any
-        default_filter_obdobie: Any
-        default_filter_var: Any
-        default_use_fade: Any
-        diagnostika_povolena: Any
-        diagnostika_povolena_var: Any
-        direktorium_data: Any
-        direktorium_label: Any
-        direktorium_window: Any
-        direktorium_window_height: Any
-        direktorium_window_width: Any
-        fade_speed: Any
-        fade_speed_combo: Any
-        fade_speed_var: Any
-        filter_menu: Any
-        filter_var: Any
-        folder_label: Any
-        font_family: Any
-        font_size: Any
-        font_size_var: Any
-        indikator_farby: Any
-        indikator_farby_id: Any
-        indikator_id: Any
-        indikator_ziarovka: Any
-        initializing: Any
-        is_text_visible: Any
-        liturgical_season: Any
-        liturgical_year_var: Any
-        live_preview_label: Any
-        main_window_height: Any
-        main_window_width: Any
-        main_window_x: Any
-        main_window_y: Any
-        manual_entry: Any
-        manual_entry_hint: Any
-        master: Any
-        nazov_label: Any
-        nazov_piesne: Any
-        obdobie_menu: Any
-        obdobie_subory: Any
-        obdobie_var: Any
-        obsah_suboru_text: Any
-        original_projection_text: Any
-        pomocnik_font_size: Any
-        pomocnik_height: Any
-        pomocnik_last_tab: Any
-        pomocnik_okno: Any
-        pomocnik_width: Any
-        pomocnik_x: Any
-        pomocnik_y: Any
-        popis_label: Any
-        popisy_suborov: Any
-        posledny_nazov_v_labeli: Any
-        pouzit_modru_farbu_pri_veceradle: Any
-        pouzit_modru_farbu_pri_veceradle_var: Any
-        pouzit_vlastnu_farbu: Any
-        preferred_monitor_index: Any
-        preview_container: Any
-        projection_window: Any
-        projection_window_root: Any
-        reserved_vertical_ratio: Any
-        reserved_vertical_var: Any
-        settings_window: Any
-        settings_window_height: Any
-        settings_window_width: Any
-        slavnosti_window: Any
-        slavnosti_window_height: Any
-        slavnosti_window_width: Any
-        slider_res_vert: Any
-        song_combobox: Any
-        song_folder_label: Any
-        song_folder_path: Any
-        song_var: Any
-        status_bar_frame: Any
+        _about_geom_after_id: Any = None
+        _about_qr_photo_ref: Any = None
+        _aktualna_vigilia: Any = None
+        _aktualna_vynechane: Any = None
+        _auto_nacitanie_after_id: Any = None
+        _closing: Any = None
+        _cezrocne_tyzdenne_lock: Any = None
+        _citania_lock: Any = None
+        _direktorium_geom_after_id: Any = None
+        _direktorium_open: Any = None
+        _download_executor: Any = None
+        _liturgicke_tyzdne_lock: Any = None
+        _live_preview_after_id: Any = None
+        _live_preview_updating: Any = None
+        _loading_settings: Any = None
+        _main_geom_after_id: Any = None
+        _pomocnik_geom_after_id: Any = None
+        _preview_test_font: Any = None
+        _refreny_lock: Any = None
+        _settings_geom_after_id: Any = None
+        _slavnosti_geom_after_id: Any = None
+        _slavnosti_open: Any = None
+        _startup_after_ids: Any = None
+        _strofa_test_font: Any = None
+        _suppress_vymazat: Any = None
+        _vespery_lock: Any = None
+        _wizard_monitor_combo: Any = None
+        about_font_size: Any = None
+        about_last_tab: Any = None
+        about_window: Any = None
+        about_window_height: Any = None
+        about_window_width: Any = None
+        aktualna_liturgicka_cast_var: Any = None
+        aktualne_cislo_piesne: Any = None
+        aktualne_strofy: Any = None
+        aktualny_index_strofa: Any = None
+        aktualny_subor_cesta: Any = None
+        bottom_margin: Any = None
+        bottom_margin_var: Any = None
+        cele_hodnoty_comboboxu: Any = None
+        checkbox_diagnostika: Any = None
+        checkbox_direktorium: Any = None
+        checkbox_live_preview: Any = None
+        checkbox_specialne_znaky: Any = None
+        checkbox_statusbar_skratka_zalmu: Any = None
+        checkbox_statusbar_zaltara: Any = None
+        checkbox_vlastna_farba: Any = None
+        checkbox_znaky_chorov: Any = None
+        config: Any = None
+        default_filter_menu: Any = None
+        default_filter_obdobie: Any = None
+        default_filter_var: Any = None
+        default_use_fade: Any = None
+        diagnostika_povolena: Any = None
+        diagnostika_povolena_var: Any = None
+        auto_filter_podla_dnes: Any = None
+        auto_filter_podla_dnes_var: Any = None
+        checkbox_auto_filter_dnes: Any = None
+        cislo_strofy_v_strede: Any = None
+        cislo_strofy_v_strede_var: Any = None
+        direktorium_data: Any = None
+        direktorium_label: Any = None
+        direktorium_font_size: Any = None
+        direktorium_window: Any = None
+        direktorium_window_height: Any = None
+        direktorium_window_width: Any = None
+        fade_speed: Any = None
+        fade_speed_combo: Any = None
+        fade_speed_var: Any = None
+        filter_menu: Any = None
+        filter_var: Any = None
+        folder_label: Any = None
+        font_family: Any = None
+        font_size: Any = None
+        font_size_var: Any = None
+        indikator_farby: Any = None
+        indikator_farby_id: Any = None
+        indikator_glow_id: Any = None
+        indikator_id: Any = None
+        indikator_ziarovka: Any = None
+        initializing: Any = None
+        nahlad_placeholder_label: Any = None
+        nahlad_projekcia_label: Any = None
+        is_text_visible: Any = None
+        liturgical_season: Any = None
+        liturgical_year_var: Any = None
+        live_preview_label: Any = None
+        main_window_height: Any = None
+        main_window_width: Any = None
+        main_window_x: Any = None
+        main_window_y: Any = None
+        manual_entry: Any = None
+        manual_entry_border: Any = None
+        manual_entry_hint: Any = None
+        manual_entry_inner: Any = None
+        master: Any = None
+        nazov_label: Any = None
+        nazov_piesne: Any = None
+        obdobie_menu: Any = None
+        obdobie_subory: Any = None
+        obdobie_var: Any = None
+        obsah_suboru_text: Any = None
+        original_projection_text: Any = None
+        pomocnik_font_size: Any = None
+        pomocnik_height: Any = None
+        pomocnik_last_tab: Any = None
+        pomocnik_okno: Any = None
+        pomocnik_width: Any = None
+        pomocnik_x: Any = None
+        pomocnik_y: Any = None
+        popis_label: Any = None
+        popisy_suborov: Any = None
+        posledny_nazov_v_labeli: Any = None
+        pouzit_modru_farbu_pri_veceradle: Any = None
+        pouzit_modru_farbu_pri_veceradle_var: Any = None
+        pouzit_vlastnu_farbu: Any = None
+        preferred_monitor_index: Any = None
+        preview_container: Any = None
+        projection_window: Any = None
+        projection_window_root: Any = None
+        reserved_vertical_ratio: Any = None
+        reserved_vertical_var: Any = None
+        settings_window: Any = None
+        settings_window_height: Any = None
+        settings_window_width: Any = None
+        slavnosti_font_size: Any = None
+        slavnosti_window: Any = None
+        slavnosti_window_height: Any = None
+        slavnosti_window_width: Any = None
+        slider_res_vert: Any = None
+        song_combobox: Any = None
+        song_folder_label: Any = None
+        song_folder_path: Any = None
+        song_var: Any = None
+        status_bar_frame: Any = None
         status_bar_zaltár_label: Any
-        statusbar_jks_piesne: Any
-        statusbar_jks_piesne_var: Any
-        statusbar_skratka_zalmu: Any
-        statusbar_skratka_zalmu_var: Any
-        statusbar_tyzden_zaltara: Any
-        statusbar_tyzden_zaltara_var: Any
-        strofa_label: Any
-        subor_menu: Any
-        subor_var: Any
-        subory_zoznam: Any
-        text_color: Any
-        text_color_var: Any
-        vyber_farbu_button: Any
-        wizard_window: Any
-        zobrazit_direktorium: Any
-        zobrazit_direktorium_var: Any
-        zobrazovat_live_preview: Any
-        zobrazovat_live_preview_var: Any
-        zobrazovat_specialne_znaky: Any
-        zobrazovat_specialne_znaky_var: Any
-        zobrazovat_znaky_chorov: Any
-        zobrazovat_znaky_chorov_var: Any
-        zoznam_piesni_data: Any
-
+        statusbar_jks_piesne: Any = None
+        statusbar_jks_piesne_var: Any = None
+        statusbar_skratka_zalmu: Any = None
+        statusbar_skratka_zalmu_var: Any = None
+        statusbar_tyzden_zaltara: Any = None
+        statusbar_tyzden_zaltara_var: Any = None
+        strofa_label: Any = None
+        subor_menu: Any = None
+        subor_var: Any = None
+        subory_zoznam: Any = None
+        text_color: Any = None
+        text_color_var: Any = None
+        vyber_farbu_button: Any = None
+        wizard_window: Any = None
+        zobrazit_direktorium: Any = None
+        zobrazit_direktorium_var: Any = None
+        zobrazovat_live_preview: Any = None
+        zobrazovat_live_preview_var: Any = None
+        zobrazovat_specialne_znaky: Any = None
+        zobrazovat_specialne_znaky_var: Any = None
+        zobrazovat_znaky_chorov: Any = None
+        zobrazovat_znaky_chorov_var: Any = None
+        zoznam_piesni_data: Any = None
         def _aktualizuj_direktorium_pre_subor(self, *args: Any, **kwargs: Any) -> Any: ...
         def _build_footer(self, *args: Any, **kwargs: Any) -> Any: ...
         def _build_info_tabs_header(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -8775,12 +9155,16 @@ if TYPE_CHECKING:
         def aktualizovat_postne_velkonocne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_refreny_zalmov_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_status_bar(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _ziskaj_kod_zalmu_pre_dnes(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _najdi_filter_pre_kod(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aplikovat_auto_filter_podla_dnes(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_stav_tlacidla_farby(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_titulok_okna(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_turicne_sviatky_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_vespery_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_vianocne_sviatky_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_vzhlad(self, *args: Any, **kwargs: Any) -> Any: ...
+        def aktualizovat_zarovanie_cisla_strofy(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizuj_popis(self, *args: Any, **kwargs: Any) -> Any: ...
         def auto_nacitanie_suboru(self, *args: Any, **kwargs: Any) -> Any: ...
         def clear_screen(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -8849,6 +9233,13 @@ if TYPE_CHECKING:
         def zobraz_rychly_sprievodca(self, *args: Any, **kwargs: Any) -> Any: ...
         def zobrazit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
         def zobrazit_o_aplikacii(self, *args: Any, **kwargs: Any) -> Any: ...
+        def on_song_selected(self, *args: Any, **kwargs: Any) -> Any: ...
+        def on_combobox_typing(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _uloz_geometriu_nastaveni(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _on_mousewheel(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _configure_canvas(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _stlmena_farba(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _farba_textu_pre_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
 else:
     class _ControlAppBase:
         """Za behu programu úplne prázdna trieda – žiadny vplyv na správanie,
@@ -8922,6 +9313,8 @@ class _NastaveniaMixin(_ControlAppBase):
             full_config["bottom_margin"] = validate_int("bottom_margin", 0, 400)
             full_config["pomocnik_font_size"] = validate_int("pomocnik_font_size", 8, 40)
             full_config["about_font_size"] = validate_int("about_font_size", 8, 40)
+            full_config["slavnosti_font_size"] = validate_int("slavnosti_font_size", 8, 40)
+            full_config["direktorium_font_size"] = validate_int("direktorium_font_size", 8, 40)
             
             try:
                 r = float(full_config.get("reserved_vertical_ratio", DEFAULT_CONFIG["reserved_vertical_ratio"]))
@@ -9081,6 +9474,7 @@ class _NastaveniaMixin(_ControlAppBase):
                 
                 self.zobrazovat_live_preview = bool(full_config.get("zobrazovat_live_preview", True))
                 set_safe("zobrazovat_live_preview_var", self.zobrazovat_live_preview)
+                set_safe("cislo_strofy_v_strede_var", self.cislo_strofy_v_strede)
                 
                 self.zobrazovat_specialne_znaky = bool(full_config.get("zobrazovat_specialne_znaky", True))
                 set_safe("zobrazovat_specialne_znaky_var", self.zobrazovat_specialne_znaky)
@@ -9093,10 +9487,15 @@ class _NastaveniaMixin(_ControlAppBase):
 
                 self.statusbar_tyzden_zaltara = bool(full_config.get("statusbar_tyzden_zaltara", True))
                 set_safe("statusbar_tyzden_zaltara_var", self.statusbar_tyzden_zaltara)
+                self.cislo_strofy_v_strede = bool(full_config.get("cislo_strofy_v_strede", True))
+                set_safe("cislo_strofy_v_strede_var", self.cislo_strofy_v_strede)
                 self.statusbar_skratka_zalmu = bool(full_config.get("statusbar_skratka_zalmu", True))
                 set_safe("statusbar_skratka_zalmu_var", self.statusbar_skratka_zalmu)
                 self.statusbar_jks_piesne = bool(full_config.get("statusbar_jks_piesne", True))
                 set_safe("statusbar_jks_piesne_var", self.statusbar_jks_piesne)
+
+                self.auto_filter_podla_dnes = bool(full_config.get("auto_filter_podla_dnes", False))
+                set_safe("auto_filter_podla_dnes_var", self.auto_filter_podla_dnes)
                 self.aktualizovat_status_bar()
 
                 self.diagnostika_povolena = bool(full_config.get("diagnostika_povolena", True))
@@ -9126,6 +9525,8 @@ class _NastaveniaMixin(_ControlAppBase):
                 self.direktorium_window_height = full_config.get("direktorium_window_height", -1)
                 self.slavnosti_window_width    = full_config.get("slavnosti_window_width", -1)
                 self.slavnosti_window_height   = full_config.get("slavnosti_window_height", -1)
+                self.slavnosti_font_size       = max(8, min(int(full_config.get("slavnosti_font_size", 12)), 40))
+                self.direktorium_font_size     = max(8, min(int(full_config.get("direktorium_font_size", 12)), 40))
 
                 # Okno O aplikácii – uložené rozmery
                 self.about_window_width  = full_config.get("about_window_width", -1)
@@ -9200,8 +9601,10 @@ class _NastaveniaMixin(_ControlAppBase):
         self.zobrazovat_znaky_chorov = self.zobrazovat_znaky_chorov_var.get() if hasattr(self, "zobrazovat_znaky_chorov_var") else True
         self.pouzit_modru_farbu_pri_veceradle = self.pouzit_modru_farbu_pri_veceradle_var.get() if hasattr(self, "pouzit_modru_farbu_pri_veceradle_var") else False
         self.statusbar_tyzden_zaltara = self.statusbar_tyzden_zaltara_var.get() if hasattr(self, "statusbar_tyzden_zaltara_var") else True
+        self.cislo_strofy_v_strede = self.cislo_strofy_v_strede_var.get() if hasattr(self, "cislo_strofy_v_strede_var") else True
         self.statusbar_skratka_zalmu = self.statusbar_skratka_zalmu_var.get() if hasattr(self, "statusbar_skratka_zalmu_var") else True
         self.statusbar_jks_piesne = self.statusbar_jks_piesne_var.get() if hasattr(self, "statusbar_jks_piesne_var") else True
+        self.auto_filter_podla_dnes = self.auto_filter_podla_dnes_var.get() if hasattr(self, "auto_filter_podla_dnes_var") else False
         self.aktualizovat_status_bar()
         self.diagnostika_povolena = self.diagnostika_povolena_var.get() if hasattr(self, "diagnostika_povolena_var") else True
         nastav_diagnostiku(self.diagnostika_povolena)
@@ -9218,6 +9621,7 @@ class _NastaveniaMixin(_ControlAppBase):
             "statusbar_tyzden_zaltara": True,
             "statusbar_skratka_zalmu": True,
             "statusbar_jks_piesne": True,
+            "auto_filter_podla_dnes": DEFAULT_CONFIG.get("auto_filter_podla_dnes", False),
             "diagnostika_povolena": DEFAULT_CONFIG.get("diagnostika_povolena", True),
             "pomocnik_font_size": DEFAULT_CONFIG.get("pomocnik_font_size", 14),
             "pomocnik_x": DEFAULT_CONFIG.get("pomocnik_x", -1),
@@ -9235,6 +9639,8 @@ class _NastaveniaMixin(_ControlAppBase):
             "direktorium_window_height": DEFAULT_CONFIG.get("direktorium_window_height", -1),
             "slavnosti_window_width": DEFAULT_CONFIG.get("slavnosti_window_width", -1),
             "slavnosti_window_height": DEFAULT_CONFIG.get("slavnosti_window_height", -1),
+            "slavnosti_font_size": DEFAULT_CONFIG.get("slavnosti_font_size", 12),
+            "direktorium_font_size": DEFAULT_CONFIG.get("direktorium_font_size", 12),
             "about_window_width": DEFAULT_CONFIG.get("about_window_width", -1),
             "about_window_height": DEFAULT_CONFIG.get("about_window_height", -1),
             "about_last_tab": DEFAULT_CONFIG.get("about_last_tab", 1),
@@ -9293,9 +9699,9 @@ class _NastaveniaMixin(_ControlAppBase):
                 preview_label.config(fg=projekcna_farba)
                 # Ak je text zobrazený, vynútime prekreslenie, aby sa aplikovala nová farba
                 if getattr(self, "is_text_visible", False):
-                     current_text = preview_label.cget("text")
-                     if current_text:
-                         self.update_live_preview(current_text)
+                    current_text = preview_label.cget("text")
+                    if current_text:
+                        self.update_live_preview(current_text)
             except Exception as e:
                 log_exception("ulozit_nastavenia: Chyba pri aktualizácii live_preview_label farby", e)
                 
@@ -9366,6 +9772,8 @@ class _NastaveniaMixin(_ControlAppBase):
             "statusbar_tyzden_zaltara": bool(self.statusbar_tyzden_zaltara),
             "statusbar_skratka_zalmu": bool(self.statusbar_skratka_zalmu),
             "statusbar_jks_piesne": bool(self.statusbar_jks_piesne),
+            "auto_filter_podla_dnes": bool(self.auto_filter_podla_dnes),
+            "cislo_strofy_v_strede": bool(self.cislo_strofy_v_strede),
             "diagnostika_povolena": bool(self.diagnostika_povolena),
             "fade_speed": self.fade_speed,
             "pomocnik_font_size": int(self.pomocnik_font_size),
@@ -9384,6 +9792,8 @@ class _NastaveniaMixin(_ControlAppBase):
             "direktorium_window_height": int(self.direktorium_window_height),
             "slavnosti_window_width":    int(self.slavnosti_window_width),
             "slavnosti_window_height":   int(self.slavnosti_window_height),
+            "slavnosti_font_size":       int(self.slavnosti_font_size),
+            "direktorium_font_size":     int(self.direktorium_font_size),
             "about_window_width":        int(self.about_window_width),
             "about_window_height":       int(self.about_window_height),
             "about_last_tab":            int(self.about_last_tab),
@@ -9525,14 +9935,32 @@ class _NastaveniaMixin(_ControlAppBase):
     # ==========================================================
 
     def vytvorit_nastavenia_okno(self):
-        """Vytvorí konfiguračné okno so všetkými nastaveniami a scrollbarom."""
+        """
+        Vytvorí konfiguračné okno so všetkými nastaveniami.
+
+        Vzhľad je zjednotený s oknami „Direktórium“ a „Slávenia“: tmavá paleta
+        (#1a1a1a / #E0E0E0), záložky s farebným prúžkom (rovnaká pomocná funkcia
+        `_vytvor_info_tabs_header`), tmavé scrollbary a ploché ovládacie prvky.
+        Všetok text používa formát písma stavového riadku: (font_family, 12).
+        """
         settings_window = tk.Toplevel(self.master)
         self.settings_window = settings_window
         settings_window.title("Nastavenia")
         settings_window.protocol("WM_DELETE_WINDOW", self.zatvorit_nastavenia)
-        
+
+        # --- PALETA (rovnaká ako v oknách Direktórium a Slávenia) ---
+        bg, fg, active = "#1a1a1a", "#E0E0E0", "#F2F2F2"
+        pole_bg = "#262626"          # pozadie tlačidiel a vstupných polí
+        muted_fg = "#9A9AA5"         # vysvetlivky
+        tip_fg = "#8ab4f8"           # odporúčania / tipy (svetlomodrá)
+        akcent = "#8c8c8c"           # rámik aktívneho poľa
+        ff = self.font_family
+        FONT = (ff, 12)              # formát písma ako v stavovom riadku
+
+        settings_window.configure(bg=bg, highlightthickness=0, bd=0)
+
         # Klúčové mapovanie kláves a fokus
-        settings_window.bind("<Escape>", lambda e: self.zatvorit_nastavenia())        
+        settings_window.bind("<Escape>", lambda e: self.zatvorit_nastavenia())
         settings_window.after(
             50,
             lambda: settings_window.winfo_exists() and settings_window.focus_force()
@@ -9567,45 +9995,45 @@ class _NastaveniaMixin(_ControlAppBase):
 
         settings_window.bind('<Configure>', _uloz_geometriu_nastaveni)
 
-        # --- ZÁLOŽKY: ZÁKLADNÉ / POKROČILÉ ---
-        container = tk.Frame(settings_window)
+        # --- KOSTRA OKNA: hlavička (záložky), pätička, obsah ---
+        container = tk.Frame(settings_window, bg=bg, highlightthickness=0, bd=0)
         container.pack(fill=tk.BOTH, expand=True)
 
-        style = ttk.Style()
-        style.configure(
-            "KinakSettings.TNotebook",
-            tabmargins=(12, 8, 12, 0)
-        )
-        style.configure(
-            "KinakSettings.TNotebook.Tab",
-            font=(self.font_family, 12, "bold"),
-            padding=(32, 12)
-        )
-        style.map(
-            "KinakSettings.TNotebook.Tab",
-            foreground=[
-                ("selected", "#000000"),
-                ("!selected", "#333333")
-            ],
-            background=[
-                ("selected", "#f2f2f2"),
-                ("!selected", "#d8d8d8")
-            ],
-            expand=[
-                ("selected", (2, 2, 2, 0))
-            ]
+        header = tk.Frame(container, bg=bg)
+        header.pack(fill=tk.X, pady=(10, 5))
+        top_panel = tk.Frame(header, bg=bg)
+        top_panel.pack(side=tk.LEFT, padx=(10, 0))
+
+        # Pätička sa packuje pred obsahom, aby ostala viditeľná aj pri malom okne.
+        footer = tk.Frame(container, bg=bg)
+        footer.pack(fill=tk.X, side=tk.BOTTOM, pady=(0, 10))
+
+        content = tk.Frame(container, bg=bg)
+        content.pack(fill=tk.BOTH, expand=True)
+
+        # --- TMAVÉ SCROLLBARY (rovnaké ako v Direktóriu / Slávenia) ---
+        style = ttk.Style(settings_window)
+        _zabezpec_tmave_scrollbary(style)
+
+        # --- ZÁLOŽKY: ZÁKLADNÉ / POKROČILÉ (štýl Pomocníka a Slávenia) ---
+        buttons, stripes = _vytvor_info_tabs_header(
+            top_panel, ff, bg, fg,
+            tab_specs=[("Základné", 12), ("Pokročilé", 12)],
+            medzera=2,
         )
 
-        notebook = ttk.Notebook(container, style="KinakSettings.TNotebook")
-        notebook.pack(fill=tk.BOTH, expand=True)
+        tab_frames: dict[int, tk.Frame] = {}
+        tab_canvases: dict[int, tk.Canvas] = {}
+        popisy: list[tk.Label | tk.Checkbutton] = []      # labely s dynamickým zalamovaním textu
 
-        def vytvor_scroll_tab(nazov):
-            tab = tk.Frame(notebook)
-            notebook.add(tab, text=f"   {nazov}   ")
-
-            canvas = tk.Canvas(tab, highlightthickness=0)
-            scrollbar = ttk.Scrollbar(tab, orient="vertical", command=canvas.yview)
-            scrollable_frame = tk.Frame(canvas)
+        def vytvor_scroll_tab(cislo):
+            tab = tk.Frame(content, bg=bg)
+            canvas = tk.Canvas(tab, bg=bg, highlightthickness=0, bd=0)
+            scrollbar = ttk.Scrollbar(
+                tab, orient="vertical", command=canvas.yview,
+                style="KinakSlav.Vertical.TScrollbar"
+            )
+            scrollable_frame = tk.Frame(canvas, bg=bg)
 
             scrollable_frame.bind(
                 "<Configure>",
@@ -9616,38 +10044,164 @@ class _NastaveniaMixin(_ControlAppBase):
 
             def _configure_canvas(event, c=canvas, cf=canvas_frame):
                 c.itemconfig(cf, width=event.width)
+                # Texty sa zalamujú podľa aktuálnej šírky okna
+                for lbl in popisy:
+                    try:
+                        lbl.config(wraplength=max(220, event.width - 70))
+                    except tk.TclError:
+                        pass
 
             canvas.bind("<Configure>", _configure_canvas)
             canvas.configure(yscrollcommand=scrollbar.set)
             canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
             scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-            def _on_mousewheel(event, c=canvas):
-                c.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-            canvas.bind("<Enter>", lambda e, c=canvas: c.bind_all("<MouseWheel>", _on_mousewheel))
-            canvas.bind("<Leave>", lambda e, c=canvas: c.unbind_all("<MouseWheel>"))
-
+            tab_frames[cislo] = tab
+            tab_canvases[cislo] = canvas
             return scrollable_frame
 
-        zakladne_frame = vytvor_scroll_tab("Základné")
-        pokrocile_frame = vytvor_scroll_tab("Pokročilé")
+        zakladne_frame = vytvor_scroll_tab(1)
+        pokrocile_frame = vytvor_scroll_tab(2)
 
-        # --- ŠTÝL ---
-        style.configure("Settings.TLabelframe", padding=10)
-        
-        # Pomocná funkcia pre vytváranie sekcií (LabelFrame)
+        aktivna_zalozka = {"cislo": 1}
+
+        def zobraz_zalozku(cislo):
+            aktivna_zalozka["cislo"] = cislo
+            for i, frm in tab_frames.items():
+                frm.pack_forget()
+                stripes[i].config(bg=bg)
+                buttons[i].config(font=FONT)
+            tab_frames[cislo].pack(fill=tk.BOTH, expand=True)
+            stripes[cislo].config(bg=active)
+            buttons[cislo].config(font=(ff, 12, "bold"))
+
+        for i in (1, 2):
+            buttons[i].config(command=lambda i=i: zobraz_zalozku(i), takefocus=0)
+
+        # Kolieskom myši sa posúva aktívna záložka
+        def _on_mousewheel(event):
+            c = tab_canvases.get(aktivna_zalozka["cislo"])
+            if c is None or not event.delta:
+                return
+            c.yview_scroll(-1 if event.delta > 0 else 1, "units")
+
+        settings_window.bind("<MouseWheel>", _on_mousewheel)
+
+        # --- POMOCNÉ FUNKCIE PRE TMAVÉ WIDGETY ---
         def vytvor_sekciu(parent, text):
-            f = tk.LabelFrame(parent, text=text, padx=10, pady=10, 
-                             font=(self.font_family, 12, "bold"), fg="#333333")
-            f.pack(fill=tk.X, padx=15, pady=8)
-            return f
+            """Sekcia: biely nadpis, tenká deliaca čiara a telo sekcie."""
+            outer = tk.Frame(parent, bg=bg)
+            outer.pack(fill=tk.X, padx=15, pady=(10, 4))
+            tk.Label(outer, text=text.upper(), font=(ff, 12, "bold"), fg="white", bg=bg, anchor="w").pack(fill=tk.X)
+            tk.Frame(outer, bg="#555555", height=1).pack(fill=tk.X, pady=(3, 8))
+            body = tk.Frame(outer, bg=bg)
+            body.pack(fill=tk.X)
+            return body
 
-        def vytvor_popis(parent, text, color="#555555"):
-            l = tk.Label(parent, text=text, font=(self.font_family, 10, "italic"),
-                         fg=color, wraplength=550, justify=tk.LEFT)
+        def vytvor_popis(parent, text, tip=False):
+            """Vysvetlivka (sivá) alebo odporúčanie/tip (zlatá)."""
+            l = tk.Label(parent, text=text, font=FONT, bg=bg,
+                         fg=tip_fg if tip else muted_fg,
+                         wraplength=550, justify=tk.LEFT, anchor="w")
             l.pack(anchor="w", pady=(0, 5))
+            popisy.append(l)
             return l
+
+        def tmave_tlacidlo(parent, text, command, normal_bg="#3F4F6A", hover_bg="#5A7090"):
+            btn = tk.Button(
+                parent, text=text, command=command,
+                bg=normal_bg, fg="white", font=FONT,
+                relief="flat", borderwidth=0, highlightthickness=0,
+                padx=12, pady=4,
+                activebackground=hover_bg, activeforeground="white",
+                cursor="hand2", takefocus=0,
+            )
+            def _on_enter(e, b=btn, hb=hover_bg):
+                try:
+                    b.config(bg=hb)
+                except Exception:
+                    pass
+            def _on_leave(e, b=btn, nb=normal_bg):
+                try:
+                    b.config(bg=nb)
+                except Exception:
+                    pass
+            btn.bind("<Enter>", _on_enter)
+            btn.bind("<Leave>", _on_leave)
+            return btn
+
+        def tmavy_check(parent, text, variable, command: Any = None, pady=2, **kw):
+            cb = tk.Checkbutton(
+                parent, text=text, variable=variable, command=command,
+                font=FONT, bg=bg, fg=fg, selectcolor=pole_bg,
+                activebackground=bg, activeforeground=active,
+                disabledforeground=muted_fg,
+                highlightthickness=0, bd=0, relief="flat",
+                anchor="w", justify=tk.LEFT, wraplength=520, pady=pady, **kw
+            )
+            popisy.append(cb)    # dlhý text sa zalamuje podľa šírky okna
+            return cb
+
+        def tmavy_slider(parent, formát="{:g}", **kw):
+            """Tmavý slider: sivý jazdec na tmavej dráhe, hodnota vpravo."""
+            riadok = tk.Frame(parent, bg=bg)
+            riadok.pack(fill=tk.X, expand=True, padx=5, pady=5)
+            premenna = kw["variable"]
+            hodnota = tk.Label(riadok, font=FONT, bg=bg, fg=fg, width=5, anchor="e")
+            hodnota.pack(side=tk.RIGHT, padx=(8, 0))
+
+            def _obnov(*_):
+                try:
+                    hodnota.config(text=formát.format(premenna.get()))
+                except (tk.TclError, ValueError):
+                    pass
+
+            premenna.trace_add("write", _obnov)
+            _obnov()
+            sc = tk.Scale(
+                riadok, orient=tk.HORIZONTAL, showvalue=False,
+                bg=akcent, fg=fg, troughcolor=pole_bg,
+                activebackground="#B0B0B0", highlightthickness=0,
+                bd=0, relief="flat", sliderrelief="flat",
+                sliderlength=18, width=14, **kw
+            )
+            sc.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            return sc
+
+        def uprav_optionmenu(om, normal_bg="#3F4F6A", hover_bg="#5A7090"):
+            om.config(
+                font=FONT, bg=normal_bg, fg="white",
+                activebackground=hover_bg, activeforeground="white",
+                disabledforeground="#8D99AD",
+                highlightthickness=0, bd=0, relief="flat", anchor="w",
+                cursor="hand2",
+            )
+            om._normal_bg = normal_bg
+            om._hover_bg = hover_bg
+            def _on_enter(e, w=om):
+                try:
+                    if str(w.cget("state")) == "disabled":
+                        return
+                    w.config(bg=w._hover_bg)
+                except Exception:
+                    pass
+            def _on_leave(e, w=om):
+                try:
+                    if str(w.cget("state")) == "disabled":
+                        return
+                    w.config(bg=w._normal_bg)
+                except Exception:
+                    pass
+            om.bind("<Enter>", _on_enter)
+            om.bind("<Leave>", _on_leave)
+            try:
+                om["menu"].config(
+                    font=FONT, bg=pole_bg, fg=fg,
+                    activebackground="#454545", activeforeground="#FFFFFF",
+                    bd=0, relief="flat",
+                )
+            except tk.TclError as e:
+                log_exception("Nastavenia: štýl rozbaľovacej ponuky zlyhal", e)
 
         # 1. INFO PANEL
         frame_info = vytvor_sekciu(zakladne_frame, "Informácia")
@@ -9665,16 +10219,13 @@ class _NastaveniaMixin(_ControlAppBase):
         if not hasattr(self, "font_size_var"):
             self.font_size_var = tk.IntVar(value=int(self.font_size))
 
-        font_size_slider = tk.Scale(
+        font_size_slider = tmavy_slider(
             frame_font,
             variable=self.font_size_var,
             from_=20,
             to=MAX_FONT_SIZE,
-            orient=tk.HORIZONTAL,
-            font=(self.font_family, 11),
             command=lambda v: None
         )
-        font_size_slider.pack(fill=tk.X, expand=True, padx=5, pady=5)
 
         font_size_slider.bind(
             "<ButtonRelease-1>",
@@ -9684,9 +10235,9 @@ class _NastaveniaMixin(_ControlAppBase):
         vytvor_popis(
             frame_font,
             "Odporúčané: Monitor (< 100cm) → cca 105 | TV/Projektor (> 100cm) → cca 75",
-            "#0066cc"
+            tip=True
         )
-        
+
         # 3. FARBA TEXTU A OBDOBIA
         frame_color = vytvor_sekciu(zakladne_frame, "Farba textu")
         vytvor_popis(frame_color, "Výber liturgického obdobia automaticky nastaví farbu textu pri projekcii.")
@@ -9696,38 +10247,37 @@ class _NastaveniaMixin(_ControlAppBase):
             frame_color, self.obdobie_var, *moznosti_obdobia,
             command=self.nastavit_farbu_pisma_podla_obdobia
         )
-        self.obdobie_menu.config(font=(self.font_family, 11), width=25)
+        self.obdobie_menu.config(width=25)
+        uprav_optionmenu(self.obdobie_menu)
         self.obdobie_menu.pack(anchor="w", pady=(0, 10))
 
-        radek_farba = tk.Frame(frame_color)
+        radek_farba = tk.Frame(frame_color, bg=bg)
         radek_farba.pack(fill=tk.X)
 
-        self.checkbox_vlastna_farba = tk.Checkbutton(
-            radek_farba, text="Použiť vlastnú farbu", variable=self.pouzit_vlastnu_farbu,
-            command=self.zmenit_rezim_farby, font=(self.font_family, 11)
+        self.checkbox_vlastna_farba = tmavy_check(
+            radek_farba, "Použiť vlastnú farbu", self.pouzit_vlastnu_farbu,
+            command=self.zmenit_rezim_farby, pady=0
         )
         self.checkbox_vlastna_farba.pack(side=tk.LEFT, padx=(0, 10))
 
-        ttk.Button(radek_farba, text="Vybrať farbu…", command=self.vybrat_vlastnu_farbu_textu).pack(side=tk.LEFT)
+        tmave_tlacidlo(radek_farba, "Vybrať farbu…", self.vybrat_vlastnu_farbu_textu).pack(side=tk.LEFT)
 
         # Indikátor farby (Zaoblený polygon)
-        self.indikator_farby = tk.Canvas(radek_farba, width=40, height=30, highlightthickness=0)
+        self.indikator_farby = tk.Canvas(radek_farba, width=40, height=30, highlightthickness=0, bg=bg, bd=0)
         self.indikator_farby.pack(side=tk.LEFT, padx=10)
-        
+
         r = 6
         points = [4+r, 4, 34-r, 4, 34, 4, 34, 4+r, 34, 26-r, 34, 26, 34-r, 26, 4+r, 26, 4, 26, 4, 26-r, 4, 4+r, 4, 4]
         self.indikator_farby_id = self.indikator_farby.create_polygon(
-            points, smooth=True, fill=self.text_color_var.get(), outline="#444444", width=1
+            points, smooth=True, fill=self.text_color_var.get(), outline=akcent, width=1
         )
 
         # Voliteľné prepnutie na modrú farbu textu pri aktívnom filtri "Večeradlo"
-        self.checkbox_modra_veceradlo = tk.Checkbutton(
+        self.checkbox_modra_veceradlo = tmavy_check(
             frame_color,
-            text="Pri aktívnom filtri „Večeradlo“ sa zobrazí modrá farba",
-            variable=self.pouzit_modru_farbu_pri_veceradle_var,
-            font=(self.font_family, 11),
+            "Pri aktívnom filtri „Večeradlo“ sa zobrazí modrá farba",
+            self.pouzit_modru_farbu_pri_veceradle_var,
             command=lambda: [self.ulozit_nastavenia(), self.aktualizovat_vzhlad()],
-            pady=2
         )
         self.checkbox_modra_veceradlo.pack(anchor="w", pady=(8, 0))
 
@@ -9735,7 +10285,7 @@ class _NastaveniaMixin(_ControlAppBase):
             frame_color,
             "Pri aktívnom filtri „Večeradlo“ sa zobrazí modrá farba; po prepnutí na iný filter sa farba "
             "automaticky vráti na liturgickú (alebo vlastnú).",
-            "#0066cc"
+            tip=True
         )
 
         # 4. LITURGICKÝ ROK A / B / C
@@ -9748,7 +10298,7 @@ class _NastaveniaMixin(_ControlAppBase):
                 value=vypocitaj_liturgicky_rok()
             )
 
-        frame_lit_rok = tk.Frame(frame_lit_rok_sekcia)
+        frame_lit_rok = tk.Frame(frame_lit_rok_sekcia, bg=bg)
         frame_lit_rok.pack(anchor="w", pady=(4, 0))
 
         for rok in ("A", "B", "C"):
@@ -9757,18 +10307,22 @@ class _NastaveniaMixin(_ControlAppBase):
                 text=f"  {rok}  ",
                 variable=self.liturgical_year_var,
                 value=rok,
-                font=(self.font_family, 13, "bold"),
+                font=FONT,
+                bg=bg, fg=fg, selectcolor=pole_bg,
+                activebackground=bg, activeforeground=active,
+                disabledforeground=fg,
+                highlightthickness=0, bd=0,
                 state=tk.DISABLED,          # hodnota je automatická – len zobrazenie
             ).pack(side=tk.LEFT, padx=4)
 
-        
         # 5. PREDVOLENÝ FILTER (HLAVNÉ OKNO)
         frame_def_filter = vytvor_sekciu(zakladne_frame, "Predvolený filter v ovládaní")
         vytvor_popis(frame_def_filter, "Vyber filter, ktorý sa zobrazí v hlavnom okne po spustení aplikácie.")
-        
+
         moznosti_subory = list(self.obdobie_subory.keys())
         self.default_filter_menu = tk.OptionMenu(frame_def_filter, self.default_filter_var, *moznosti_subory)
-        self.default_filter_menu.config(font=(self.font_family, 11), width=25)
+        self.default_filter_menu.config(width=25)
+        uprav_optionmenu(self.default_filter_menu)
         self.default_filter_menu.pack(anchor="w")
 
         # --- Vizuálny oddeľovač pre modlitbové filtre aj v nastaveniach ---
@@ -9779,56 +10333,118 @@ class _NastaveniaMixin(_ControlAppBase):
                 menu2.insert_separator(idx2)
         except Exception as e:
             log_exception("Pridanie oddeľovača do default_filter_menu zlyhalo", e)
-        
+
+        # Funkcia na (de)aktiváciu predvoleného filtra podľa checkboxu Automaticky...
+        def _aktualizuj_stav_predvoleneho_filtra(*_args):
+            try:
+                zapnute = bool(self.auto_filter_podla_dnes_var.get())
+            except Exception:
+                zapnute = False
+            try:
+                if zapnute:
+                    self.default_filter_menu.config(
+                        state="disabled",
+                        bg="#252525",
+                        fg="#6b7280",
+                        activebackground="#252525",
+                        activeforeground="#6b7280",
+                        disabledforeground="#6b7280",
+                        cursor="",
+                    )
+                    # zachovaj pôvodné farby pre neskoršie obnovenie
+                    # _normal_bg / _hover_bg ostávajú nastavené z uprav_optionmenu
+                else:
+                    self.default_filter_menu.config(
+                        state="normal",
+                        bg=self.default_filter_menu._normal_bg if hasattr(self.default_filter_menu, "_normal_bg") else "#3F4F6A",
+                        fg="white",
+                        activebackground=self.default_filter_menu._hover_bg if hasattr(self.default_filter_menu, "_hover_bg") else "#5A7090",
+                        activeforeground="white",
+                        disabledforeground="#8D99AD",
+                        cursor="hand2",
+                    )
+            except Exception as e:
+                log_exception("_aktualizuj_stav_predvoleneho_filtra", e)
+
         # Trace teraz ukladá nastavenia a zároveň okamžite aktualizuje zoznam piesní
         self.default_filter_var.trace_add("write", lambda *a: [
-            self.ulozit_nastavenia(), 
+            self.ulozit_nastavenia(),
             self.filtrovat_subory(self.filter_var.get())
-        ])              
-        
+        ])
+
         vytvor_popis(
             frame_def_filter,
-            "• Filter „Večeradlo“ → prednosť pri vyhľadávaní má priečinok piesne/Večeradlo/\n"   
-            "• Filter „Mládež“ → prednosť pri vyhľadávaní má priečinok piesne/Mládež/\n" 
-            "• Iné filtre → prednosť pri vyhľadávaní má hlavný priečinok piesne/",            
-            "#0066cc"
+            "• Filter „Večeradlo“ → prednosť pri vyhľadávaní má priečinok piesne/Večeradlo/\n"
+            "• Filter „Mládež“ → prednosť pri vyhľadávaní má priečinok piesne/Mládež/\n"
+            "• Iné filtre → prednosť pri vyhľadávaní má hlavný priečinok piesne/",
+            tip=True
         )
-        
+
+        # --- NOVÉ: Automaticky aktualizovať filter podľa Dnes ---
+        self.checkbox_auto_filter_dnes = tmavy_check(
+            frame_def_filter,
+            "Automaticky aktualizovať filter podľa informácie zo stavového riadku „Dnes:“",
+            self.auto_filter_podla_dnes_var,
+            command=lambda: [self.ulozit_nastavenia(), _aktualizuj_stav_predvoleneho_filtra()],
+        )
+        self.checkbox_auto_filter_dnes.pack(anchor="w", pady=(8, 0))
+
+        # Inicializácia stavu po vytvorení + reakcia na zmenu var
+        try:
+            self.auto_filter_podla_dnes_var.trace_add("write", lambda *_a: _aktualizuj_stav_predvoleneho_filtra())
+        except Exception:
+            pass
+        # zavolaj hneď po vytvorení checkboxu
+        try:
+            _aktualizuj_stav_predvoleneho_filtra()
+        except Exception:
+            pass
+
+        vytvor_popis(
+            frame_def_filter,
+            "Keď je táto možnosť zapnutá, pri štarte aplikácie sa načíta stavový riadok. Z položky Dnes: sa vyberie aktuálny žalm "
+            "(napr. Dnes: žalm 28c2) a modrosivé tlačidlá sa automaticky nastavia na príslušný výber: Cezročné C2 → 28c2.",
+            tip=True
+        )
+
         # 6. BEŽNÉ A POKROČILÉ PREPÍNAČE ZOBRAZENIA
         def vytvor_check(parent, text, var):
-            cb = tk.Checkbutton(parent, text=text, variable=var, font=(self.font_family, 11), 
-                                command=self.ulozit_nastavenia, pady=2)
+            cb = tmavy_check(parent, text, var, command=self.ulozit_nastavenia)
             cb.pack(anchor="w")
             return cb
 
         frame_basic_view = vytvor_sekciu(zakladne_frame, "Náhľad v ovládaní")
 
-        self.checkbox_live_preview = tk.Checkbutton(
+        self.checkbox_live_preview = tmavy_check(
             frame_basic_view,
-            text="Zobraziť náhľad projekcie (Live Preview)",
-            variable=self.zobrazovat_live_preview_var,
-            font=(self.font_family, 11),
+            "Zobraziť náhľad projekcie (Live Preview) vpravo dole",
+            self.zobrazovat_live_preview_var,
             command=lambda: [self.ulozit_nastavenia(), self.update_live_preview(getattr(self, 'posledny_text', ""))],
-            pady=2
         )
         self.checkbox_live_preview.pack(anchor="w")
 
+        self.checkbox_cislo_strofy_v_strede = tmavy_check(
+            frame_basic_view,
+            "Číslo piesne a aktuálnu strofu v strede (napr. 254 – 1/15)",
+            self.cislo_strofy_v_strede_var,
+            command=lambda: [self.ulozit_nastavenia(), self.aktualizovat_zarovanie_cisla_strofy()],
+        )
+        self.checkbox_cislo_strofy_v_strede.pack(anchor="w")
+
         vytvor_popis(
             frame_basic_view,
-            "Náhľad pomáha vtedy, keď premietajúci nevidí priamo na projektor alebo televízor.",
-            "#0066cc"
+            "Náhľad pomáha vtedy, keď premietajúci nevidí priamo na projektor alebo televízor. Prepínač určuje, či sa číslo 254-1/15 zobrazí v strede alebo vpravo.",
+            tip=True
         )
 
         frame_checks = vytvor_sekciu(pokrocile_frame, "Liturgické pomôcky a znaky")
 
         # 1. DIREKTÓRIUM:
-        self.checkbox_direktorium = tk.Checkbutton(
-            frame_checks, 
-            text="Zobraziť odporúčané piesne z JKS pod rozbaľovacím filtrom pri výbere žalmu", 
-            variable=self.zobrazit_direktorium_var, 
-            font=(self.font_family, 11),            
+        self.checkbox_direktorium = tmavy_check(
+            frame_checks,
+            "Zobraziť odporúčané piesne z JKS pod rozbaľovacím filtrom pri výbere žalmu",
+            self.zobrazit_direktorium_var,
             command=lambda: [self.ulozit_nastavenia(), self.aktualizovat_direktorium_label(), self.filtrovat_subory(self.filter_var.get())],
-            pady=2
         )
         self.checkbox_direktorium.pack(anchor="w")
 
@@ -9841,23 +10457,20 @@ class _NastaveniaMixin(_ControlAppBase):
             "V hlavnom ovládacom okne zostávajú špeciálne znaky a znaky [L] / [P] "
             "vždy viditeľné, aby sa premietajúci vedel ľahko orientovať. "
             "Prepínače ovplyvňujú iba zobrazenie v projekcii.",
-            "#0066cc"
+            tip=True
         )
 
-        
         self.checkbox_statusbar_skratka_zalmu = vytvor_check(
             frame_checks,
             "Zobraziť v stavovom riadku skratku žalmu podľa liturgického obdobia",
             self.statusbar_skratka_zalmu_var
-        )       
-        
-        
+        )
+
         self.checkbox_statusbar_zaltara = vytvor_check(
             frame_checks,
             "Zobraziť v stavovom riadku aktuálny týždeň žaltára v breviári",
             self.statusbar_tyzden_zaltara_var
         )
-                
 
         # 7. RÝCHLOSŤ PRECHODU
         frame_fade = vytvor_sekciu(zakladne_frame, "Rýchlosť prechodu textu")
@@ -9865,12 +10478,63 @@ class _NastaveniaMixin(_ControlAppBase):
             frame_fade,
             "Určuje, ako rýchlo sa nová obrazovka (strofa) rozjasní z čiernej."
         )
+        # Modrý štýl (rovnaký odtieň ako ostatné výberové tlačidlá) odvodený od „Big.TCombobox“
+        modra, modra_hover = "#3F4F6A", "#5A7090"
+        try:
+            _layout = style.layout("Big.TCombobox")
+            if _layout:
+                style.layout("KinakSetModra.TCombobox", _layout)
+            style.configure(
+                "KinakSetModra.TCombobox",
+                fieldbackground=modra, background=modra, foreground="white",
+                arrowcolor="white", insertcolor="white",
+                bordercolor=modra, lightcolor=modra, darkcolor=modra,
+                selectbackground=modra, selectforeground="white", padding=5,
+            )
+            style.map(
+                "KinakSetModra.TCombobox",
+                fieldbackground=[("readonly", modra), ("active", modra_hover), ("focus", modra_hover)],
+                background=[("active", modra_hover)],
+                foreground=[("readonly", "white")],
+                selectbackground=[("readonly", modra), ("focus", modra)],
+                selectforeground=[("readonly", "white"), ("focus", "white")],
+                bordercolor=[("focus", modra_hover), ("active", modra_hover)],
+                lightcolor=[("focus", modra_hover), ("active", modra_hover)],
+                darkcolor=[("focus", modra_hover), ("active", modra_hover)],
+                arrowcolor=[("active", "white"), ("focus", "white")],
+            )
+            _styl_combo = "KinakSetModra.TCombobox"
+        except tk.TclError as e:
+            log_exception("Nastavenia: modrý štýl comboboxu zlyhal", e)
+            _styl_combo = "Big.TCombobox"
         self.fade_speed_combo = ttk.Combobox(
             frame_fade, textvariable=self.fade_speed_var,
             values=["veľmi pomalé", "pomalé", "stredné", "mierne stredné", "mierne rýchle", "rýchle", "vypnuté"],
-            state="readonly", font=(self.font_family, 11), width=20
+            state="readonly", font=FONT, width=20, style=_styl_combo, cursor="hand2"
         )
         self.fade_speed_combo.pack(anchor="w", pady=5)
+        def _fade_enter(e):
+            try:
+                style.configure(_styl_combo, fieldbackground=modra_hover, background=modra_hover)
+                style.map(_styl_combo, fieldbackground=[("readonly", modra_hover)])
+            except Exception:
+                pass
+        def _fade_leave(e):
+            try:
+                style.configure(_styl_combo, fieldbackground=modra, background=modra)
+                style.map(_styl_combo, fieldbackground=[("readonly", modra), ("active", modra_hover), ("focus", modra_hover)])
+            except Exception:
+                pass
+        self.fade_speed_combo.bind("<Enter>", _fade_enter)
+        self.fade_speed_combo.bind("<Leave>", _fade_leave)
+        try:
+            _popdown = str(settings_window.tk.call("ttk::combobox::PopdownWindow", self.fade_speed_combo))
+            settings_window.tk.call(
+                f"{_popdown}.f.l", "configure",
+                "-selectbackground", "#454545", "-selectforeground", "#FFFFFF"
+            )
+        except tk.TclError as e:
+            log_exception("Nastavenia: štýl zoznamu comboboxu zlyhal", e)
         self.fade_speed_combo.bind("<<ComboboxSelected>>", lambda e: self.ulozit_nastavenia())
 
         # 8. UMIESTNENIE SÚBOROV
@@ -9883,50 +10547,42 @@ class _NastaveniaMixin(_ControlAppBase):
             "správne UTF-8 kódovanie. Originály sa pred tým zálohujú."
         )
 
+        # Tlačidlá sa packujú sprava ešte pred cestou, aby pri úzkom okne ostali viditeľné.
+        tmave_tlacidlo(
+            frame_folder, "Zmeniť…", self.zmenit_priecinok_piesni
+        ).pack(side=tk.RIGHT)
+
+        tmave_tlacidlo(
+            frame_folder, "Skonvertovať do UTF-8…", self.skonvertovat_piesne_do_utf8
+        ).pack(side=tk.RIGHT, padx=(0, 6))
+
         self.folder_label = tk.Label(
             frame_folder,
-            text=str(self.song_folder_path),   
-            wraplength=450,
-            font=(self.font_family, 10),
-            bg="#f9f9f9",
+            text=str(self.song_folder_path),
+            wraplength=300,
+            font=FONT,
+            bg=pole_bg, fg=fg,
             anchor="w",
             justify=tk.LEFT,
-            relief="sunken",
-            padx=5,
+            relief="flat",
+            padx=8,
             pady=5
         )
         self.folder_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
 
-        ttk.Button(
-            frame_folder,
-            text="Zmeniť…",
-            command=self.zmenit_priecinok_piesni
-        ).pack(side=tk.RIGHT)
-
-        ttk.Button(
-            frame_folder,
-            text="Skonvertovať do UTF-8…",
-            command=self.skonvertovat_piesne_do_utf8
-        ).pack(side=tk.RIGHT, padx=(0, 6))
-
         # 9. REZERVY
         frame_res = vytvor_sekciu(pokrocile_frame, "Globálna (vertikálna) rezerva")
         vytvor_popis(frame_res, "Vzdialenosť textu od horného a dolného okraja obrazovky – necháva priestor hore aj dole, aby text nebol nalepený na okraje. Vyššia hodnota = menší text.")
-        
-        safe_font_name: str = FONT_NAME or "Arial"
 
-        # Slider upravený na celú šírku (odstránený length, pridaný fill=tk.X)
-        self.slider_res_vert = tk.Scale(
+        # Slider upravený na celú šírku
+        self.slider_res_vert = tmavy_slider(
             frame_res,
             variable=self.reserved_vertical_var,
             from_=0.10,
             to=0.40,
             resolution=0.01,
-            orient=tk.HORIZONTAL,
-            font=(safe_font_name, 11),
-            highlightthickness=0
+            formát="{:.2f}",
         )
-        self.slider_res_vert.pack(fill=tk.X, expand=True, padx=5, pady=5)
 
         # Uložiť až po pustení myši
         self.slider_res_vert.bind(
@@ -9936,33 +10592,37 @@ class _NastaveniaMixin(_ControlAppBase):
 
         frame_margin = vytvor_sekciu(pokrocile_frame, "Spodná rezerva (Overscan)")
         vytvor_popis(frame_margin, "Posunie celý text vyššie (ak obrazovka orezáva spodok).")
-        
+
         def validate_num(P):
             return P == "" or (P.isdigit() and 0 <= int(P) <= 400)
         vcmd = (self.settings_window.register(validate_num), "%P")
 
         # Rámček, ktorý drží všetky prvky v jednom riadku
-        spin_frame = tk.Frame(frame_margin)
+        spin_frame = tk.Frame(frame_margin, bg=bg)
         spin_frame.pack(fill=tk.X, pady=5)
 
         # 1. Label (vľavo)
         tk.Label(
             spin_frame,
             text="px (0–400):",
-            font=(safe_font_name, 11)
+            font=FONT, bg=bg, fg=fg
         ).pack(side=tk.LEFT)
 
         # 2. Spinbox (vľavo, hneď za labelom)
         tk.Spinbox(
-            spin_frame, from_=0, to=400, textvariable=self.bottom_margin_var, 
-            width=10, font=(self.font_family, 11), validate="key", 
-            validatecommand=vcmd, command=self.ulozit_nastavenia
+            spin_frame, from_=0, to=400, textvariable=self.bottom_margin_var,
+            width=10, font=FONT, validate="key",
+            validatecommand=vcmd, command=self.ulozit_nastavenia,
+            bg=pole_bg, fg=fg, insertbackground=fg,
+            buttonbackground=pole_bg,
+            selectbackground=akcent, selectforeground=KINAK_AKCENT_TEXT,
+            relief="flat", highlightthickness=1,
+            highlightbackground=pole_bg, highlightcolor=akcent,
         ).pack(side=tk.LEFT, padx=5)
 
-        # 3. Tlačidlo (vpravo - teraz je v tom istom ráme ako spinbox)
-        ttk.Button(
-            spin_frame, text="Viac o rezervách", 
-            command=self.zobraz_info_rezervy
+        # 3. Tlačidlo (vpravo)
+        tmave_tlacidlo(
+            spin_frame, "Viac o rezervách", self.zobraz_info_rezervy
         ).pack(side=tk.RIGHT)
 
         # 9b. DIAGNOSTIKA
@@ -9979,38 +10639,47 @@ class _NastaveniaMixin(_ControlAppBase):
             "Zapnúť diagnostické logovanie do súboru",
             self.diagnostika_povolena_var
         )
-        tk.Label(
-            frame_diag,
-            text=f"Súbor: {LOG_PATH}",
-            wraplength=450,
-            font=(self.font_family, 9),
-            fg="#555555",
-            anchor="w",
-            justify=tk.LEFT,
-        ).pack(anchor="w", pady=(4, 0))
+        vytvor_popis(frame_diag, f"Súbor: {LOG_PATH}")
 
         # 10. RESET
         frame_reset = vytvor_sekciu(pokrocile_frame, "Reset do pôvodného stavu")
         vytvor_popis(frame_reset, "Vráti všetky nastavenia na pôvodné hodnoty. Použite ho v prípade, že sa nastavenia „rozladia“ tak, že sa text zobrazí mimo obrazovky, je príliš orezaný, nečitateľný alebo sa vôbec nezobrazí kvôli nesprávnym nastaveniam.")
-        ttk.Button(frame_reset, text="Obnoviť predvolené", command=self.obnovit_predvolene).pack(anchor="e")
+        tlacidlo_reset = tmave_tlacidlo(frame_reset, "Obnoviť predvolené", self.obnovit_predvolene, normal_bg="#8B1E1E", hover_bg="#C93030")
+        tlacidlo_reset.config(
+            bg="#8B1E1E", activebackground="#C93030",
+            font=(ff, 12, "bold"), padx=16, pady=6,
+        )
+        tlacidlo_reset.pack(anchor="e")
 
         # FIXNÁ POZNÁMKA NA SPODKU (mimo scrollu)
-        frame_restart = tk.Frame(self.settings_window, pady=10)
-        frame_restart.pack(fill=tk.X)
-
         tk.Label(
-            frame_restart,
+            footer,
             text="Niektoré nastavenia sa aplikujú až po reštarte aplikácie.",
-            font=(safe_font_name, 10),
-            fg="#aa0000"
+            font=FONT, bg=bg, fg="#E06C6C"
         ).pack()
+
+        # Prvá záložka
+        zobraz_zalozku(1)
+
+        def _prvotne_zalomenie():
+            if not settings_window.winfo_exists():
+                return
+            sirka = tab_canvases[1].winfo_width()
+            if sirka > 1:
+                for lbl in popisy:
+                    try:
+                        lbl.config(wraplength=max(220, sirka - 70))
+                    except tk.TclError:
+                        pass
+
+        settings_window.after_idle(_prvotne_zalomenie)
 
         # Dokončenie inicializácie
         self.aktualizovat_stav_tlacidla_farby()
         self.aktualizovat_vzhlad()
-        self.settings_window.deiconify() 
-        
-    
+        self.settings_window.deiconify()
+
+
     def zatvorit_nastavenia(self):
         """
         Uloží nastavenia bez prebliknutia hlavného rozhrania a korektne zavrie okno.
@@ -10185,6 +10854,12 @@ class _NastaveniaMixin(_ControlAppBase):
         if hasattr(self, "zobrazit_direktorium_var"):
             raw = self.config.get("zobrazit_direktorium", False)
             self.zobrazit_direktorium_var.set(bool(raw))
+
+        # Auto filter podľa Dnes
+        if hasattr(self, "auto_filter_podla_dnes_var"):
+            raw = self.config.get("auto_filter_podla_dnes", False)
+            self.auto_filter_podla_dnes_var.set(bool(raw))
+            self.auto_filter_podla_dnes = bool(raw)
 
         # Diagnostika (logovanie do súboru)
         if hasattr(self, "diagnostika_povolena_var"):
@@ -10549,9 +11224,11 @@ class _NastaveniaMixin(_ControlAppBase):
 
         # Efektívna farba textu – zohľadňuje prípadné prepnutie na modrú pri
         # aktívnom filtri Večeradlo (pozri _farba_textu_pre_projekciu).
-        # Používa sa vo všetkých prvkoch nižšie (projekcia, Live Preview,
-        # aj samotné ovládacie okno), aby bola farba všade jednotná.
         projekcna_farba = self._farba_textu_pre_projekciu(text_color)
+
+        # Zjednotenie: hlavné okno používa rovnakú farbu ako projekcia (ako v Kinak_x.py)
+        # Pôvodná logika s LITURGICKE_OBDOBIA_JEMNE (#D47BC6/#DCB862/#8FD16A) bola odstránená na žiadosť
+        jemna_farba = projekcna_farba
 
         # 1) Projekčné okno – nastavenie cieľovej farby a pozadia 
         try:
@@ -10563,7 +11240,7 @@ class _NastaveniaMixin(_ControlAppBase):
 
         # 2) Pozadie hlavného okna 
         try:
-            self.master.configure(bg=background_color)
+            self.master.configure(bg=UI_WINDOW_BG)
         except Exception as e:
             log_exception("aktualizovat_vzhlad: zlyhala konfigurácia master okna", e)
 
@@ -10592,15 +11269,31 @@ class _NastaveniaMixin(_ControlAppBase):
         except Exception as e:
             log_exception("aktualizovat_vzhlad: zlyhala konfigurácia live_preview_label", e)
 
-        # 4) Vstupné pole (Manual Entry) 
+        # 4) Vstupné pole (Manual Entry) - text farbou obdobia, rámik tenká sivá (požiadavka)
         try:
-            self.manual_entry.config(fg=projekcna_farba, insertbackground=projekcna_farba)
+            if getattr(self, "manual_entry", None) is not None:
+                self.manual_entry.config(fg=jemna_farba, insertbackground=jemna_farba)
+            # Rámik – tenká sivá namiesto liturgickej ružovej/fialovej
+            inner_border = getattr(self, "manual_entry_inner", None)
+            if inner_border is not None and inner_border.winfo_exists():
+                inner_border.config(highlightbackground="#4a4a4a", highlightcolor="#4a4a4a")
+            # Pre kompatibilitu - ak existuje starý border s bg
+            border = getattr(self, "manual_entry_border", None)
+            if border is not None and border.winfo_exists():
+                try:
+                    # ak je border ešte ako rámik s bg farbou, necháme panel farbu
+                    # aby nepôsobil dominantne
+                    if border.cget("bg") != UI_LEFT_PANEL_BG:
+                        # starý štýl - prefarbiť, ale nový štýl má bg = panel
+                        pass
+                except Exception:
+                    pass
         except Exception as e:
             log_exception("aktualizovat_vzhlad: zlyhala konfigurácia manual_entry", e)
 
-        # 5) Panel strofy
+        # 5) Panel strofy - zjemnená farba pre hlavné okno
         try:
-            self.strofa_label["foreground"] = projekcna_farba
+            self.strofa_label["foreground"] = jemna_farba
             self.strofa_label["background"] = background_color
 
             if hasattr(self.strofa_label, "master"):
@@ -10610,16 +11303,28 @@ class _NastaveniaMixin(_ControlAppBase):
         except Exception as e:
             log_exception("aktualizovat_vzhlad: zlyhala konfigurácia strofa_label", e)
 
-        # 6) Highlight tag v texte
+        # 6) Highlight tag v texte - sivý pás s rovnakým odsadením zľava aj sprava (odtieň čiernej)
         try:
             if self.obsah_suboru_text is not None:
                 safe_font_name: str = FONT_NAME or "Arial"
 
                 self.obsah_suboru_text.tag_config(
                     "highlight",
-                    background="#444444",
-                    foreground=projekcna_farba,
-                    font=(safe_font_name, 18, "bold")
+                    background="#101010",
+                    foreground=jemna_farba,
+                    font=(safe_font_name, 18, "bold"),
+                    lmargin1=16,
+                    lmargin2=16,
+                    rmargin=16,
+                    spacing1=8,
+                    spacing3=8,
+                    borderwidth=0,
+                    relief="flat"
+                )
+                self.obsah_suboru_text.tag_config(
+                    "highlight_pad",
+                    background="#101010",
+                    foreground=jemna_farba
                 )
         except Exception as e:
             log_exception("aktualizovat_vzhlad: zlyhala konfigurácia tagu highlight", e)
@@ -10633,7 +11338,53 @@ class _NastaveniaMixin(_ControlAppBase):
                     self.projection_window.update_text("")
                     self.projection_window.update_title(name="", current=0, total=None)
         except Exception as e:
-            log_exception("aktualizovat_vzhlad: záverečná aktualizácia stavu zlyhala", e)                        
+            log_exception("aktualizovat_vzhlad: záverečná aktualizácia stavu zlyhala", e)
+
+        # 8) Scrollbar – čo najviac priblížený k ploche panela #181818, trochu hrubší
+        try:
+            # UI_PANEL_BG #181818 - thumb #1c1c1c
+            tlmena, tlmena_active = "#1c1c1c", "#222222"
+
+            style = ttk.Style()
+            style.configure(
+                "KinakDark.Vertical.TScrollbar",
+                troughcolor="#181818",
+                background=tlmena,
+                darkcolor=tlmena,
+                lightcolor=tlmena,
+                bordercolor="#181818",
+                arrowcolor="#181818",
+                width=10
+            )
+            style.map(
+                "KinakDark.Vertical.TScrollbar",
+                background=[("active", tlmena_active), ("pressed", tlmena_active), ("disabled", "#181818"), ("!active", tlmena)],
+                darkcolor=[("active", tlmena_active), ("disabled", "#181818"), ("!active", tlmena)],
+                lightcolor=[("active", tlmena_active), ("disabled", "#181818"), ("!active", tlmena)]
+            )
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: scrollbar tlmený pásik", e)
+
+        try:
+            # Zoznam piesní – dropdown Listbox (ten pásik pri hover/výbere)
+            self.master.option_add("*TCombobox*Listbox.selectBackground", "#454545")  # sivý pásik (bez liturgickej farby)
+            self.master.option_add("*TCombobox*Listbox.selectForeground", "#FFFFFF")
+            self.master.option_add("*TCombobox*Listbox.background", MENU_BTN_BG)
+            self.master.option_add("*TCombobox*Listbox.foreground", MENU_BTN_FG)
+
+            # Rolovacie menu – filtre (OptionMenu) – aktívny pásik
+            if hasattr(self, "filter_menu") and self.filter_menu.winfo_exists():
+                try:
+                    self.filter_menu["menu"].config(activebackground="#454545", activeforeground="#FFFFFF")  # sivý pásik (bez liturgickej farby)
+                except Exception:
+                    pass
+            if hasattr(self, "subor_menu") and self.subor_menu.winfo_exists():
+                try:
+                    self.subor_menu["menu"].config(activebackground="#454545", activeforeground="#FFFFFF")  # sivý pásik (bez liturgickej farby)
+                except Exception:
+                    pass
+        except Exception as e:
+            log_exception("aktualizovat_vzhlad: rolovacie menu farba pásika", e)                        
 
     def aktualizovat_titulok_okna(self):
         """Aktualizuje titulok hlavného okna pri zmene liturgického roku v nastaveniach."""
@@ -10672,7 +11423,7 @@ class _StahovanieMixin(_ControlAppBase):
         """
         dialog = tk.Toplevel(self.master)
         dialog.title(title)
-        dialog.configure(bg="#1e1e1e")
+        dialog.configure(bg="#121212")
         dialog.resizable(False, False)
         dialog.transient(self.master)
         dialog.grab_set()
@@ -10688,15 +11439,15 @@ class _StahovanieMixin(_ControlAppBase):
         tk.Label(
             dialog,
             text=nadpis,
-            bg="#1e1e1e",
+            bg="#121212",
             fg="#ffffff",
             font=(self.font_family, 13, "bold")
         ).pack(pady=(18, 10))
 
         btn_style = {
-            "bg": "#3a3a3a",
+            "bg": "#262626",
             "fg": "#ffffff",
-            "activebackground": "#555555",
+            "activebackground": "#2a2a2a",
             "activeforeground": "#ffffff",
             "font": (self.font_family, 12, "bold"),
             "relief": "flat",
@@ -10722,26 +11473,26 @@ class _StahovanieMixin(_ControlAppBase):
         tk.Label(
             dialog,
             text="── alebo vybrať dátum ──",
-            bg="#1e1e1e",
+            bg="#121212",
             fg="#888888",
             font=(self.font_family, 10)
         ).pack(pady=(14, 6))
 
         # --- Výber dátumu: DD . MM . YYYY ---
         dnes = date.today()
-        frame_datum = tk.Frame(dialog, bg="#1e1e1e")
+        frame_datum = tk.Frame(dialog, bg="#121212")
         frame_datum.pack()
 
         spin_style = {
-            "bg": "#2e2e2e",
+            "bg": "#121212",
             "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
+            "buttonbackground": "#262626",
             "relief": "flat",
             "bd": 1,
             "font": (self.font_family, 13, "bold"),
             "justify": "center",
             "highlightthickness": 1,
-            "highlightbackground": "#555555",
+            "highlightbackground": "#2a2a2a",
             "highlightcolor": "#aaaaaa",
         }
 
@@ -10753,7 +11504,7 @@ class _StahovanieMixin(_ControlAppBase):
         sp_den.delete(0, tk.END)
         sp_den.insert(0, f"{dnes.day:02d}")
 
-        tk.Label(frame_datum, text=".", bg="#1e1e1e", fg="#888888",
+        tk.Label(frame_datum, text=".", bg="#121212", fg="#888888",
                  font=(self.font_family, 14, "bold")).pack(side=tk.LEFT, padx=2)
 
         sp_mes = tk.Spinbox(
@@ -10764,19 +11515,19 @@ class _StahovanieMixin(_ControlAppBase):
         sp_mes.delete(0, tk.END)
         sp_mes.insert(0, f"{dnes.month:02d}")
 
-        tk.Label(frame_datum, text=".", bg="#1e1e1e", fg="#888888",
+        tk.Label(frame_datum, text=".", bg="#121212", fg="#888888",
                  font=(self.font_family, 14, "bold")).pack(side=tk.LEFT, padx=2)
 
         rok_var = tk.StringVar(value=str(dnes.year))
         sp_rok = tk.Spinbox(
             frame_datum, from_=GREGORIANSKY_MIN_ROK, to=GREGORIANSKY_MAX_ROK, width=5,
-            textvariable=rok_var, state="readonly", readonlybackground="#2e2e2e", **spin_style
+            textvariable=rok_var, state="readonly", readonlybackground="#121212", **spin_style
         )
         sp_rok.pack(side=tk.LEFT)
 
         # --- Chybová správa a tlačidlo Stiahni vybraný dátum ---
         chyba_var = tk.StringVar(value="")
-        tk.Label(dialog, textvariable=chyba_var, bg="#1e1e1e",
+        tk.Label(dialog, textvariable=chyba_var, bg="#121212",
                  fg="#ff6b6b", font=(self.font_family, 9)).pack(pady=(4, 0))
 
         def stiahni_vybraty():
@@ -10878,18 +11629,18 @@ class _StahovanieMixin(_ControlAppBase):
         if rok_var is None:
             rok_var = tk.StringVar(value=str(date.today().year))
         spin_style = {
-            "bg": "#2e2e2e",
+            "bg": "#121212",
             "fg": "#ffffff",
-            "buttonbackground": "#3a3a3a",
+            "buttonbackground": "#262626",
             "relief": "flat",
             "bd": 1,
             "font": (self.font_family, 14, "bold"),
             "justify": "center",
             "highlightthickness": 1,
-            "highlightbackground": "#555555",
+            "highlightbackground": "#2a2a2a",
             "highlightcolor": "#aaaaaa",
         }
-        sp_rok = tk.Spinbox(parent, from_=GREGORIANSKY_MIN_ROK, to=GREGORIANSKY_MAX_ROK, width=6, textvariable=rok_var, state="readonly", readonlybackground="#2e2e2e", **spin_style)
+        sp_rok = tk.Spinbox(parent, from_=GREGORIANSKY_MIN_ROK, to=GREGORIANSKY_MAX_ROK, width=6, textvariable=rok_var, state="readonly", readonlybackground="#121212", **spin_style)
         return rok_var, sp_rok
 
     def _zobraz_dialog_stiahnutia_pre_rok(
@@ -10919,7 +11670,7 @@ class _StahovanieMixin(_ControlAppBase):
         """
         dialog = tk.Toplevel(self.master)
         dialog.title(titulok_okna)
-        dialog.configure(bg="#1e1e1e")
+        dialog.configure(bg="#121212")
         dialog.resizable(False, False)
         dialog.transient(self.master)
         dialog.grab_set()
@@ -10937,15 +11688,15 @@ class _StahovanieMixin(_ControlAppBase):
         tk.Label(
             dialog,
             textvariable=chyba_var,
-            bg="#1e1e1e",
+            bg="#121212",
             fg="#ff6b6b",
             font=(self.font_family, 9),
         ).pack(pady=(0, 4))
 
         btn_style = {
-            "bg": "#3a3a3a",
+            "bg": "#262626",
             "fg": "#ffffff",
-            "activebackground": "#555555",
+            "activebackground": "#2a2a2a",
             "activeforeground": "#ffffff",
             "font": (self.font_family, 12, "bold"),
             "relief": "flat",
@@ -10977,7 +11728,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Stiahnuť refrény žalmov po mesiacoch:",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#ffffff",
                 font=(self.font_family, 13, "bold")
             ).pack(pady=(18, 10))
@@ -10988,7 +11739,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Prepíšu sa súbory 1L.txt až 12L.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#bbbbbb",
                 font=(self.font_family, 10),
                 justify=tk.CENTER,
@@ -11015,7 +11766,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Stiahnuť týždne cezročného obdobia:",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#ffffff",
                 font=(self.font_family, 13, "bold"),
                 wraplength=360,
@@ -11046,7 +11797,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 textvariable=info_var,
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#bbbbbb",
                 font=(self.font_family, 10),
                 justify=tk.CENTER,
@@ -11122,7 +11873,7 @@ class _StahovanieMixin(_ControlAppBase):
 
         progress_dialog = tk.Toplevel(self.master)
         progress_dialog.title(dialog_titulok)
-        progress_dialog.configure(bg="#1e1e1e")
+        progress_dialog.configure(bg="#121212")
         progress_dialog.resizable(False, False)
         progress_dialog.transient(self.master)
         progress_dialog.lift()
@@ -11159,7 +11910,7 @@ class _StahovanieMixin(_ControlAppBase):
         tk.Label(
             progress_dialog,
             textvariable=stav_var,
-            bg="#1e1e1e",
+            bg="#121212",
             fg="#ffffff",
             font=(self.font_family, 11, "bold"),
             wraplength=wraplength,
@@ -11172,7 +11923,7 @@ class _StahovanieMixin(_ControlAppBase):
         tk.Label(
             progress_dialog,
             textvariable=pocet_var,
-            bg="#1e1e1e",
+            bg="#121212",
             fg="#bbbbbb",
             font=(self.font_family, 10),
         ).pack()
@@ -11187,7 +11938,7 @@ class _StahovanieMixin(_ControlAppBase):
         tk.Label(
             progress_dialog,
             text="Sťahovanie bude pokračovať na pozadí.",
-            bg="#1e1e1e",
+            bg="#121212",
             fg="#888888",
             font=(self.font_family, 8),
         ).pack(pady=(0, 6))
@@ -11481,7 +12232,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Stiahnuť refrény žalmov pre liturgické týždne:",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#ffffff",
                 font=(self.font_family, 13, "bold"),
                 wraplength=400,
@@ -11501,7 +12252,7 @@ class _StahovanieMixin(_ControlAppBase):
                     "  • Adventné týždne: 1AD.txt – 4AD.txt\n\n"
                     "Existujúce súbory sa pred prepísaním automaticky zálohujú."
                 ),
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#bbbbbb",
                 font=(self.font_family, 10),
                 justify=tk.LEFT,
@@ -11573,7 +12324,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Stiahnuť refrény žalmov – pôstne a veľkonočné:",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#ffffff",
                 font=(self.font_family, 13, "bold"),
                 wraplength=400,
@@ -11583,7 +12334,7 @@ class _StahovanieMixin(_ControlAppBase):
             rok_var, sp_rok = self._vytvor_rok_spinbox(dialog)
             sp_rok.pack(pady=(0, 8))
 
-            frame = tk.Frame(dialog, bg="#1e1e1e")
+            frame = tk.Frame(dialog, bg="#121212")
             frame.pack(pady=(0, 10), padx=25, anchor="w")
 
             tk.Label(
@@ -11597,7 +12348,7 @@ class _StahovanieMixin(_ControlAppBase):
                     "    ZST.txt, VP.txt, VG.txt, VPON.txt, NP.txt\n\n"
                     "Existujúce súbory sa pred prepísaním automaticky zálohujú."
                 ),
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#bbbbbb",
                 font=(self.font_family, 10),
                 justify=tk.LEFT,
@@ -11670,7 +12421,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Stiahnuť refrény žalmov – adventné týždne:",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#ffffff",
                 font=(self.font_family, 13, "bold"),
                 wraplength=400,
@@ -11683,7 +12434,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Prepíšu sa súbory 1AD.txt až 4AD.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#bbbbbb",
                 font=(self.font_family, 10),
                 justify=tk.CENTER,
@@ -11756,7 +12507,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Stiahnuť refrény žalmov – Turíce a nadväzujúce sviatky:",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#ffffff",
                 font=(self.font_family, 13, "bold"),
                 wraplength=400,
@@ -11769,7 +12520,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Prepíšu sa súbory 1TS.txt až 7TS.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#bbbbbb",
                 font=(self.font_family, 10),
                 justify=tk.CENTER,
@@ -11843,7 +12594,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Stiahnuť refrény žalmov vianočných sviatkov:",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#ffffff",
                 font=(self.font_family, 13, "bold"),
                 wraplength=380,
@@ -11866,7 +12617,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 textvariable=obdobie_var,
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#8fd0ff",
                 font=(self.font_family, 10, "bold"),
                 justify=tk.CENTER,
@@ -11887,7 +12638,7 @@ class _StahovanieMixin(_ControlAppBase):
                     "nedeľný formulár), pôvodný súbor zostane bez zmeny.\n"
 
                 ),
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#bbbbbb",
                 font=(self.font_family, 10),
                 justify=tk.CENTER,
@@ -11981,7 +12732,7 @@ class _StahovanieMixin(_ControlAppBase):
             tk.Label(
                 dialog,
                 text="Stiahnuť refrény žalmov cezročných sviatkov:",
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#ffffff",
                 font=(self.font_family, 13, "bold"),
                 wraplength=380,
@@ -12000,7 +12751,7 @@ class _StahovanieMixin(_ControlAppBase):
                     "prekrytý iným slávením), pôvodný súbor zostane bez zmeny.\n"
 
                 ),
-                bg="#1e1e1e",
+                bg="#121212",
                 fg="#bbbbbb",
                 font=(self.font_family, 10),
                 justify=tk.CENTER,
@@ -12789,7 +13540,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
     def vymazat_subor_menu(self, event=None):
         if getattr(self, "_suppress_vymazat", False):
             return
-        self.subor_var.set("—")
+        self.subor_var.set(SUBOR_ZIADNY)
         self.popis_label.config(text="")
         self.direktorium_label.config(text="")
         
@@ -12968,7 +13719,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
         # 1) Prázdny vstup → reset len ak je v menu pomlčka
         # ------------------------------------------------------------
         if not raw_clean:
-            if self.subor_var.get().strip() == "—":
+            if self.subor_var.get().strip() == SUBOR_ZIADNY:
                 # Vymaž panel "Obsah súboru"
                 self.obsah_suboru_text.config(state=tk.NORMAL)
                 self.obsah_suboru_text.delete("1.0", tk.END)
@@ -13041,7 +13792,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
             return
 
         # Reset výberov a popisov
-        self.subor_var.set("—")
+        self.subor_var.set(SUBOR_ZIADNY)
         self.popis_label.config(text="")
         self.direktorium_label.config(text="")
 
@@ -13111,7 +13862,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
             elif vybrane_obdobie == "Mládež":
                 header_text = "Mládež"
             else:
-                header_text = "Zoznam piesní"
+                header_text = COMBO_HLAVICKA
 
             if vybrane_obdobie == "Večeradlo":
                 subory = self._ziskaj_subory_vecheradlo()
@@ -13125,11 +13876,21 @@ class _PiesneSuboryMixin(_ControlAppBase):
                         self.song_combobox["values"] = self.cele_hodnoty_comboboxu
                         self.song_combobox.current(0)
                         try:
-                            # Modrá + tučné - priamo na widgete, nie len cez štýl
-                            self.song_combobox.configure(style="Blue.TCombobox")
+                            # Podľa nastavenia: ak je zapnutá modrá farba pre Večeradlo, nechaj modrú, inak biela (#e0e0e6)
+                            pouzit_modru = False
+                            try:
+                                pouzit_modru = bool(self.pouzit_modru_farbu_pri_veceradle_var.get() if hasattr(self, 'pouzit_modru_farbu_pri_veceradle_var') else getattr(self, 'pouzit_modru_farbu_pri_veceradle', False))
+                            except Exception:
+                                pouzit_modru = False
+                            if pouzit_modru:
+                                # Modrá + tučné - ponechané podľa nastavenia
+                                self.song_combobox.configure(style="Blue.TCombobox")
+                            else:
+                                # Biela odtieň #e0e0e6 – rovnako ako Mládež
+                                self.song_combobox.configure(style="Big.TCombobox")
                             self.song_combobox.configure(font=(self.font_family, 12, "bold"))
                         except Exception as e:
-                            log_exception("filtrovat_subory: blue bold config", e)
+                            log_exception("filtrovat_subory: blue/white config Večeradlo", e)
                 except Exception as e:
                     log_exception("filtrovat_subory: aktualizacia Zoznamu piesni pre Večeradlo", e)
             elif vybrane_obdobie == "Mládež":
@@ -13198,7 +13959,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
                 )
 
             # Resetuj výber súboru v menu
-            self.subor_var.set("—")
+            self.subor_var.set(SUBOR_ZIADNY)
         except Exception as e:
             log_exception("filtrovat_subory: menu update", e)
 
@@ -13502,7 +14263,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
         # 1. Zrušíme výber v comboboxe a bočnom menu
         if self.song_combobox is not None:
             self.song_combobox.current(0)
-        self.subor_var.set("—")
+        self.subor_var.set(SUBOR_ZIADNY)
         
         # 2. Vložíme kód do hlavného vyhľadávacieho poľa
         self.manual_entry.delete(0, tk.END)
@@ -13538,12 +14299,12 @@ class _PiesneSuboryMixin(_ControlAppBase):
         try:
             note, piesne = self.nacitaj_piesne_z_direktoria_pre_subor(nazov_bez_ext)
             if piesne:
-                odporucane_text = "\n".join(
+                odporucane_text = "\n\n".join(
                     [f"  \u2022 {sekcia}: {text}" for sekcia, text in piesne.items() if text]
                 )
                 hlavicka = f"Odporúčané piesne: {note}" if note else "  Odporúčané piesne:"
                 self.direktorium_label.config(
-                    text=f"{hlavicka}\n{odporucane_text}",
+                    text=f"{hlavicka}\n\n{odporucane_text}",
                     fg=DIREKTORIUM_LABEL_FG
                 )
             elif note:
@@ -13686,7 +14447,12 @@ class _PiesneSuboryMixin(_ControlAppBase):
             self.obsah_suboru_text.config(state=tk.NORMAL)
             self.obsah_suboru_text.delete("1.0", tk.END)
             self.obsah_suboru_text.insert(tk.END, obsah)
+            self.obsah_suboru_text.tag_add("normal_text", "1.0", tk.END)
             self.obsah_suboru_text.tag_remove("highlight", "1.0", tk.END)
+            try:
+                self.obsah_suboru_text.tag_raise("highlight", "normal_text")
+            except Exception:
+                pass
             self.obsah_suboru_text.config(state=tk.DISABLED)
         except Exception as e:
             log_exception("Chyba pri vkladaní textu do náhľadového okna", e)
@@ -13986,18 +14752,24 @@ class _TextObsahMixin(_ControlAppBase):
     
     def oznac_aktualnu_strofu_v_obsahu(self):
         """
-        Zvýrazní aktuálnu strofu v obsahu súboru.
-        Ak sa rovnaký text (napr. refrén) vyskytuje viackrát,
-        zvýrazní sa N-tý výskyt podľa aktuálneho indexu strofy.
+        Zvýrazní aktuálnu strofu v obsahu súboru - čierny pás s rovnakým odsadením zľava aj sprava, aj pre jednoriadkové strofy.
         """
-        # --- Vyčistenie highlightu ---
+        # --- Vyčistenie highlightu + padding tabov ---
         try:
             self.obsah_suboru_text.config(state=tk.NORMAL)
             self.obsah_suboru_text.tag_remove("highlight", "1.0", tk.END)
+            try:
+                while True:
+                    rng = self.obsah_suboru_text.tag_nextrange("highlight_pad", "1.0")
+                    if not rng:
+                        break
+                    self.obsah_suboru_text.delete(rng[0], rng[1])
+                self.obsah_suboru_text.tag_remove("highlight_pad", "1.0", tk.END)
+            except Exception:
+                pass
         except Exception as e:
             log_exception("Chyba pri čistení highlightu v náhľade", e)
 
-        # --- Neplatné stavy ---
         if not self.aktualne_strofy:
             try:
                 self.obsah_suboru_text.config(state=tk.DISABLED)
@@ -14012,41 +14784,26 @@ class _TextObsahMixin(_ControlAppBase):
                 log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (index mimo rozsah)", e)
             return
 
-        # ------------------------------------------------------------
-        # 0) NULTÁ STROFA – zobraz číslo piesne v ovládacom paneli
-        # ------------------------------------------------------------
+        # 0) NULTÁ STROFA
         if self.aktualny_index_strofa == 0:
             try:
                 cislo = self.aktualne_cislo_piesne or self.nazov_piesne or ""
                 if isinstance(cislo, str) and cislo.isdigit():
                     cislo = str(int(cislo))
-
                 self.strofa_label.config(state=tk.NORMAL)
                 self.strofa_label.delete("1.0", tk.END)
-
-                self.strofa_label.tag_configure(
-                    "center",
-                    justify="center",
-                    font=(self.font_family, 30, "bold")
-                )
-
+                self.strofa_label.tag_configure("center", justify="center", font=(self.font_family, 30, "bold"))
                 self.strofa_label.insert("1.0", cislo, "center")
                 self.strofa_label.config(state=tk.DISABLED)
-
             except Exception as e:
                 log_exception("Chyba pri zobrazení čísla piesne v ovládacom paneli", e)
-
-            # Náhľad uzamkneme
             try:
                 self.obsah_suboru_text.config(state=tk.DISABLED)
             except Exception as e:
                 log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (nultá strofa)", e)
-
             return
 
-        # ------------------------------------------------------------
-        # 1) REÁLNA STROFA – zvýraznenie v náhľade
-        # ------------------------------------------------------------
+        # 1) REÁLNA STROFA
         aktualna_strofa = self.aktualne_strofy[self.aktualny_index_strofa]
         norm_current = self._normalize(aktualna_strofa)
 
@@ -14057,7 +14814,6 @@ class _TextObsahMixin(_ControlAppBase):
                 log_exception("Nepodarilo sa uzamknúť obsah_suboru_text (prázdna strofa)", e)
             return
 
-        # Koľký výskyt tejto strofy to je?
         count = 0
         for i in range(len(self.aktualne_strofy)):
             if self._normalize(self.aktualne_strofy[i]) == norm_current:
@@ -14065,10 +14821,8 @@ class _TextObsahMixin(_ControlAppBase):
             if i == self.aktualny_index_strofa:
                 break
 
-        # Nájdeme N-tý výskyt v Text widgete
         start_index = None
         pos = "1.0"
-
         try:
             for _ in range(count):
                 found = self.obsah_suboru_text.search(norm_current, pos, tk.END)
@@ -14080,54 +14834,47 @@ class _TextObsahMixin(_ControlAppBase):
             log_exception("Chyba pri vyhľadávaní textu strofy v náhľade", e)
             start_index = None
 
-        # Highlight
+        # Highlight - zarovno s ostatným textom, bez skákania, zachováva liturgickú farbu
         if start_index:
             try:
                 end_index = f"{start_index} + {len(norm_current)} chars"
-                self.obsah_suboru_text.tag_add("highlight", start_index, end_index)
-                self.obsah_suboru_text.see(start_index)
+                start_full = self.obsah_suboru_text.index(f"{start_index} linestart")
+                end_line_end = self.obsah_suboru_text.index(f"{end_index} lineend")
+
+                self.obsah_suboru_text.tag_add("highlight", start_full, end_line_end)
+                try:
+                    self.obsah_suboru_text.tag_raise("highlight", "normal_text")
+                except Exception:
+                    pass
+                self.obsah_suboru_text.see(start_full)
             except Exception as e:
                 log_exception("Chyba pri aplikácii tagu highlight", e)
 
-        # ------------------------------------------------------------
-        # 2) OVLÁDACÍ PANEL – typografia + font
-        # ------------------------------------------------------------
+        # 2) OVLÁDACÍ PANEL
         try:
             text = self.format_typography(aktualna_strofa)
             font_size = self.vypocitaj_velkost_pisma_pre_strofu(text)
-
             self.strofa_label.config(state=tk.NORMAL)
             self.strofa_label.delete("1.0", tk.END)
-
-            self.strofa_label.tag_configure(
-                "center",
-                justify="center",
-                font=(self.font_family, font_size, "bold")
-            )
-
+            self.strofa_label.tag_configure("center", justify="center", font=(self.font_family, font_size, "bold"))
             self.strofa_label.insert("1.0", text, "center")
             self.strofa_label.config(state=tk.DISABLED)
-
         except Exception as e:
             log_exception("Chyba pri aktualizácii stredného panelu (strofa_label)", e)
 
-        # ------------------------------------------------------------
         # 3) Aktualizácia horného panelu
-        # ------------------------------------------------------------
         try:
             self._update_nazov_label()
         except Exception as e:
             log_exception("Chyba pri volaní _update_nazov_label", e)
 
-        # ------------------------------------------------------------
         # 4) Uzamknutie náhľadu
-        # ------------------------------------------------------------
         try:
             self.obsah_suboru_text.config(state=tk.DISABLED)
         except Exception as e:
-            log_exception("Záverečné uzamknutie náhľadu zlyhalo", e)       
-                                          
-                          
+            log_exception("Záverečné uzamknutie náhľadu zlyhalo", e)
+
+
     def vypocitaj_velkost_pisma_pre_strofu(self, text):
         """
         Dynamické škálovanie písma pre horný panel (strofa_label).
@@ -14357,7 +15104,7 @@ class _ProjekciaMixin(_ControlAppBase):
             zadane_manualne = True
 
         # výber zo zoznamu
-        elif vybrany_subor and vybrany_subor != "—":
+        elif vybrany_subor and vybrany_subor != SUBOR_ZIADNY:
             hladany_full = self.najdi_subor_podla_prefixu(vybrany_subor)
             if not hladany_full:
                 messagebox.showerror("Kinak: Nenájdené", f"Súbor '{vybrany_subor}' neexistuje v priečinku piesní.")
@@ -14377,7 +15124,7 @@ class _ProjekciaMixin(_ControlAppBase):
 
         # reset výberu a popisov po manuálnom vstupe
         if zadane_manualne:
-            self.subor_var.set("—")
+            self.subor_var.set(SUBOR_ZIADNY)
             self.popis_label.config(text="")
             self.direktorium_label.config(text="")
 
@@ -14459,8 +15206,59 @@ class _ProjekciaMixin(_ControlAppBase):
 
 
     def set_projection_indicator(self, active: bool):
-        farba = "#00cc00" if active else "#888888"
-        self.indikator_ziarovka.itemconfig(self.indikator_id, fill=farba)      
+        try:
+            if active:
+                # Zelená s glow efektom ako na screenshote
+                try:
+                    if hasattr(self, 'indikator_glow_id'):
+                        # glow - jemný zelený svit okolo guličky
+                        self.indikator_ziarovka.itemconfig(self.indikator_glow_id, fill="#1e4a0f")
+                    self.indikator_ziarovka.itemconfig(self.indikator_id, fill="#80FF00")
+                except Exception:
+                    try:
+                        self.indikator_ziarovka.itemconfig(self.indikator_id, fill="#80FF00")
+                    except Exception:
+                        pass
+
+                # Prepni texty v lište náhľadu projekcie
+                try:
+                    if hasattr(self, 'nahlad_placeholder_label') and self.nahlad_placeholder_label.winfo_exists():
+                        self.nahlad_placeholder_label.pack_forget()
+                except Exception:
+                    pass
+                try:
+                    if hasattr(self, 'nahlad_projekcia_label') and self.nahlad_projekcia_label.winfo_exists():
+                        if not self.nahlad_projekcia_label.winfo_ismapped():
+                            self.nahlad_projekcia_label.pack(side=tk.LEFT, padx=(8, 0))
+                except Exception:
+                    pass
+            else:
+                # Neaktívne - sivá gulička bez glow
+                try:
+                    if hasattr(self, 'indikator_glow_id'):
+                        self.indikator_ziarovka.itemconfig(self.indikator_glow_id, fill=UI_PREVIEW_HDR_BG)
+                    self.indikator_ziarovka.itemconfig(self.indikator_id, fill="#262626")
+                except Exception:
+                    try:
+                        self.indikator_ziarovka.itemconfig(self.indikator_id, fill="#888888")
+                    except Exception:
+                        pass
+
+                # Prepni späť na placeholder
+                try:
+                    if hasattr(self, 'nahlad_projekcia_label') and self.nahlad_projekcia_label.winfo_exists():
+                        self.nahlad_projekcia_label.pack_forget()
+                except Exception:
+                    pass
+                try:
+                    if hasattr(self, 'nahlad_placeholder_label') and self.nahlad_placeholder_label.winfo_exists():
+                        if not self.nahlad_placeholder_label.winfo_ismapped():
+                            self.nahlad_placeholder_label.pack(side=tk.LEFT, padx=(6, 0))
+                except Exception:
+                    pass
+        except Exception as e:
+            log_exception("set_projection_indicator", e)
+              
             
         
     def toggle_projection_text(self, event=None):
@@ -14533,7 +15331,7 @@ class _ProjekciaMixin(_ControlAppBase):
 
             # Reset pozadia hlavného okna
             try:
-                self.master.configure(bg=BACKGROUND_COLOR)
+                self.master.configure(bg=UI_WINDOW_BG)
             except Exception as e:
                 log_exception("clear_screen: chyba pri zmene bg master okna", e)
 
@@ -14630,6 +15428,7 @@ class _HlavneOknoMixin(_ControlAppBase):
     """Zostavenie hlavného GUI okna a stavového riadku."""
 
     def vytvorit_gui(self):
+        self.master.configure(bg=UI_WINDOW_BG)
         style = ttk.Style()
         style.configure("TButton", font=(self.font_family, 12), padding=6)
         style.configure("TLabel", font=(self.font_family, 12))
@@ -14637,24 +15436,37 @@ class _HlavneOknoMixin(_ControlAppBase):
         style.configure("Settings.TButton", font=(self.font_family, 14), padding=2)
 
         # globálne nastavenie pre combobox listbox
-        self.master.option_add("*TCombobox*Listbox.font", (self.font_family, 11))
+        self.master.option_add("*TCombobox*Listbox.font", (self.font_family, 12))
         self.master.option_add("*TCombobox*Listbox.justify", "left")
+        # rozbaľovací zoznam piesní: rovnaké farby ako tlačidlá Žalm/Modlitba
+        self.master.option_add("*TCombobox*Listbox.background", MENU_BTN_BG)
+        self.master.option_add("*TCombobox*Listbox.foreground", MENU_BTN_FG)
+        self.master.option_add("*TCombobox*Listbox.selectBackground", "#454545")
+        self.master.option_add("*TCombobox*Listbox.selectForeground", "#FFFFFF")
+        self.master.option_add("*TCombobox*Listbox.relief", "flat")
+        self.master.option_add("*TCombobox*Listbox.borderWidth", 0)
+        self.master.option_add("*TCombobox*Listbox.highlightThickness", 1)
+        self.master.option_add("*TCombobox*Listbox.highlightColor", MENU_BTN_BORDER)
+        self.master.option_add("*TCombobox*Listbox.highlightBackground", MENU_BTN_BORDER)
 
-        horny_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR, height=60)
+        horny_frame = tk.Frame(self.master, bg=UI_BAR_BG, height=72)
         horny_frame.pack_propagate(False)
         horny_frame.pack(side=tk.TOP, fill=tk.X, anchor="ne", pady=(0, 0))
 
         # --- STATUS BAR (spodok hlavného okna) ---
-        self.status_bar_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR, height=28)
+        self.status_bar_frame = tk.Frame(self.master, bg=UI_BAR_BG, height=40)
         self.status_bar_frame.pack_propagate(False)
         self.status_bar_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+        # tenká deliaca čiara nad stavovým riadkom
+        tk.Frame(self.status_bar_frame, bg=UI_BTN_BG, height=1).pack(side=tk.TOP, fill=tk.X)
 
         self.status_bar_zaltár_label = tk.Label(
             self.status_bar_frame,
             text="",
-            font=(self.font_family, 12),
-            fg="#bbbbbb",
-            bg=PANEL_BG_COLOR,
+            font=(self.font_family, 14),
+            fg=UI_BTN_FG,
+            bg=UI_BAR_BG,
             anchor="w",
             padx=15
         )
@@ -14664,6 +15476,59 @@ class _HlavneOknoMixin(_ControlAppBase):
         # --- Combobox "Zoznam piesní" vľavo ---
         self.song_var = tk.StringVar()
         style.configure("Big.TCombobox", padding=5)
+
+        # --- Vzhľad "Zoznam piesní" zhodný s tlačidlami pod číslom piesne ---
+        # Prvky z témy "clam" sa klonujú len pre tento combobox, takže tmavé
+        # farby fungujú aj v natívnej téme Windows (vista) bez zmeny ostatných widgetov.
+        try:
+            style.element_create("Kinak.Combobox.field", "from", "clam", "Combobox.field")
+            style.element_create("Kinak.Combobox.downarrow", "from", "clam", "Combobox.downarrow")
+            kinak_combo_layout: Any = [
+                ("Kinak.Combobox.field", {"sticky": "nswe", "children": [
+                    ("Kinak.Combobox.downarrow", {"side": "right", "sticky": "ns"}),
+                    ("Combobox.padding", {"expand": "1", "sticky": "nswe", "children": [
+                        ("Combobox.textarea", {"sticky": "nswe"})
+                    ]}),
+                ]})
+            ]
+        except tk.TclError as e:
+            kinak_combo_layout = None
+            log_exception("vytvorit_gui: klonovanie prvkov comboboxu zlyhalo", e)
+
+        # Farba textu pre každý štýl (aby sa po výbere piesne text nezmenil na čiernu na bielom).
+        _combo_text_farby = {
+            "Big.TCombobox": MENU_BTN_FG,
+            "Blue.TCombobox": "#1E90FF",
+            "Orange.TCombobox": MLADEZ_COMBOBOX_FARBA,
+        }
+        for _combo_styl, _combo_fg in _combo_text_farby.items():
+            try:
+                if kinak_combo_layout:
+                    style.layout(_combo_styl, kinak_combo_layout)  # type: ignore[arg-type]
+                style.configure(
+                    _combo_styl,
+                    fieldbackground=MENU_BTN_BG, background=MENU_BTN_BG,
+                    foreground=MENU_BTN_FG, insertcolor=MENU_BTN_FG,
+                    bordercolor=MENU_BTN_BORDER, lightcolor=MENU_BTN_BORDER,
+                    darkcolor=MENU_BTN_BORDER, arrowcolor=MENU_BTN_FG,
+                    selectbackground=KINAK_AKCENT, selectforeground=KINAK_AKCENT_TEXT,
+                    padding=5,
+                )
+                style.map(
+                    _combo_styl,
+                    fieldbackground=[("active", MENU_BTN_ACTIVE_BG), ("focus", MENU_BTN_ACTIVE_BG)],
+                    background=[("active", MENU_BTN_ACTIVE_BG)],
+                    bordercolor=[("focus", KINAK_AKCENT), ("active", KINAK_AKCENT)],
+                    lightcolor=[("focus", KINAK_AKCENT), ("active", KINAK_AKCENT)],
+                    darkcolor=[("focus", KINAK_AKCENT), ("active", KINAK_AKCENT)],
+                    arrowcolor=[("active", KINAK_AKCENT), ("focus", KINAK_AKCENT)],
+                    # Označený text bez focusu sa nesmie zobraziť ako biely pás:
+                    # splynie s pozadím poľa, takže pole vyzerá nevyznačené.
+                    selectbackground=[("!focus", MENU_BTN_BG), ("focus", KINAK_AKCENT)],
+                    selectforeground=[("!focus", _combo_fg), ("focus", KINAK_AKCENT_TEXT)],
+                )
+            except tk.TclError as e:
+                log_exception("vytvorit_gui: štýl comboboxu " + _combo_styl, e)
         style.configure("Blue.TCombobox", padding=5, foreground="#1E90FF", font=(self.font_family, 12, "bold"))
         try:
             style.map("Blue.TCombobox", foreground=[("readonly", "#1E90FF"), ("!readonly", "#1E90FF"), ("focus", "#1E90FF")])
@@ -14696,7 +15561,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         # (predtým tu bola duplicitná logika pre Večeradlo, ktorá sa hneď prepísala)
         self.cele_hodnoty_comboboxu = []
         self.song_combobox["values"] = []
-        self.song_combobox.pack(side=tk.LEFT, padx=(10, 0), pady=(8, 2), ipady=1)
+        self.song_combobox.pack(side=tk.LEFT, padx=(6, 0), pady=(10, 4), ipady=1)
 
         # --- Filtrovanie počas písania ---
         # Normalizácia diakritiky: používa sa globálna funkcia normalize_diacritics()
@@ -14745,7 +15610,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         def on_song_selected(event=None):
             selection = self.song_combobox.get()
 
-            if selection == "Zoznam piesní" or not selection:
+            if selection == COMBO_HLAVICKA or not selection:
                 return
 
             # Ak používateľ napísal len časť názvu
@@ -14771,7 +15636,7 @@ class _HlavneOknoMixin(_ControlAppBase):
                 self.manual_entry.delete(0, tk.END)
                 self.manual_entry.insert(0, format_cislo_piesne_pre_vstup(num_display))
 
-                self.subor_var.set("—")
+                self.subor_var.set(SUBOR_ZIADNY)
 
                 # Po výbere obnovíme celý zoznam
                 self.song_combobox["values"] = self.cele_hodnoty_comboboxu
@@ -14786,6 +15651,24 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         self.song_combobox.bind("<<ComboboxSelected>>", on_song_selected)
         self.song_combobox.bind("<Return>", on_song_selected)
+        # --- Placeholder správanie pre COMBO_HLAVICKA ---
+        def _combo_placeholder_focus_in(event=None):
+            try:
+                if self.song_combobox.get() == COMBO_HLAVICKA:
+                    self.song_combobox.delete(0, tk.END)
+            except Exception:
+                pass
+
+        def _combo_placeholder_focus_out(event=None):
+            try:
+                if not self.song_combobox.get().strip():
+                    self.song_combobox.set(COMBO_HLAVICKA)
+            except Exception:
+                pass
+
+        self.song_combobox.bind("<FocusIn>", _combo_placeholder_focus_in)
+        self.song_combobox.bind("<FocusOut>", _combo_placeholder_focus_out)
+
         for k in ["<KeyPress-plus>", "<KeyPress-minus>", "<KeyPress-KP_Add>", "<KeyPress-KP_Subtract>"]:
             self.song_combobox.bind(k, self.klavesa_plus if 'plus' in k or 'Add' in k else self.klavesa_minus)
         self.song_combobox.bind("=", self.klavesa_plus)
@@ -14805,35 +15688,24 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         self.song_combobox.bind("<Tab>", prepni_focus_tab)
 
-        # bielym písmom "názov súboru - strofa 1/25"
-        self.nazov_label = tk.Label(
-            self.master,
-            font=(self.font_family, 15, "bold"),
-            fg="#ffffff",
-            bg=BACKGROUND_COLOR,
-            anchor="center",
-            justify=tk.CENTER
-        )
-        self.nazov_label.place(relx=0.50, y=30, anchor="center")
-
         # --- Rámik pre tlačidlá napravo ---
-        buttons_frame = tk.Frame(horny_frame, bg=PANEL_BG_COLOR)
-        buttons_frame.pack(side=tk.RIGHT, padx=(0, 5), pady=(8, 2))
+        buttons_frame = tk.Frame(horny_frame, bg=UI_BAR_BG)
+        buttons_frame.pack(side=tk.RIGHT, padx=(0, 6), pady=(10, 4))
 
         # --- ŠTÝL PRE IKONY ---
         style.configure("Icon.TButton", font=("Segoe UI Symbol", 13))
         style.configure("Download.TMenubutton", font=(self.font_family, 13), padding=6)
 
-        toolbar_btn_bg = "#1C1C1C"
-        toolbar_btn_fg = "#E0E0E0"
-        toolbar_btn_active = "#F2F2F2"
-        toolbar_menu_active_bg = "#333333"
+        toolbar_btn_bg = UI_BTN_BG
+        toolbar_btn_fg = UI_BTN_FG
+        toolbar_btn_active = "#ffffff"
+        toolbar_menu_active_bg = "#454545"   # výraznejší pásik aktuálnej položky v ponuke
 
         def vytvor_toolbar_menu(parent):
             return tk.Menu(
                 parent,
                 tearoff=0,
-                font=(self.font_family, 13),
+                font=(self.font_family, 14),
                 bg=toolbar_btn_bg,
                 fg=toolbar_btn_fg,
                 activebackground=toolbar_menu_active_bg,
@@ -14845,16 +15717,22 @@ class _HlavneOknoMixin(_ControlAppBase):
             widget.configure(
                 bg=toolbar_btn_bg,
                 fg=toolbar_btn_fg,
-                activebackground=toolbar_btn_bg,
-                activeforeground=toolbar_btn_active,
+                activebackground="#454545",     # výraznejší odtieň pri nabehnutí myši
+                activeforeground="#FFFFFF",
                 relief="flat",
                 borderwidth=0,
                 highlightthickness=0,
-                font=(self.font_family, 13),
-                padx=10,
-                pady=5
+                font=(self.font_family, 15),
+                padx=18,
+                pady=8
             )
-            widget.pack(side=tk.LEFT, padx=0)
+            widget.pack(side=tk.LEFT, padx=(0, 8))
+            # tk.Button na Windows pri nabehnutí myši „activebackground“ nepoužije
+            # (iba pri stlačení), preto sa hover rieši ručne. Menubutton ho
+            # podporuje natívne, takže ho netreba meniť.
+            if isinstance(widget, tk.Button):
+                widget.bind("<Enter>", lambda e, w=widget: w.config(bg="#454545", fg="#FFFFFF"))
+                widget.bind("<Leave>", lambda e, w=widget: w.config(bg=toolbar_btn_bg, fg=toolbar_btn_fg))
             return widget
 
         styl_toolbar_widget(tk.Button(
@@ -14891,52 +15769,69 @@ class _HlavneOknoMixin(_ControlAppBase):
         pomoc_menu.add_command(label="O aplikácii", command=self.zobrazit_o_aplikacii)
         pomoc_btn["menu"] = pomoc_menu
 
-        # --- INDIKÁTOR ŽIAROVKY ---
-        self.indikator_ziarovka = tk.Canvas(
-            horny_frame, width=50, height=52, highlightthickness=0, bg=PANEL_BG_COLOR
-        )
-        self.indikator_id = self.indikator_ziarovka.create_rectangle(
-            8, 8, 42, 42, fill="#888888", outline=""
-        )
-        self.indikator_ziarovka.pack(side=tk.RIGHT, padx=(0, 0), pady=(8, 2))     
-
-        # --- PANEL AKTUÁLNA STROFA (Hore) ---
-        panel_strofa_hore = tk.Frame(self.master, bg=BACKGROUND_COLOR, height=250)
-        panel_strofa_hore.pack_propagate(False)
-        panel_strofa_hore.pack(side=tk.TOP, fill=tk.X, padx=10, pady=(0, 0))
-
-        self.strofa_label = tk.Text(
-            panel_strofa_hore, wrap=tk.WORD, bg=BACKGROUND_COLOR, fg=self.text_color_var.get(),
-            relief=tk.FLAT, bd=0, padx=20, pady=10, spacing1=1, spacing2=2, spacing3=1
-        )
-        self.strofa_label.bind("<Button-1>", lambda e: "break")
-        self.strofa_label.tag_configure("center", justify="center", font=(self.font_family, 25, "bold"))
-        self.strofa_label.config(state=tk.DISABLED)
-        self.strofa_label.pack(fill=tk.BOTH, expand=True)
+        # --- INDIKÁTOR ŽIAROVKY presunutý do lišty Náhľad projekcie ---
+        # (pôvodný indikátor v hornom paneli bol odstránený na žiadosť používateľa)     
 
         # --- HLAVNÝ OBSAH ---
-        hlavny_frame = tk.Frame(self.master, bg=PANEL_BG_COLOR)
+        hlavny_frame = tk.Frame(self.master, bg=UI_WINDOW_BG)
         hlavny_frame.pack(fill=tk.BOTH, expand=True)
 
         # 1. Panel výberu (Vľavo)
-        frame_vyber = tk.Frame(hlavny_frame, width=205, bg=PANEL_BG_COLOR)
+        frame_vyber = tk.Frame(hlavny_frame, width=272, bg=UI_WINDOW_BG)
         frame_vyber.pack_propagate(False)
-        frame_vyber.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+        frame_vyber.pack(side=tk.LEFT, fill=tk.Y, padx=(14, 8), pady=14)
 
-        panel_vyber = tk.LabelFrame(frame_vyber, bg=PANEL_BG_COLOR, padx=10, pady=10)
+        panel_vyber = tk.Frame(frame_vyber, bg=UI_LEFT_PANEL_BG, bd=0, highlightthickness=0, padx=14, pady=14)
         panel_vyber.pack(fill=tk.BOTH, expand=True)
 
-        self.manual_entry = tk.Entry(
-            panel_vyber, font=(self.font_family, 25, "bold"), bg="#1e1e1e",
-            fg=self.text_color_var.get(), insertbackground=self.text_color_var.get(), justify="center"
+        # --- Obrovské vstupné pole s liturgickým rámikom (bez labelu - môže byť aj skratka žalmu/modlitby) ---
+        # Farba rámika = aktuálna liturgická farba (alebo vlastná, ak je zapnutá)
+        # Použijeme projekčnú farbu, aby rešpektovala aj filter Večeradlo
+        try:
+            _base = self.text_color_var.get()
+            _init_border_color = self._farba_textu_pre_projekciu(_base)  # type: ignore[no-untyped-call]
+        except Exception:
+            try:
+                _init_border_color = self.text_color_var.get()  # type: ignore[no-untyped-call]
+            except Exception:
+                _init_border_color = "#e6e6e6"
+        # Pylance-safe: ensure str
+        _init_border_color = str(_init_border_color)
+
+        # Vonkajší Frame slúži ako jemný rámik - farba podľa liturgického obdobia
+        # Upravené: tenší, menej dominantný (highlight 1px namiesto plného 1px fill)
+        self.manual_entry_border = tk.Frame(
+            panel_vyber, bg=UI_LEFT_PANEL_BG, bd=0,
+            highlightthickness=0
         )
-        self.manual_entry.pack(fill=tk.X, pady=(0, 10))
+        self.manual_entry_border.pack(fill=tk.X, pady=(0, 10), padx=0)
+
+        # Vnútorný Frame - tenká sivá linka (požiadavka: ružový → tenká sivá)
+        self.manual_entry_inner = tk.Frame(
+            self.manual_entry_border, bg=UI_ENTRY_BG, bd=0,
+            highlightthickness=1,
+            highlightbackground="#4a4a4a",
+            highlightcolor="#4a4a4a"
+        )
+        self.manual_entry_inner.pack(fill=tk.BOTH, expand=True, padx=0, pady=0)
+
+        self.manual_entry = tk.Entry(
+            self.manual_entry_inner, 
+            font=(self.font_family, 42, "bold"), 
+            bg=UI_ENTRY_BG,
+            fg=_init_border_color, 
+            insertbackground=_init_border_color, 
+            justify="center",
+            relief=tk.FLAT, bd=0,
+            highlightthickness=0
+        )
+        self.manual_entry.pack(fill=tk.BOTH, expand=True, ipady=12, padx=4, pady=2)
 
         self.manual_entry_hint = tk.Label(
-            panel_vyber, text="Zadaj č. piesne alebo vyber žalm či modlitbu z menu nižšie.", font=(self.font_family, 11, "italic"),
-            fg="#aaaaaa", bg=PANEL_BG_COLOR, wraplength=180, justify=tk.CENTER
+            panel_vyber, text="Zadaj č. piesne alebo vyber žalm či modlitbu z menu nižšie.", font=(self.font_family, 11),
+            fg="#9a9aaa", bg=UI_LEFT_PANEL_BG, wraplength=235, justify=tk.LEFT, anchor="w"
         )
-        self.manual_entry_hint.pack(pady=(0, 10))
+        self.manual_entry_hint.pack(fill=tk.X, pady=(0, 14))
 
         # Bindings
         self.manual_entry.bind("<FocusOut>", self.skus_manualne_nacitanie)
@@ -14950,11 +15845,25 @@ class _HlavneOknoMixin(_ControlAppBase):
         self.manual_entry.bind("<FocusIn>", self.vymazat_subor_menu)
         self.manual_entry.bind("<Tab>", prepni_focus_tab)
 
-        # Filtre a menu
+        # Filtre a menu - HYBRID: chipy nad zoznamom + box odporúčaných
         self.filter_var = tk.StringVar(value=self.default_filter_var.get())
-        self.filter_menu = tk.OptionMenu(panel_vyber, self.filter_var, *list(self.obdobie_subory.keys()), command=self.filtrovat_subory)
-        self.filter_menu.config(font=(self.font_family, 14, "bold"), width=16)
-        self.filter_menu.pack(pady=(0, 10))
+        self.subor_var = tk.StringVar(value=SUBOR_ZIADNY)
+        self.subory_zoznam = self.ziskaj_zoznam_suborov()
+
+        # --- CHIPY: Turíce a sviatky + 10C2 / 4TS ako chipy nad zoznamom ---
+        chips_frame = tk.Frame(panel_vyber, bg=UI_LEFT_PANEL_BG)
+        chips_frame.pack(fill=tk.X, pady=(0, 12))
+
+        self.filter_menu = tk.OptionMenu(chips_frame, self.filter_var, *list(self.obdobie_subory.keys()), command=self.filtrovat_subory)
+        self.filter_menu.config(font=(self.font_family, 13, "bold"), width=14, bd=0, relief="flat")
+        stylizuj_optionmenu_tmavo(self.filter_menu)
+        self.filter_menu.config(indicatoron=0, anchor="center", highlightthickness=1, highlightbackground="#2a2a2a", pady=8, padx=4)
+        # tlmene modrá ako tlačidlá v Nastaveniach – jasne ukazuje, že ide o ovládač výberu
+        self.filter_menu.config(
+            bg="#3F4F6A", fg="#FFFFFF", activebackground="#5A7090", activeforeground="#FFFFFF",
+            disabledforeground="#8D99AD", highlightbackground="#3F4F6A", highlightcolor="#3F4F6A",
+        )
+        self.filter_menu.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
 
         # --- Vizuálny oddeľovač pre modlitbové filtre ---
         try:
@@ -14966,42 +15875,145 @@ class _HlavneOknoMixin(_ControlAppBase):
         except Exception as e:
             log_exception("Pridanie oddeľovača do filter_menu zlyhalo", e)
 
-        self.subor_var = tk.StringVar(value="—")
-        self.subory_zoznam = self.ziskaj_zoznam_suborov()
-        self.subor_menu = tk.OptionMenu(panel_vyber, self.subor_var, *["—"], command=self.nacitat_podla_menu)
-        self.subor_menu.config(font=(self.font_family, 14, "bold"), width=16)
-        self.subor_menu.pack(pady=(0, 10))
+        self.subor_menu = tk.OptionMenu(chips_frame, self.subor_var, *[SUBOR_ZIADNY], command=self.nacitat_podla_menu)
+        self.subor_menu.config(font=(self.font_family, 13, "bold"), width=7, bd=0, relief="flat")
+        stylizuj_optionmenu_tmavo(self.subor_menu)
+        self.subor_menu.config(indicatoron=0, anchor="center", highlightthickness=1, highlightbackground="#2a2a2a", pady=8, padx=4)
+        # tlmene modrá ako tlačidlá v Nastaveniach – jasne ukazuje, že ide o ovládač výberu
+        self.subor_menu.config(
+            bg="#3F4F6A", fg="#FFFFFF", activebackground="#5A7090", activeforeground="#FFFFFF",
+            disabledforeground="#8D99AD", highlightbackground="#3F4F6A", highlightcolor="#3F4F6A",
+        )
+        self.subor_menu.pack(side=tk.LEFT, fill=tk.X, expand=False)
 
-        self.popis_label = tk.Label(panel_vyber, text="", font=(self.font_family, 12, "italic"), fg="#bbbbbb", bg=PANEL_BG_COLOR, wraplength=180)
-        self.popis_label.pack(pady=(0, 5))
+        # --- VÝRAZNEJŠÍ HOVER pre Cezročné C2 a Žiadna ---
+        def _pridaj_hover_efekt(widget, normal_bg="#3F4F6A", hover_bg="#5A7090"):
+            try:
+                widget.bind("<Enter>", lambda e, w=widget, hb=hover_bg: w.config(bg=hb))
+                widget.bind("<Leave>", lambda e, w=widget, nb=normal_bg: w.config(bg=nb))
+                # kurzor ruka pre lepší UX
+                widget.config(cursor="hand2")
+            except Exception:
+                pass
 
-        self.direktorium_label = tk.Label(panel_vyber, text="", font=(self.font_family, 11), fg=DIREKTORIUM_LABEL_FG, bg=PANEL_BG_COLOR, wraplength=180, justify=tk.LEFT)
-        self.direktorium_label.pack()
+        _pridaj_hover_efekt(self.filter_menu)
+        _pridaj_hover_efekt(self.subor_menu)
+
+        # --- BOX: Odporúčané piesne (killer feature) ---
+        odporucane_box = tk.Frame(panel_vyber, bg="#1a1a1a", bd=0, highlightthickness=1, highlightbackground="#262626")
+        odporucane_box.pack(fill=tk.X, pady=(0, 12), padx=0)
+
+        box_header = tk.Frame(odporucane_box, bg="#1a1a1a")
+        box_header.pack(fill=tk.X, padx=10, pady=(8, 12))
+
+        self.popis_label = tk.Label(box_header, text="", font=(self.font_family, 12, "bold"), fg="#ffffff", bg="#1a1a1a", wraplength=215, justify=tk.LEFT, anchor="w")
+        self.popis_label.pack(fill=tk.X, anchor="w")
+
+        self.direktorium_label = tk.Label(odporucane_box, text="", font=(self.font_family, 13), fg=DIREKTORIUM_LABEL_FG, bg="#1a1a1a", wraplength=215, justify=tk.LEFT, anchor="w")
+        self.direktorium_label.pack(fill=tk.X, padx=10, pady=(12, 12))
         self.aktualizovat_direktorium_label()        
 
-        # 2. Panel obsah súboru (V strede)
-        panel_obsah = tk.LabelFrame(hlavny_frame, bg=PANEL_BG_COLOR, padx=10, pady=10)
-        panel_obsah.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # 2. Pravý stĺpec: náhľad projekcie (hore) + obsah súboru (dole)
+        pravy_stlpec = tk.Frame(hlavny_frame, bg=UI_WINDOW_BG)
+        pravy_stlpec.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 14), pady=14)
 
-        scrollbar = tk.Scrollbar(panel_obsah)
+        # --- PANEL AKTUÁLNA STROFA (Hore) s pásikom "Náhľad projekcie" ---
+        panel_strofa_hore = tk.Frame(pravy_stlpec, bg=BACKGROUND_COLOR, height=216)
+        panel_strofa_hore.pack_propagate(False)
+        panel_strofa_hore.pack(side=tk.TOP, fill=tk.X, pady=(0, 14))
+
+        nahlad_hlavicka = tk.Frame(panel_strofa_hore, bg=UI_PREVIEW_HDR_BG, height=36)
+        nahlad_hlavicka.pack_propagate(False)
+        nahlad_hlavicka.pack(side=tk.TOP, fill=tk.X, padx=16, pady=(12, 0))
+
+        # --- NOVÉ: Ľavá strana s indikátorom zelenej guličky ---
+        lavy_status_frame = tk.Frame(nahlad_hlavicka, bg=UI_PREVIEW_HDR_BG)
+        lavy_status_frame.pack(side=tk.LEFT, fill=tk.Y)
+
+        # Canvas pre guličku s glow efektom ako na screenshote
+        self.indikator_ziarovka = tk.Canvas(
+            lavy_status_frame, width=26, height=26,
+            bg=UI_PREVIEW_HDR_BG, highlightthickness=0, bd=0
+        )
+        self.indikator_ziarovka.pack(side=tk.LEFT, padx=(2, 0), pady=3)
+
+        # Vonkajší glow (tmavozelený kruh pre efekt žiary)
+        self.indikator_glow_id = self.indikator_ziarovka.create_oval(
+            1, 1, 25, 25, fill=UI_PREVIEW_HDR_BG, outline="", width=0
+        )
+        # Vnútorná gulička (aktuálny stav)
+        self.indikator_id = self.indikator_ziarovka.create_oval(
+            8, 8, 18, 18, fill="#262626", outline=""
+        )
+
+        # Label "ZOBRAZUJE SA" - zobrazí sa len pri aktívnej projekcii
+        self.nahlad_projekcia_label = tk.Label(
+            lavy_status_frame, text="ZOBRAZUJE SA",
+            font=(self.font_family, 11, "bold"),
+            fg="#80FF00", bg=UI_PREVIEW_HDR_BG
+        )
+        # Na začiatku skrytý
+
+        # Statický placeholder "Náhľad projekcie" - viditeľný keď sa nepremieta
+        self.nahlad_placeholder_label = tk.Label(
+            lavy_status_frame, text="Náhľad projekcie",
+            font=(self.font_family, 12),
+            fg="#b0b0b8", bg=UI_PREVIEW_HDR_BG, anchor="w", padx=3
+        )
+        self.nahlad_placeholder_label.pack(side=tk.LEFT, padx=(6, 0))
+
+        # --- Stred / pravá strana: číslo piesne a strofa ---
+        self.nazov_label = tk.Label(
+            nahlad_hlavicka,
+            font=(self.font_family, 12, "bold"),
+            fg="#ffffff",
+            bg=UI_PREVIEW_HDR_BG,
+            anchor="center",
+            justify=tk.CENTER,
+            padx=3
+        )
+        # Predvolene v strede (podľa nastavenia)
+        self.nazov_label.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.strofa_label = tk.Text(
+            panel_strofa_hore, wrap=tk.WORD, bg=BACKGROUND_COLOR, fg=self.text_color_var.get(),
+            relief=tk.FLAT, bd=0, padx=20, pady=10, spacing1=2, spacing2=1, spacing3=2
+        )
+        self.strofa_label.bind("<Button-1>", lambda e: "break")
+        self.strofa_label.tag_configure("center", justify="center", font=(self.font_family, 25, "bold"))
+        self.strofa_label.config(state=tk.DISABLED)
+        self.strofa_label.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 6))
+
+        # --- Panel obsah súboru ---
+        panel_obsah = tk.Frame(pravy_stlpec, bg=UI_PANEL_BG, bd=0, highlightthickness=0, padx=20, pady=16)
+        panel_obsah.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        scrollbar = ttk.Scrollbar(panel_obsah, orient="vertical", style="KinakDark.Vertical.TScrollbar")
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.obsah_suboru_text = tk.Text(
-            panel_obsah, wrap=tk.WORD, font=(self.font_family, 14), bg="#1e1e1e", fg="#dddddd",
-            yscrollcommand=scrollbar.set, padx=15, pady=10
+            panel_obsah, wrap=tk.WORD, font=(self.font_family, 14), bg=UI_PANEL_BG, fg="#e0e0e6",
+            relief=tk.FLAT, bd=0, highlightthickness=0,
+            yscrollcommand=scrollbar.set, padx=4, pady=10
         )
         self.obsah_suboru_text.bind("<Button-1>", lambda e: "break")
-        self.obsah_suboru_text.config(state=tk.DISABLED, spacing3=2)
-        self.obsah_suboru_text.tag_config("highlight", background="#444444", foreground=self.text_color_var.get(), font=(self.font_family, 18, "bold"))
+        self.obsah_suboru_text.config(state=tk.DISABLED, spacing1=3, spacing2=2, spacing3=5)
+        self.obsah_suboru_text.tag_config("highlight", background="#101010", foreground=self.text_color_var.get(), font=(self.font_family, 18, "bold"), lmargin1=12, lmargin2=12, rmargin=0, spacing1=3, spacing2=2, spacing3=5, borderwidth=0, relief="flat")
+        self.obsah_suboru_text.tag_config("normal_text", lmargin1=12, lmargin2=12, rmargin=12)
+        try:
+            self.obsah_suboru_text.tag_raise("highlight", "normal_text")
+        except Exception:
+            pass
         self.obsah_suboru_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.obsah_suboru_text.yview)
 
         # --- LIVE PREVIEW ---
         self.preview_container = tk.Frame(
             self.master, width=350, height=160, bg=BACKGROUND_COLOR, bd=1, relief="solid",
-            highlightthickness=1, highlightbackground="#373737"   # "#373737"   #444444"
+            highlightthickness=1, highlightbackground=UI_BTN_BG
         )
-        self.preview_container.place(relx=1.0, rely=1.0, x=-10, y=-10, anchor="se")
+        # y=-60 = nad status barom (40px) + rezerva, aby neprekrýval lištu
+        self.preview_container.place(relx=1.0, rely=1.0, x=-14, y=-60, anchor="se")
         self.preview_container.pack_propagate(False)        
        
         # Ak pri štarte nie je náhľad povolený, okamžite ho schováme
@@ -15030,8 +16042,35 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         # Inicializácia po vytvorení
         self.filtrovat_subory(self.filter_var.get())
+        # Aplikuj zarovanie čísla strofy podľa nastavenia (stred/pravo)
+        try:
+            self.aktualizovat_zarovanie_cisla_strofy()
+        except Exception:
+            pass
         
               
+    def aktualizovat_zarovanie_cisla_strofy(self):
+        """Prepne zarovnanie textu 254-1/15 v pásiku Náhľad projekcie na stred alebo vpravo podľa nastavenia."""
+        try:
+            stred_var = getattr(self, 'cislo_strofy_v_strede_var', None)
+            if stred_var is not None:
+                stred = bool(stred_var.get())
+            else:
+                stred = bool(getattr(self, 'cislo_strofy_v_strede', True))
+        except Exception:
+            stred = True
+        try:
+            if stred:
+                self.nazov_label.pack_forget()
+                self.nazov_label.place(relx=0.5, rely=0.5, anchor="center")
+                self.nazov_label.config(anchor="center", justify=tk.CENTER)
+            else:
+                self.nazov_label.place_forget()
+                self.nazov_label.config(anchor="e", justify=tk.RIGHT)
+                self.nazov_label.pack(side=tk.RIGHT)
+        except Exception as e:
+            log_exception("aktualizovat_zarovanie_cisla_strofy zlyhalo", e)
+
     def aktualizovat_status_bar(self):
         """Aktualizuje obsah status baru (skratka žalmu + týždeň žaltára + vigília + vynechané slávenie)."""
         try:
@@ -15058,6 +16097,244 @@ class _HlavneOknoMixin(_ControlAppBase):
                 self.status_bar_frame.pack_forget()
         except Exception as e:
             log_exception("aktualizovat_status_bar: chyba", e)
+
+    # ------------------------------------------------------------------
+    # AUTO FILTER PODĽA DNES – nové metódy
+    # ------------------------------------------------------------------
+    def _ziskaj_kod_zalmu_pre_dnes(self) -> str | None:
+        """Získa skratku žalmu pre dnešný deň.
+
+        1) Pokúsi sa vyparsovať text stavového riadku (položka „Dnes: žalm XXX“),
+           ak je stavový riadok už vytvorený a obsahuje túto informáciu.
+        2) Fallback: priamo vypočíta kód liturgickej časti pre date.today()
+           cez vypocitaj_kod_liturgickej_casti() + format_skratku_liturgickej_casti(),
+           čo je presne to, čo zostav_text_status_baru() používa pre „Dnes:“.
+
+        Vracia napr. „28c2“, „1AD“, „2VN“, „1L“ alebo None pri chybe.
+        """
+        try:
+            # 1) Pokus o parsovanie zo stavového riadku
+            label = getattr(self, "status_bar_zaltár_label", None)
+            if label is not None:
+                try:
+                    txt = label.cget("text") if label.winfo_exists() else ""
+                except Exception:
+                    txt = ""
+                if txt and "Dnes:" in txt:
+                    # Príklad textu: "  Dnes: žalm 28c2   |   Zajtra: žalm 29c2 ..."
+                    m = re.search(r"Dnes:\s*žalm\s+([A-Za-z0-9]+)", txt, re.IGNORECASE)
+                    if m:
+                        kod = m.group(1).strip()
+                        if kod:
+                            log_info(f"_ziskaj_kod_zalmu_pre_dnes: parsované zo status baru = {kod}")
+                            return kod
+                # Tiež skús priamo zostav_text_status_baru bez widgetu (ak label ešte nemá text)
+                try:
+                    txt2 = zostav_text_status_baru(date.today(), True, False, None, None)
+                    m2 = re.search(r"Dnes:\s*žalm\s+([A-Za-z0-9]+)", txt2, re.IGNORECASE)
+                    if m2:
+                        kod2 = m2.group(1).strip()
+                        if kod2:
+                            log_info(f"_ziskaj_kod_zalmu_pre_dnes: parsované zo zostav_text_status_baru = {kod2}")
+                            return kod2
+                except Exception:
+                    pass
+        except Exception as e:
+            log_exception("_ziskaj_kod_zalmu_pre_dnes: parsovanie status baru zlyhalo", e)
+
+        # 2) Priamy výpočet – vždy funguje
+        try:
+            dnes = date.today()
+            kod_lit = vypocitaj_kod_liturgickej_casti(dnes)
+            skratka = format_skratku_liturgickej_casti(kod_lit, dnes)
+            log_info(f"_ziskaj_kod_zalmu_pre_dnes: vypočítané = {skratka} (kod_lit={kod_lit})")
+            return skratka
+        except Exception as e:
+            log_exception("_ziskaj_kod_zalmu_pre_dnes: výpočet zlyhal", e)
+            return None
+
+    def _najdi_filter_pre_kod(self, kod_zalmu: str) -> tuple[str, str] | None:
+        """Nájde filter (kľúč v self.obdobie_subory) pre daný kód žalmu.
+
+        Vracia (filter_name, kod_upper) alebo None, ak sa nenašiel.
+        Príklad: „28c2“ -> („Cezročné C2“, „28C2“), „1AD“ -> („Adventné“, „1AD“)
+        """
+        if not kod_zalmu:
+            return None
+        kod_upper = kod_zalmu.strip().upper()
+        if not kod_upper:
+            return None
+
+        try:
+            # Priame hľadanie v zoznamoch kódov
+            for filter_name, kody in self.obdobie_subory.items():
+                if kody is None:
+                    continue
+                # Porovnanie case-insensitive
+                for k in kody:
+                    if k.upper() == kod_upper:
+                        return filter_name, k  # vráť originálny tvar z tabuľky (napr. "28C2")
+            # Tiež skús normalizovanú zhodu pre istotu
+            # (už pokryté vyššie, ale necháme fallback)
+
+            # Špeciálny fallback pre cezročné týždne: ak kód je typu \d+C[12] a filter existuje
+            m = re.fullmatch(r"(\d+)C([12])", kod_upper)
+            if m:
+                parnost = m.group(2)
+                filter_name = f"Cezročné C{parnost}"
+                if filter_name in self.obdobie_subory:
+                    # Over, že kód je v rozsahu 1-34
+                    try:
+                        cislo = int(m.group(1))
+                        if 1 <= cislo <= 34:
+                            return filter_name, kod_upper
+                    except ValueError:
+                        pass
+
+            # Fallback pre mesačné sviatky: 1L-12L
+            if re.fullmatch(r"(\d+)L", kod_upper):
+                if "Mesačné" in self.obdobie_subory:
+                    return "Mesačné", kod_upper
+
+            # Pre ostatné kódy (napr. AD, VI, P, VN, TS, atď.) už by priame hľadanie malo stačiť,
+            # ale pre istotu skúsime ešte raz prejsť s normalizáciou
+            return None
+        except Exception as e:
+            log_exception("_najdi_filter_pre_kod: chyba", e)
+            return None
+
+    def aplikovat_auto_filter_podla_dnes(self) -> bool:
+        """Aplikuje automatický filter podľa dnešného žalmu, ak je voľba zapnutá.
+
+        Logika podľa zadania:
+        - Pri štarte aplikácie sa načíta stavový riadok, z položky Dnes: sa vyberie aktuálny žalm
+          (napr. Dnes: žalm 28c2).
+        - Modré tlačidlá sa automaticky nastavia tak, aby obsahovali výber: Cezročné2 → 28c2
+
+        V praxi:
+        - filter_var = "Cezročné C2" (alebo iný podľa kódu)
+        - subor_var = "28C2" a zavolá sa nacitat_podla_menu, aby sa načítal súbor
+
+        Oprava pre bug "nastaví a hneď vráti":
+        - FocusIn na manual_entry viaže vymazat_subor_menu(), ktorý maže subor_var na "—".
+          Startup focus (300ms) preto po prvom auto-filteri (200ms) výber zmazal.
+        - Teraz potláčame vymazávanie cez _suppress_vymazat a opätovne nastavujeme
+          filter+subor po krátkom oneskorení, aby prežil aj neskoršie focus eventy.
+
+        Vracia True pri úspechu, False ak je vypnuté alebo zlyhalo.
+        """
+        try:
+            # Kontrola, či je voľba zapnutá
+            enabled = False
+            try:
+                if hasattr(self, "auto_filter_podla_dnes_var") and self.auto_filter_podla_dnes_var is not None:
+                    enabled = bool(self.auto_filter_podla_dnes_var.get())
+                else:
+                    enabled = bool(getattr(self, "auto_filter_podla_dnes", False))
+            except Exception:
+                enabled = bool(getattr(self, "auto_filter_podla_dnes", False))
+
+            if not enabled:
+                log_info("aplikovat_auto_filter_podla_dnes: voľba je vypnutá, preskakujem")
+                return False
+
+            kod = self._ziskaj_kod_zalmu_pre_dnes()
+            if not kod:
+                log_info("aplikovat_auto_filter_podla_dnes: nepodarilo sa získať kód žalmu")
+                return False
+
+            vysledok = self._najdi_filter_pre_kod(kod)
+            if not vysledok:
+                log_info(f"aplikovat_auto_filter_podla_dnes: filter pre kód {kod} nenájdený")
+                return False
+
+            filter_name, kod_real = vysledok
+            log_info(f"aplikovat_auto_filter_podla_dnes: nastavujem {filter_name} -> {kod_real}")
+
+            # Potlač vymazávania počas nastavovania (FocusIn -> vymazat_subor_menu)
+            try:
+                self._suppress_vymazat = True
+            except Exception:
+                pass
+
+            # 1) Nastav filter (modré tlačidlo – filter)
+            try:
+                self.filter_var.set(filter_name)
+            except Exception as e:
+                log_exception("aplikovat_auto_filter_podla_dnes: filter_var.set zlyhalo", e)
+                try:
+                    self._suppress_vymazat = False
+                except Exception:
+                    pass
+                return False
+
+            # 2) Prefiltruj súbory
+            try:
+                self.filtrovat_subory(filter_name)
+            except Exception as e:
+                log_exception("aplikovat_auto_filter_podla_dnes: filtrovat_subory zlyhalo", e)
+
+            # 3) Nastav konkrétny súbor (modré tlačidlo – súbor)
+            try:
+                self.nacitat_podla_menu(kod_real)
+                try:
+                    self.subor_var.set(kod_real)
+                except Exception:
+                    pass
+                log_info(f"aplikovat_auto_filter_podla_dnes: úspešne nastavené {filter_name} -> {kod_real}")
+
+                # Zabezpeč, aby sa výber udržal aj po neskorších FocusIn eventoch:
+                # po 150ms, 400ms a 800ms znovu nastavíme filter+subor, ak by ho niečo
+                # medzičasom vynulovalo (startup focus 300ms, manual_entry bindings).
+                def _reapply():
+                    try:
+                        # Ak je filter_var stále iný ako požadovaný, vráť ho
+                        cur_f = self.filter_var.get() if hasattr(self, "filter_var") else None
+                        if cur_f != filter_name:
+                            try:
+                                self.filter_var.set(filter_name)
+                                self.filtrovat_subory(filter_name)
+                            except Exception:
+                                pass
+                        cur_s = self.subor_var.get() if hasattr(self, "subor_var") else None
+                        # SUBOR_ZIADNY = "—"
+                        if cur_s != kod_real:
+                            try:
+                                self.nacitat_podla_menu(kod_real)
+                                self.subor_var.set(kod_real)
+                            except Exception:
+                                pass
+                    except Exception as e:
+                        log_exception("_reapply v auto_filter zlyhalo", e)
+
+                try:
+                    self.master.after(150, _reapply)
+                    self.master.after(400, _reapply)
+                    self.master.after(800, _reapply)
+                    # Uvoľni potlačenie až po poslednom reapply
+                    self.master.after(900, lambda: setattr(self, "_suppress_vymazat", False))
+                except Exception:
+                    try:
+                        self._suppress_vymazat = False
+                    except Exception:
+                        pass
+
+                return True
+            except Exception as e:
+                log_exception("aplikovat_auto_filter_podla_dnes: nacitat_podla_menu zlyhalo", e)
+                try:
+                    self._suppress_vymazat = False
+                except Exception:
+                    pass
+                return False
+
+        except Exception as e:
+            log_exception("aplikovat_auto_filter_podla_dnes: kritická chyba", e)
+            try:
+                self._suppress_vymazat = False
+            except Exception:
+                pass
+            return False
 
 
     def aktualizovat_info_liturgickeho_roka(self, liturgicky_rok: str | None = None):
@@ -15192,6 +16469,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         height_attr: str,
         reset_ui_kontext: str,
         kriticka_chyba_popis: str,
+        extra_kwargs: dict | None = None,
     ):
         """
         Spoločná logika pre open_direktorium a open_slavnosti: otvorí pomocné
@@ -15225,6 +16503,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 init_width=saved_w, init_height=saved_h,
                 on_close_callback=_uloz_rozmery,
                 on_song_select=self.nacitat_z_okna_pomocok,
+                **(extra_kwargs or {}),
             )
 
             self.song_combobox.current(0)
@@ -15251,7 +16530,16 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             "direktorium_window_width", "direktorium_window_height",
             reset_ui_kontext="open_direktorium",
             kriticka_chyba_popis="Direktória",
+            extra_kwargs={
+                "init_font_size": self.direktorium_font_size,
+                "on_font_change": self._uloz_direktorium_font_size,
+            },
         )
+
+    def _uloz_direktorium_font_size(self, size):
+        """Uloží veľkosť písma okna Direktórium (zoom + / − / Reset) do config.json."""
+        self.direktorium_font_size = max(8, min(int(size), 40))
+        self.ulozit_nastavenia(aktualizovat_label=False)
 
     def nastav_verziu_direktoria(self, nova_verzia):
         """
@@ -15276,7 +16564,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             except Exception:
                 pass
             try:
-                if self.subor_var.get() in ("", "—", None):
+                if self.subor_var.get() in ("", SUBOR_ZIADNY, None):
                     return
             except Exception:
                 pass
@@ -15294,7 +16582,16 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             "slavnosti_window_width", "slavnosti_window_height",
             reset_ui_kontext="open_slavnosti",
             kriticka_chyba_popis="Slávností",
+            extra_kwargs={
+                "init_font_size": self.slavnosti_font_size,
+                "on_font_change": self._uloz_slavnosti_font_size,
+            },
         )
+
+    def _uloz_slavnosti_font_size(self, size):
+        """Uloží veľkosť písma okna Slávenia (zoom + / − / Reset) do config.json."""
+        self.slavnosti_font_size = max(8, min(int(size), 40))
+        self.ulozit_nastavenia(aktualizovat_label=False)
     
     def otvorit_pomocnika(self):
         try:
@@ -15311,7 +16608,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             self.pomocnik_okno = tk.Toplevel(self.master)
             self.pomocnik_okno.transient(self.master)
             self.pomocnik_okno.title("Pomocník")
-            self.pomocnik_okno.configure(bg="#1C1C1C")
+            self.pomocnik_okno.configure(bg="#1a1a1a")
             self.pomocnik_okno.protocol("WM_DELETE_WINDOW", self._zatvorit_pomocnika)
 
             sw, sh = self.master.winfo_screenwidth(), self.master.winfo_screenheight()
@@ -15349,7 +16646,12 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             self.pomocnik_okno.bind("<Configure>", uloz_poziciu)
 
-            bg, fg, active = "#1C1C1C", "#E0E0E0", "#F2F2F2"
+            bg, fg, active = "#1a1a1a", "#E0E0E0", "#F2F2F2"
+            # Zjednotený scrollbar pre všetky okná
+            try:
+                _zabezpec_tmave_scrollbary(ttk.Style(self.pomocnik_okno))
+            except Exception:
+                pass
 
             # --- CESTY ---
             song_folder = self.song_folder_path
@@ -15405,17 +16707,26 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             font_size = tk.IntVar(value=self.pomocnik_font_size)
 
             def vytvor_text(parent, text, readonly=False):
+                # Wrapper + scrollbar – zjednotený neutrálny štýl #4a4a4a width 12 ako v hlavnom okne
+                wrapper = tk.Frame(parent, bg=bg)
+                wrapper.pack(fill="both", expand=True)
+
+                sb = ttk.Scrollbar(wrapper, orient="vertical", style="KinakDark.Vertical.TScrollbar")
+                sb.pack(side=tk.RIGHT, fill=tk.Y)
+
                 t = tk.Text(
-                    parent,
+                    wrapper,
                     wrap="word",
                     bg=bg,
                     fg=fg,
                     font=(safe_font_name, font_size.get()),
                     borderwidth=0,
                     insertbackground=fg,
-                    undo=not readonly
+                    undo=not readonly,
+                    yscrollcommand=sb.set
                 )
-                t.pack(fill="both", expand=True, padx=10, pady=10)
+                t.pack(side=tk.LEFT, fill="both", expand=True, padx=10, pady=10)
+                sb.config(command=t.yview)
                 t.insert("1.0", text)
                 if readonly:
                     t.config(state=tk.DISABLED)
@@ -15537,7 +16848,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 " 10L  –  Sviatky mučeníkov (v októbri)\n"
                 " 11L  –  Všetkých svätých (1. XI.)\n"
                 " 12L  –  Nepoškvrnené počatie Panny Márie (8. XII.) – ak nepadne na nedeľu\n\n"
-                " xL?  –  Fixná pripomienka v stavovom riadku (nie chyba). Použi ju, ak si medzi ponúknutými skratkami nenašiel vhodný žalm.\n\n" 
+                "  xL  –  Fixná pripomienka v stavovom riadku. Použi ju, ak si medzi ponúknutými skratkami nenašiel vhodný žalm.\n\n" 
                 
                 "PRAKTICKÁ POZNÁMKA\n"
                 "─────────────────────\n"
@@ -15798,7 +17109,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         self._setup_wizard_window(wizard)
 
         safe_font_name: str = self.font_family
-        bg, fg, active = "#1C1C1C", "#E0E0E0", "#F2F2F2"
+        bg, fg, active = "#1a1a1a", "#E0E0E0", "#F2F2F2"
 
         # --- HEADER + CONTENT KONTEJNERY ---
         header, top_panel, content = self._build_main_containers(wizard, bg)
@@ -15859,10 +17170,14 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
     # ================== POMOCNÉ METÓDY ==================
 
     def _setup_wizard_window(self, wizard: tk.Toplevel) -> None:
-        wizard.configure(bg="#1C1C1C", highlightthickness=0, bd=0)
+        wizard.configure(bg="#1a1a1a", highlightthickness=0, bd=0)
         wizard.resizable(False, False)
         wizard.transient(self.master)
         wizard.grab_set()
+        try:
+            _zabezpec_tmave_scrollbary(ttk.Style(wizard))
+        except Exception:
+            pass
 
         window_width, window_height = 700, 520
         screen_width = wizard.winfo_screenwidth()
@@ -15933,9 +17248,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         ).pack(anchor="w", pady=(0, 5))
 
         entry_folder = tk.Entry(
-            f2_inner, textvariable=folder_var, font=(safe_font_name, 11),
-            bg="#2e2e2e", fg="white", insertbackground="white", relief="flat",
-            highlightthickness=0, state="readonly", readonlybackground="#2e2e2e"
+            f2_inner, textvariable=folder_var, font=(safe_font_name, 12),
+            bg="#121212", fg="white", insertbackground="white", relief="flat",
+            highlightthickness=0, state="readonly", readonlybackground="#121212"
         )
         entry_folder.pack(fill="x", pady=5, ipady=6)
 
@@ -15948,9 +17263,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
         tk.Button(
             f2_inner, text="Vybrať priečinok...", command=vyber_priecinok,
-            bg="#3a3a3a", fg="white", font=(safe_font_name, 11, "bold"),
+            bg="#262626", fg="white", font=(safe_font_name, 12, "bold"),
             relief="flat", borderwidth=0, padx=12, pady=6,
-            activebackground="#555555", activeforeground="white", cursor="hand2"
+            activebackground="#2a2a2a", activeforeground="white", cursor="hand2"
         ).pack(pady=15)
 
 
@@ -15982,7 +17297,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
                 combo = ttk.Combobox(
                     f3_inner, values=mena, textvariable=monitor_var,
-                    state="readonly", font=(safe_font_name, 11)
+                    state="readonly", font=(safe_font_name, 12)
                 )
                 combo.pack(fill="x", pady=5)
 
@@ -16019,7 +17334,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• ✓ Rozšíriť – odporúčané pre Kinak (projektor je samostatná plocha)\n"
                 "• Iba druhá obrazovka – obraz ide len na projektor"
             ),
-            font=(safe_font_name, 11),
+            font=(safe_font_name, 12),
             bg=bg, fg=fg, justify="left"
         ).pack(anchor="w", pady=(0, 15))
 
@@ -16071,9 +17386,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
         tk.Button(
             f3_inner, text="Test projekcie (2.5s)", command=test_projekcie,
-            bg="#3a3a3a", fg="white", font=(safe_font_name, 11, "bold"),
+            bg="#262626", fg="white", font=(safe_font_name, 12, "bold"),
             relief="flat", borderwidth=0, padx=12, pady=6,
-            activebackground="#555555", activeforeground="white", cursor="hand2"
+            activebackground="#2a2a2a", activeforeground="white", cursor="hand2"
         ).pack(pady=10)
 
 
@@ -16088,32 +17403,17 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
     def _build_info_tabs_header(self, top_panel, safe_font_name, bg, fg, tab_specs, medzera=2):
         """
-        Vytvorí riadok záložkových tlačidiel a farebné pásiky pod nimi –
-        presne v štýle používanom v oknách "O aplikácii" a "Pomocník"
-        (nahrádza 2× duplicitne definovanú lokálnu funkciu `make_tab`).
+        Riadok záložiek s farebnými pásikmi pre okná „O aplikácii“ a „Pomocník“.
+        Samotná logika je v module-level `_vytvor_info_tabs_header`, aby ju
+        mohlo použiť aj okno „Slávenia“ (SlavnostiApp), ktoré nie je súčasťou
+        ControlApp.
 
         Zámerne nepoužíva `_build_tabs_header` nižšie (ten je určený pre
-        sprievodcu nastavením a má navyše iné štýlovanie – activebackground/
-        activeforeground/columnconfigure), aby sa nezmenil vzhľad týchto
-        dvoch okien.
-
-        tab_specs: zoznam (label, width) dvojíc, jedna položka na záložku.
-        medzera: horizontálna medzera (padx) medzi záložkami v pixeloch.
-        Vracia (buttons, stripes), oba slovníky indexované od 1.
+        sprievodcu nastavením a má iné štýlovanie).
         """
-        buttons, stripes = {}, {}
-        for i, (label, width) in enumerate(tab_specs):
-            btn = tk.Button(
-                top_panel, text=label, bg=bg, fg=fg,
-                font=(safe_font_name, 12), relief="flat", width=width,
-                activebackground=bg, activeforeground=fg, borderwidth=0,
-                highlightthickness=0,
-            )
-            btn.grid(row=0, column=i, padx=medzera)
-            stripe = tk.Frame(top_panel, height=3, bg=bg)
-            stripe.grid(row=1, column=i, sticky="ew")
-            buttons[i + 1], stripes[i + 1] = btn, stripe
-        return buttons, stripes
+        return _vytvor_info_tabs_header(
+            top_panel, safe_font_name, bg, fg, tab_specs, medzera=medzera
+        )
 
 
     def _naplanuj_debounced_zapis(
@@ -16212,14 +17512,14 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
         tk.Button(
             footer_frame, text="Zavrieť", command=wizard.destroy,
-            bg="#3a3a3a", fg="white", font=(safe_font_name, 11, "bold"),
+            bg="#262626", fg="white", font=(safe_font_name, 12, "bold"),
             relief="flat", borderwidth=0, padx=15, pady=8,
-            activebackground="#555555", activeforeground="white", cursor="hand2"
+            activebackground="#2a2a2a", activeforeground="white", cursor="hand2"
         ).pack(side="left")
 
         tk.Button(
             footer_frame, text="Uložiť nastavenia", command=ulozit,
-            bg="#07BA07", fg="white", font=(safe_font_name, 11, "bold"),
+            bg="#07BA07", fg="white", font=(safe_font_name, 12, "bold"),
             relief="flat", borderwidth=0, padx=15, pady=8,
             activebackground="#09d109", activeforeground="white", cursor="hand2"
         ).pack(side="right")
@@ -16247,7 +17547,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         self.manual_entry.delete(0, tk.END)
 
         # Resetuj výber v rolovacom menu a popis + popis piesne z direktória
-        self.subor_var.set("—")
+        self.subor_var.set(SUBOR_ZIADNY)
         self.popis_label.config(text="")
         self.direktorium_label.config(text="")        
 
@@ -16322,7 +17622,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
         # 4. Zobrazenie kontajnera (ak bol skrytý)
         if not container.winfo_ismapped():
-            container.place(relx=1.0, rely=1.0, x=-10, y=-10, anchor="se")
+            container.place(relx=1.0, rely=1.0, x=-14, y=-60, anchor="se")
 
         # 5. Rozmery kontajnera
         w = container.winfo_width()
@@ -16343,6 +17643,21 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         try:
             if not self.is_text_visible:
                 preview.config(text="")
+                try:
+                    if container.winfo_ismapped():
+                        container.place_forget()
+                except Exception:
+                    pass
+                return
+
+            # Ak je text prázdny, tiež skry – nech nezostáva prázdny čierny box
+            if not (text or "").strip():
+                preview.config(text="")
+                try:
+                    if container.winfo_ismapped():
+                        container.place_forget()
+                except Exception:
+                    pass
                 return
 
             cisty_text = text or ""
@@ -16403,43 +17718,121 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                                     
 
     def zobraz_info_rezervy(self):
+        """
+        Okno „Viac o rezervách“ – tmavý vzhľad zjednotený s oknom Nastavenia
+        (pozadie #1a1a1a, tučné nadpisy veľkými písmenami, deliaca čiara,
+        písmo ako v stavovom riadku: (font_family, 12)).
+        """
+        bg, fg = "#1a1a1a", "#E0E0E0"
+        muted_fg, tip_fg, ciara = "#9A9AA5", "#8ab4f8", "#555555"
+        ff = self.font_family
+        FONT = (ff, 12)
+
         info_window = tk.Toplevel(self.settings_window)
         info_window.title("Viac o rezervách")
-        info_window.geometry("550x660")
+        info_window.configure(bg=bg, highlightthickness=0, bd=0)
         info_window.transient(self.settings_window)  # drží sa nad hlavnými nastaveniami
 
-        text = (
-            "Na rôznych zariadeniach (projektor, TV, monitor) sa správanie overscanu aj rozlíšenie obrazovky líši, "
-            "preto môže byť výsledná veľkosť písma odlišná.\n\n"
+        sirka, vyska = 580, 640
+        try:
+            px = self.settings_window.winfo_rootx() + 30
+            py = self.settings_window.winfo_rooty() + 30
+        except tk.TclError:
+            px, py = 100, 100
+        info_window.geometry(f"{sirka}x{vyska}+{px}+{py}")
+        info_window.minsize(420, 400)
+        info_window.bind("<Escape>", lambda e: info_window.destroy())
+
+        # Posúvateľný obsah s tmavým scrollbarom (rovnaký ako v ostatných oknách)
+        _zabezpec_tmave_scrollbary(ttk.Style(info_window))
+        platno = tk.Canvas(info_window, bg=bg, highlightthickness=0, bd=0)
+        posuvnik = ttk.Scrollbar(info_window, orient="vertical", command=platno.yview,
+                                 style="KinakSlav.Vertical.TScrollbar")
+        platno.configure(yscrollcommand=posuvnik.set)
+        posuvnik.pack(side=tk.RIGHT, fill=tk.Y)
+        platno.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        telo = tk.Frame(platno, bg=bg)
+        telo_id = platno.create_window((0, 0), window=telo, anchor="nw")
+        telo.bind("<Configure>", lambda e: platno.configure(scrollregion=platno.bbox("all")))
+        platno.bind("<Configure>", lambda e: platno.itemconfig(telo_id, width=e.width))
+        info_window.bind(
+            "<MouseWheel>",
+            lambda e: e.delta and platno.yview_scroll(-1 if e.delta > 0 else 1, "units")
+        )
+        tk.Frame(telo, bg=bg, height=5).pack()   # horný okraj
+
+        zalamovane: list[tk.Label] = []
+
+        def odsek(text):
+            """Text odseku (sivý) so zalamovaním podľa šírky okna."""
+            l = tk.Label(telo, text=text, font=FONT, bg=bg, fg=muted_fg,
+                         justify=tk.LEFT, anchor="w", wraplength=sirka - 90)
+            l.pack(fill=tk.X, anchor="w", padx=20, pady=(0, 6))
+            zalamovane.append(l)
+            return l
+
+        def nadpis(text):
+            tk.Label(telo, text=text.upper(), font=(ff, 12, "bold"), fg="white",
+                     bg=bg, anchor="w").pack(fill=tk.X, padx=20, pady=(10, 0))
+            tk.Frame(telo, bg=ciara, height=1).pack(fill=tk.X, padx=20, pady=(3, 8))
+
+        def tabulka(riadky):
+            t = tk.Frame(telo, bg=bg)
+            t.pack(fill=tk.X, anchor="w", padx=12, pady=(0, 6))
+            for r, bunky in enumerate(riadky):
+                for c, hodnota in enumerate(bunky):
+                    tk.Label(t, text=hodnota, font=FONT, bg=bg,
+                             fg=fg if c == 0 else muted_fg, anchor="w"
+                             ).grid(row=r, column=c, sticky="w", padx=(8 if c == 0 else 0, 24), pady=1)
+
+        odsek(
+            "Na rôznych zariadeniach (projektor, TV, monitor) sa správanie overscanu aj rozlíšenie "
+            "obrazovky líši, preto môže byť výsledná veľkosť písma odlišná.\n\n"
             "Veľkosť písma pri projekcii závisí od typu zobrazovacieho zariadenia a od nastavených rezerv "
-            "v aplikácii Kinak (globálnej vertikálnej aj spodnej). Rezervy určujú, koľko miesta zostane okolo textu.\n\n"
-            "Logika výpočtu\n\n"
+            "v aplikácii Kinak (globálnej vertikálnej aj spodnej). Rezervy určujú, koľko miesta zostane okolo textu."
+        )
+
+        nadpis("Logika výpočtu")
+        odsek(
             "Najprv sa odpočíta globálna vertikálna rezerva (rezerva v percentách výšky obrazovky). "
             "Týka sa celej výšky obrazovky, takže ide o „globálny“ parameter. "
-            "Potom sa odpočíta pevná spodná rezerva (px). Ide o rezervu proti overscanu, aby spodné riadky neboli príliš nízko " 
-            "alebo orezané na zariadeniach s overscanom.\n\n"              
-            "Odporúčané hodnoty:\n\n"
-            "   • Projektor:   vertikálna 0.30–0.35,     spodná 60–80 px\n"
-            "   • TV (16:9):   vertikálna 0.25–0.28,     spodná 40–60 px\n"
-            "   • Monitor:    vertikálna 0.20–0.25,     spodná 30–40 px\n\n"  
-            "Tip podľa pomeru strán (16:9 je optimálny default)\n\n"                
-            "   • 16:9   vertikálna 0.28,                spodná 40 px\n"
-            "   • 21:9   vertikálna 0.20–0.25,       spodná 30–40 px\n\n"                    
-            "TV/projektor: používajte natívny režim obrazu (Original/Just Scan/Full),\n"
-            "bez Zoom alebo Stretch.\n\n"
-            "Ak sa zobrazenie aj napriek tomu nehodí, strofu možno upraviť priamo v textovom súbore (napr. rozdeliť riadky). "
-            "Namiesto 6 krátkych riadkov strofu rozdeliť na 4 dlhšie, čím sa dosiahne odlišný výsledný vzhľad projekcie."
+            "Potom sa odpočíta pevná spodná rezerva (px). Ide o rezervu proti overscanu, aby spodné riadky "
+            "neboli príliš nízko alebo orezané na zariadeniach s overscanom."
         )
-            
-        safe_font_name: str = FONT_NAME or "Arial"
 
-        tk.Label(
-            info_window,
-            text=text,
-            font=(safe_font_name, 11),
-            wraplength=500,
-            justify=tk.LEFT
-        ).pack(padx=10, pady=10, fill=tk.BOTH, expand=True)    
+        nadpis("Odporúčané hodnoty")
+        tabulka([
+            ("Projektor", "vertikálna 0.30–0.35", "spodná 60–80 px"),
+            ("TV (16:9)", "vertikálna 0.25–0.28", "spodná 40–60 px"),
+            ("Monitor",   "vertikálna 0.20–0.25", "spodná 30–40 px"),
+        ])
+
+        nadpis("Tip podľa pomeru strán")
+        tabulka([
+            ("16:9", "vertikálna 0.28",      "spodná 40 px"),
+            ("21:9", "vertikálna 0.20–0.25", "spodná 30–40 px"),
+        ])
+        tk.Label(telo, text="(16:9 je optimálny default)", font=FONT, bg=bg, fg=tip_fg,
+                 anchor="w").pack(fill=tk.X, padx=20, pady=(0, 6))
+
+        nadpis("TV a projektor")
+        odsek(
+            "Používajte natívny režim obrazu (Original/Just Scan/Full), bez Zoom alebo Stretch.\n\n"
+            "Ak sa zobrazenie aj napriek tomu nehodí, strofu možno upraviť priamo v textovom súbore "
+            "(napr. rozdeliť riadky). Namiesto 6 krátkych riadkov strofu rozdeliť na 4 dlhšie, "
+            "čím sa dosiahne odlišný výsledný vzhľad projekcie."
+        )
+
+        def _zalom(event):
+            if event.widget is not info_window:
+                return
+            for l in zalamovane:
+                try:
+                    l.config(wraplength=max(200, event.width - 90))
+                except tk.TclError:
+                    pass
+
+        info_window.bind("<Configure>", _zalom)
 
 
     def zobrazit_o_aplikacii(self):
@@ -16464,6 +17857,10 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             about_window.transient(self.master)
             about_window.grab_set()
+            try:
+                _zabezpec_tmave_scrollbary(ttk.Style(about_window))
+            except Exception:
+                pass
 
             saved_w = int(self.about_window_width)
             saved_h = int(self.about_window_height)
@@ -16492,7 +17889,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             self.about_window.bind("<Configure>", _uloz_geometriu_about)
 
             safe_font_name: str = FONT_NAME or "Arial"
-            bg, fg, active = "#1C1C1C", "#E0E0E0", "#F2F2F2"
+            bg, fg, active = "#1a1a1a", "#E0E0E0", "#F2F2F2"
 
             # 2) Karty s obsahom
             container = tk.Frame(
@@ -17080,13 +18477,19 @@ class ControlApp(
 
         style.configure(
             "KinakDark.Vertical.TScrollbar",
-            troughcolor="#1e1e1e",
-            background="#333333",
-            darkcolor="#222222",
-            lightcolor="#444444",
-            bordercolor="#1e1e1e",
-            arrowcolor="#dddddd",
-            width=8
+            troughcolor="#181818",
+            background="#1c1c1c",
+            darkcolor="#1c1c1c",
+            lightcolor="#1c1c1c",
+            bordercolor="#181818",
+            arrowcolor="#181818",
+            width=10
+        )
+        style.map(
+            "KinakDark.Vertical.TScrollbar",
+            background=[("active", "#222222"), ("pressed", "#222222"), ("disabled", "#181818"), ("!active", "#1c1c1c")],
+            darkcolor=[("active", "#222222"), ("disabled", "#181818"), ("!active", "#1c1c1c")],
+            lightcolor=[("active", "#222222"), ("disabled", "#181818"), ("!active", "#1c1c1c")],
         )
 
         # --- Inicializácia premenných z konfigurácie ---
@@ -17111,6 +18514,7 @@ class ControlApp(
         self.zobrazovat_specialne_znaky: bool = DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True)
         self.zobrazovat_znaky_chorov: bool = DEFAULT_CONFIG.get("zobrazovat_znaky_chorov", True)
         self.statusbar_tyzden_zaltara: bool = DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", True)
+        self.cislo_strofy_v_strede: bool = DEFAULT_CONFIG.get("cislo_strofy_v_strede", True)
         self.statusbar_skratka_zalmu: bool = DEFAULT_CONFIG.get("statusbar_skratka_zalmu", True)
         self.statusbar_jks_piesne: bool = DEFAULT_CONFIG.get("statusbar_jks_piesne", True)
         self.diagnostika_povolena: bool = DEFAULT_CONFIG.get("diagnostika_povolena", True)
@@ -17126,6 +18530,8 @@ class ControlApp(
         self.direktorium_window_height: int = DEFAULT_CONFIG.get("direktorium_window_height", -1)
         self.slavnosti_window_width: int = DEFAULT_CONFIG.get("slavnosti_window_width", -1)
         self.slavnosti_window_height: int = DEFAULT_CONFIG.get("slavnosti_window_height", -1)
+        self.slavnosti_font_size: int = DEFAULT_CONFIG.get("slavnosti_font_size", 12)
+        self.direktorium_font_size: int = DEFAULT_CONFIG.get("direktorium_font_size", 12)
         self.about_window_width: int = DEFAULT_CONFIG.get("about_window_width", -1)
         self.about_window_height: int = DEFAULT_CONFIG.get("about_window_height", -1)
         self.about_last_tab: int = DEFAULT_CONFIG.get("about_last_tab", 1)
@@ -17206,6 +18612,7 @@ class ControlApp(
 
         self.zobrazit_direktorium_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_direktorium", False))
         self.zobrazovat_live_preview_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_live_preview", True))
+        self.cislo_strofy_v_strede_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("cislo_strofy_v_strede", True))
         self.zobrazovat_specialne_znaky_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True))
         self.zobrazovat_znaky_chorov_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_znaky_chorov", True))
         self.pouzit_modru_farbu_pri_veceradle_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("pouzit_modru_farbu_pri_veceradle", False))
@@ -17213,6 +18620,8 @@ class ControlApp(
         self.statusbar_skratka_zalmu_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_skratka_zalmu", True))
         self.statusbar_jks_piesne_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("statusbar_jks_piesne", True))
         self.diagnostika_povolena_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("diagnostika_povolena", True))
+        self.auto_filter_podla_dnes = DEFAULT_CONFIG.get("auto_filter_podla_dnes", False)
+        self.auto_filter_podla_dnes_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("auto_filter_podla_dnes", False))
         self.aktualna_liturgicka_cast_var = tk.StringVar(
             self.master,
             value=format_aktualna_liturgicka_cast()
@@ -17381,6 +18790,56 @@ class ControlApp(
         self.vytvorit_gui()
         self.nastavit_globalne_skratky()
 
+        # Automatický filter podľa Dnes (ak je zapnutý v Nastaveniach)
+        # POZN.: Pôvodná verzia volala auto-filter po 200ms, ale startup focus
+        # (300ms) viazaný na <FocusIn> -> vymazat_subor_menu() hneď potom vynuloval
+        # subor_var na "—", takže modré tlačidlá sa nastavili a hneď vrátili.
+        # Oprava: auto-filter spúšťame AŽ PO focus callbacku (600-700ms) a s potlačeným
+        # vymazávaním, aby FocusIn nezmazal výber.
+        try:
+            if getattr(self, "auto_filter_podla_dnes", False):
+                try:
+                    # Potlačíme vymazat_subor_menu počas celej startup fázy
+                    self._suppress_vymazat = True
+                except Exception:
+                    pass
+
+                def _auto_startup_wrapper():
+                    try:
+                        self._suppress_vymazat = True
+                    except Exception:
+                        pass
+                    try:
+                        self.aplikovat_auto_filter_podla_dnes()
+                    finally:
+                        # Uvoľníme potlačenie až po 600ms, aby stihli dobehnúť aj ďalšie focus eventy
+                        try:
+                            self.master.after(600, lambda: setattr(self, "_suppress_vymazat", False))
+                        except Exception:
+                            try:
+                                setattr(self, "_suppress_vymazat", False)
+                            except Exception:
+                                pass
+
+                try:
+                    # 700ms = po _STARTUP_FOCUS_DELAY_MS (300) a _STARTUP_PREVIEW_DELAY_MS (600)
+                    # takže focus už prebehol a my ho prepíšeme
+                    self.master.after(700, _auto_startup_wrapper)
+                    # Bezpečnostná druhá aplikácia po 1200ms (ak by niečo medzičasom resetlo)
+                    self.master.after(1200, _auto_startup_wrapper)
+                except Exception:
+                    pass
+                # Okamžitý pokus pre testy / rýchly štart (bez GUI), nevadí ak ho neskôr prepíše after
+                try:
+                    self.aplikovat_auto_filter_podla_dnes()
+                except Exception:
+                    pass
+        except Exception as e:
+            try:
+                log_exception("ControlApp.__init__: auto filter pri štarte zlyhal", e)
+            except Exception:
+                pass
+
         # --- KRITICKÝ KROK PRE STABILITU ---
         # Vynútime, aby si Windows uvedomil skutočné rozmery okna skôr, než skončí init
         self.master.update_idletasks()
@@ -17430,6 +18889,46 @@ class ControlApp(
     
 
 
+# Farba titulkového pruhu okna (len Windows 11, build 22000+). Formát "#RRGGBB".
+TITLEBAR_BG_COLOR = "#0e0e0e"
+TITLEBAR_FG_COLOR = "#e6e6e6"
+
+
+def nastavit_farbu_titulkoveho_pruhu(okno, bg: str = TITLEBAR_BG_COLOR, fg: str = TITLEBAR_FG_COLOR) -> None:
+    """Zafarbí natívny titulkový pruh okna na tmavú farbu (Windows 11).
+
+    Na starších Windowsoch (10) a iných systémoch sa farba pruhu zmeniť nedá –
+    funkcia vtedy nič nerobí (iba zapne tmavý režim titulku, ak je dostupný).
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        okno.update_idletasks()
+        hwnd = ctypes.windll.user32.GetParent(okno.winfo_id()) or okno.winfo_id()
+
+        def _colorref(hex_farba: str) -> int:
+            h = hex_farba.lstrip("#")
+            r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+            return (b << 16) | (g << 8) | r   # COLORREF = 0x00BBGGRR
+
+        def _set(atribut: int, hodnota: int) -> int:
+            val = ctypes.c_int(hodnota)
+            return ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                wintypes.HWND(hwnd), ctypes.c_uint(atribut),
+                ctypes.byref(val), ctypes.sizeof(val)
+            )
+
+        _set(20, 1)                      # DWMWA_USE_IMMERSIVE_DARK_MODE
+        _set(35, _colorref(bg))          # DWMWA_CAPTION_COLOR
+        _set(36, _colorref(fg))          # DWMWA_TEXT_COLOR
+        _set(34, _colorref(bg))          # DWMWA_BORDER_COLOR
+    except Exception as e:
+        log_exception("nastavit_farbu_titulkoveho_pruhu", e)
+
+
 if __name__ == "__main__":
 
     root = None  # ← pridane, aby bola premenná vždy definovaná
@@ -17470,6 +18969,7 @@ if __name__ == "__main__":
         # neobjavilo pred dokončením vykresľovania widgetov (zabraňuje bliknutiu).
         root.deiconify()
         root.update_idletasks()
+        nastavit_farbu_titulkoveho_pruhu(root)
         
         # Vynútenie focusu
         try:
