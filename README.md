@@ -55,7 +55,7 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
    zachovaná táto štruktúra.
 3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
 4. V **Nastaveniach** nastavte cestu k priečinku `piesne`
-   (napr. `Kinak_večeradlo/piesne`).
+   (napr. `Kinak_Projekcia/piesne`).
 
 ## Liturgický kalendár – špecifikácia
 
