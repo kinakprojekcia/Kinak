@@ -43,7 +43,7 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
 2. Vedľa `Kinak.exe` musí byť priečinok `piesne/`:
 
    ```
-   Kinak/
+   Kinak/  (priečinok môže mať ľubovoľný názov)
    ├── Kinak.exe
    └── piesne/
        ├── Mládež/
