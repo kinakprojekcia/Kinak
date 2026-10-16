@@ -51,7 +51,7 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
        └── ...
    ```
 
-   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_večeradlo`), ak zostane
+   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_Projekcia`), ak zostane
    zachovaná táto štruktúra.
 3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
 4. V **Nastaveniach** nastavte cestu k priečinku `piesne`
