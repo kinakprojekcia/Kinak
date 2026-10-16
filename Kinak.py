@@ -8613,7 +8613,7 @@ class SlavnostiApp:
             footer,
             text="Poznámky ▼",
             font=(ff, 12),
-            bg=bg, fg="#CDB00C",
+            bg=bg, fg="#8ab4f8",
             relief="flat", borderwidth=0, highlightthickness=0,
             activebackground=bg, activeforeground=active,
             cursor="hand2", takefocus=0,
@@ -10088,11 +10088,15 @@ class _NastaveniaMixin(_ControlAppBase):
         settings_window.bind("<MouseWheel>", _on_mousewheel)
 
         # --- POMOCNÉ FUNKCIE PRE TMAVÉ WIDGETY ---
-        def vytvor_sekciu(parent, text):
-            """Sekcia: biely nadpis, tenká deliaca čiara a telo sekcie."""
+        def vytvor_sekciu(parent, text, tooltip=None):
+            """Sekcia: biely nadpis, tenká deliaca čiara a telo sekcie.
+            Voliteľný `tooltip` sa zobrazí po prechode myšou nad nadpisom."""
             outer = tk.Frame(parent, bg=bg)
             outer.pack(fill=tk.X, padx=15, pady=(10, 4))
-            tk.Label(outer, text=text.upper(), font=(ff, 12, "bold"), fg="white", bg=bg, anchor="w").pack(fill=tk.X)
+            nadpis = tk.Label(outer, text=text.upper(), font=(ff, 12, "bold"), fg="white", bg=bg, anchor="w")
+            nadpis.pack(fill=tk.X)
+            if tooltip:
+                Tooltip(nadpis, tooltip)
             tk.Frame(outer, bg="#555555", height=1).pack(fill=tk.X, pady=(3, 8))
             body = tk.Frame(outer, bg=bg)
             body.pack(fill=tk.X)
@@ -10372,14 +10376,6 @@ class _NastaveniaMixin(_ControlAppBase):
             self.filtrovat_subory(self.filter_var.get())
         ])
 
-        vytvor_popis(
-            frame_def_filter,
-            "• Filter „Večeradlo“ → prednosť pri vyhľadávaní má priečinok piesne/Večeradlo/\n"
-            "• Filter „Mládež“ → prednosť pri vyhľadávaní má priečinok piesne/Mládež/\n"
-            "• Iné filtre → prednosť pri vyhľadávaní má hlavný priečinok piesne/",
-            tip=True
-        )
-
         # --- NOVÉ: Automaticky aktualizovať filter podľa Dnes ---
         self.checkbox_auto_filter_dnes = tmavy_check(
             frame_def_filter,
@@ -10402,8 +10398,7 @@ class _NastaveniaMixin(_ControlAppBase):
 
         vytvor_popis(
             frame_def_filter,
-            "Keď je táto možnosť zapnutá, pri štarte aplikácie sa načíta stavový riadok. Z položky Dnes: sa vyberie aktuálny žalm "
-            "(napr. Dnes: žalm 28c2) a modrosivé tlačidlá sa automaticky nastavia na príslušný výber: Cezročné C2 → 28c2.",
+            "Pri štarte nastaví filter podľa žalmu zo stavového riadku (napr. Cezročné C2 → 28c2).",
             tip=True
         )
 
@@ -10549,11 +10544,11 @@ class _NastaveniaMixin(_ControlAppBase):
 
         # Tlačidlá sa packujú sprava ešte pred cestou, aby pri úzkom okne ostali viditeľné.
         tmave_tlacidlo(
-            frame_folder, "Zmeniť…", self.zmenit_priecinok_piesni
+            frame_folder, "Skonvertovať do UTF-8…", self.skonvertovat_piesne_do_utf8
         ).pack(side=tk.RIGHT)
 
         tmave_tlacidlo(
-            frame_folder, "Skonvertovať do UTF-8…", self.skonvertovat_piesne_do_utf8
+            frame_folder, "Zmeniť…", self.zmenit_priecinok_piesni
         ).pack(side=tk.RIGHT, padx=(0, 6))
 
         self.folder_label = tk.Label(
@@ -10572,7 +10567,7 @@ class _NastaveniaMixin(_ControlAppBase):
 
         # 9. REZERVY
         frame_res = vytvor_sekciu(pokrocile_frame, "Globálna (vertikálna) rezerva")
-        vytvor_popis(frame_res, "Vzdialenosť textu od horného a dolného okraja obrazovky – necháva priestor hore aj dole, aby text nebol nalepený na okraje. Vyššia hodnota = menší text.")
+        vytvor_popis(frame_res, "Odstup textu od horného a dolného okraja obrazovky. Vyššia hodnota = menší text.")
 
         # Slider upravený na celú šírku
         self.slider_res_vert = tmavy_slider(
@@ -10626,13 +10621,13 @@ class _NastaveniaMixin(_ControlAppBase):
         ).pack(side=tk.RIGHT)
 
         # 9b. DIAGNOSTIKA
-        frame_diag = vytvor_sekciu(pokrocile_frame, "Diagnostika")
+        frame_diag = vytvor_sekciu(
+            pokrocile_frame, "Diagnostika",
+            tooltip="Súbor sa automaticky premazáva, aby nerástol donekonečna."
+        )
         vytvor_popis(
             frame_diag,
-            "Keď je diagnostika zapnutá, aplikácia priebežne zapisuje chyby a technické "
-            "udalosti do log súboru nižšie (s automatickou rotáciou, aby súbor nerástol "
-            "donekonečna). Pri probléme s aplikáciou tento súbor pomôže zistiť "
-            "príčinu – v takom prípade je dobré mať diagnostiku zapnutú."
+            "Zapisuje chyby do súboru. Zapni, keď treba nájsť príčinu problému."
         )
         self.checkbox_diagnostika = vytvor_check(
             frame_diag,
@@ -14090,8 +14085,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
     def _priecinok_mladez(self) -> Path:
         """
         Cesta k podpriečinku 'Mládež' vo vnútri hlavného priečinka piesní
-        (self.song_folder_path / "Mládež"). Priečinok si používateľ
-        vytvorí ručne a nakopíruje doň piesne pre mládež.
+        (self.song_folder_path / "Mládež"). Priečinok je súčasťou distribúcie; bez neho sa zoznam piesní pre filter Mládež nenačíta.
         """
         return self.song_folder_path / "Mládež"
 
@@ -14298,18 +14292,21 @@ class _PiesneSuboryMixin(_ControlAppBase):
         """
         try:
             note, piesne = self.nacitaj_piesne_z_direktoria_pre_subor(nazov_bez_ext)
+            # Aktívna verzia databázy čísel piesní z okna Direktórium (A/B)
+            verzia = "B" if str(getattr(self, "direktorium_verzia", "A")).strip().upper() == "B" else "A"
+            nadpis = f"Odporúčané piesne (Verzia: {verzia})"
             if piesne:
                 odporucane_text = "\n\n".join(
                     [f"  \u2022 {sekcia}: {text}" for sekcia, text in piesne.items() if text]
                 )
-                hlavicka = f"Odporúčané piesne: {note}" if note else "  Odporúčané piesne:"
+                hlavicka = f"{nadpis}: {note}" if note else f"{nadpis}:"
                 self.direktorium_label.config(
                     text=f"{hlavicka}\n\n{odporucane_text}",
                     fg=DIREKTORIUM_LABEL_FG
                 )
             elif note:
                 self.direktorium_label.config(
-                    text=f"Odporúčané piesne:\n{note}",
+                    text=f"{nadpis}:\n{note}",
                     fg=DIREKTORIUM_LABEL_FG
                 )
             else:
@@ -15777,7 +15774,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         hlavny_frame.pack(fill=tk.BOTH, expand=True)
 
         # 1. Panel výberu (Vľavo)
-        frame_vyber = tk.Frame(hlavny_frame, width=272, bg=UI_WINDOW_BG)
+        frame_vyber = tk.Frame(hlavny_frame, width=310, bg=UI_WINDOW_BG)
         frame_vyber.pack_propagate(False)
         frame_vyber.pack(side=tk.LEFT, fill=tk.Y, padx=(14, 8), pady=14)
 
@@ -15829,7 +15826,7 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         self.manual_entry_hint = tk.Label(
             panel_vyber, text="Zadaj č. piesne alebo vyber žalm či modlitbu z menu nižšie.", font=(self.font_family, 11),
-            fg="#9a9aaa", bg=UI_LEFT_PANEL_BG, wraplength=235, justify=tk.LEFT, anchor="w"
+            fg="#9a9aaa", bg=UI_LEFT_PANEL_BG, wraplength=273, justify=tk.LEFT, anchor="w"
         )
         self.manual_entry_hint.pack(fill=tk.X, pady=(0, 14))
 
@@ -15906,10 +15903,10 @@ class _HlavneOknoMixin(_ControlAppBase):
         box_header = tk.Frame(odporucane_box, bg="#1a1a1a")
         box_header.pack(fill=tk.X, padx=10, pady=(8, 12))
 
-        self.popis_label = tk.Label(box_header, text="", font=(self.font_family, 12, "bold"), fg="#ffffff", bg="#1a1a1a", wraplength=215, justify=tk.LEFT, anchor="w")
+        self.popis_label = tk.Label(box_header, text="", font=(self.font_family, 12, "bold"), fg="#ffffff", bg="#1a1a1a", wraplength=253, justify=tk.LEFT, anchor="w")
         self.popis_label.pack(fill=tk.X, anchor="w")
 
-        self.direktorium_label = tk.Label(odporucane_box, text="", font=(self.font_family, 13), fg=DIREKTORIUM_LABEL_FG, bg="#1a1a1a", wraplength=215, justify=tk.LEFT, anchor="w")
+        self.direktorium_label = tk.Label(odporucane_box, text="", font=(self.font_family, 13), fg=DIREKTORIUM_LABEL_FG, bg="#1a1a1a", wraplength=253, justify=tk.LEFT, anchor="w")
         self.direktorium_label.pack(fill=tk.X, padx=10, pady=(12, 12))
         self.aktualizovat_direktorium_label()        
 
@@ -16684,9 +16681,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             tk.Label(
                 footer_frame,
-                text=("1 a 2 Poznámky, Večeradlo a Skratky žalmov sú len na čítanie. Citania.txt a vespery.txt sú editovateľné.\n"
-                    "Po dopísaní vráťte kurzor myšou späť do poľa s piesňami."),
-                bg=bg, fg="#CDB00C",
+                text=("Citania.txt a Vespery.txt sú editovateľné priamo tu - stačí kliknúť do textu a písať, zmeny sa uložia automaticky.\n"
+                    "Po úprave kliknite späť do vyhľadávania piesní."),
+                bg=bg, fg="#8ab4f8",
                 font=(safe_font_name, 11, "italic"),
                 justify="left"
             ).pack(anchor="w", padx=15)
@@ -16743,8 +16740,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "SKRATKY ŽALMOVÉHO DIREKTÓRIA\n"
                 "════════════════════════════════════\n\n"
                 "Kinak zobrazuje v stavovom riadku skratku žalmu pre dnešok a zajtrajšok "
-                "podľa liturgického dňa. Táto skratka nadväzuje na Direktórium a okno Slávenia "
-                "a používa sa aj pri vyhľadávaní odporúčaných piesní JKS. "
+                "podľa liturgického dňa. Táto skratka nadväzuje na okno Direktórium a Slávenia. "
+                "Odporúčané piesne JKS priradí podľa zvoleného žalmu (prepojenie s oknom Slávenia a Direktóriom). "
                 "Pre zobrazenie odporúčaných piesní musí byť táto funkcia zapnutá v nastaveniach.\n\n"
                 "Liturgický deň sa vypočíta automaticky. Ak slávnosť koliduje s významnejším slávením, program zohľadní jej presun. "               
                 "Pri nedeliach sa používa cyklus A/B/C. Pri bežných dňoch cez rok sa rozlišuje "
@@ -18044,15 +18041,19 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí mať pri sebe aj priečinok "
                 "s názvom 'piesne'.\n\n"              
                                          
-                "Ak priečinok premenujete (napr. na Kinak_JKS), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/).\n\n"                                         
+                "Ak priečinok premenujete (napr. na Kinak_Projekcia), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/).\n\n"                                         
                 "Kinak (priečinok môže mať ľubovoľný názov)\n"
                 " ├── Kinak.exe\n"
                 " └── piesne/\n"
+                "               ├── Mládež/\n"
+                "               ├── Večeradlo/\n"
                 "               ├── 001.txt\n"
                 "               ├── 002.txt\n"
                 "               ├── 003.txt\n"
                 "               └──  .  .  .\n\n"                  
-                "Skontrolujte, či je v Nastaveniach správne vybraný priečinok piesní. "
+                "Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka na stiahnutie z www.kinak.sk.\n"
+                "Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.\n\n"
+                "Skontrolujte, či je v „Nastavenia → Umiestnenie súborov“ správne vybraný priečinok piesní. "
                 "Ak priečinok neexistuje, je prázdny alebo neobsahuje textové súbory, "
                 "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"  
                 
@@ -18071,7 +18072,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA\n\n"
                 "Liturgické výpočty v aplikácii Kinak sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku.\n\n"
                 f"• Kalendár je zostavený pre: {KALENDAR_KRAJINA} (Slovensko)\n"
-                f"• Výpočty podľa Všeobecných noriem o liturgickom roku a Direktóriá KBS\n"
+                f"• Výpočty podľa Všeobecných noriem o liturgickom roku a Direktória KBS\n"
                 f"• Zdroje dát: {KALENDAR_ZDROJE}\n"
             )             
 
@@ -18087,12 +18088,22 @@ PODPRIEČINOK PIESNE/VEČERADLO/
 
 Podpriečinok piesne/Večeradlo/ je samostatný priestor pre modlitby a piesne Večeradla. Môže obsahovať aj súbory s rovnakým názvom/číslom ako hlavný priečinok (napr. 016.txt) – s úplne iným obsahom – bez toho, aby si navzájom prekážali.
 
+PODPRIEČINOK PIESNE/MLÁDEŽ/
+
+Podpriečinok piesne/Mládež/ je určený pre piesne pre mládež (s číslovaním od 1001). Po zapnutí filtra „Mládež“ sa zoznam piesní načíta práve z tohto priečinka.
+
+Zdroj dát: mladeznickyspevnik.sk
+
 PRIORITA PRI ZHODE NÁZVOV
 
-Keďže sa v oboch priečinkoch môžu vyskytnúť súbory s rovnakým názvom, aplikácia rozhoduje o prednosti podľa toho, ktorý filter je práve aktívny:
+V hlavnom ovládacom okne môžete prepínať medzi zdrojmi piesní Večeradlo a Mládež.
+Pri ostatných filtroch sa ako hlavný zdroj piesní používa základný priečinok piesne.
 
-• Filter „Večeradlo“ alebo „Mládež“ → prednosť má príslušný podpriečinok piesne/Večeradlo/ resp. piesne/Mládež/
-• Inak (pri akomkoľvek inom filtri) → prednosť má hlavný priečinok piesne/ 
+Keďže sa vo viacerých priečinkoch môžu vyskytnúť súbory s rovnakým názvom, aplikácia rozhoduje o prednosti podľa toho, ktorý filter je práve aktívny:
+
+• Filter „Večeradlo“ → prednosť pri vyhľadávaní má priečinok piesne/Večeradlo/
+• Filter „Mládež“ → prednosť pri vyhľadávaní má priečinok piesne/Mládež/
+• Iné filtre → prednosť pri vyhľadávaní má hlavný priečinok piesne/
 
 Príklad
 
