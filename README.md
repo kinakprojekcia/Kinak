@@ -51,11 +51,11 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
         ├── 003.txt
         └──  .  .  . 
   
-   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_Projekcia`), ak zostane
-   zachovaná táto štruktúra. Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom   zoznam piesní vľavo hore nenačíta.
+Priečinok môžete ľubovoľne premenovať (napr. `Kinak_Projekcia`), ak zostane zachovaná táto štruktúra. Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom   zoznam piesní vľavo hore nenačíta.
+   
 3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
-4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne`
-   (napr. `Kinak_Projekcia/piesne`).
+
+4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_Projekcia/piesne`).
 
 ## Liturgický kalendár – špecifikácia
 
