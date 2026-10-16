@@ -41,20 +41,20 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
 
 1. Stiahnite si ZIP z [Releases](https://github.com/kinakprojekcia/Kinak/releases/latest) a rozbaľte ho.
 2. Vedľa `Kinak.exe` musí byť priečinok `piesne/`:
-
    ```
-   Kinak/
-   ├── Kinak.exe
-   └── piesne/
-       ├── 001.txt
-       ├── 002.txt
-       └── ...
+  " ├── Kinak.exe\n"
+  " └── piesne/\n"
+  "               ├── Mládež/\n"
+  "               ├── Večeradlo/\n"
+  "               ├── 001.txt\n"
+  "               ├── 002.txt\n"
+  "               ├── 003.txt\n"
+  "               └──  .  .  .\n\n" 
    ```
-
    Priečinok môžete ľubovoľne premenovať (napr. `Kinak_Projekcia`), ak zostane
    zachovaná táto štruktúra.
 3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
-4. V **Nastaveniach** nastavte cestu k priečinku `piesne`
+4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne`
    (napr. `Kinak_Projekcia/piesne`).
 
 ## Liturgický kalendár – špecifikácia
