@@ -42,14 +42,16 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
 1. Stiahnite si ZIP z [Releases](https://github.com/kinakprojekcia/Kinak/releases/latest) a rozbaľte ho.
 2. Vedľa `Kinak.exe` musí byť priečinok `piesne/`:
    
-  ├── Kinak.exe
-  └── piesne/
-        ├── Mládež/\
-        ├── Večeradlo/
-        ├── 001.txt
-        ├── 002.txt
-        ├── 003.txt
-        └──  .  .  . 
+   ```
+  " ├── Kinak.exe\n"
+  " └── piesne/\n"
+  "               ├── Mládež/\n"
+  "               ├── Večeradlo/\n"
+  "               ├── 001.txt\n"
+  "               ├── 002.txt\n"
+  "               ├── 003.txt\n"
+  "               └──  .  .  .\n\n" 
+   ```
   
 Priečinok môžete ľubovoľne premenovať (napr. `Kinak_Projekcia`), ak zostane zachovaná táto štruktúra. Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom   zoznam piesní vľavo hore nenačíta.
    
