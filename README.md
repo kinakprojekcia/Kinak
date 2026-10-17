@@ -94,8 +94,10 @@ Do priečinka `piesne/` môžete pridať vlastné piesne ako textové súbory (`
 Rovnako sa dajú pridávať aj do podpriečinkov `Mládež/` a `Večeradlo/`.
 
 - Dodržte existujúcu štruktúru a číslovanie súborov (napr. `001.txt`, `002.txt`).
-- Neprepisujte, nepremenúvajte ani nemažte súbory, ktoré už v priečinku sú,
-  inak môže program súbory načítať nesprávne alebo vôbec.
+- Text existujúcich piesní môžete upravovať podľa potreby.
+- Nemažte ani nepremenúvajte súbory, ktoré už v priečinku sú, a nemeňte
+  štruktúru ostatných súborov, najmä skratky žalmov. Inak môže program
+  piesne načítať nesprávne alebo vôbec.
 - Pred úpravami odporúčame zálohovať celý priečinok `piesne/`.
 
 ## Liturgický kalendár – špecifikácia
