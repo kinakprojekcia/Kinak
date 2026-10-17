@@ -80,7 +80,10 @@
   .tree-label{font-size:12.5px;font-weight:600;letter-spacing:0.02em;margin-bottom:10px;color:rgba(255,251,242,0.9)}
   .tree-label span{font-weight:400;color:rgba(255,251,242,0.5);font-size:11.5px}
   .tree{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12.5px;line-height:18px;margin:0;white-space:pre;color:#E8DDC5}
-  .steps-last{margin-top:18px;font-size:13.5px;line-height:22px;background:#FFFBF2;border:1px dashed rgba(201,169,110,0.4);border-radius:10px;padding:10px 14px}
+  .instructions ol.steps-more{margin-top:18px}
+  .instructions ol.steps-more li{background:#FFFBF2;border:1px dashed rgba(201,169,110,0.4);border-radius:10px;padding:10px 14px}
+  .smartscreen{margin-top:16px;text-align:left;font-size:12.5px;line-height:19px;color:rgba(26,26,26,0.7);background:#FFFBF2;border:1px solid rgba(201,169,110,0.35);border-radius:12px;padding:10px 14px}
+  .smartscreen strong{color:#1A1A1A}
 
   .features{margin-top:32px;width:100%;max-width:440px;background:rgba(255,255,255,0.9);border-radius:20px;border:1px solid rgba(26,26,26,0.06);padding:24px 24px 22px;text-align:left}
   .features h2{font-size:20px;font-weight:400;margin-bottom:14px}
@@ -116,6 +119,7 @@
       Stiahnuť Kinak v3.3.zip
     </a>
     <div class="hint">Stačí rozbaliť a spustiť Kinak.exe</div>
+    <div class="smartscreen"><strong>Upozornenie Windows:</strong> pri prvom spustení sa môže zobraziť hlásenie „Windows chránil váš počítač“, pretože program zatiaľ nie je digitálne podpísaný. Je to bežné a nejde o chybu. Kliknite na <strong>Ďalšie informácie → Aj tak spustiť</strong>.</div>
   </div>
 
   <div class="instructions" id="spustenie">
@@ -135,8 +139,10 @@
     ├── 003.txt
     └── ...</pre>
     </div>
-    <p class="steps-last">Spustite <code>Kinak.exe</code> a choďte do menu <strong>Pomoc → Rýchly sprievodca</strong></p>
-    <p class="steps-last">V <strong>Nastavenia → Umiestnenie súborov</strong> ešte raz skontrolujte nastavenie cesty k priečinku <code>piesne</code></p>
+    <ol start="3" class="steps-more">
+      <li>Spustite <code>Kinak.exe</code> a choďte do menu <strong>Pomoc → Rýchly sprievodca</strong></li>
+      <li>V <strong>Nastavenia → Umiestnenie súborov</strong> ešte raz skontrolujte nastavenie cesty k priečinku <code>piesne</code></li>
+    </ol>
   </div>
 
   <div class="features" id="vyhody">
@@ -145,6 +151,10 @@
       <li>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         <span>Prináša výrazné výhody oproti univerzálnym zahraničným riešeniam, pretože je optimalizovaný pre slovenské liturgické prostredie.</span>
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Liturgický deň, žalm, čítania aj vešpery si program pripraví sám a kalendár počíta aj bez internetu.</span>
       </li>
       <li>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>

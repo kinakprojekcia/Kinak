@@ -20,8 +20,22 @@ Premietač počas svätej omše často žongluje s Wordom, mobilom, viacerými
 stránkami s čítaniami, knižkou žalmov a lístočkom s poznámkou. Je sviatok?
 Má prednosť slávnosť? Rok A, B alebo C? Párny či nepárny rok?
 
-Kinak to vypočíta automaticky a offline, takže premietač má všetko pripravené
-na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
+Univerzálne nástroje ako PowerPoint, Canva či ProPresenter na toto nestačia.
+Kinak je robený priamo pre kostol a pre slovenskú liturgiu: robí jednu vec
+a robí ju poriadne.
+
+- **Ovládanie poslepiačky jedným prstom.** Napíšete číslo piesne a ďalej
+  stačia klávesy: **+ / −** (ďalšia / predchádzajúca strofa), **Enter**
+  (skryť / zobraziť text), **Backspace** (okamžite vypnúť projekciu).
+  Počas omše netreba hľadať myš.
+- **Detaily z praxe.** Veľkosť písma sa prispôsobí dĺžke textu, rezerva pre
+  overscan chráni spodok textu na projektoroch, ktoré orezávajú okraje,
+  farby sa menia podľa liturgického obdobia a pre Večeradlo je modrá.
+- **Tmavé rozhranie**, ktoré v kostole neruší a dobre sa číta aj v šere.
+
+Liturgický deň, žalm, čítania aj vešpery si program pripraví sám a kalendár
+počíta aj bez internetu. Premietač tak má všetko na dva kliky a môže konečne
+prežívať svätú omšu, nielen premietať.
 
 ## Funkcie
 
@@ -34,10 +48,17 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
 - **Presuny slávení** pri kolízii s významnejším slávením (Zvestovanie,
   sv. Jozef, Narodenie Jána Krstiteľa a i.)
 - **Žalmy:** v stavovom riadku zobrazí skratku žalmu podľa liturgického dňa a aktuálny týždeň žaltára v breviári. Odporúčané piesne JKS priradí podľa zvoleného žalmu (prepojenie s oknom Slávenia a Direktóriom)
-- **Čítania a vešpery:** sťahovanie na daný deň (offline cache)
-- **Funguje offline** po prvom stiahnutí
+- **Čítania a vešpery:** stiahnete ich na daný deň a po stiahnutí sú uložené
+  v počítači (offline cache). Responzóriové žalmy stačí stiahnuť raz za rok,
+  naraz na celý liturgický rok.
+- **Ovládanie na diaľku:** program sa dá ovládať aj bezdrôtovou (numerickou)
+  klávesnicou. Okno programu však musí byť aktívne.
+- **Funguje offline:** kalendár, výpočty a piesne fungujú vždy bez internetu.
+  Pripojenie treba len na stiahnutie čítaní a vešpier.
 
 ## Inštalácia (Windows)
+
+Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
 
 1. Stiahnite si ZIP z [Releases](https://github.com/kinakprojekcia/Kinak/releases/latest) a rozbaľte ho.
 2. Vedľa `Kinak.exe` musí byť priečinok `piesne/`:
@@ -57,6 +78,11 @@ na dva kliky. Môže tak konečne prežívať svätú omšu, nielen premietať.
    Priečinok môžete ľubovoľne premenovať (napr. `Kinak_Projekcia`), ak zostane zachovaná táto štruktúra. Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.
 
 3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
+
+   > **Upozornenie Windows:** pri prvom spustení sa môže zobraziť hlásenie
+   > „Windows chránil váš počítač“, pretože program zatiaľ nie je digitálne
+   > podpísaný. Je to bežné a nejde o chybu. Kliknite na
+   > **Ďalšie informácie → Aj tak spustiť**.
 
 4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_Projekcia/piesne`).
 
