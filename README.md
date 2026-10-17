@@ -97,7 +97,7 @@ Rovnako sa dajú pridávať aj do podpriečinkov `Mládež/` a `Večeradlo/`.
 - Text existujúcich piesní môžete upravovať podľa potreby.
 - Nemažte ani nepremenúvajte súbory, ktoré už v priečinku sú, a nemeňte
   štruktúru ostatných súborov, najmä skratky žalmov. Inak môže program
-  piesne načítať nesprávne alebo vôbec.
+  súbory načítať nesprávne alebo vôbec.
 - Pred úpravami odporúčame zálohovať celý priečinok `piesne/`.
 
 ## Liturgický kalendár – špecifikácia
