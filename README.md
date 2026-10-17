@@ -40,8 +40,10 @@ prežívať svätú omšu, nielen premietať.
 ## Funkcie
 
 - **Premietanie** na druhý monitor alebo projektor (farby, veľkosť, prelínanie)
-- **Piesne:** rýchle vyhľadávanie podľa čísla alebo názvu, vlastná knižnica,
-  databáza JKS, mládežnícke piesne a piesne Večeradla
+- **Piesne:** rýchle vyhľadávanie podľa čísla alebo názvu v databáze piesní
+  z Jednotného katolíckeho spevníka (JKS), mládežnícke piesne a piesne
+  Večeradla; vlastné piesne si môžete pridať ako textové súbory
+  (pozri [Vlastné piesne](#vlastné-piesne))
 - **Liturgický kalendár pre Slovensko:** automatický výpočet liturgického dňa,
   Veľkonočnej nedele (Meeus-Jones-Butcher), liturgických období, týždňa
   žaltára I–IV, liturgického roka A/B/C a cyklu I/II
@@ -85,6 +87,16 @@ Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
    > **Ďalšie informácie → Aj tak spustiť**.
 
 4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_Projekcia/piesne`).
+
+## Vlastné piesne
+
+Do priečinka `piesne/` môžete pridať vlastné piesne ako textové súbory (`.txt`).
+Rovnako sa dajú pridávať aj do podpriečinkov `Mládež/` a `Večeradlo/`.
+
+- Dodržte existujúcu štruktúru a číslovanie súborov (napr. `001.txt`, `002.txt`).
+- Neprepisujte, nepremenúvajte ani nemažte súbory, ktoré už v priečinku sú,
+  inak môže program piesne načítať nesprávne alebo vôbec.
+- Pred úpravami odporúčame zálohovať celý priečinok `piesne/`.
 
 ## Liturgický kalendár – špecifikácia
 
