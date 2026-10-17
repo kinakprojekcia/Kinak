@@ -95,7 +95,7 @@ Rovnako sa dajú pridávať aj do podpriečinkov `Mládež/` a `Večeradlo/`.
 
 - Dodržte existujúcu štruktúru a číslovanie súborov (napr. `001.txt`, `002.txt`).
 - Neprepisujte, nepremenúvajte ani nemažte súbory, ktoré už v priečinku sú,
-  inak môže program piesne načítať nesprávne alebo vôbec.
+  inak môže program súbory načítať nesprávne alebo vôbec.
 - Pred úpravami odporúčame zálohovať celý priečinok `piesne/`.
 
 ## Liturgický kalendár – špecifikácia
