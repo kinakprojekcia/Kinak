@@ -10,5 +10,15 @@
       <image:loc>https://kinak.sk/favicon.png</image:loc>
       <image:title>Kinak logo - program na premietanie JKS</image:title>
     </image:image>
+    <image:image>
+      <image:loc>https://kinak.sk/og-image.png</image:loc>
+      <image:title>Kinak – premietanie JKS v kostole</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://kinak.sk/direktorium.html</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
 </urlset>
