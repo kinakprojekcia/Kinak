@@ -56,9 +56,10 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    { "@type": "Question", "name": "Je Kinak naozaj zadarmo?", "acceptedAnswer": { "@type": "Answer", "text": "Áno. Kinak je slobodný softvér s MIT licenciou, ktorý môžu farnosti používať, upravovať a šíriť zadarmo aj na komerčné účely." }},
-    { "@type": "Question", "name": "Potrebuje Kinak internet?", "acceptedAnswer": { "@type": "Answer", "text": "Nie. Kalendár, výpočty a piesne fungujú offline. Internet treba len na stiahnutie čítaní z lc.kbs.sk a vešpier z breviar.kbs.sk, potom zostávajú uložené v počítači. Responzóriové žalmy stačí stiahnuť raz za rok." }},
-    { "@type": "Question", "name": "Aký je rozdiel oproti PowerPoint alebo OpenLP?", "acceptedAnswer": { "@type": "Answer", "text": "Kinak je robený priamo pre slovenskú liturgiu – automaticky počíta liturgický deň pre Slovensko, presuny slávení, týždeň žaltára, rok A/B/C a odporúča piesne JKS podľa žalmu. Ovláda sa klávesmi + / - / Enter poslepiačky." }}
+    { "@type": "Question", "name": "Je Kinak naozaj zadarmo?", "acceptedAnswer": { "@type": "Answer", "text": "Áno. Kinak je slobodný softvér s MIT licenciou." }},
+    { "@type": "Question", "name": "Potrebuje Kinak internet?", "acceptedAnswer": { "@type": "Answer", "text": "Nie. Funguje offline. Internet treba len na stiahnutie čítaní z lc.kbs.sk a vešpier z breviar.kbs.sk." }},
+    { "@type": "Question", "name": "Je Kinak alternatíva k OpenLP?", "acceptedAnswer": { "@type": "Answer", "text": "Áno, Kinak je slovenská alternatíva k OpenLP, ProPresenter a PowerPoint, optimalizovaná priamo pre JKS a liturgický kalendár pre Slovensko." }},
+    { "@type": "Question", "name": "Čo je liturgický kalendár program Slovensko?", "acceptedAnswer": { "@type": "Answer", "text": "Kinak obsahuje zabudovaný liturgický kalendár program pre Slovensko, ktorý počíta slávenia podľa Direktória KBS a Všeobecných noriem." }}
   ]
 }
 </script>
@@ -219,10 +220,18 @@
     <p style="margin-top:12px">Texty piesní, ktoré sú súčasťou balíka, si môžete podľa potreby upravovať. K nim môžete pridávať aj vlastné piesne vo formáte <code>.txt</code>, a to priamo v priečinku <code>piesne/</code> alebo v podpriečinkoch <code>Mládež/</code> a <code>Večeradlo/</code>. Pri nových súboroch stačí dodržať existujúce číslovanie, napr. <code>001.txt</code>, <code>002.txt</code>.</p>
   </div>
 
-  <div class="features" id="kalendar">
-    <h2 class="serif">Zabudovaný liturgický kalendár</h2>
-    <p>Kinak má zabudovaný liturgický kalendár, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus a žaltárový týždeň liturgického roka. Aktuálne liturgické informácie sa zobrazujú priamo v hlavičke a stavovom riadku. Liturgický deň sa vypočíta automaticky a ak slávnosť koliduje s významnejším slávením, program zohľadní jej presun.</p>
-    <p>Kalendár je zostavený pre Slovensko. Výpočty sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku (Všeobecné normy o liturgickom roku a Direktórium KBS).</p>
+    <div class="features" id="kalendar">
+    <h2 class="serif">Liturgický kalendár program Slovensko</h2>
+    <p>Kinak obsahuje <strong>zabudovaný liturgický kalendár (program) pre Slovensko</strong>, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus A/B/C, cyklus I/II a týždeň žaltára I-IV. Liturgický deň sa vypočíta offline, aj bez internetu, a ak slávnosť koliduje s významnejším slávením (Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa), program zohľadní jej presun.</p>
+    <p>Kalendár je zostavený tak, že bežné férie a ľubovoľné spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.</p>
+    <p>Výpočty sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku (Všeobecné normy o liturgickom roku a Direktórium KBS). Na rozdiel od amerického modelu je Zjavenie Pána pevne 6. januára.</p>
+    <p style="margin-top:10px">Hľadáš liturgický kalendár program Slovensko? Kinak ho počíta automaticky pre každú nedeľu a sviatok.</p>
+  </div>
+
+  <div class="features" id="openlp-alternativa">
+    <h2 class="serif">Slovenská alternatíva k OpenLP, ProPresenter a PowerPoint</h2>
+    <p>Hľadáš <strong>OpenLP alternatíva Slovensko</strong>? Univerzálne nástroje ako PowerPoint, Canva, ProPresenter alebo OpenLP nepoznajú JKS, slovenské presuny slávení ani Direktórium KBS.</p>
+    <p><strong>Kinak je slovenská alternatíva k OpenLP</strong> robená priamo pre kostol: ovládanie jedným prstom (+ / - / Enter / Backspace), automatické farby podľa liturgického obdobia, rezerva pre overscan projektorov a odporúčané piesne JKS podľa žalmu. Funguje spoľahlivo aj na starších notebookoch vo farnostiach.</p>
   </div>
 
   <div class="features" id="otazky">
