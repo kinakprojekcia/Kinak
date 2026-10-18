@@ -2,8 +2,8 @@
 
 **Liturgický projekčný program pre farnosti na Slovensku – zdarma.**
 
-![License: MIT](https://img.shields.io/badge/license-MIT-green)
-![Platform: Windows](https://img.shields.io/badge/platform-Windows-blue)
+[License: MIT](https://img.shields.io/badge/license-MIT-green)
+[Platform: Windows](https://img.shields.io/badge/platform-Windows-blue)
 
 🌐 [kinak.sk](https://kinak.sk/) · ⬇️ [Stiahnuť najnovšie vydanie](https://github.com/kinakprojekcia/Kinak/releases/latest)
 
@@ -12,7 +12,7 @@ piesní, modlitieb, čítaní a žalmov, aby sa veriaci mohli ľahšie zapojiť 
 slávenia. Počas svätej omše beží vo všetkých kostoloch v Kremnici a vznikol
 ako dobrovoľnícky projekt pre našu farnosť.
 
-![Screenshot](docs/screenshot.png)
+[Screenshot](docs/screenshot.png)
 
 ## Prečo Kinak
 
@@ -66,18 +66,18 @@ Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
 2. Vedľa `Kinak.exe` musí byť priečinok `piesne/`:
 
    ```
-   Kinak/  (priečinok môže mať ľubovoľný názov)
-   ├── Kinak.exe
-   └── piesne/
-       ├── Mládež/
-       ├── Večeradlo/
-       ├── 001.txt
+   Kinak/                     ← rozbalený priečinok zo ZIPu, názov môže byť ľubovoľný
+   ├── Kinak.exe              ← samotná aplikácia, dvojklik na spustenie
+   └── piesne/                ← musí zostať vedľa Kinak.exe, nemazať
+       ├── Mládež/            ← mládežnícke piesne
+       ├── Večeradlo/         ← piesne Večeradla
+       ├── 001.txt            ← JKS piesne
        ├── 002.txt
        ├── 003.txt
        └── …
    ```
 
-   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_v3.3`), ak zostane zachovaná táto štruktúra. Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.
+   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_Projekcia`), ak zostane zachovaná táto štruktúra. Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.
 
 3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
 
@@ -86,7 +86,7 @@ Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
    > podpísaný. Je to bežné a nejde o chybu. Kliknite na
    > **Ďalšie informácie → Aj tak spustiť**.
 
-4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_v3.3/piesne`).
+4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_Projekcia/piesne`).
 
 ## Vlastné piesne
 
@@ -97,7 +97,7 @@ Rovnako sa dajú pridávať aj do podpriečinkov `Mládež/` a `Večeradlo/`.
 - Text existujúcich piesní môžete upravovať podľa potreby.
 - Nemažte ani nepremenúvajte súbory, ktoré už v priečinku sú, a nemeňte
   štruktúru ostatných súborov, najmä skratky žalmov. Inak môže program
-  súbory načítať nesprávne alebo vôbec.
+  piesne načítať nesprávne alebo vôbec.
 - Pred úpravami odporúčame zálohovať celý priečinok `piesne/`.
 
 ## Liturgický kalendár – špecifikácia
