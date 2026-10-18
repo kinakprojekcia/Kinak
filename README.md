@@ -2,14 +2,15 @@
 
 **Liturgický projekčný program pre farnosti na Slovensku – zdarma.**
 
-[License: MIT](https://img.shields.io/badge/license-MIT-green)
-[Platform: Windows](https://img.shields.io/badge/platform-Windows-blue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Platform: Windows](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/kinakprojekcia/Kinak/releases/latest)
+[![Release](https://img.shields.io/github/v/release/kinakprojekcia/Kinak)](https://github.com/kinakprojekcia/Kinak/releases/latest)
 
 🌐 [kinak.sk](https://kinak.sk/) · ⬇️ [Stiahnuť najnovšie vydanie](https://github.com/kinakprojekcia/Kinak/releases/latest)
 
 Kinak je projekčný softvér na vizuálne sprevádzanie liturgie. Je to **program na premietanie piesní z Jednotného katolíckeho spevníka (JKS), mládežníckych piesní a Večeradla, žalmov, čítaní a vešpier** počas svätej omše, aby sa veriaci mohli ľahšie zapojiť do slávenia. Automaticky vypočíta liturgický deň pre Slovensko a funguje offline. Počas svätej omše beží vo všetkých kostoloch v Kremnici a vznikol ako dobrovoľnícky projekt pre našu farnosť.
 
-[Screenshot](docs/screenshot.png)
+![Screenshot](docs/screenshot.png)
 
 ## Prečo Kinak
 
@@ -46,7 +47,7 @@ prežívať svätú omšu, nielen premietať.
   žaltára I–IV, liturgického roka A/B/C a cyklu I/II
 - **Presuny slávení** pri kolízii s významnejším slávením (Zvestovanie,
   sv. Jozef, Narodenie Jána Krstiteľa a i.)
-- **Žalmy:** v stavovom riadku zobrazí skratku žalmu podľa liturgického dňa a aktuálny týždeň žaltára v breviári. Odporúčané piesne JKS priradí podľa zvoleného žalmu (prepojenie s oknom Slávenia a Direktóriom)
+- **Žalmy:** v stavovom riadku zobrazí skratku žalmu podľa liturgického dňa a aktuálny týždeň žaltára v breviári. Odporúčané piesne JKS priradí podľa zvoleného žalmu (prepojenie s oknom Slávenia a Direktóriom JKS)
 - **Čítania a vešpery:** stiahnete ich na daný deň a po stiahnutí sú uložené
   v počítači (offline cache). Responzóriové žalmy stačí stiahnuť raz za rok,
   naraz na celý liturgický rok.
@@ -74,7 +75,7 @@ Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
        └── …
    ```
 
-   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_v3.3`), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/). Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.
+   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_v3.4`), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/). Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.
 
 3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
 
@@ -83,7 +84,7 @@ Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
    > podpísaný. Je to bežné a nejde o chybu. Kliknite na
    > **Ďalšie informácie → Aj tak spustiť**.
 
-4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_v3.3/piesne`).
+4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_v3.4/piesne`).
 
 ## Vlastné piesne
 
