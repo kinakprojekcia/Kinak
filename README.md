@@ -77,7 +77,7 @@ Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
        └── …
    ```
 
-   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_Projekcia`), ak zostane zachovaná táto štruktúra. Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.
+   Priečinok môžete ľubovoľne premenovať (napr. `Kinak_v3.3`), ak zostane zachovaná táto štruktúra. Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka. Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.
 
 3. Spustite program a v menu **Pomoc → Rýchly sprievodca** postupujte podľa pokynov.
 
@@ -86,7 +86,7 @@ Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
    > podpísaný. Je to bežné a nejde o chybu. Kliknite na
    > **Ďalšie informácie → Aj tak spustiť**.
 
-4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_Projekcia/piesne`).
+4. V **Nastavenia → Umiestnenie súborov** ešte raz skontrolujte nastavenie cesty k priečinku `piesne` (napr. `Kinak_v3.3/piesne`).
 
 ## Vlastné piesne
 
