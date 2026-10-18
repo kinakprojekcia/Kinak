@@ -8,7 +8,7 @@
 
 🌐 [kinak.sk](https://kinak.sk/) · ⬇️ [Stiahnuť najnovšie vydanie](https://github.com/kinakprojekcia/Kinak/releases/latest)
 
-Kinak je projekčný softvér na vizuálne sprevádzanie liturgie. Je to **program na premietanie piesní z Jednotného katolíckeho spevníka (JKS), mládežníckych piesní a Večeradla, žalmov, čítaní a vešpier** počas svätej omše, aby sa veriaci mohli ľahšie zapojiť do slávenia. Automaticky vypočíta liturgický deň pre Slovensko a funguje offline. Počas svätej omše beží vo všetkých kostoloch v Kremnici a vznikol ako dobrovoľnícky projekt pre našu farnosť.
+Kinak je projekčný softvér na vizuálne sprevádzanie liturgie. Je to **program na premietanie piesní z Jednotného katolíckeho spevníka (JKS), mládežníckych piesní a Večeradla, žalmov, čítaní a vešpier** počas svätej omše, aby sa veriaci mohli ľahšie zapojiť do slávenia. Automaticky vypočíta liturgický deň pre Slovensko a funguje offline. 
 
 ![Screenshot](docs/screenshot.png)
 
