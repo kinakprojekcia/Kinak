@@ -90,15 +90,15 @@ Kinak sa neinštaluje, stačí ho rozbaliť a spustiť `Kinak.exe`.
 
 ## Vlastné piesne
 
-Do priečinka `piesne/` môžete pridať vlastné piesne ako textové súbory (`.txt`).
-Rovnako sa dajú pridávať aj do podpriečinkov `Mládež/` a `Večeradlo/`.
+Do priečinka **piesne/** môžete pridávať vlastné piesne vo forme textových súborov **.txt**.
+Rovnako ich môžete umiestňovať aj do podpriečinkov **Mládež/** a **Večeradlo/**.
 
-- Dodržte existujúcu štruktúru a číslovanie súborov (napr. `001.txt`, `002.txt`).
+- Dodržte existujúcu štruktúru a číslovanie súborov (napr. **001.txt, 002.txt**).
 - Text existujúcich piesní môžete upravovať podľa potreby.
 - Nemažte ani nepremenúvajte súbory, ktoré už v priečinku sú, a nemeňte
   štruktúru ostatných súborov, najmä skratky žalmov. Inak môže program
   piesne načítať nesprávne alebo vôbec.
-- Pred úpravami odporúčame zálohovať celý priečinok `piesne/`.
+- Pred úpravami odporúčame **zálohovať celý priečinok piesne/**.
 
 ## Liturgický kalendár – špecifikácia
 
