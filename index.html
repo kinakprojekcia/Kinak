@@ -91,6 +91,54 @@
       "author": {
         "@id": "https://kinak.sk/#organization"
       }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://kinak.sk/#faq",
+      "url": "https://kinak.sk/",
+      "inLanguage": "sk-SK",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Je Kinak naozaj zadarmo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Áno. Je to slobodný softvér s licenciou MIT, ktorý môžu farnosti zdarma používať, upravovať a šíriť."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Potrebuje Kinak internet?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nie, funguje offline. Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť raz za rok, naraz na celý liturgický rok."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Je Kinak alternatíva k OpenLP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Áno, Kinak je slovenská alternatíva k OpenLP, ProPresenter a PowerPoint, optimalizovaná priamo pre katolícku liturgiu. Priamo v sebe obsahuje kompletný JKS a automatický liturgický kalendár pre Slovensko."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Môžem pridať vlastné alebo mládežnícke piesne?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Áno. Stačí upraviť alebo pridať súbor .txt v priečinku piesne/, prípadne v podpriečinku Mládež/."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Čo je Direktórium JKS a kde ho nájdem?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Direktórium JKS (https://kinak.sk/direktorium.html) je zoznam odporúčaných piesní z JKS na jednotlivé nedele a sviatky liturgického roka."
+          }
+        }
+      ]
     }
   ]
 }
@@ -211,41 +259,27 @@
   </div>
 
   <div class="features" id="vyhody">
-    <h2 class="serif">Kinak – slovenský projekčný program pre liturgiu</h2>
+    <h2 class="serif">Prečo Kinak: vytvorený pre slovenskú liturgiu</h2>
+    <p>Univerzálne zahraničné programy ako OpenLP, ProPresenter či PowerPoint nepoznajú našu liturgiu ani JKS. Kinak je slovenská alternatíva, pri ktorej netreba pripravovať šablóny ani nič zdĺhavo nastavovať.</p>
     <ul>
       <li>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Prináša výrazné výhody oproti univerzálnym zahraničným riešeniam, pretože je optimalizovaný pre slovenské liturgické prostredie.</span>
+        <span><strong>100 % zadarmo a offline.</strong> Licencia MIT, bez poplatkov. Po stiahnutí funguje bez internetu. Žalmy na celý rok stačí stiahnuť raz.</span>
       </li>
       <li>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Premietanie na externý displej — projektor, monitor alebo televízor — s nastaviteľnými farbami, veľkosťou písma a prelínaním.</span>
+        <span><strong>Automatický liturgický kalendár pre SR.</strong> Sám určí liturgický deň a cyklus (A/B/C) vrátane presunov sviatkov podľa pravidiel KBS.</span>
       </li>
       <li>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Liturgický deň, žalm, čítania aj vešpery si program pripraví sám a kalendár počíta aj bez internetu.</span>
+        <span><strong>Prepojenie s <a href="direktorium.html">Direktóriom JKS</a>.</strong> Podľa nedele alebo sviatku ponúkne odporúčané piesne z Jednotného katolíckeho spevníka.</span>
       </li>
       <li>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Spoľahlivo funguje aj na slabších či starších notebookoch.</span>
-      </li>
-      <li>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Jednoduché ovládanie — vhodné aj pre používateľov bez technických skúseností.</span>
-      </li>
-      <li>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Podľa zvoleného žalmu ponúkne odporúčané piesne JKS z <a href="direktorium.html">Direktória JKS</a>, ktoré obsahuje zoznam odporúčaných piesní na jednotlivé nedele a sviatky liturgického roka.</span>
-      </li>
-      <li>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Program umožňuje stiahnuť vešpery a liturgické čítania, ktoré sa po stiahnutí automaticky prispôsobia na projekciu.</span>
-      </li>
-      <li>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span>Ovládanie na diaľku je možné pomocou bezdrôtovej (numerickej) klávesnice. Okno programu však musí byť aktívne.</span>
+        <span><strong>Jednoduché ovládanie.</strong> Zadáte číslo piesne a klávesmi <kbd>+</kbd> a <kbd>−</kbd> posúvate strofy. Vhodné aj pre ľudí bez technických skúseností.</span>
       </li>
     </ul>
+    <p style="margin-top:14px">Premieta na projektor, monitor alebo televízor s nastaviteľnými farbami, veľkosťou písma a prelínaním. Spoľahlivo beží aj na starších notebookoch a ovládať ho môžete aj bezdrôtovou numerickou klávesnicou (okno programu musí byť aktívne). Čítania a vešpery po stiahnutí sám prispôsobí na projekciu.</p>
   </div>
 
   <div class="features" id="ovladanie">
@@ -287,8 +321,7 @@
 
   <div class="features" id="pre-koho">
     <h2 class="serif">Pre koho je Kinak</h2>
-    <p>Kinak je určený pre premietačov liturgických textov na plátno alebo TV a pre farnosti, ktoré chcú mať čítania, vešpery, žalmy, piesne a modlitby pripravené automaticky.</p>    
-    <p>Kinak je projekčný softvér určený na vizuálne sprevádzanie liturgie. Pomáha farnostiam premietať texty piesní, modlitieb a čítaní tak, aby sa veriaci mohli ľahšie zapojiť do slávenia.</p>
+    <p>Kinak je určený pre premietačov liturgických textov na plátno alebo TV a pre farnosti, ktoré chcú mať čítania, vešpery, žalmy, piesne a modlitby pripravené automaticky, aby sa veriaci mohli ľahšie zapojiť do slávenia.</p>
   </div>
 
   <div class="features" id="piesne">
@@ -299,15 +332,10 @@
 
     <div class="features" id="kalendar">
     <h2 class="serif">Liturgický kalendár pre Slovensko</h2>
-    <p>Kinak obsahuje <strong>zabudovaný liturgický kalendár pre Slovensko</strong>, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus A/B/C, cyklus I/II a aktuálny týždeň žaltára v breviári. Aktuálne liturgické informácie sa zobrazujú priamo v hlavičke a stavovom riadku. Liturgický deň sa vypočíta offline, aj bez internetu, a ak slávnosť koliduje s významnejším slávením (Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa), program zohľadní jej presun.</p>
+    <p>Kinak obsahuje <strong>zabudovaný liturgický kalendár pre Slovensko</strong>, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus A/B/C, cyklus I/II a aktuálny týždeň žaltára v breviári. Aktuálne liturgické informácie sa zobrazujú priamo v hlavičke a stavovom riadku. Liturgický deň sa vypočíta offline, aj bez internetu, a ak slávnosť koliduje s významnejším slávením (Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa), program zohľadní jej presun podľa pravidiel KBS.</p>
     <p>Kalendár je zostavený tak, že bežné férie a (ľubovoľné) spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.</p>
     <p>Výpočty sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku (<strong>Všeobecné normy o liturgickom roku</strong> a <strong>Direktórium KBS</strong>).</p>
   
-  </div>
-
-  <div class="features" id="openlp-alternativa">
-    <h2 class="serif">Slovenská alternatíva k OpenLP, ProPresenter a PowerPoint</h2>
-    <p>Hľadáte <strong>slovenskú alternatívu k OpenLP</strong> alebo PowerPointu? Kinak rozumie JKS a podľa liturgického dňa ponúkne piesne z <a href="direktorium.html">Direktória JKS</a>, takže nemusíte ručne nič pripravovať ani nastavovať šablóny.</p>
   </div>
 
   <div class="features" id="otazky">
@@ -315,8 +343,7 @@
     <p><strong>Je Kinak naozaj zadarmo?</strong><br>Áno. Je to slobodný softvér s licenciou MIT, ktorý môžu farnosti zdarma používať, upravovať a šíriť.</p>
     <p><strong>Potrebuje Kinak internet?</strong><br>Nie, funguje offline. Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť <strong>raz za rok, naraz na celý liturgický rok</strong>.</p>
     <p><strong>Je Kinak alternatíva k OpenLP?</strong><br>Áno, Kinak je slovenská alternatíva k OpenLP, ProPresenter a PowerPoint, optimalizovaná priamo pre katolícku liturgiu. Priamo v sebe obsahuje kompletný JKS a automatický liturgický kalendár pre Slovensko.</p>
-    <p><strong>Je Kinak program s liturgickým kalendárom pre Slovensko?</strong><br>Áno. Kalendár automaticky určuje slávenia podľa <strong>Direktória KBS</strong> a <strong>Všeobecných noriem</strong>.</p>
-    <p><strong>Hľadáte program na premietanie piesní cez projektor v kostole?</strong><br>Kinak umožňuje z počítača s Windows premietať piesne JKS, žalmy, čítania a vešpery na pripojený projektor, televízor alebo druhý monitor.</p>
+    <p><strong>Môžem pridať vlastné alebo mládežnícke piesne?</strong><br>Áno. Stačí upraviť alebo pridať súbor <code>.txt</code> v priečinku <code>piesne/</code>, prípadne v podpriečinku <code>Mládež/</code>.</p>
     <p><strong>Čo je Direktórium JKS a kde ho nájdem?</strong><br><a href="direktorium.html">Direktórium JKS</a> je zoznam odporúčaných piesní z JKS na jednotlivé nedele a sviatky liturgického roka.</p>
   </div>
 
