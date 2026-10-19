@@ -108,7 +108,7 @@ americkým modelom.
   (sv. Cyril a Metod 5. 7., Sedembolestná Panna Mária 15. 9. a i.)
 - **Smernice:** Všeobecné normy o liturgickom roku a o kalendári + Direktórium KBS
 
-Kalendár je zostavený tak, že bežné férie a ľubovoľné spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.
+Kalendár je zostavený tak, že bežné férie a (ľubovoľné) spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.
 
 **Kľúčový rozdiel oproti US modelu:** Zjavenie Pána je na Slovensku pevne
 6. januára (prikázaný sviatok, štátny sviatok) a nepresúva sa na nedeľu.
