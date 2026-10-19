@@ -27,101 +27,71 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Kinak",
-  "description": "Liturgický projekčný program na premietanie piesní, žalmov a čítaní v kostole počas svätej omše. Automaticky vypočíta liturgický deň, funguje offline a je zadarmo pre farnosti.",
-  "url": "https://kinak.sk/",
-  "applicationCategory": "MultimediaApplication",
-  "operatingSystem": "Windows",
-  "softwareVersion": "3.4",
-  "inLanguage": "sk",
-  "downloadUrl": "https://github.com/kinakprojekcia/Kinak/releases/latest/download/Kinak_v3.4.zip",
-  "license": "https://opensource.org/licenses/MIT",
-  "isAccessibleForFree": true,
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "EUR"
-  },
-  "author": {
-    "@type": "Organization",
-    "name": "Kinak – Kremnica",
-    "url": "https://kinak.sk/"
-  }
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    { "@type": "Question", "name": "Je Kinak naozaj zadarmo?", "acceptedAnswer": { "@type": "Answer", "text": "Áno. Kinak je slobodný softvér s MIT licenciou." }},
-    { "@type": "Question", "name": "Potrebuje Kinak internet?", "acceptedAnswer": { "@type": "Answer", "text": "Nie. Funguje offline. Internet treba len na stiahnutie čítaní z lc.kbs.sk a vešpier z breviar.kbs.sk." }},
-    { "@type": "Question", "name": "Je Kinak alternatíva k OpenLP?", "acceptedAnswer": { "@type": "Answer", "text": "Áno, Kinak je slovenská alternatíva k OpenLP, ProPresenter a PowerPoint, optimalizovaná priamo pre katolícku liturgiu. Priamo v sebe obsahuje kompletný JKS a automatický liturgický kalendár pre Slovensko." }},
-    { "@type": "Question", "name": "Čo je Direktórium JKS a kde ho nájdem?", "acceptedAnswer": { "@type": "Answer", "text": "Direktórium JKS je zoznam odporúčaných piesní z JKS na jednotlivé nedele a sviatky liturgického roka." }},
-    { "@type": "Question", "name": "Čo je liturgický kalendár program Slovensko?", "acceptedAnswer": { "@type": "Answer", "text": "Kinak obsahuje zabudovaný liturgický kalendár program pre Slovensko, ktorý počíta slávenia podľa Direktória KBS a Všeobecných noriem." }}
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "Kinak",
-  "url": "https://kinak.sk/",
-  "inLanguage": "sk-SK",
-  "hasPart": [
+  "@graph": [
     {
-      "@type": "CollectionPage",
-      "name": "Direktórium JKS – odporúčané piesne na nedele a sviatky",
-      "url": "https://kinak.sk/direktorium.html",
-      "description": "Prehľad odporúčaných piesní z JKS na nedele a sviatky liturgického roka (101 slávení v 6 obdobiach)."
+      "@type": "Organization",
+      "@id": "https://kinak.sk/#organization",
+      "name": "Kinak",
+      "url": "https://kinak.sk/",
+      "logo": "https://kinak.sk/favicon.png",
+      "description": "Kinak – slovenský liturgický projekčný program na premietanie piesní JKS, žalmov a čítaní v kostole.",
+      "sameAs": [
+        "https://github.com/kinakprojekcia/Kinak"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://kinak.sk/#website",
+      "name": "Kinak",
+      "url": "https://kinak.sk/",
+      "inLanguage": "sk-SK",
+      "publisher": {
+        "@id": "https://kinak.sk/#organization"
+      },
+      "hasPart": [
+        {
+          "@type": "CollectionPage",
+          "name": "Direktórium JKS – odporúčané piesne na nedele a sviatky",
+          "url": "https://kinak.sk/direktorium.html",
+          "description": "Prehľad odporúčaných piesní z JKS na nedele a sviatky liturgického roka (101 slávení v 6 obdobiach)."
+        }
+      ],
+      "about": {
+        "@id": "https://kinak.sk/#software"
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://kinak.sk/#software",
+      "name": "Kinak",
+      "description": "Liturgický projekčný program na premietanie piesní, žalmov a čítaní v kostole počas svätej omše. Automaticky vypočíta liturgický deň, funguje offline a je zadarmo pre farnosti.",
+      "url": "https://kinak.sk/",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Windows",
+      "softwareVersion": "3.4",
+      "inLanguage": "sk",
+      "downloadUrl": "https://github.com/kinakprojekcia/Kinak/releases/latest/download/Kinak_v3.4.zip",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "featureList": [
+        "Ovládanie klávesmi + / − (strofy), Enter (skryť text), Backspace (vypnúť projekciu)",
+        "Automatické prispôsobenie veľkosti písma dĺžke textu",
+        "Rezerva pre overscan na projektoroch",
+        "Farby podľa liturgického obdobia",
+        "Premietanie na druhý monitor alebo projektor",
+        "Piesne JKS, mládežnícke piesne a Večeradlo",
+        "Automatický liturgický kalendár pre Slovensko, funguje offline",
+        "Stiahnutie čítaní, žalmov a vešpier"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "author": {
+        "@id": "https://kinak.sk/#organization"
+      }
     }
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Kinak",
-  "url": "https://kinak.sk/",
-  "logo": "https://kinak.sk/favicon.png",
-  "description": "Kinak – slovenský liturgický projekčný program na premietanie piesní JKS, žalmov a čítaní v kostole.",
-  "sameAs": [
-    "https://github.com/kinakprojekcia/Kinak"
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "HowTo",
-  "name": "Ako spustiť Kinak",
-  "description": "Postup stiahnutia a prvého spustenia programu Kinak na Windows.",
-  "url": "https://kinak.sk/#spustenie",
-  "step": [
-    { "@type": "HowToStep", "position": 1, "name": "Stiahnite a rozbaľte ZIP", "text": "Stiahnite si celý priečinok Kinak_v3.4 – stlačte tlačidlo na stiahnutie a rozbaľte ZIP.", "url": "https://kinak.sk/#spustenie" },
-    { "@type": "HowToStep", "position": 2, "name": "Skontrolujte priečinok piesne", "text": "Súbor Kinak.exe musí mať pri sebe aj priečinok s názvom piesne.", "url": "https://kinak.sk/#spustenie" },
-    { "@type": "HowToStep", "position": 3, "name": "Spustite Kinak.exe", "text": "Spustite Kinak.exe a choďte do menu Pomoc → Rýchly sprievodca.", "url": "https://kinak.sk/#spustenie" },
-    { "@type": "HowToStep", "position": 4, "name": "Skontrolujte cestu k piesňam", "text": "V Nastavenia → Umiestnenie súborov ešte raz skontrolujte nastavenie cesty k priečinku piesne.", "url": "https://kinak.sk/#spustenie" }
-  ]
-}
-</script>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  "name": "Navigácia Kinak",
-  "itemListElement": [
-    { "@type": "SiteNavigationElement", "position": 1, "name": "Stiahnuť", "url": "https://kinak.sk/#stiahnut" },
-    { "@type": "SiteNavigationElement", "position": 2, "name": "Ako spustiť", "url": "https://kinak.sk/#spustenie" },
-    { "@type": "SiteNavigationElement", "position": 3, "name": "Direktórium JKS", "url": "https://kinak.sk/direktorium.html" },
-    { "@type": "SiteNavigationElement", "position": 4, "name": "Výhody", "url": "https://kinak.sk/#vyhody" },
-    { "@type": "SiteNavigationElement", "position": 5, "name": "Pre koho", "url": "https://kinak.sk/#pre-koho" },
-    { "@type": "SiteNavigationElement", "position": 6, "name": "Piesne", "url": "https://kinak.sk/#piesne" },
-    { "@type": "SiteNavigationElement", "position": 7, "name": "Otázky", "url": "https://kinak.sk/#otazky" }
   ]
 }
 </script>
@@ -184,6 +154,10 @@
   .features p{font-size:13.5px;line-height:22px;color:rgba(26,26,26,0.8);margin-bottom:10px}
   .features p:last-child{margin-bottom:0}
   .features p strong{color:#1A1A1A}
+  .features h3{font-size:14px;font-weight:600;margin:20px 0 10px;color:#1A1A1A}
+  .features .keys li{align-items:baseline;gap:12px}
+  .features .keys kbd{min-width:104px}
+  kbd{display:inline-block;min-width:34px;text-align:center;flex-shrink:0;background:#FFFBF2;border:1px solid rgba(26,26,26,0.18);border-bottom-width:2px;border-radius:6px;padding:1px 8px;font-size:12.5px;font-weight:600;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;color:#1A1A1A}
 
 </style>
 </head>
@@ -191,7 +165,7 @@
 <header>
   <div class="brand">KINAK <span class="sep"></span> <small>v3.4</small></div>
 </header>
-<nav class="nav" aria-label="Rýchla navigácia"><a href="#stiahnut">Stiahnuť</a><a href="#spustenie">Ako spustiť</a><a href="direktorium.html">Direktórium JKS</a><a href="#vyhody">Výhody</a><a href="#pre-koho">Pre koho</a><a href="#piesne">Piesne</a><a href="#otazky">Otázky</a></nav>
+<nav class="nav" aria-label="Rýchla navigácia"><a href="#stiahnut">Stiahnuť</a><a href="#spustenie">Ako spustiť</a><a href="direktorium.html">Direktórium JKS</a><a href="#vyhody">Výhody</a><a href="#ovladanie">Ovládanie</a><a href="#pre-koho">Pre koho</a><a href="#piesne">Piesne</a><a href="#otazky">Otázky</a></nav>
 <main>
   <div class="hero">
     <div class="logo-lg-wrap"><img src="data:image/png;base64,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" alt="Kinak logo - program na premietanie JKS v kostole zadarmo" width="80" height="80" class="logo-lg"></div>
@@ -270,6 +244,46 @@
     </ul>
   </div>
 
+  <div class="features" id="ovladanie">
+    <h2 class="serif">Ovládanie a funkcie pri premietaní</h2>
+    <p>Zadáte číslo piesne a potom používate klávesy:</p>
+    <ul class="keys">
+      <li><kbd>PLUS (+)</kbd><span>Ďalšia strofa</span></li>
+      <li><kbd>MÍNUS (-)</kbd><span>Predchádzajúca strofa (možno použiť aj šípky)</span></li>
+      <li><kbd>ENTER</kbd><span>Aktivovať projekciu (skryť/zobraziť text)</span></li>
+      <li><kbd>BACKSPACE</kbd><span>Maže číslo piesne a zároveň okamžite vypína projekciu</span></li>
+      <li><kbd>ESC</kbd><span>Zavrieť okno / Zavrieť program</span></li>
+    </ul>
+
+    <h3>Detaily z praxe</h3>
+    <ul>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span><strong>Veľkosť písma</strong> sa automaticky prispôsobí dĺžke textu, takže dlhšie strofy sa vojdú na plátno.</span>
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span><strong>Rezerva pre overscan</strong> chráni spodok textu na projektoroch a televízoroch, ktoré orezávajú okraje obrazu.</span>
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span><strong>Farby podľa liturgického obdobia.</strong> Prostredie sa mení podľa toho, či je advent, pôst alebo Veľká noc, a piesne Večeradla sú modré.</span>
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span><strong>Premietanie na druhý monitor alebo projektor</strong> s nastaviteľnými farbami, veľkosťou písma a prelínaním.</span>
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span><strong>Rýchle vyhľadávanie piesní</strong> podľa čísla alebo názvu v JKS, mládežníckych piesňach a piesňach Večeradla.</span>
+      </li>
+      <li>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span><strong>Tmavé rozhranie</strong>, ktoré v kostole neruší a dobre sa číta aj v šere.</span>
+      </li>
+    </ul>
+  </div>
+
   <div class="features" id="pre-koho">
     <h2 class="serif">Pre koho je Kinak</h2>
     <p>Kinak je určený pre premietačov liturgických textov na plátno alebo TV a pre farnosti, ktoré chcú mať čítania, vešpery, žalmy, piesne a modlitby pripravené automaticky.</p>    
@@ -283,8 +297,8 @@
   </div>
 
     <div class="features" id="kalendar">
-    <h2 class="serif">Liturgický kalendár program Slovensko</h2>
-    <p>Kinak obsahuje <strong>zabudovaný liturgický kalendár (program) pre Slovensko</strong>, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus A/B/C, cyklus I/II a aktuálny týždeň žaltára v breviári.  Aktuálne liturgické informácie sa zobrazujú priamo v hlavičke a stavovom riadku. Liturgický deň sa vypočíta offline, aj bez internetu, a ak slávnosť koliduje s významnejším slávením (Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa), program zohľadní jej presun.</p>
+    <h2 class="serif">Liturgický kalendár pre Slovensko</h2>
+    <p>Kinak obsahuje <strong>zabudovaný liturgický kalendár pre Slovensko</strong>, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus A/B/C, cyklus I/II a aktuálny týždeň žaltára v breviári. Aktuálne liturgické informácie sa zobrazujú priamo v hlavičke a stavovom riadku. Liturgický deň sa vypočíta offline, aj bez internetu, a ak slávnosť koliduje s významnejším slávením (Zvestovanie, sv. Jozef, Narodenie Jána Krstiteľa), program zohľadní jej presun.</p>
     <p>Kalendár je zostavený tak, že bežné férie a ľubovoľné spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.</p>
     <p>Výpočty sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku (<strong>Všeobecné normy o liturgickom roku</strong> a <strong>Direktórium KBS</strong>).</p>
   
@@ -292,7 +306,7 @@
 
   <div class="features" id="openlp-alternativa">
     <h2 class="serif">Slovenská alternatíva k OpenLP, ProPresenter a PowerPoint</h2>
-    <p>Hľadáš <strong>OpenLP alternatíva Slovensko</strong>? Kinak je slovenská náhrada za PowerPoint a OpenLP – rozumie JKS a vie odporučiť odporúčané piesne z JKS na jednotlivé nedele a sviatky liturgického roka, takže netreba ručne nič riešiť ani nastavovať šablóny.</p>
+    <p>Hľadáte <strong>slovenskú alternatívu k OpenLP</strong> alebo PowerPointu? Kinak rozumie JKS a podľa liturgického dňa ponúkne piesne z <a href="direktorium.html">Direktória JKS</a>, takže nemusíte ručne nič pripravovať ani nastavovať šablóny.</p>
   </div>
 
   <div class="features" id="otazky">
@@ -300,7 +314,7 @@
     <p><strong>Je Kinak naozaj zadarmo?</strong><br>Áno. Je to slobodný softvér s licenciou MIT, ktorý môžu farnosti zdarma používať, upravovať a šíriť.</p>
     <p><strong>Potrebuje Kinak internet?</strong><br>Nie, funguje offline. Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť <strong>raz za rok, naraz na celý liturgický rok</strong>.</p>
     <p><strong>Je Kinak alternatíva k OpenLP?</strong><br>Áno, Kinak je slovenská alternatíva k OpenLP, ProPresenter a PowerPoint, optimalizovaná priamo pre katolícku liturgiu. Priamo v sebe obsahuje kompletný JKS a automatický liturgický kalendár pre Slovensko.</p>
-    <p><strong>Čo je liturgický kalendár program Slovensko?</strong><br>Kinak obsahuje zabudovaný liturgický kalendár program pre Slovensko, ktorý počíta slávenia podľa <strong>Direktória KBS</strong> a <strong>Všeobecných noriem</strong>.</p>
+    <p><strong>Má Kinak liturgický kalendár pre Slovensko?</strong><br>Áno. Kinak obsahuje zabudovaný liturgický kalendár pre Slovensko, ktorý počíta slávenia podľa <strong>Direktória KBS</strong> a <strong>Všeobecných noriem</strong>.</p>
     <p><strong>Čo je Direktórium JKS a kde ho nájdem?</strong><br><a href="direktorium.html">Direktórium JKS</a> je zoznam odporúčaných piesní z JKS na jednotlivé nedele a sviatky liturgického roka.</p>
   </div>
 
