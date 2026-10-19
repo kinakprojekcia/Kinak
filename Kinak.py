@@ -18497,7 +18497,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• Podpora UTF-8 aj ANSI kódovania\n"
                 "• Zobrazenie aktuálnych liturgických informácií zo zabudovaného liturgického kalendára priamo v hlavičke a v stavovom riadku\n\n"
                 
-                "Kalendár je zostavený tak, že bežné férie a ľubovoľné spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.\n\n"
+                "Kalendár je zostavený tak, že bežné férie a (ľubovoľné) spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.\n\n"
                 "Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť raz za rok, naraz na celý liturgický rok.\n\n"
                 "INDIKÁTOR PROJEKCIE\n\n"
                 "• Zelená = projekcia aktívna\n"
