@@ -23,8 +23,9 @@ Kinak je robený priamo pre kostol a pre slovenskú liturgiu: robí jednu vec
 a robí ju poriadne.
 
 - **Ovládanie poslepiačky jedným prstom.** Napíšete číslo piesne a ďalej
-  stačia klávesy: **+ / −** (ďalšia / predchádzajúca strofa), **Enter**
-  (skryť / zobraziť text), **Backspace** (okamžite vypnúť projekciu).
+  stačia klávesy: **+ / −** (ďalšia / predchádzajúca strofa; rovnako fungujú
+  aj šípky **→ / ←**), **Enter** (skryť / zobraziť text), **Backspace**
+  (okamžite vypnúť projekciu), **Esc** (zavrieť okno alebo ukončiť program).
   Počas omše netreba hľadať myš.
 - **Detaily z praxe.** Veľkosť písma sa prispôsobí dĺžke textu, rezerva pre
   overscan chráni spodok textu na projektoroch, ktoré orezávajú okraje,
@@ -45,9 +46,9 @@ prežívať svätú omšu, nielen premietať.
 - **Liturgický kalendár pre Slovensko:** automatický výpočet liturgického dňa,
   Veľkonočnej nedele (Meeus-Jones-Butcher), liturgických období, týždňa
   žaltára I–IV, liturgického roka A/B/C a cyklu I/II
-- **Presuny slávení** pri kolízii s významnejším slávením (Zvestovanie,
-  sv. Jozef, Narodenie Jána Krstiteľa a i.)
-- **Žalmy:** v stavovom riadku zobrazí skratku žalmu podľa liturgického dňa a aktuálny týždeň žaltára v breviári. Odporúčané piesne JKS priradí podľa zvoleného žalmu (prepojenie s oknom Slávenia a Direktóriom JKS)
+- **Presuny slávností** pri kolízii s dňom s vyššou prednosťou (napr. Zvestovanie
+  Pána, sv. Jozef, Narodenie sv. Jána Krstiteľa) podľa Direktória KBS
+- **Žalmy:** podľa vypočítaného liturgického dňa program určí žalm, v stavovom riadku zobrazí jeho skratku a aktuálny týždeň žaltára v breviári a ponúkne odporúčané piesne z JKS (prepojenie s oknom Slávenia a Direktóriom JKS)
 - **Čítania a vešpery:** stiahnete ich na daný deň a po stiahnutí sú uložené
   v počítači (offline cache). Responzóriové žalmy stačí stiahnuť raz za rok,
   naraz na celý liturgický rok.
@@ -106,9 +107,9 @@ americkým modelom.
 - **Krajina / provincia:** Slovensko (SK)
 - **Kalendár:** všeobecný rímsky + vlastné slávenia slovenskej provincie
   (sv. Cyril a Metod 5. 7., Sedembolestná Panna Mária 15. 9. a i.)
-- **Smernice:** Všeobecné normy o liturgickom roku a o kalendári + Direktórium KBS
+- **Smernice:** Všeobecné normy o liturgickom roku a o všeobecnom rímskom kalendári + Direktórium KBS
 
-Kalendár je zostavený tak, že bežné férie a (ľubovoľné) spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.
+Kalendár je zostavený tak, že bežné férie a spomienky (záväzné aj ľubovoľné) zobrazuje ako dni príslušného týždňa liturgického roka (napr. cezročného obdobia).
 
 **Kľúčový rozdiel oproti US modelu:** Zjavenie Pána je na Slovensku pevne
 6. januára (prikázaný sviatok, štátny sviatok) a nepresúva sa na nedeľu.

@@ -84,7 +84,7 @@ KINAK_QR_BASE64 = """iVBORw0KGgoAAAANSUhEUgAAAhwAAAIcCAYAAAC9/nd8AABOsElEQVR4nO3
 # Zdroje dát pre generovanie obsahu:
 #   - Liturgický kalendár a čítania: lc.kbs.sk (Konferencia biskupov Slovenska)
 #   - Liturgia hodín / vešpery: breviar.kbs.sk
-#   - Smernice: Všeobecné normy o liturgickom roku a o kalendári
+#   - Smernice: Všeobecné normy o liturgickom roku a o všeobecnom rímskom kalendári
 #
 # Upozornenie: Sťahovaný obsah z lc.kbs.sk / breviar.kbs.sk NIE JE súčasťou
 # distribúcie – sťahuje sa na požiadanie, pre osobnú potrebu farnosti.
@@ -232,7 +232,7 @@ def datum_zvestovania_pana(rok: int) -> date:
     """
     Zvestovanie Pána: pevný dátum 25. marca, ale s pravidlom presunutia.
 
-    Podľa čl. 5 Všeobecných smerníc o liturgickom roku a o kalendári
+    Podľa čl. 5 Všeobecných noriem o liturgickom roku a o všeobecnom rímskom kalendári
     (porov. breviar.kbs.sk/docs/smernice_lrk.htm) majú nedele adventné,
     pôstne a veľkonočné prednosť pred všetkými slávnosťami a sviatkami
     Pána. Slávnosti, ktoré na tieto nedele pripadnú, sa preto presúvajú
@@ -260,7 +260,7 @@ def datum_zvestovania_pana(rok: int) -> date:
     VAROVANIE – obmedzený rozsah implementácie:
         Táto funkcia NEIMPLEMENTUJE všeobecné pravidlo "najbližší voľný deň"
         podľa celej tabuľky poradia liturgických dní (I.–VIII. trieda,
-        Všeobecné normy liturgického roka a kalendára, čl. 59–61). Rieši
+        Všeobecné normy o liturgickom roku a o všeobecnom rímskom kalendári, čl. 59–61). Rieši
         iba dve vyššie uvedené, dnes jediné reálne možné kolízie v rámci
         univerzálneho rímskeho kalendára a slovenského národného kalendára.
         Ak by sa v budúcnosti do aplikácie doplnil diecézny alebo farský
@@ -339,8 +339,8 @@ def vypocitaj_datum_pohyblivych_slaveni(rok: int) -> Mapping[str, date]:
         "Krista Kráľa":                                      krista_krala,
     })
 
-# Pohyblivé "slávnosti Pána" – podľa Všeobecných noriem liturgického roka
-# (č. 60) majú prednosť pred pevnou slávnosťou svätca rovnakého stupňa
+# Pohyblivé "slávnosti Pána" – podľa Všeobecných noriem o liturgickom roku
+# a o všeobecnom rímskom kalendári (č. 60) majú prednosť pred pevnou slávnosťou svätca rovnakého stupňa
 # tabuľky liturgických dní. Narodenie sv. Jána Krstiteľa (24.6., pevná
 # slávnosť svätca) sa preto pri kolízii s ktoroukoľvek z nich vynúteno
 # presúva. Zoznam je zámerne širší než matematicky nutné pre 24.6. (v praxi
@@ -395,7 +395,7 @@ def je_neposkvrnene_srdce_pm_prekazane(datum: date) -> bool:
 
     Kolidujúce slávenie NSPM vytláča, len ak má vyšší stupeň
     (Slávnosť/Sviatok) – dve spomienky na ten istý deň sa navzájom
-    automaticky nevylučujú (Všeobecné normy liturgického roka, čl. 60),
+    automaticky nevylučujú (Všeobecné normy o liturgickom roku a o všeobecnom rímskom kalendári, čl. 60),
     preto sa "Spomienka"/prázdny stupeň zámerne neberie ako kolízia.
     """
     pohyblive = vypocitaj_datum_pohyblivych_slaveni(datum.year)
@@ -17258,9 +17258,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "════════════════════════════════════\n\n"
                 "Kinak zobrazuje v stavovom riadku skratku žalmu pre dnešok a zajtrajšok "
                 "podľa liturgického dňa. Táto skratka nadväzuje na okno Direktórium a Slávenia. "
-                "Odporúčané piesne JKS priradí podľa zvoleného žalmu (prepojenie s oknom Slávenia a Direktóriom). "
+                "Podľa vypočítaného liturgického dňa program určí žalm a ponúkne odporúčané piesne z Direktória JKS (prepojenie s oknom Slávenia a Direktóriom). "
                 "Pre zobrazenie odporúčaných piesní musí byť táto funkcia zapnutá v nastaveniach.\n\n"
-                "Liturgický deň sa vypočíta automaticky. Ak slávnosť koliduje s významnejším slávením, program zohľadní jej presun. "               
+                "Liturgický deň sa vypočíta automaticky. Ak slávnosť pripadne na deň s vyššou prednosťou, program zohľadní jej presun podľa Direktória KBS. "               
                 "Pri nedeliach sa používa cyklus A/B/C. Pri bežných dňoch cez rok sa rozlišuje "
                 "nepárny a párny rok, napr. 20c1 alebo 20c2.\n\n"
                 
@@ -17736,8 +17736,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         txt1.insert("1.0", "1. Ovládanie\n\n", "nadpis")
         navod_text = (            
             "Zadajte číslo piesne a potom používajte klávesy:\n\n"
-            "• PLUS (+) \t\tĎalšia strofa\n"
-            "• MÍNUS (-) \t\tPredchádzajúca strofa (možno použiť aj šípky)\n"
+            "• PLUS (+) \t\tĎalšia strofa (možno použiť aj šípku →)\n"
+            "• MÍNUS (-) \t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
             "• ENTER \t\tAktivovať projekciu (zobraziť/skryť text)\n"
             "• BACKSPACE \t\tMaže číslo piesne a zároveň okamžite vypína projekciu\n"
             "• ESC \t\tZavrieť okno / ukončiť program\n"
@@ -18483,8 +18483,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             ovladanie_text = (
                 "RÝCHLY NÁVOD\n\n"                
                 "Zadajte číslo piesne a potom používajte klávesy:\n\n"
-                "• PLUS (+)\t\tĎalšia strofa\n"
-                "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípky)\n"
+                "• PLUS (+)\t\tĎalšia strofa (možno použiť aj šípku →)\n"
+                "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
                 "• ENTER\t\tAktivovať projekciu (skryť/zobraziť text)\n"
                 "• BACKSPACE\t\tMaže číslo piesne a zároveň okamžite vypína projekciu\n"
                 "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
@@ -18497,7 +18497,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• Podpora UTF-8 aj ANSI kódovania\n"
                 "• Zobrazenie aktuálnych liturgických informácií zo zabudovaného liturgického kalendára priamo v hlavičke a v stavovom riadku\n\n"
                 
-                "Kalendár je zostavený tak, že bežné férie a (ľubovoľné) spomienky zobrazuje ako týždne Cezročného obdobia – resp. týždne liturgického roka.\n\n"
+                "Kalendár je zostavený tak, že bežné férie a spomienky (záväzné aj ľubovoľné) zobrazuje ako dni príslušného týždňa liturgického roka (napr. cezročného obdobia).\n\n"
                 "Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť raz za rok, naraz na celý liturgický rok.\n\n"
                 "INDIKÁTOR PROJEKCIE\n\n"
                 "• Zelená = projekcia aktívna\n"
@@ -18561,7 +18561,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí mať pri sebe aj priečinok "
                 "s názvom 'piesne'.\n\n"              
                                          
-                "Priečinok môžete ľubovoľne premenovať (napr. `Kinak_v3.3`), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/).\n\n"                                         
+                f"Priečinok môžete ľubovoľne premenovať (napr. `Kinak_v{KINAK_VERSION}`), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/).\n\n"                                         
                 "Kinak (priečinok môže mať ľubovoľný názov)\n"
                 " ├── Kinak.exe\n"
                 " └── piesne/\n"
@@ -18592,7 +18592,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA\n\n"
                 "Liturgické výpočty v aplikácii Kinak sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku.\n\n"
                 f"• Kalendár je zostavený pre: {KALENDAR_KRAJINA} (Slovensko)\n"
-                f"• Výpočty podľa Všeobecných noriem o liturgickom roku a Direktória KBS\n"
+                f"• Výpočty podľa Všeobecných noriem o liturgickom roku a o všeobecnom rímskom kalendári a Direktória KBS\n"
                 f"• Zdroje dát: {KALENDAR_ZDROJE}\n"
             )             
 
@@ -18738,7 +18738,7 @@ Rovnaká logika sa uplatňuje aj pri filtri „Mládež“.
                     ("Ovládanie", 11),
                     ("Vyhľadávanie", 12),
                     ("Úprava textov", 12),
-                    ("Piesne", 8),
+                    ("Priečinok piesní", 16),
                     ("Pomoc", 8),
                     ("Web", 6),
                 ],
