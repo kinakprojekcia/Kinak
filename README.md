@@ -27,6 +27,8 @@ a robí ju poriadne.
   aj šípky **→ / ←**), **Enter** (skryť / zobraziť text), **Backspace**
   (okamžite vypnúť projekciu), **Esc** (zavrieť okno alebo ukončiť program).
   Počas omše netreba hľadať myš.
+- **Čítania a vešpery sám prispôsobí na projekciu.** Po stiahnutí ich program
+  sám upraví do podoby vhodnej na premietanie.
 - **Detaily z praxe.** Veľkosť písma sa prispôsobí dĺžke textu, rezerva pre
   overscan chráni spodok textu na projektoroch, ktoré orezávajú okraje,
   farby sa menia podľa liturgického obdobia a pre Večeradlo je modrá.
@@ -49,9 +51,9 @@ prežívať svätú omšu, nielen premietať.
 - **Presuny slávností** pri kolízii s dňom s vyššou prednosťou (napr. Zvestovanie
   Pána, sv. Jozef, Narodenie sv. Jána Krstiteľa) podľa Direktória KBS
 - **Žalmy:** podľa vypočítaného liturgického dňa program určí žalm, v stavovom riadku zobrazí jeho skratku a aktuálny týždeň žaltára v breviári a ponúkne odporúčané piesne z JKS (prepojenie s oknom Slávenia a Direktóriom JKS)
-- **Čítania a vešpery:** stiahnete ich na daný deň a po stiahnutí sú uložené
-  v počítači (offline cache). Responzóriové žalmy stačí stiahnuť raz za rok,
-  naraz na celý liturgický rok.
+- **Čítania a vešpery:** stiahnete ich na daný deň, program ich sám prispôsobí
+  na projekciu a po stiahnutí sú uložené v počítači (offline cache).
+  Responzóriové žalmy stačí stiahnuť raz za rok, naraz na celý liturgický rok.
 - **Ovládanie na diaľku:** program sa dá ovládať aj bezdrôtovou (numerickou)
   klávesnicou. Okno programu však musí byť aktívne.
 - **Funguje offline:** kalendár, výpočty a piesne fungujú vždy bez internetu.
