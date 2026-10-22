@@ -17693,7 +17693,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         except Exception:
             pass
 
-        window_width, window_height = 700, 520
+        window_width, window_height = 700, 580
         screen_width = wizard.winfo_screenwidth()
         x = max(0, screen_width - window_width - 30)
         y = 30
@@ -17784,16 +17784,68 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
 
     def _build_tab_projektor(self, parent, safe_font_name, bg, fg, wizard):
+        muted = "#9a9a9a"
+        accent = "#07BA07"
+        key_bg, key_border = "#2e2e2e", "#5a5a5a"
+
         f3_inner = tk.Frame(parent, bg=bg)
-        f3_inner.pack(padx=20, pady=20, fill="both", expand=True)
+        f3_inner.pack(padx=20, pady=(12, 10), fill="both", expand=True)
 
         tk.Label(
-            f3_inner, text="3. Projektor", font=(safe_font_name, 16, "bold"), bg=bg, fg="white"
-        ).pack(anchor="w", pady=(0, 20))
+            f3_inner, text="3. Projektor", font=(safe_font_name, 18, "bold"), bg=bg, fg="white"
+        ).pack(anchor="w", pady=(0, 12))
+
+        # --- KROK 1: Win + P -> Rozšíriť ---
+        tk.Label(
+            f3_inner, text="KROK 1", font=(safe_font_name, 9, "bold"), bg=bg, fg=accent
+        ).pack(anchor="w")
+        tk.Label(
+            f3_inner, text="Zapnite v systéme Windows režim Rozšíriť",
+            font=(safe_font_name, 13, "bold"), bg=bg, fg="white"
+        ).pack(anchor="w", pady=(0, 6))
+
+        keys_row = tk.Frame(f3_inner, bg=bg)
+        keys_row.pack(anchor="w", pady=(0, 8))
+
+        def _kláves(text):
+            tk.Label(
+                keys_row, text=text, font=(safe_font_name, 11, "bold"),
+                bg=key_bg, fg="white", padx=10, pady=3,
+                highlightthickness=1, highlightbackground=key_border, highlightcolor=key_border
+            ).pack(side="left")
+
+        def _plus():
+            tk.Label(
+                keys_row, text="+", font=(safe_font_name, 11, "bold"), bg=bg, fg=muted
+            ).pack(side="left", padx=6)
+
+        _kláves("Win")
+        _plus()
+        _kláves("P")
+        tk.Label(
+            keys_row, text="→", font=(safe_font_name, 12, "bold"), bg=bg, fg=muted
+        ).pack(side="left", padx=10)
+        tk.Label(
+            keys_row, text="✓ Rozšíriť (Extend)", font=(safe_font_name, 12, "bold"),
+            bg=bg, fg=accent
+        ).pack(side="left")
 
         tk.Label(
-            f3_inner, text="Nastavenie monitora", font=(safe_font_name, 13, "bold"), bg=bg, fg=fg
-        ).pack(anchor="w", pady=(0, 5))
+            f3_inner,
+            text=(
+                "Odporúčané pre Kinak – projektor je samostatná plocha.\n"                
+            ),
+            font=(safe_font_name, 10), bg=bg, fg=muted, justify="left"
+        ).pack(anchor="w", pady=(0, 14))
+
+        # --- KROK 2: výber monitora ---
+        tk.Label(
+            f3_inner, text="KROK 2", font=(safe_font_name, 9, "bold"), bg=bg, fg=accent
+        ).pack(anchor="w")
+        tk.Label(
+            f3_inner, text="Vyberte monitor pre projektor",
+            font=(safe_font_name, 13, "bold"), bg=bg, fg="white"
+        ).pack(anchor="w", pady=(0, 6))
 
         monitor_var = tk.StringVar()
 
@@ -17803,23 +17855,79 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         except Exception:
             get_monitors = None
 
+        self._wizard_monitor_combo = None
         if callable(get_monitors):
             try:
                 monitory = cast(list, get_monitors())
-                mena = [f"{i+1}: {m.width}x{m.height} (x={m.x}, y={m.y})" for i, m in enumerate(monitory)]
-                monitor_var.set(mena[0] if mena else "")
+                mena = []
+                for i, m in enumerate(monitory):
+                    nazov = f"Monitor {i+1} – {m.width}×{m.height}"
+                    if getattr(m, "is_primary", False):
+                        nazov += " (hlavný)"
+                    mena.append(nazov)
+
+                # Predvýber: uložený monitor, inak prvý nehlavný (projektor), inak prvý
+                predvybrany = 0
+                pref = getattr(self, "preferred_monitor_index", None)
+                if isinstance(pref, int) and 0 <= pref < len(mena):
+                    predvybrany = pref
+                else:
+                    for i, m in enumerate(monitory):
+                        if not getattr(m, "is_primary", False):
+                            predvybrany = i
+                            break
+
+                # Vlastný štýl: text musí byť viditeľný vo všetkých stavoch (readonly/focus/active)
+                _st = ttk.Style(wizard)
+                _wiz_styl = "KinakWizard.TCombobox"
+                _pole_bg, _text_fg = "#262626", "#FFFFFF"
+                try:
+                    _layout = _st.layout("Big.TCombobox")
+                    if _layout:
+                        _st.layout(_wiz_styl, _layout)
+                except Exception:
+                    pass
+                try:
+                    _st.configure(
+                        _wiz_styl, foreground=_text_fg, fieldbackground=_pole_bg,
+                        background="#111111", arrowcolor="#9096A3", padding=5,
+                        selectbackground=_pole_bg, selectforeground=_text_fg,
+                        bordercolor="#5a5a5a", lightcolor="#5a5a5a", darkcolor="#5a5a5a",
+                    )
+                    _st.map(
+                        _wiz_styl,
+                        foreground=[("readonly", _text_fg), ("focus", _text_fg), ("active", _text_fg)],
+                        fieldbackground=[("readonly", _pole_bg), ("focus", "#2e2e2e"), ("active", "#2e2e2e")],
+                        selectbackground=[("readonly", _pole_bg), ("focus", _pole_bg)],
+                        selectforeground=[("readonly", _text_fg), ("focus", _text_fg)],
+                        bordercolor=[("focus", "#07BA07"), ("active", "#07BA07")],
+                        lightcolor=[("focus", "#07BA07"), ("active", "#07BA07")],
+                        darkcolor=[("focus", "#07BA07"), ("active", "#07BA07")],
+                        arrowcolor=[("active", "#e0e0e6"), ("focus", "#e0e0e6")],
+                    )
+                except Exception:
+                    _wiz_styl = "Big.TCombobox"
 
                 combo = ttk.Combobox(
                     f3_inner, values=mena, textvariable=monitor_var,
-                    state="readonly", font=(safe_font_name, 12)
+                    state="readonly", font=(safe_font_name, 12), style=_wiz_styl
                 )
-                combo.pack(fill="x", pady=5)
+                combo.pack(fill="x", pady=(0, 4))
+
+                if mena:
+                    combo.current(predvybrany)
+                else:
+                    monitor_var.set("Vyberte monitor pre projektor…")
+
+                # Bez modrého označenia textu po výbere / focuse
+                combo.bind("<FocusIn>", lambda e: combo.after_idle(lambda: combo.selection_clear()))
 
                 self._wizard_monitor_combo = combo
 
                 def na_zmenu_monitora(event):
+                    combo.selection_clear()
+                    idx = combo.current()
                     if getattr(self, "projection_window", None):
-                        idx = combo.current()
                         self.preferred_monitor_index = idx
                         setattr(self.projection_window, "preferred_monitor_index", idx)
                         if hasattr(self.projection_window, "move_and_maximize"):
@@ -17829,28 +17937,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 combo.bind("<<ComboboxSelected>>", na_zmenu_monitora)
             except Exception:
                 tk.Label(f3_inner, text="Chyba načítania monitorov", bg=bg, fg="#ff6b6b").pack(anchor="w")
-
                 self._wizard_monitor_combo = None
-
-        # --- WIN + P INFORMÁCIE ---
-        tk.Label(
-            f3_inner,
-            text="Zapnite v systéme Windows pomocou skratky Win + P režim Rozšíriť:",
-            font=(safe_font_name, 12, "bold"),
-            bg=bg, fg=fg
-        ).pack(anchor="w", pady=(20, 5))
-
-        tk.Label(
-            f3_inner,
-            text=(
-                "• Iba PC obrazovka – projektor je vypnutý\n"
-                "• Duplikovať – rovnaký obraz na oboch monitoroch\n"
-                "• ✓ Rozšíriť – odporúčané pre Kinak (projektor je samostatná plocha)\n"
-                "• Iba druhá obrazovka – obraz ide len na projektor"
-            ),
-            font=(safe_font_name, 12),
-            bg=bg, fg=fg, justify="left"
-        ).pack(anchor="w", pady=(0, 15))
 
         def test_projekcie():
             try:
@@ -17894,16 +17981,22 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             except Exception as e:
                 messagebox.showerror("Chyba testu", f"Chyba pri pokuse o test: {e}", parent=wizard)
 
-
-
-
+        # --- TEST PROJEKCIE ---
+        test_frame = tk.Frame(f3_inner, bg=bg)
+        test_frame.pack(pady=(14, 0))
 
         tk.Button(
-            f3_inner, text="Test projekcie (2.5s)", command=test_projekcie,
-            bg="#262626", fg="white", font=(safe_font_name, 12, "bold"),
-            relief="flat", borderwidth=0, padx=12, pady=6,
-            activebackground="#2a2a2a", activeforeground="white", cursor="hand2"
-        ).pack(pady=10)
+            test_frame, text="Test projekcie", command=test_projekcie,
+            bg="#333333", fg="white", font=(safe_font_name, 12, "bold"),
+            relief="flat", borderwidth=0, padx=16, pady=6,
+            highlightthickness=1, highlightbackground="#7a7a7a", highlightcolor=accent,
+            activebackground="#444444", activeforeground="white", cursor="hand2"
+        ).pack()
+        tk.Label(
+            test_frame,
+            text="Na vybranom monitore sa na 2,5 s zobrazí projekcia.",
+            font=(safe_font_name, 10), bg=bg, fg=muted
+        ).pack(pady=(5, 0))
 
 
     def _zablokovat_klik(self, event=None):
