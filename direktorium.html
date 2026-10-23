@@ -156,7 +156,10 @@ footer a{color:var(--burg)}
 @media screen and (max-width:520px){.panel{padding:10px;border-radius:22px}.search{padding:0 14px}.showall{padding:0 12px;font-size:14px}}
 @media screen and (max-width:430px){.ctl-tools{flex-wrap:wrap}.seg{flex-basis:100%}.step{flex:1;justify-content:space-between}.step button{flex:1}.step .rst{flex:1.4}.more>button{height:100%}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+.printver{display:none}
 @media print{
+ .noprint{display:none!important}
+ .printver{display:inline!important;font-weight:600}
  .skip,header.top,.nav,.controls,.count,.promo,footer{display:none!important}
  body{background:#fff}main{padding:0;max-width:none}
  thead th{position:static;background:#fff}
@@ -172,7 +175,7 @@ footer a{color:var(--burg)}
 <nav class="nav" aria-label="Rýchla navigácia"><a href="index.html#stiahnut">Stiahnuť</a><a href="index.html#spustenie">Ako spustiť</a><a href="direktorium.html" class="active">Direktórium JKS</a><a href="index.html#vyhody">Výhody</a><a href="index.html#pre-koho">Pre koho</a><a href="index.html#piesne">Piesne</a><a href="index.html#otazky">Otázky</a></nav>
 <main>
 <h1 class="title">Direktórium JKS</h1>
-<p class="subtitle">Odporúčané piesne z JKS na jednotlivé nedele a sviatky liturgického roka. Vyhľadávanie funguje aj bez diakritiky. <a href="jks/piesne.html">Zoznam piesní JKS podľa čísla</a></p>
+<p class="subtitle">Odporúčané piesne z JKS na jednotlivé nedele a sviatky liturgického roka. <span class="noprint">Vyhľadávanie funguje aj bez diakritiky. <a href="jks/piesne.html">Zoznam piesní JKS podľa čísla</a></span><span class="printver" id="printVer">Verzia: A</span></p>
 
 <div class="controls" id="controls"><div class="panel">
  <div class="ctl-main">
@@ -331,7 +334,7 @@ function render(){
  $('count').textContent=n+' '+pl(n);
 }
 function setFont(px){fontSize=Math.max(11,Math.min(22,px));document.documentElement.style.setProperty('--fs',fontSize+'px');$('btnMinus').disabled=fontSize<=11;$('btnPlus').disabled=fontSize>=22;}
-function setVersion(v){activeVer=v;[['A','btnVerA'],['B','btnVerB']].forEach(([k,id])=>{const b=$(id);b.classList.toggle('on',k===v);b.setAttribute('aria-pressed',k===v);});render();}
+function setVersion(v){activeVer=v;$('printVer').textContent='Verzia: '+v;[['A','btnVerA'],['B','btnVerB']].forEach(([k,id])=>{const b=$(id);b.classList.toggle('on',k===v);b.setAttribute('aria-pressed',k===v);});render();}
 function setObdobie(o){activeObdobie=o;document.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.obdobie===o));render();}
 function clearSearch(){$('searchInput').value='';filterText='';}
 $('btnVerA').onclick=()=>setVersion('A');$('btnVerB').onclick=()=>setVersion('B');
