@@ -143,7 +143,7 @@
           "name": "Hľadáte modlitebnú knižku do mobilu?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Kinak je program pre Windows. Ak hľadáte piesne JKS v mobile, aplikácia JKS Knižka v Google Play obsahuje piesne Jednotného katolíckeho spevníka a funguje aj bez internetu."
+            "text": "Ak hľadáte piesne JKS v mobile, aplikácia JKS Knižka obsahuje piesne Jednotného katolíckeho spevníka aj modlitby. Je bezplatná a funguje aj bez pripojenia na internet."
           }
         },
         {
@@ -222,6 +222,19 @@
   .features .keys li{align-items:baseline;gap:12px}
   .features .keys kbd{min-width:104px}
   kbd{display:inline-block;min-width:34px;text-align:center;flex-shrink:0;background:#FFFBF2;border:1px solid rgba(26,26,26,0.18);border-bottom-width:2px;border-radius:6px;padding:1px 8px;font-size:12.5px;font-weight:600;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;color:#1A1A1A}
+
+
+  .nav{margin-top:14px}
+  /* --- Oddelená sekcia mimo Kinaku --- */
+  .others{margin-top:48px;width:100%;max-width:440px;background:#F6EAD0;border:1px solid rgba(201,169,110,0.55);border-radius:24px;padding:28px 20px 24px}
+  .others h2{font-size:26px;font-weight:400;text-align:center}
+  .others-intro{font-size:13.5px;line-height:22px;color:rgba(26,26,26,0.7);text-align:center;margin-top:8px}
+  .app-card{margin-top:16px;background:#fff;border:1px solid rgba(26,26,26,0.08);border-left:4px solid #C9A96E;border-radius:16px;padding:18px 20px}
+  .app-card .pill{font-size:10px;padding:3px 10px}
+  .app-card h3{font-size:15px;font-weight:600;margin-top:10px}
+  .app-card p{font-size:13.5px;line-height:21px;color:rgba(26,26,26,0.8);margin-top:6px}
+  .app-card a.go{display:inline-block;margin-top:10px;font-size:13.5px;font-weight:600;color:#8B1A1A;text-decoration:none}
+  .app-card a.go:hover{text-decoration:underline}
 
 </style>
 </head>
@@ -366,9 +379,26 @@
     <p><strong>Je Kinak alternatíva k OpenLP?</strong><br>Áno, Kinak je slovenská alternatíva k OpenLP, ProPresenter a PowerPoint, optimalizovaná priamo pre katolícku liturgiu. Priamo v sebe obsahuje kompletný JKS a automatický liturgický kalendár pre Slovensko.</p>
     <p><strong>Môžem pridať vlastné alebo mládežnícke piesne?</strong><br>Áno. Stačí upraviť alebo pridať súbor <code>.txt</code> v priečinku <code>piesne/</code> alebo v podpriečinkoch <code>Mládež/</code> a <code>Večeradlo/</code>.</p>
     <p><strong>Čo je Direktórium JKS a kde ho nájdem?</strong><br><a href="direktorium.html">Direktórium JKS</a> je zoznam odporúčaných piesní z JKS na jednotlivé nedele a sviatky liturgického roka.</p>
-    <p><strong>Existuje aj Katechizmus a Sväté písmo do mobilu?</strong><br>Áno. Bezplatná Android aplikácia spája dva zdroje na jednom mieste: celý Katechizmus Katolíckej cirkvi a celé Sväté písmo. <a href="katechizmus.html">Viac o aplikácii Katechizmus</a></p>
-    <p><strong>Hľadáte modlitebnú knižku do mobilu?</strong><br>Kinak je program pre Windows. Ak hľadáte piesne JKS v mobile, aplikácia <a href="https://play.google.com/store/apps/details?id=pk.tappdesign.knizka&amp;hl=sk" target="_blank" rel="noopener">JKS Knižka v Google Play</a> obsahuje piesne Jednotného katolíckeho spevníka a funguje aj bez internetu.</p>
   </div>
+
+  <section class="others" id="ine-projekty" aria-labelledby="ine-h">
+    <h2 id="ine-h" class="serif">Viac od vývojára (TAppDesign)</h2>
+    <p class="others-intro">Kinak beží na Windows. Ak hľadáte niečo do mobilu, pozrite si tieto Android aplikácie:</p>
+
+    <article class="app-card">
+      <div class="pill"><i></i> Android</div>
+      <h3>Existuje aj Katechizmus a Sväté písmo do mobilu?</h3>
+      <p>Áno. Bezplatná Android aplikácia spája dva zdroje na jednom mieste: celý Katechizmus Katolíckej cirkvi a celé Sväté písmo.</p>
+      <a class="go" href="katechizmus.html">Viac o aplikácii Katechizmus →</a>
+    </article>
+
+    <article class="app-card">
+      <div class="pill"><i></i> Android</div>
+      <h3>Hľadáte modlitebnú knižku do mobilu?</h3>
+      <p>Ak hľadáte piesne JKS v mobile, aplikácia JKS Knižka obsahuje piesne Jednotného katolíckeho spevníka aj modlitby. Je bezplatná a funguje aj bez pripojenia na internet.</p>
+      <a class="go" href="https://play.google.com/store/apps/details?id=pk.tappdesign.knizka&amp;hl=sk" target="_blank" rel="noopener">JKS Knižka v Google Play ↗</a>
+    </article>
+  </section>
 
 </main>
 <footer style="flex-direction:column;gap:8px;display:flex;align-items:center;justify-content:center;padding:20px 24px;text-align:center;margin-top:24px;border-top:1px solid rgba(26,26,26,0.06)"><p style="font-size:11px;color:rgba(26,26,26,0.65)">MIT License • Zdroj dát: lc.kbs.sk, breviar.kbs.sk • 2026 Kinak – Kremnica</p><p style="font-size:11px;color:rgba(26,26,26,0.65)"><a href="https://play.google.com/store/apps/dev?id=5341542724056271332&amp;hl=sk" target="_blank" rel="noopener" style="color:#8B1A1A">Viac od vývojára (TAppDesign)</a></p></footer>
