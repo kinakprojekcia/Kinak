@@ -3748,6 +3748,9 @@ DEFAULT_CONFIG = {
     "auto_filter_podla_dnes": True,
     "pouzit_vlastnu_farbu": False,
     "bottom_margin": 40,
+    # Výška prázdnych riadkov medzi strofami v texte ovládacieho okna (v %,
+    # 100 = pôvodná výška). Projekcia sa tým NEMENÍ.
+    "medzery_ovladanie": 50,
     "reserved_vertical_ratio": 0.20,
     "zobrazit_direktorium": False,
     # Úvodná obrazovka (obsah hlavného okna, kým nie je vybraná pieseň)
@@ -9031,6 +9034,8 @@ if TYPE_CHECKING:
         aktualny_subor_cesta: Any = None
         bottom_margin: Any = None
         bottom_margin_var: Any = None
+        medzery_ovladanie: Any = None
+        medzery_ovladanie_var: Any = None
         cele_hodnoty_comboboxu: Any = None
         checkbox_diagnostika: Any = None
         checkbox_direktorium: Any = None
@@ -9298,6 +9303,8 @@ if TYPE_CHECKING:
         def _configure_canvas(self, *args: Any, **kwargs: Any) -> Any: ...
         def _stlmena_farba(self, *args: Any, **kwargs: Any) -> Any: ...
         def _farba_textu_pre_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _aplikuj_medzery_ovladanie(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _oznac_prazdne_riadky_obsahu(self, *args: Any, **kwargs: Any) -> Any: ...
 else:
     class _ControlAppBase:
         """Za behu programu úplne prázdna trieda – žiadny vplyv na správanie,
@@ -9369,6 +9376,7 @@ class _NastaveniaMixin(_ControlAppBase):
 
             full_config["font_size"] = validate_int("font_size", 20, 200)
             full_config["bottom_margin"] = validate_int("bottom_margin", 0, 400)
+            full_config["medzery_ovladanie"] = validate_int("medzery_ovladanie", 0, 100)
             full_config["pomocnik_font_size"] = validate_int("pomocnik_font_size", 8, 40)
             full_config["about_font_size"] = validate_int("about_font_size", 8, 40)
             full_config["slavnosti_font_size"] = validate_int("slavnosti_font_size", 8, 40)
@@ -9493,6 +9501,7 @@ class _NastaveniaMixin(_ControlAppBase):
                 # Inštančné premenné (font_size spravujeme výhradne cez self.font_size)
                 self.font_size = int(full_config["font_size"])
                 self.bottom_margin = full_config["bottom_margin"]
+                self.medzery_ovladanie = full_config["medzery_ovladanie"]
                 self.reserved_vertical_ratio = full_config["reserved_vertical_ratio"]
                 self.fade_speed = full_config["fade_speed"]
                 self.song_folder_path = Path(full_config["song_folder"]).resolve()                
@@ -9500,6 +9509,8 @@ class _NastaveniaMixin(_ControlAppBase):
                 # Priradenie do TK premenných cez set_safe
                 set_safe("font_size_var", self.font_size)
                 set_safe("bottom_margin_var", self.bottom_margin)
+                set_safe("medzery_ovladanie_var", self.medzery_ovladanie)
+                self._aplikuj_medzery_ovladanie(self.medzery_ovladanie)
                 set_safe("reserved_vertical_var", self.reserved_vertical_ratio)
                 set_safe("fade_speed_var", self.fade_speed)
                 set_safe("pouzit_vlastnu_farbu", use_custom)
@@ -9668,6 +9679,10 @@ class _NastaveniaMixin(_ControlAppBase):
         self.diagnostika_povolena = self.diagnostika_povolena_var.get() if hasattr(self, "diagnostika_povolena_var") else True
         nastav_diagnostiku(self.diagnostika_povolena)
         self.bottom_margin = self.bottom_margin_var.get() if hasattr(self, "bottom_margin_var") else 50
+        try:
+            self.medzery_ovladanie = int(self.medzery_ovladanie_var.get()) if hasattr(self, "medzery_ovladanie_var") else DEFAULT_CONFIG["medzery_ovladanie"]
+        except (tk.TclError, ValueError, TypeError):
+            self.medzery_ovladanie = DEFAULT_CONFIG["medzery_ovladanie"]
         self.reserved_vertical_ratio = self.reserved_vertical_var.get() if hasattr(self, "reserved_vertical_var") else 0.20
 
         pouzit_vlastnu = self.pouzit_vlastnu_farbu.get() if hasattr(self, "pouzit_vlastnu_farbu") else False
@@ -9678,6 +9693,7 @@ class _NastaveniaMixin(_ControlAppBase):
         # Chýbajúce konfiguračné atribúty preto doplníme na jednom mieste.
         config_attr_defaults = {
             "statusbar_tyzden_zaltara": DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", False),
+            "medzery_ovladanie": DEFAULT_CONFIG.get("medzery_ovladanie", 50),
             "statusbar_skratka_zalmu": True,
             "statusbar_jks_piesne": True,
             "auto_filter_podla_dnes": DEFAULT_CONFIG.get("auto_filter_podla_dnes", False),
@@ -9714,6 +9730,45 @@ class _NastaveniaMixin(_ControlAppBase):
             "lit_season": lit_season,
             "def_filter": def_filter,
         }
+
+    def _aplikuj_medzery_ovladanie(self, hodnota=None):
+        """
+        Nastaví výšku prázdnych riadkov (medzier medzi strofami) v texte
+        ovládacieho okna. Mení sa iba písmo tagu „medzera_riadok“, ktorým sú
+        označené prázdne riadky – text ani projekcia sa nemenia.
+        `hodnota` je v % (0–100, 100 = pôvodná výška prázdneho riadku).
+        """
+        try:
+            if hodnota is None:
+                hodnota = getattr(self, "medzery_ovladanie", DEFAULT_CONFIG["medzery_ovladanie"])
+            pct = max(0, min(100, int(float(hodnota))))
+            widget = getattr(self, "obsah_suboru_text", None)
+            if widget is None or not widget.winfo_exists():
+                return
+            try:
+                zaklad = abs(int(tkfont.Font(font=widget.cget("font")).cget("size"))) or 14
+            except Exception:
+                zaklad = 14
+            velkost = max(1, round(zaklad * pct / 100))
+            widget.tag_config("medzera_riadok", font=(self.font_family, velkost))
+        except Exception as e:
+            log_exception("_aplikuj_medzery_ovladanie: zlyhalo nastavenie medzier", e)
+
+    def _oznac_prazdne_riadky_obsahu(self):
+        """
+        Označí tagom „medzera_riadok“ všetky prázdne riadky v texte ovládacieho
+        okna, aby sa dala ich výška meniť nezávisle od projekcie.
+        """
+        try:
+            widget = getattr(self, "obsah_suboru_text", None)
+            if widget is None:
+                return
+            widget.tag_remove("medzera_riadok", "1.0", tk.END)
+            for cislo, riadok in enumerate(widget.get("1.0", "end-1c").split("\n"), 1):
+                if not riadok.strip():
+                    widget.tag_add("medzera_riadok", f"{cislo}.0", f"{cislo}.0 lineend+1c")
+        except Exception as e:
+            log_exception("_oznac_prazdne_riadky_obsahu: zlyhalo označenie prázdnych riadkov", e)
 
     def _farba_textu_pre_projekciu(self, base_color: str) -> str:
         """
@@ -9821,6 +9876,7 @@ class _NastaveniaMixin(_ControlAppBase):
             "default_filter_obdobie": def_filter,
             "pouzit_vlastnu_farbu": pouzit_vlastnu,
             "bottom_margin": int(self.bottom_margin),
+            "medzery_ovladanie": int(self.medzery_ovladanie),
             "reserved_vertical_ratio": float(self.reserved_vertical_ratio),
             "zobrazit_direktorium": bool(self.zobrazit_direktorium),
             "direktorium_verzia": getattr(self, "direktorium_verzia", "A"),
@@ -10029,7 +10085,7 @@ class _NastaveniaMixin(_ControlAppBase):
         # Nastavenie geometrie (vycentrovanie)
         saved_w = int(self.settings_window_width)
         saved_h = int(self.settings_window_height)
-        window_width  = saved_w if saved_w >= 400 else 620
+        window_width  = saved_w if saved_w >= 400 else 860
         window_height = saved_h if saved_h >= 300 else 660
         screen_width = settings_window.winfo_screenwidth()
         screen_height = settings_window.winfo_screenheight()
@@ -10075,11 +10131,14 @@ class _NastaveniaMixin(_ControlAppBase):
         style = ttk.Style(settings_window)
         _zabezpec_tmave_scrollbary(style)
 
-        # --- ZÁLOŽKY: ZÁKLADNÉ / POKROČILÉ (štýl Pomocníka a Slávenia) ---
+        # --- ZÁLOŽKY: VZHĽAD / OVLÁDANIE / ÚVOD / LITURGIA / PROJEKCIA / POKROČILÉ ---
         buttons, stripes = _vytvor_info_tabs_header(
             top_panel, ff, bg, fg,
-            tab_specs=[("Základné", 12), ("Pokročilé", 12)],
-            medzera=2,
+            tab_specs=[
+                ("Vzhľad", 0), ("Ovládanie", 0), ("Úvodná obrazovka", 0),
+                ("Liturgia", 0), ("Projekcia", 0), ("Pokročilé", 0),
+            ],
+            medzera=6,
         )
 
         tab_frames: dict[int, tk.Frame] = {}
@@ -10120,8 +10179,12 @@ class _NastaveniaMixin(_ControlAppBase):
             tab_canvases[cislo] = canvas
             return scrollable_frame
 
-        zakladne_frame = vytvor_scroll_tab(1)
-        pokrocile_frame = vytvor_scroll_tab(2)
+        vzhlad_frame = vytvor_scroll_tab(1)
+        ovladanie_frame = vytvor_scroll_tab(2)
+        uvod_frame = vytvor_scroll_tab(3)
+        liturgia_frame = vytvor_scroll_tab(4)
+        projekcia_frame = vytvor_scroll_tab(5)
+        pokrocile_frame = vytvor_scroll_tab(6)
 
         aktivna_zalozka = {"cislo": 1}
 
@@ -10135,7 +10198,7 @@ class _NastaveniaMixin(_ControlAppBase):
             stripes[cislo].config(bg=active)
             buttons[cislo].config(font=(ff, 12, "bold"))
 
-        for i in (1, 2):
+        for i in tab_frames:
             buttons[i].config(command=lambda i=i: zobraz_zalozku(i), takefocus=0)
 
         # Kolieskom myši sa posúva aktívna záložka
@@ -10194,13 +10257,94 @@ class _NastaveniaMixin(_ControlAppBase):
             btn.bind("<Leave>", _on_leave)
             return btn
 
+        # --- VÝRAZNÉ ZAŠKRTÁVACIE POLÍČKA ---
+        # Štandardný indikátor tk.Checkbutton je na tmavej téme malý a zafajknutie
+        # (čierne na tmavom) takmer nevidno. Preto sa kreslí vlastný obrázok:
+        # nezaškrtnuté = tmavé políčko so sivým rámikom, zaškrtnuté = jasne modré
+        # políčko s bielou fajkou.
+        _CHECK_ON = "#2F80ED"        # výplň zaškrtnutého políčka
+        _CHECK_ON_RAMIK = "#8FBBFF"  # rámik zaškrtnutého políčka
+        _CHECK_OFF_RAMIK = "#9A9AA5" # rámik nezaškrtnutého políčka
+        try:
+            _mierka = max(1.0, settings_window.winfo_fpixels("1i") / 96.0)
+        except tk.TclError:
+            _mierka = 1.0
+        _box = max(20, int(round(20 * _mierka)))     # strana políčka v px
+        _medzera_za = max(8, int(round(8 * _mierka)))  # priehľadná medzera medzi políčkom a textom
+
+        def _nakresli_check(zaskrtnute):
+            img = tk.PhotoImage(master=settings_window, width=_box + _medzera_za, height=_box)
+            rk = _CHECK_ON_RAMIK if zaskrtnute else _CHECK_OFF_RAMIK
+            vyplne = _CHECK_ON if zaskrtnute else pole_bg
+            hr = 2  # hrúbka rámika
+            img.put(rk, to=(0, 0, _box, _box))
+            img.put(vyplne, to=(hr, hr, _box - hr, _box - hr))
+            # zaoblené rohy: rohové pixely vrátime na farbu pozadia okna
+            for (cx, cy) in ((0, 0), (_box - 1, 0), (0, _box - 1), (_box - 1, _box - 1)):
+                img.put(bg, to=(cx, cy, cx + 1, cy + 1))
+            if zaskrtnute:
+                body = ((0.24, 0.52), (0.43, 0.72), (0.78, 0.30))
+                hrub = max(2, int(round(_box * 0.12)))
+                for (x0, y0), (x1, y1) in zip(body, body[1:]):
+                    kroky = max(8, int(_box * 1.5))
+                    for k in range(kroky + 1):
+                        t = k / kroky
+                        x = int((x0 + (x1 - x0) * t) * _box)
+                        y = int((y0 + (y1 - y0) * t) * _box)
+                        img.put("#FFFFFF", to=(x - hrub // 2, y - hrub // 2,
+                                               x - hrub // 2 + hrub, y - hrub // 2 + hrub))
+            return img
+
+        _check_obrazky = (_nakresli_check(False), _nakresli_check(True))
+        self._check_obrazky = _check_obrazky   # referencia, aby ich Tk nezmazal
+
+        def _hex_na_rgb(h):
+            h = h.lstrip("#")
+            return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+        def _zmiesaj(c1, c2, podiel):
+            """Zmieša farbu c1 (pozadie) s farbou c2 v danom podiele 0–1."""
+            podiel = max(0.0, min(1.0, podiel))
+            return tuple(round(a + (b - a) * podiel) for a, b in zip(c1, c2))
+
+        def _nakresli_radio(zapnute):
+            """Okrúhly prepínač s vyhladenými hranami: tmavý kruh so sivým rámikom,
+            alebo modrý kruh s bielou bodkou (rovnaká paleta ako zaškrtávacie políčka)."""
+            img = tk.PhotoImage(master=settings_window, width=_box + _medzera_za, height=_box)
+            rk = _hex_na_rgb(_CHECK_ON_RAMIK if zapnute else _CHECK_OFF_RAMIK)
+            vyplne = _hex_na_rgb(_CHECK_ON if zapnute else pole_bg)
+            pozadie = _hex_na_rgb(bg)
+            biela = (255, 255, 255)
+            stred = _box / 2.0
+            r_von = _box / 2.0 - 0.5
+            r_dnu = r_von - 2.0
+            r_bodka = _box * 0.20
+            for y in range(_box):
+                for x in range(_box):
+                    d = ((x + 0.5 - stred) ** 2 + (y + 0.5 - stred) ** 2) ** 0.5
+                    pokrytie = r_von - d + 0.5
+                    if pokrytie <= 0:
+                        continue
+                    farba = _zmiesaj(pozadie, rk, pokrytie)
+                    farba = _zmiesaj(farba, vyplne, r_dnu - d + 0.5)
+                    if zapnute:
+                        farba = _zmiesaj(farba, biela, r_bodka - d + 0.5)
+                    img.put("#%02x%02x%02x" % farba, to=(x, y))
+            return img
+
+        _radio_obrazky = (_nakresli_radio(False), _nakresli_radio(True))
+        self._radio_obrazky = _radio_obrazky   # referencia, aby ich Tk nezmazal
+
         def tmavy_check(parent, text, variable, command: Any = None, pady=2, **kw):
             cb = tk.Checkbutton(
                 parent, text=text, variable=variable, command=command,
-                font=FONT, bg=bg, fg=fg, selectcolor=pole_bg,
+                font=FONT, bg=bg, fg=fg,
+                indicatoron=False, image=_check_obrazky[0], selectimage=_check_obrazky[1],
+                compound=tk.LEFT, selectcolor=bg,
                 activebackground=bg, activeforeground=active,
                 disabledforeground=muted_fg,
-                highlightthickness=0, bd=0, relief="flat",
+                highlightthickness=0, bd=0, relief="flat", offrelief="flat",
+                overrelief="flat", cursor="hand2",
                 anchor="w", justify=tk.LEFT, wraplength=520, pady=pady, **kw
             )
             popisy.append(cb)    # dlhý text sa zalamuje podľa šírky okna
@@ -10268,11 +10412,11 @@ class _NastaveniaMixin(_ControlAppBase):
                 log_exception("Nastavenia: štýl rozbaľovacej ponuky zlyhal", e)
 
         # 1. INFO PANEL
-        frame_info = vytvor_sekciu(zakladne_frame, "Informácia")
+        frame_info = vytvor_sekciu(vzhlad_frame, "Informácia")
         vytvor_popis(frame_info, "Veľkosť písma sa automaticky prispôsobuje veľkosti obrazovky.")
 
         # 2. VEĽKOSŤ PÍSMA
-        frame_font = vytvor_sekciu(zakladne_frame, "Základná veľkosť písma")
+        frame_font = vytvor_sekciu(vzhlad_frame, "Základná veľkosť písma")
 
         # IntVar musí dostať istý int
         if not hasattr(self, "font_size_var"):
@@ -10299,7 +10443,7 @@ class _NastaveniaMixin(_ControlAppBase):
         )
 
         # 3. FARBA TEXTU A OBDOBIA
-        frame_color = vytvor_sekciu(zakladne_frame, "Farba textu")
+        frame_color = vytvor_sekciu(vzhlad_frame, "Farba textu")
 
         moznosti_obdobia = list(LITURGICKE_OBDOBIA.keys())
         self.obdobie_menu = tk.OptionMenu(
@@ -10345,7 +10489,7 @@ class _NastaveniaMixin(_ControlAppBase):
 
 
         # 4. LITURGICKÝ ROK A / B / C
-        frame_lit_rok_sekcia = vytvor_sekciu(pokrocile_frame, "Liturgický rok")
+        frame_lit_rok_sekcia = vytvor_sekciu(liturgia_frame, "Liturgický rok")
         vytvor_popis(frame_lit_rok_sekcia, "Liturgický cyklus (A, B, C) sa mení v programe Kinak automaticky každú Prvú adventnú nedeľu – začína sa nový liturgický rok.")
 
         if not hasattr(self, "liturgical_year_var"):
@@ -10358,21 +10502,29 @@ class _NastaveniaMixin(_ControlAppBase):
         frame_lit_rok.pack(anchor="w", pady=(4, 0))
 
         for rok in ("A", "B", "C"):
-            tk.Radiobutton(
+            _rb = tk.Radiobutton(
                 frame_lit_rok,
-                text=f"  {rok}  ",
+                text=f" {rok}  ",
                 variable=self.liturgical_year_var,
                 value=rok,
                 font=FONT,
-                bg=bg, fg=fg, selectcolor=pole_bg,
+                bg=bg, fg=fg, selectcolor=bg,
+                indicatoron=False, image=_radio_obrazky[0], selectimage=_radio_obrazky[1],
+                compound=tk.LEFT,
                 activebackground=bg, activeforeground=active,
                 disabledforeground=fg,
-                highlightthickness=0, bd=0,
-                state=tk.DISABLED,          # hodnota je automatická – len zobrazenie
-            ).pack(side=tk.LEFT, padx=4)
+                highlightthickness=0, bd=0, relief="flat", offrelief="flat",
+                takefocus=0,
+            )
+            # Hodnota je automatická – len zobrazenie. Nepoužíva sa state=DISABLED,
+            # lebo Tk by obrázok prepínača zosivil/zrastroval; kliknutie a medzerník
+            # sa namiesto toho zablokujú.
+            for _udalost in ("<Button-1>", "<space>", "<Return>"):
+                _rb.bind(_udalost, lambda e: "break")
+            _rb.pack(side=tk.LEFT, padx=4)
 
         # 5. PREDVOLENÝ FILTER (HLAVNÉ OKNO)
-        frame_def_filter = vytvor_sekciu(zakladne_frame, "Predvolený filter v ovládaní")
+        frame_def_filter = vytvor_sekciu(liturgia_frame, "Predvolený filter v ovládaní")
 
         moznosti_subory = list(self.obdobie_subory.keys())
         self.default_filter_menu = tk.OptionMenu(frame_def_filter, self.default_filter_var, *moznosti_subory)
@@ -10457,7 +10609,7 @@ class _NastaveniaMixin(_ControlAppBase):
             cb.pack(anchor="w")
             return cb
 
-        frame_basic_view = vytvor_sekciu(zakladne_frame, "Náhľad v ovládaní")
+        frame_basic_view = vytvor_sekciu(ovladanie_frame, "Náhľad v ovládaní")
 
         self.checkbox_live_preview = tmavy_check(
             frame_basic_view,
@@ -10479,9 +10631,34 @@ class _NastaveniaMixin(_ControlAppBase):
         Tooltip(self.checkbox_cislo_strofy_v_strede,
                 "Určuje, či sa číslo 254-1/15 zobrazí v strede alebo vpravo.")
 
+        # Medzery medzi strofami v texte ovládacieho okna (projekcia sa nemení)
+        tk.Label(
+            frame_basic_view, text="Medzery medzi riadkami", font=FONT, bg=bg, fg=fg, anchor="w"
+        ).pack(anchor="w", pady=(10, 0))
+        medzery_slider = tmavy_slider(
+            frame_basic_view,
+            formát="{:g} %",
+            variable=self.medzery_ovladanie_var,
+            from_=0,
+            to=100,
+            command=lambda v: self._aplikuj_medzery_ovladanie(v),
+        )
+        medzery_slider.bind(
+            "<ButtonRelease-1>",
+            lambda e: self.ulozit_nastavenia(aktualizovat_label=False)
+        )
+        medzery_slider.bind(
+            "<KeyRelease>",
+            lambda e: self.ulozit_nastavenia(aktualizovat_label=False)
+        )
+        Tooltip(medzery_slider,
+                "Výška prázdnych riadkov medzi strofami v texte ovládacieho okna. "
+                "Zmenšením sa zmestí viac textu naraz. Projekcia sa nemení.")
+        vytvor_popis(frame_basic_view, "Mení sa iba text v ovládacom okne, projekcia zostáva rovnaká.")
+
 
         # --- Úvodná obrazovka (prázdne hlavné okno) ---
-        frame_uvod = vytvor_sekciu(zakladne_frame, "Úvodná obrazovka")
+        frame_uvod = vytvor_sekciu(uvod_frame, "Úvodná obrazovka")
 
         def _uvodna_zmena():
             self.ulozit_nastavenia()
@@ -10505,7 +10682,7 @@ class _NastaveniaMixin(_ControlAppBase):
                 command=_uvodna_zmena,
             ).pack(anchor="w", padx=(22, 0))
 
-        frame_checks = vytvor_sekciu(pokrocile_frame, "Liturgické pomôcky a znaky")
+        frame_checks = vytvor_sekciu(liturgia_frame, "Liturgické pomôcky a znaky")
 
         # 1. DIREKTÓRIUM:
         self.checkbox_direktorium = tmavy_check(
@@ -10541,7 +10718,7 @@ class _NastaveniaMixin(_ControlAppBase):
         )
 
         # 7. RÝCHLOSŤ PRECHODU
-        frame_fade = vytvor_sekciu(zakladne_frame, "Rýchlosť prechodu textu")
+        frame_fade = vytvor_sekciu(projekcia_frame, "Rýchlosť prechodu textu")
         # Modrý štýl (rovnaký odtieň ako ostatné výberové tlačidlá) odvodený od „Big.TCombobox“
         modra, modra_hover = "#3F4F6A", "#5A7090"
         try:
@@ -10603,7 +10780,7 @@ class _NastaveniaMixin(_ControlAppBase):
         self.fade_speed_combo.bind("<<ComboboxSelected>>", lambda e: self.ulozit_nastavenia())
 
         # 8. UMIESTNENIE SÚBOROV
-        frame_folder = vytvor_sekciu(zakladne_frame, "Umiestnenie súborov")
+        frame_folder = vytvor_sekciu(pokrocile_frame, "Umiestnenie súborov")
         vytvor_popis(
             frame_folder,
             "Ak sa v piesňach niekedy namiesto diakritiky zobrazujú nečitateľné "
@@ -10636,7 +10813,7 @@ class _NastaveniaMixin(_ControlAppBase):
         self.folder_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
 
         # 9. REZERVY
-        frame_res = vytvor_sekciu(pokrocile_frame, "Globálna (vertikálna) rezerva")
+        frame_res = vytvor_sekciu(projekcia_frame, "Globálna (vertikálna) rezerva")
         vytvor_popis(frame_res, "Odstup textu od horného a dolného okraja obrazovky. Vyššia hodnota = menší text.")
 
         # Slider upravený na celú šírku
@@ -10655,7 +10832,7 @@ class _NastaveniaMixin(_ControlAppBase):
             lambda e: self.ulozit_nastavenia()
         )
 
-        frame_margin = vytvor_sekciu(pokrocile_frame, "Spodná rezerva (Overscan)")
+        frame_margin = vytvor_sekciu(projekcia_frame, "Spodná rezerva (Overscan)")
         vytvor_popis(frame_margin, "Posunie celý text vyššie (ak obrazovka orezáva spodok).")
 
         def validate_num(P):
@@ -10938,6 +11115,11 @@ class _NastaveniaMixin(_ControlAppBase):
         if hasattr(self, "bottom_margin_var"):
             raw = self.config.get("bottom_margin", 40)
             self.bottom_margin_var.set(int(raw))
+
+        if hasattr(self, "medzery_ovladanie_var"):
+            raw = self.config.get("medzery_ovladanie", DEFAULT_CONFIG["medzery_ovladanie"])
+            self.medzery_ovladanie_var.set(int(raw))
+            self._aplikuj_medzery_ovladanie(raw)
 
         # Priečinok piesní
         raw_folder = self.config.get("song_folder", "")
@@ -14067,7 +14249,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
             messagebox.showinfo(
                 "Kinak: Žiadne piesne",
                 f"V priečinku sa nenašli žiadne súbory .txt.\n\n"
-                "Skontrolujte zvolený priečinok v časti Nastavenia → Umiestnenie súborov.\n\n"
+                "Skontrolujte zvolený priečinok v časti Nastavenia záložka Pokročilé → Umiestnenie súborov.\n\n"
                 f"Aktuálne nastavená cesta:\n{priečinok.resolve()}"
             )
 
@@ -14517,6 +14699,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
             self.obsah_suboru_text.delete("1.0", tk.END)
             self.obsah_suboru_text.insert(tk.END, obsah)
             self.obsah_suboru_text.tag_add("normal_text", "1.0", tk.END)
+            self._oznac_prazdne_riadky_obsahu()
             self.obsah_suboru_text.tag_remove("highlight", "1.0", tk.END)
             try:
                 self.obsah_suboru_text.tag_raise("highlight", "normal_text")
@@ -16070,6 +16253,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         self.obsah_suboru_text.config(state=tk.DISABLED, spacing1=3, spacing2=2, spacing3=5)
         self.obsah_suboru_text.tag_config("highlight", background="#101010", foreground=self.text_color_var.get(), font=(self.font_family, 18, "bold"), lmargin1=12, lmargin2=12, rmargin=0, spacing1=3, spacing2=2, spacing3=5, borderwidth=0, relief="flat")
         self.obsah_suboru_text.tag_config("normal_text", lmargin1=12, lmargin2=12, rmargin=12)
+        self._aplikuj_medzery_ovladanie()
         try:
             self.obsah_suboru_text.tag_raise("highlight", "normal_text")
         except Exception:
@@ -16570,6 +16754,25 @@ UVODNA_NADPIS_FG = "#9aa3b8"
 UVODNA_TLACIDLO_BG = "#3F4F6A"
 UVODNA_TLACIDLO_ACTIVE = "#5A7090"
 
+# Hierarchia tlačidiel na úvodnej obrazovke:
+#   primárne   – jediná hlavná akcia (Žalm dnes), jasná modrá ako zaškrtnuté políčka v Nastaveniach
+#   sekundárne – bežné akcie (štandardná tlmená modrosivá)
+#   terciárne  – pomocné akcie (tmavé, ploché)
+UVODNA_STYLY_TLACIDIEL = {
+    "primarne": {
+        "bg": "#2F80ED", "active": "#4D96F5", "pressed": "#1E63C0",
+        "okraj": "#8FBBFF", "okraj_hover": "#BBD6FF", "fg": "#FFFFFF",
+    },
+    "sekundarne": {
+        "bg": UVODNA_TLACIDLO_BG, "active": UVODNA_TLACIDLO_ACTIVE, "pressed": MODRA_PRESSED,
+        "okraj": MODRA_OKRAJ, "okraj_hover": MODRA_OKRAJ_HOVER, "fg": "#FFFFFF",
+    },
+    "terciarne": {
+        "bg": "#2A2A2A", "active": "#383838", "pressed": "#1C1C1C",
+        "okraj": "#3A3A3A", "okraj_hover": MODRA_OKRAJ, "fg": "#C8CCD6",
+    },
+}
+
 
 def uvodna_normalizuj_posledne(zoznam, nova=None, maximum=UVODNA_POSLEDNE_MAX):
     """Vráti zoznam naposledy použitých piesní (najnovšia prvá, bez duplicít).
@@ -16759,16 +16962,19 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         self, rodic, text, prikaz,
         stav: Literal["normal", "active", "disabled"] = tk.NORMAL,
         kompaktne=False,
+        styl: Literal["primarne", "sekundarne", "terciarne"] = "sekundarne",
     ):
-        """Modré tlačidlo s 1 px okrajom. Okraj tvorí rámik okolo tlačidla (highlightthickness
-        sa na Windows pri tk.Button nevykresľoval), preto sa vracia rámik, nie samotné tlačidlo."""
-        okraj_pokoj = MODRA_OKRAJ if stav != tk.DISABLED else "#37425A"
+        """Tlačidlo s 1 px okrajom v jednom zo štýlov (primárne / sekundárne / terciárne).
+        Okraj tvorí rámik okolo tlačidla (highlightthickness sa na Windows pri tk.Button
+        nevykresľoval), preto sa vracia rámik, nie samotné tlačidlo."""
+        farby = UVODNA_STYLY_TLACIDIEL.get(styl, UVODNA_STYLY_TLACIDIEL["sekundarne"])
+        okraj_pokoj = farby["okraj"] if stav != tk.DISABLED else "#37425A"
         okraj = tk.Frame(rodic, bg=okraj_pokoj, bd=0, highlightthickness=0)
         btn = tk.Button(
             okraj, text=text, command=lambda: self._uvodna_spusti(prikaz),
             font=(self.font_family, 11 if kompaktne else 12, "bold"),
-            bg=UVODNA_TLACIDLO_BG, fg="#FFFFFF",
-            activebackground=UVODNA_TLACIDLO_ACTIVE, activeforeground="#FFFFFF",
+            bg=farby["bg"], fg=farby["fg"],
+            activebackground=farby["active"], activeforeground=farby["fg"],
             disabledforeground="#8D99AD", relief=tk.FLAT, bd=0, highlightthickness=0,
             padx=10 if kompaktne else 12, pady=5 if kompaktne else 8,
             cursor="hand2", takefocus=0, state=stav,
@@ -16777,16 +16983,16 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
 
         def _nad(_e=None):
             if str(btn.cget("state")) != "disabled":
-                btn.config(bg=UVODNA_TLACIDLO_ACTIVE)
-                okraj.config(bg=MODRA_OKRAJ_HOVER)
+                btn.config(bg=farby["active"])
+                okraj.config(bg=farby["okraj_hover"])
 
         def _von(_e=None):
-            btn.config(bg=UVODNA_TLACIDLO_BG)
+            btn.config(bg=farby["bg"])
             okraj.config(bg=okraj_pokoj)
 
         def _stlac(_e=None):
             if str(btn.cget("state")) != "disabled":
-                btn.config(bg=MODRA_PRESSED)
+                btn.config(bg=farby["pressed"])
 
         btn.bind("<Enter>", _nad)
         btn.bind("<Leave>", _von)
@@ -16888,7 +17094,10 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             if zajtra_z:
                 tlacidla.append((f"Žalm zajtra: {zajtra_z}", zajtra_z))
         for text, kod in tlacidla:
-            self._uvodna_tlacidlo(karta, text, lambda k=kod: self._uvodna_otvor(k)).pack(fill=tk.X, pady=(0, 6))
+            self._uvodna_tlacidlo(
+                karta, text, lambda k=kod: self._uvodna_otvor(k),
+                styl="primarne" if text.startswith("Žalm dnes") else "sekundarne",
+            ).pack(fill=tk.X, pady=(0, 6))
 
         rad = tk.Frame(karta, bg=UVODNA_KARTA_BG)
         rad.pack(fill=tk.X)
@@ -16952,7 +17161,7 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         """Karta „Okno Pomocník“ – len tlačidlo na otvorenie okna Pomocník
         (kľúč „poznamky“ ostáva kvôli kompatibilite s existujúcim config.json)."""
         self._uvodna_nadpis(karta, "Okno Pomocník")
-        self._uvodna_tlacidlo(karta, "Otvoriť Pomocníka", self.otvorit_pomocnika).pack(fill=tk.X)
+        self._uvodna_tlacidlo(karta, "Otvoriť Pomocníka", self.otvorit_pomocnika, styl="terciarne").pack(fill=tk.X)
         return True
 
     def _uvodna_pas_klaves(self, obal, riadok):
@@ -18595,7 +18804,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "INDIKÁTOR PROJEKCIE\n\n"
                 "• Zelená = projekcia aktívna\n"
                 "• Sivá   = projekcia vypnutá\n\n"
-                "V nastaveniach je možné zapnúť malý náhľad projekcie v pravom dolnom rohu "
+                "V nastaveniach záložka Ovládanie je možné zapnúť malý náhľad projekcie v pravom dolnom rohu "
                 "ovládacieho okna – užitočné najmä vtedy, ak premietajúci nevidí priamo na projekčnú obrazovku.\n\n"              
                 "OKNÁ DIREKTÓRIUM A SLÁVENIA\n\n"
                 "Rýchly výber piesne alebo skratky žalmu pre konkrétne slávenie — dvojklik na bunku, bez ručného zadávania.\n"
@@ -18648,8 +18857,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             pomoc_text = (
                 "AK PROJEKCIA NIE JE NA SPRÁVNOM MONITORE\n\n"
-                "Skontrolujte, či je v systéme zapnutá rozšírená plocha. Aplikácia vie automaticky otvoriť projekciu "
-                "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku.\n\n"
+                "V systéme Windows stlačte Win + P a skontrolujte, či je zvolený režim Rozšíriť (Extend). Kinak môže automaticky otvoriť projekciu "
+                "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku. Podrobnosti nájdete v aplikácii Kinak v časti Pomoc → Rýchly sprievodca.\n\n"
                 "AK SA PIESNE NENAČÍTAJÚ\n\n"
                 "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí mať pri sebe aj priečinok "
                 "s názvom 'piesne'.\n\n"              
@@ -18666,7 +18875,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "               └──  .  .  .\n\n"                  
                 "Podpriečinky Mládež a Večeradlo sú súčasťou distribučného balíka, ktorý je dostupný na stiahnutie z www.kinak.sk. "
                 "Aplikácia sa spustí aj bez nich, ale pri aktívnom filtri „Mládež“ či „Večeradlo“ sa potom zoznam piesní vľavo hore nenačíta.\n\n"
-                "Skontrolujte, či je v „Nastavenia → Umiestnenie súborov“ správne vybraný priečinok piesní. "
+                "Skontrolujte, či je v „Nastavenia záložka Pokročilé → Umiestnenie súborov“ správne vybraný priečinok piesní. "
                 "Ak priečinok neexistuje, je prázdny alebo neobsahuje textové súbory, "
                 "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"  
                 
@@ -18678,7 +18887,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Po uložení sa text zobrazí správne.\n\n"
                 "HROMADNÉ SKONVERTOVANIE CELÉHO PRIEČINKA\n\n"
                 "Ak sa chybná diakritika vyskytne vo viacerých súboroch, nemusíte ich opravovať jednotlivo. "
-                "V Nastaveniach → Umiestnenie súborov kliknite na „Skonvertovať do UTF‑8…“. Aplikácia "
+                "V Nastaveniach záložka Pokročilé → Umiestnenie súborov kliknite na „Skonvertovať do UTF‑8…“. Aplikácia "
                 "automaticky prevedie všetky .txt súbory v priečinku na čisté UTF‑8 a pôvodné verzie uloží do "
                 "podpriečinka „_zaloha_original“, takže prevod možno vrátiť späť.\n\n"                               
                                           
@@ -19130,6 +19339,9 @@ class ControlApp(
         self.bottom_margin = DEFAULT_CONFIG.get("bottom_margin", 40)
         self.bottom_margin_var = tk.IntVar(self.master, value=self.bottom_margin)
 
+        self.medzery_ovladanie = DEFAULT_CONFIG.get("medzery_ovladanie", 50)
+        self.medzery_ovladanie_var = tk.IntVar(self.master, value=self.medzery_ovladanie)
+
         self.reserved_vertical_ratio = DEFAULT_CONFIG.get("reserved_vertical_ratio", 0.20)
         self.reserved_vertical_var = tk.DoubleVar(self.master, value=self.reserved_vertical_ratio)
 
@@ -19564,6 +19776,73 @@ def nastavit_farbu_titulkoveho_pruhu(okno, bg: str = TITLEBAR_BG_COLOR, fg: str 
         log_exception("nastavit_farbu_titulkoveho_pruhu", e)
 
 
+def zapni_tmavy_titulok_pre_dialogy(root) -> None:
+    """Každé bežné dialógové okno (Toplevel) dostane tmavý titulkový pruh ako hlavné okno
+    – bez viditeľného bliknutia svetlého pásu.
+
+    Ako to funguje:
+      1. Pri vytvorení každého Toplevel sa jeho priehľadnosť (-alpha) nastaví na 0,
+         takže okno sa pri zobrazení ešte nevykreslí viditeľne.
+      2. Pri prvom zobrazení (<Map>) už existuje natívne okno, nastaví sa mu tmavý
+         titulkový pruh (DwmSetWindowAttribute).
+      3. O chvíľu neskôr sa priehľadnosť vráti na pôvodnú hodnotu – používateľ vidí
+         okno hneď s tmavým pásom.
+    Okná bez rámu (tooltipy, projekcia – overrideredirect) dostanú len späť
+    priehľadnosť. Natívne systémové dialógy (messagebox, výber súboru/farby) sa tým
+    ovplyvniť nedajú.
+    """
+    if sys.platform != "win32":
+        return
+    if getattr(tk.Toplevel, "_kinak_tmavy_titulok", False):
+        return   # už nainštalované (ochrana pred dvojitým patchom)
+
+    ZDRZANIE_MS = 40   # ako dlho po <Map> ostane okno priehľadné (kým DWM prekreslí pás)
+
+    def _obnov_priehladnost(okno):
+        try:
+            povodna = getattr(okno, "_kinak_povodna_alpha", 1.0)
+            # Ak ju medzitým niekto zmenil sám (≠ 0), nechávame jeho hodnotu.
+            if float(okno.attributes("-alpha")) == 0.0:
+                okno.attributes("-alpha", povodna)
+        except tk.TclError:
+            pass   # okno medzitým zaniklo
+
+    _povodny_init = tk.Toplevel.__init__
+
+    def _init_s_priehladnostou(self, *args, **kwargs):
+        _povodny_init(self, *args, **kwargs)
+        try:
+            self._kinak_povodna_alpha = float(self.attributes("-alpha"))
+            self.attributes("-alpha", 0.0)
+        except Exception as e:
+            log_exception("zapni_tmavy_titulok_pre_dialogy: nastavenie -alpha zlyhalo", e)
+
+    def _pri_zobrazeni(event):
+        okno = event.widget
+        try:
+            if not isinstance(okno, tk.Toplevel):
+                return
+            if getattr(okno, "_tmavy_titulok_nastaveny", False):
+                return
+            okno._tmavy_titulok_nastaveny = True  # type: ignore[attr-defined]
+            if not okno.overrideredirect():
+                nastavit_farbu_titulkoveho_pruhu(okno)
+        except Exception as e:
+            log_exception("zapni_tmavy_titulok_pre_dialogy: _pri_zobrazeni", e)
+        finally:
+            try:
+                okno.after(ZDRZANIE_MS, lambda o=okno: _obnov_priehladnost(o))
+            except Exception:
+                _obnov_priehladnost(okno)
+
+    try:
+        tk.Toplevel.__init__ = _init_s_priehladnostou  # type: ignore[method-assign]
+        tk.Toplevel._kinak_tmavy_titulok = True        # type: ignore[attr-defined]
+        root.bind_class("Toplevel", "<Map>", _pri_zobrazeni, add="+")
+    except Exception as e:
+        log_exception("zapni_tmavy_titulok_pre_dialogy: inštalácia zlyhala", e)
+
+
 if __name__ == "__main__":
 
     root = None  # ← pridane, aby bola premenná vždy definovaná
@@ -19605,6 +19884,7 @@ if __name__ == "__main__":
         root.deiconify()
         root.update_idletasks()
         nastavit_farbu_titulkoveho_pruhu(root)
+        zapni_tmavy_titulok_pre_dialogy(root)
         
         # Vynútenie focusu
         try:
