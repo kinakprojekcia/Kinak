@@ -358,6 +358,11 @@ function chipFade(){chips.classList.toggle('fade',chips.scrollWidth>chips.client
 if('ResizeObserver' in window)new ResizeObserver(()=>{setH();chipFade();}).observe(controls);
 mq.addEventListener('change',setH);chips.addEventListener('scroll',chipFade,{passive:true});addEventListener('resize',chipFade);
 setH();chipFade();setFont(FS_DEFAULT);render();
+/* odkaz #den-N: prepne na správne obdobie a doskroluje na riadok */
+function goHash(){const m=location.hash.match(/^#den-(\d+)$/);if(!m)return;const n=+m[1];let ob=null;
+ DATA.forEach(g=>g.riadky.forEach(r=>{if(IDX[r.den]===n)ob=g.obdobie;}));if(!ob)return;
+ clearSearch();setObdobie(ob);const el=$('den-'+n);if(el)el.scrollIntoView({block:'start'});}
+addEventListener('hashchange',goHash);goHash();
 </script>
 </body>
 </html>
