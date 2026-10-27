@@ -166,7 +166,11 @@ footer a{color:var(--burg)}
  tr.row:hover>*{background:none}
  tr{break-inside:avoid}
 }
-.b-song-pages{max-width:900px;margin:20px 0;padding:16px 20px;background:var(--beige);border-radius:18px}.b-song-pages summary{cursor:pointer;color:var(--burg);font-weight:600}.b-song-pages ul{margin:10px 0 0;padding-left:22px;columns:2;column-gap:32px}.b-song-pages li{break-inside:avoid;margin:3px 0}.b-song-pages a{color:var(--burg);text-decoration:none}.b-song-pages a:hover{text-decoration:underline}@media(max-width:600px){.b-song-pages ul{columns:1}}</style>
+.b-song-pages{max-width:900px;margin:20px 0;padding:16px 20px;background:var(--beige);border-radius:18px}.b-song-pages summary{cursor:pointer;color:var(--burg);font-weight:600}.b-song-pages ul{margin:10px 0 0;padding-left:22px;columns:2;column-gap:32px}.b-song-pages li{break-inside:avoid;margin:3px 0}.b-song-pages a{color:var(--burg);text-decoration:none}.b-song-pages a:hover{text-decoration:underline}@media(max-width:600px){.b-song-pages ul{columns:1}}@media print{.b-song-pages{display:none!important}}
+@page{margin:14mm 12mm 18mm;
+ @bottom-left{content:"https://kinak.sk/direktorium.html";font:9pt sans-serif;color:#555}
+ @bottom-right{content:"Strana " counter(page) " / " counter(pages);font:9pt sans-serif;color:#555}}
+</style>
 </head>
 <body>
 <a class="skip" href="#zoznam">Preskočiť na zoznam</a>
