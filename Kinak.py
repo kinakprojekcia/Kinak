@@ -17120,7 +17120,20 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         polozky = [(s, t) for s, t in (piesne or {}).items() if t]
         if not polozky and not poznamka:
             return False
-        self._uvodna_nadpis(karta, f"Odporúčané piesne k žalmu {dnes_z}")
+        # Hlavička karty: nadpis vľavo, aktívna verzia direktória (A/B) vpravo
+        verzia = "B" if str(getattr(self, "direktorium_verzia", "A")).strip().upper() == "B" else "A"
+        hlavicka = tk.Frame(karta, bg=UVODNA_KARTA_BG)
+        hlavicka.pack(fill=tk.X, pady=(0, 8))
+        tk.Label(
+            hlavicka, text=f"Odporúčané piesne k žalmu {dnes_z}",
+            font=(self.font_family, 12, "bold"),
+            fg=UVODNA_NADPIS_FG, bg=UVODNA_KARTA_BG, anchor="w"
+        ).pack(side=tk.LEFT)
+        tk.Label(
+            hlavicka, text=f"Verzia {verzia}",
+            font=(self.font_family, 11, "bold"),
+            fg="#d8b45a", bg=UVODNA_KARTA_BG, anchor="e"
+        ).pack(side=tk.RIGHT, padx=(8, 0))
         for sekcia, text in polozky:
             kod = "" if sekcia == "Stupeň" else vyber_prvu_piesen_z_direktorioveho_textu(text)
             prikaz = (lambda k=kod: self._uvodna_otvor(k)) if kod else None
@@ -17277,6 +17290,12 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         try:
             self.direktorium_verzia = "B" if str(nova_verzia).strip().upper() == "B" else "A"
             self.ulozit_nastavenia(aktualizovat_label=False)
+
+            # Úvodná obrazovka zobrazuje aktívnu verziu – prekresliť po zmene
+            try:
+                self.uvodna_prekresli()
+            except Exception as e:
+                log_exception("nastav_verziu_direktoria: prekreslenie úvodnej obrazovky zlyhalo", e)
 
             # FIX: Po otvorení okna Direktória sa volá reset_ui(), ktorý vymaže
             # direktorium_label a nastaví subor_var na "—". V tom stave nechceme
