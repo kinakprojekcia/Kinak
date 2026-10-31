@@ -13456,7 +13456,9 @@ class _StahovanieMixin(_ControlAppBase):
             messagebox.showinfo(
                 "Hotovo",
                 "Čítania boli upravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
-                "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi."
+                "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi.\n\n"
+                "Tip v Pomocníkovi: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
+                "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
             )
         try:
             self.manual_entry.focus_set()
@@ -13634,8 +13636,10 @@ class _StahovanieMixin(_ControlAppBase):
                     f"Čítania pre {datum.strftime('%d.%m.%Y')} boli úspešne stiahnuté!\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Súbor: {vystup_cesta.name}\n\n"
-                    f"Čítania boli pripravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
-                    f"(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi."
+                    "Čítania boli pripravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
+                    "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi.\n\n"
+                    "Tip v Pomocníkovi: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
+                    "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."                    
                 )
             else:
                 zobraz_chybu_stahovania("čítania", "lc.kbs.sk")
@@ -13699,7 +13703,7 @@ class _StahovanieMixin(_ControlAppBase):
                     f"Zdroj: breviar.kbs.sk\n"
                     f"Súbor: {vystup_cesta.name}\n\n"
                     "Vešpery boli pripravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
-                    "(do vstupného poľa zadajte 'vespery') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi."
+                    "(do vstupného poľa zadajte 'vespery') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi. "                    
                 )
                 self.manual_entry.focus_set()
             else:
@@ -18924,7 +18928,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "V systéme Windows stlačte Win + P a skontrolujte, či je zvolený režim Rozšíriť (Extend). Kinak môže automaticky otvoriť projekciu "
                 "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku. Podrobnosti nájdete v aplikácii Kinak v časti Pomoc → Rýchly sprievodca.\n\n"
                 "AK SA PIESNE NENAČÍTAJÚ\n\n"
-                "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí mať pri sebe aj priečinok "
+                "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí byť v rovnakom priečinku ako priečinok "
                 "s názvom 'piesne'.\n\n"              
                                          
                 f"Priečinok môžete ľubovoľne premenovať (napr. `Kinak_v{KINAK_VERSION}`), aplikácia bude stále fungovať, pokiaľ zostane zachovaná štruktúra (Kinak.exe + piesne/).\n\n"                                         
