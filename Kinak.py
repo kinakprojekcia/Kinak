@@ -4298,7 +4298,11 @@ def _vycisti_refren_zalmu_lc_kbs(text: str) -> str:
     t = t.lstrip(":. ").strip()
     t = re.sub(r":(?!\s)", ": ", t)
     t = re.sub(r"\s*alebo\s+[Aa]leluja\.?\s*$", "", t, flags=re.IGNORECASE).strip()
-    return _vycisti_text_lc_kbs(t)
+    t = _vycisti_text_lc_kbs(t)
+    # Dve alternatívy refrénu (napr. ZOS): „alebo“ za koncom vety dáme na
+    # samostatný riadok s prázdnym riadkom pred aj za ním.
+    t = re.sub(r"(?<=[.!?…])[ \t]+alebo[ \t]+", "\n\nalebo\n\n", t)
+    return t
 
 
 def _extrahuj_refreny_zalmov_lc_kbs(soup) -> list[str]:
@@ -18806,6 +18810,19 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             font_size = tk.IntVar(value=self.about_font_size)
             text_widgets = []
 
+            def _nastav_tagy_sekcii(tw, size):
+                tw.tag_config(
+                    "nadpis_sekcie",
+                    font=(safe_font_name, size, "bold"),
+                    foreground="white"
+                )
+                tw.tag_config(
+                    "bodka",
+                    font=(safe_font_name, size + 4, "bold"),
+                    foreground="#d4a017"
+                )
+                tw.tag_raise("bodka", "nadpis_sekcie")
+
             def vlozit_text(parent, nazov: str, text: str):
                 scrollbar = ttk.Scrollbar(
                     parent,
@@ -18840,6 +18857,18 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                     foreground="white"
                 )
                 text_widget.insert("end", text)
+
+                # Nadpisy sekcií (riadky so znakom ●): tučné písmo + väčšia farebná bodka
+                _nastav_tagy_sekcii(text_widget, font_size.get())
+                _pozicia = "1.0"
+                while True:
+                    _idx = text_widget.search("●", _pozicia, stopindex="end")
+                    if not _idx:
+                        break
+                    text_widget.tag_add("nadpis_sekcie", _idx, f"{_idx} lineend")
+                    text_widget.tag_add("bodka", _idx, f"{_idx}+1c")
+                    _pozicia = f"{_idx}+1c"
+
                 text_widget.config(state="disabled")
 
                 text_widget.bind("<Enter>", lambda e, tw=text_widget: tw.bind_all(
@@ -18851,7 +18880,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 return text_widget
 
             ovladanie_text = (
-                "RÝCHLY NÁVOD\n\n"                
+                "● RÝCHLY NÁVOD\n\n"                
                 "Zadajte číslo piesne a potom používajte klávesy:\n\n"
                 "• PLUS (+)\t\tĎalšia strofa (možno použiť aj šípku →)\n"
                 "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
@@ -18859,7 +18888,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• BACKSPACE\t\tMaže číslo piesne a zároveň okamžite vypína projekciu\n"
                 "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
                 "Kinak je prenosná desktopová aplikácia na projekciu liturgických piesní, žalmov a modlitieb, so zabudovaným liturgickým kalendárom, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus a žaltárový týždeň liturgického roka.\n\n"
-                "HLAVNÉ FUNKCIE\n\n"
+                "● HLAVNÉ FUNKCIE\n\n"
                 "• Projekcia textov na externý monitor alebo projektor\n"
                 "• Automatické spustenie projekcie na druhom monitore v režime celej obrazovky\n"
                 "  (vyžaduje zapnutú rozšírenú plochu v systéme)\n"
@@ -18869,26 +18898,26 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 
                 "Kalendár je zostavený tak, že bežné férie a spomienky (záväzné aj ľubovoľné) zobrazuje ako dni príslušného týždňa liturgického roka (napr. cezročného obdobia).\n\n"
                 "Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť raz za rok, naraz na celý liturgický rok.\n\n"
-                "INDIKÁTOR PROJEKCIE\n\n"
+                "● INDIKÁTOR PROJEKCIE\n\n"
                 "• Zelená = projekcia aktívna\n"
                 "• Sivá   = projekcia vypnutá\n\n"
                 "V nastaveniach záložka Ovládanie je možné zapnúť malý náhľad projekcie v pravom dolnom rohu "
                 "ovládacieho okna – užitočné najmä vtedy, ak premietajúci nevidí priamo na projekčnú obrazovku.\n\n"              
-                "OKNÁ DIREKTÓRIUM A SLÁVENIA\n\n"
+                "● OKNÁ DIREKTÓRIUM A SLÁVENIA\n\n"
                 "Rýchly výber piesne alebo skratky žalmu pre konkrétne slávenie — dvojklik na bunku, bez ručného zadávania.\n"
             )
 
             vyhladavanie_text = (
-                "VYHĽADÁVANIE PIESNÍ, MODLITIEB A ŽALMOV\n\n"
+                "● VYHĽADÁVANIE PIESNÍ, MODLITIEB A ŽALMOV\n\n"
                 "Vyhľadávanie je možné vykonávať cez filtre alebo ručným zadaním do vstupného poľa.\n\n"
-                "A) VYHĽADÁVANIE RUČNÝM ZADANÍM DO VSTUPNÉHO POĽA\n\n"
+                "● A) VYHĽADÁVANIE RUČNÝM ZADANÍM DO VSTUPNÉHO POĽA\n\n"
                 "Do poľa na zadanie piesne môžete ručne napísať:\n\n"
                 "• Čísla piesní (napr. 254)\n"
                 "• Skratky modlitieb (napr. dk)\n"
                 "• Časť názvu piesne alebo modlitby (napr. ruž → Ružencové bratstvo)\n"
                 "• Skratku žalmu (napr. 20c2)\n\n"
                 "Vstupné pole vyhľadáva podľa názvov .txt súborov.\n\n"
-                "B) VYHĽADÁVANIE CEZ FILTRE\n\n"
+                "● B) VYHĽADÁVANIE CEZ FILTRE\n\n"
                 "• Na vyhľadávanie modlitieb slúžia 3 filtre: „Modlitby a iné“, „Ruženec“ a „Večeradlo“\n"
                 "• Na vyhľadávanie piesní pre mládež slúži filter „Mládež“\n"                
                 "• Ostatné filtre slúžia na vyhľadávanie žalmov\n\n"
@@ -18896,7 +18925,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Ak je aktívny filter „Večeradlo“, aplikácia najprv hľadá súbor v podpriečinku piesne/Večeradlo/; ak neexistuje, použije súbor z hlavného priečinka piesne/ vrátane podpriečinka Mládež.\n\n"
                 "Ak je aktívny filter „Mládež“, aplikácia najprv hľadá súbor v podpriečinku piesne/Mládež/; ak neexistuje, použije súbor z hlavného priečinka piesne/ vrátane podpriečinka Večeradlo.\n\n"
                                 
-                "POZNÁMKY K ŽALMOM\n\n"
+                "● POZNÁMKY K ŽALMOM\n\n"
                 "• A, B, C = liturgické roky (nedeľné žalmy)\n"
                 "• 1–6 = dni v týždni (pondelok–sobota)\n\n"
                 "Pri práci s Direktóriom stačí dvojklik na bunku — číslo piesne sa odošle do hlavného okna a okamžite sa načíta. "                
@@ -18904,11 +18933,11 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             )
 
             priprava_text = (
-                "ÚPRAVA PIESNÍ\n\n"
+                "● ÚPRAVA PIESNÍ\n\n"
                 "Pri piesňach JKS je v poriadku, ak sa jedna strofa zobrazí aj na dve či tri obrazovky. "
                 "Ak chcete, aby sa celá strofa zobrazila naraz, odstráňte v textovom súbore prázdne riadky medzi veršami. "
                 "Odlišný vzhľad možno dosiahnuť aj rozdelením strofy na dlhšie riadky.\n\n"
-                "ŠPECIÁLNE ZNAKY V PIESŇACH JKS\n\n"
+                "● ŠPECIÁLNE ZNAKY V PIESŇACH JKS\n\n"
                 "• BODKA (·)\t\t\tObsahuje Ofertórium (použije sa dvakrát: úvod + obetovanie)\n"
                 "• PODČIARKOVNÍK (_)\t\t\tKoniec strofy\n"
                 "• KOMBINÁCIA (_·)\t\t\tKoniec úvodnej časti; nižšie sa nachádza Ofertórium\n\n"
@@ -18916,7 +18945,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "však zostanú vždy viditeľné, aby sa premietajúci vedel ľahko orientovať. "
                 "Je to užitočné najmä pri piesňach z JKS, kde môže byť jedna strofa rozdelená na viac obrazoviek. Značky vám pomôžu vidieť, kde končí strofa, aby ste nezačali ďalšiu práve vtedy,  keď už len dokončujete aktuálnu strofu a liturgia sa posúva ďalej.\n\n"
                 "Praktická rada: Ak pieseň začína bodkou (·), pri obetovaní stačí prejsť na najbližší riadok začínajúci bodkou.\n\n"
-                "STRIEDANIE CHÓROV VO VEŠPERÁCH\n\n"
+                "● STRIEDANIE CHÓROV VO VEŠPERÁCH\n\n"
                 "Striedanie ľavého a pravého chóru je v projekcii dané striedaním obrazoviek.\n"
                 "(každá nová obrazovka = zmena chóru)\n\n"
                 "Označenie [L] / [P] slúži len ako vizuálna pomôcka – rýchla orientácia o tom, ktorý chór je práve na obrazovke.\n\n"
@@ -18924,10 +18953,10 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             )
 
             pomoc_text = (
-                "AK PROJEKCIA NIE JE NA SPRÁVNOM MONITORE\n\n"
+                "● AK PROJEKCIA NIE JE NA SPRÁVNOM MONITORE\n\n"
                 "V systéme Windows stlačte Win + P a skontrolujte, či je zvolený režim Rozšíriť (Extend). Kinak môže automaticky otvoriť projekciu "
                 "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku. Podrobnosti nájdete v aplikácii Kinak v časti Pomoc → Rýchly sprievodca.\n\n"
-                "AK SA PIESNE NENAČÍTAJÚ\n\n"
+                "● AK SA PIESNE NENAČÍTAJÚ\n\n"
                 "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí byť v rovnakom priečinku ako priečinok "
                 "s názvom 'piesne'.\n\n"              
                                          
@@ -18947,44 +18976,48 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Ak priečinok neexistuje, je prázdny alebo neobsahuje textové súbory, "
                 "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"  
                 
-                "NEČITATEĽNÁ DIAKRITIKA\n\n"
+                "● AK SA ŽALMY NEZOBRAZUJÚ SPRÁVNE\n\n"
+                "Ak texty refrénov responzóriových žalmov nesedia s daným liturgickým dňom, je potrebné stiahnuť aktualizácie. "
+                "V hornom menu zvoľte Liturgické nástroje → Stiahnuť refrény žalmov a stiahnite refrény pre požadované obdobie. "
+                "Na stiahnutie je potrebné pripojenie na internet.\n\n"
+                "● NEČITATEĽNÁ DIAKRITIKA\n\n"
                 "Databáza textov je uložená v priečinku piesne. Textové súbory používajú kódovanie ANSI alebo UTF‑8. "
                 "Ak sa súbor z nejakého dôvodu poškodí, môže sa stať, že sa na obrazovke zobrazia nečitateľné znaky diakritiky.\n\n"
                 "Riešenie je jednoduché:\n\n"
                 "otvorte súbor v Notepade, zvoľte Uložiť ako… a vyberte kódovanie ANSI alebo UTF‑8.\n"
                 "Po uložení sa text zobrazí správne.\n\n"
-                "HROMADNÉ SKONVERTOVANIE CELÉHO PRIEČINKA\n\n"
+                "● HROMADNÉ SKONVERTOVANIE CELÉHO PRIEČINKA\n\n"
                 "Ak sa chybná diakritika vyskytne vo viacerých súboroch, nemusíte ich opravovať jednotlivo. "
                 "V Nastaveniach záložka Pokročilé → Umiestnenie súborov kliknite na „Skonvertovať do UTF‑8…“. Aplikácia "
                 "automaticky prevedie všetky .txt súbory v priečinku na čisté UTF‑8 a pôvodné verzie uloží do "
                 "podpriečinka „_zaloha_original“, takže prevod možno vrátiť späť.\n\n"                               
                                           
-                "LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA\n\n"
+                "● LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA\n\n"
                 "Liturgické výpočty v aplikácii Kinak sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku.\n\n"
                 f"• Kalendár je zostavený pre: {KALENDAR_KRAJINA} (Slovensko)\n"
                 f"• Výpočty podľa Všeobecných noriem o liturgickom roku a o všeobecnom rímskom kalendári a Direktória KBS\n"
                 f"• Zdroje dát: {KALENDAR_ZDROJE}\n"
             )             
 
-            priecinok_piesni_text = ("""PRIEČINOK PIESNÍ – ŠTRUKTÚRA A PRAVIDLÁ ZARAĎOVANIA
+            priecinok_piesni_text = ("""● PRIEČINOK PIESNÍ – ŠTRUKTÚRA A PRAVIDLÁ ZARAĎOVANIA
 
-HLAVNÝ PRIEČINOK PIESNE/
+● HLAVNÝ PRIEČINOK PIESNE/
 
 Do hlavného priečinka piesne/ patria číslované piesne (napr. 001.txt–196.txt) a súbory s liturgickým kódom (napr. 1AD.txt, PS.txt a pod.).
 
 Súbory bez číselného alebo liturgického prefixu aplikácia automaticky nezaraďuje do žiadneho konkrétneho liturgického obdobia – namiesto toho sa sami objavia vo filtri „Modlitby a iné“. Stačí teda takýto súbor jednoducho vložiť priamo do priečinka piesní a appka ho sama zaradí.
 
-PODPRIEČINOK PIESNE/VEČERADLO/
+● PODPRIEČINOK PIESNE/VEČERADLO/
 
 Podpriečinok piesne/Večeradlo/ je samostatný priestor pre modlitby a piesne Večeradla. Môže obsahovať aj súbory s rovnakým názvom/číslom ako hlavný priečinok (napr. 016.txt) – s úplne iným obsahom – bez toho, aby si navzájom prekážali.
 
-PODPRIEČINOK PIESNE/MLÁDEŽ/
+● PODPRIEČINOK PIESNE/MLÁDEŽ/
 
 Podpriečinok piesne/Mládež/ je určený pre piesne pre mládež (s číslovaním od 1001). Po zapnutí filtra „Mládež“ sa zoznam piesní načíta práve z tohto priečinka.
 
 Zdroj dát: mladeznickyspevnik.sk
 
-VLASTNÉ PIESNE
+● VLASTNÉ PIESNE
 
 Do priečinka piesne/ môžete pridávať vlastné piesne vo forme textových súborov .txt. Rovnako ich môžete umiestňovať aj do podpriečinkov Mládež/ a Večeradlo/.
 
@@ -18993,7 +19026,7 @@ Do priečinka piesne/ môžete pridávať vlastné piesne vo forme textových s�
 • Nemažte ani nepremenúvajte súbory, ktoré už v priečinku sú, a nemeňte štruktúru ostatných súborov, najmä skratky žalmov. Inak môže program piesne načítať nesprávne alebo vôbec.
 • Pred úpravami odporúčame zálohovať celý priečinok piesne/.
 
-PRIORITA PRI ZHODE NÁZVOV
+● PRIORITA PRI ZHODE NÁZVOV
 
 V hlavnom ovládacom okne môžete prepínať medzi zdrojmi piesní Večeradlo a Mládež.
 Pri ostatných filtroch sa ako hlavný zdroj piesní používa základný priečinok piesne.
@@ -19009,7 +19042,7 @@ Príklad
 Vo filtri „Večeradlo“ kliknete alebo napíšete 016 → vždy sa načíta piesne/Večeradlo/016.txt.
 Po prepnutí na iný filter (bežné piesne) sa 016 opäť správa ako predtým – načíta sa z hlavného priečinka piesne/016.txt.
 
-ČO SA STANE, KEĎ SÚBOR CHÝBA?
+● ČO SA STANE, KEĎ SÚBOR CHÝBA?
 
 Logika je takáto:
 
@@ -19132,6 +19165,7 @@ Rovnaká logika sa uplatňuje aj pri filtri „Mládež“.
                         "nadpis",
                         font=(safe_font_name, max(size + 4, 12), "bold")
                     )
+                    _nastav_tagy_sekcii(text_widget, size)
                 self.about_font_size = size
                 self.ulozit_nastavenia(aktualizovat_label=False)
                 self.manual_entry.focus_set()
