@@ -3328,7 +3328,7 @@ def zobraz_chybu_chybajucich_kniznic_pre_stahovanie() -> bool:
     nazvy = ", ".join(chybaju)
     log_info(f"Sťahovanie nie je dostupné, chýbajú knižnice: {nazvy}")
     messagebox.showerror(
-        "Chýbajú knižnice",
+        "Kinak: Chýbajú knižnice",
         "Funkcia sťahovania čítaní, vešpier, refrénov a cezročných týždňov nie je dostupná, "
         f"pretože chýbajú tieto Python knižnice: {nazvy}.\n\n"
         "Doinštalujte ich príkazom:\n"
@@ -3391,14 +3391,14 @@ def je_internet_dostupny(timeout: float = 2.0) -> bool:
     """
     if _over_internet_socket(timeout):
         return True
-    messagebox.showerror("Žiadne internetové pripojenie", "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.")
+    messagebox.showerror("Kinak: Žiadne internetové pripojenie", "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.")
     return False
 
 
 def zobraz_chybu_stahovania(nazov: str, zdroj: str):
     """Jednotné chybové hlásenie pre všetky sťahovania."""
     messagebox.showerror(
-        "Chyba pri sťahovaní",
+        "Kinak: Chyba pri sťahovaní",
         f"Nepodarilo sa stiahnuť {nazov} z {zdroj}.\n\n"
         "Možné príčiny:\n"
         "• Žiadne internetové pripojenie\n"
@@ -3657,7 +3657,7 @@ PANEL_BG_COLOR = "#121212"
 
 # Text zobrazený v rozbaľovacom menu súborov, keď nie je nič vybrané.
 SUBOR_ZIADNY = "Žiadna"
-COMBO_HLAVICKA = "Hľadať číslo alebo názov…"
+COMBO_HLAVICKA = "Hľadať pieseň podľa čísla alebo názvu…"
 
 # Tmavý vzhľad rozbaľovacích tlačidiel (OptionMenu) v ľavom paneli.
 MENU_BTN_BG = "#1a1a1a"
@@ -11341,7 +11341,7 @@ class _NastaveniaMixin(_ControlAppBase):
 
         if not folder.is_dir():
             messagebox.showerror(
-                "Priečinok neexistuje",
+                "Kinak: Priečinok neexistuje",
                 f"Priečinok s piesňami neexistuje:\n{folder}\n\n"
                 "Skontroluj nastavenie umiestnenia súborov."
             )
@@ -11360,13 +11360,13 @@ class _NastaveniaMixin(_ControlAppBase):
 
         if total == 0:
             messagebox.showinfo(
-                "Skonvertovať do UTF-8",
+                "Kinak: Skonvertovať do UTF-8",
                 f"V priečinku\n{folder}\n(vrátane podpriečinkov) sa nenašli žiadne .txt súbory."
             )
             return
 
         if not messagebox.askyesno(
-            "Skonvertovať do UTF-8",
+            "Kinak: Skonvertovať do UTF-8",
             f"Prevedie sa {total} súborov .txt v priečinku:\n{folder}\n"
             "vrátane všetkých podpriečinkov (napr. „Večeradlo“).\n\n"
             "Každý súbor sa najprv zálohuje (pôvodné bajty, nezmenené) do "
@@ -11382,7 +11382,7 @@ class _NastaveniaMixin(_ControlAppBase):
             backup_folder.mkdir(exist_ok=True)
         except Exception as e:
             log_exception("skonvertovat_piesne_do_utf8: vytvorenie zálohy zlyhalo", e)
-            messagebox.showerror("Chyba", f"Nepodarilo sa vytvoriť zálohovací priečinok:\n{e}")
+            messagebox.showerror("Kinak: Chyba", f"Nepodarilo sa vytvoriť zálohovací priečinok:\n{e}")
             return
 
         def precitaj_auto(cesta: Path) -> tuple[str, str]:
@@ -11467,9 +11467,9 @@ class _NastaveniaMixin(_ControlAppBase):
             sprava += f"\n\nSúbory s chybou ({len(chyby)}):\n" + "\n".join(
                 f"  • {nazov}: {chyba}" for nazov, chyba in chyby
             )
-            messagebox.showwarning("Skonvertovať do UTF-8 – dokončené s chybami", sprava)
+            messagebox.showwarning("Kinak: Skonvertovať do UTF-8 – dokončené s chybami", sprava)
         else:
-            messagebox.showinfo("Skonvertovať do UTF-8 – hotovo", sprava)
+            messagebox.showinfo("Kinak: Skonvertovať do UTF-8 – hotovo", sprava)
 
     def zmenit_rezim_farby(self):
         if not self.pouzit_vlastnu_farbu.get():
@@ -11858,7 +11858,7 @@ class _StahovanieMixin(_ControlAppBase):
                     self.upravit_citania_pre_projekciu(zobrazit_potvrdenie=False)
                 except Exception as e:
                     log_exception("open_citanie/upravit", e)
-                    messagebox.showerror("Chyba", f"Úprava čítaní zlyhala: {e}")
+                    messagebox.showerror("Kinak: Chyba", f"Úprava čítaní zlyhala: {e}")
 
             try:
                 self.aktualizovat_citania_gui(
@@ -11867,7 +11867,7 @@ class _StahovanieMixin(_ControlAppBase):
                 )
             except Exception as e:
                 log_exception("open_citanie/start_thread", e)
-                messagebox.showerror("Chyba", f"Nepodarilo sa spustiť sťahovanie: {e}")
+                messagebox.showerror("Kinak: Chyba", f"Nepodarilo sa spustiť sťahovanie: {e}")
 
         self._zobraz_dialog_stiahnutia(
             title="Stiahnuť čítania",
@@ -11901,7 +11901,7 @@ class _StahovanieMixin(_ControlAppBase):
             return False
 
         if not messagebox.askyesno(
-            "Potvrdiť stiahnutie",
+            "Kinak: Potvrdiť stiahnutie",
             potvrdzujuci_text_fn(rok),
             parent=dialog,
         ):
@@ -12006,7 +12006,19 @@ class _StahovanieMixin(_ControlAppBase):
                 akcia_po_potvrdeni=akcia_po_potvrdeni,
             )
 
-        tk.Button(dialog, text=tlacidlo_text, command=spusti, **btn_style).pack()
+        tk.Button(
+            dialog, text=tlacidlo_text, command=spusti, **btn_style
+        ).pack(side=tk.BOTTOM, pady=(4, 10))
+
+        # Po zväčšení informačného písma sa obsah môže zmeniť na viac riadkov.
+        # Zväčšíme okno podľa požadovanej výšky widgetov, aby tlačidlo zostalo viditeľné.
+        dialog.update_idletasks()
+        vyska_okna = max(dh, dialog.winfo_reqheight() + 12)
+        vyska_obrazovky = dialog.winfo_screenheight()
+        vyska_okna = min(vyska_okna, vyska_obrazovky - 60)
+        stred_y = self.master.winfo_y() + self.master.winfo_height() // 2
+        poloha_y = max(20, min(stred_y - vyska_okna // 2, vyska_obrazovky - vyska_okna - 20))
+        dialog.geometry(f"{dw}x{vyska_okna}+{mx - dw // 2}+{poloha_y}")
 
         dialog.bind("<Return>", lambda e: spusti())
         dialog.bind("<Escape>", lambda e: dialog.destroy())
@@ -12034,7 +12046,7 @@ class _StahovanieMixin(_ControlAppBase):
                 text="Prepíšu sa súbory 1L.txt až 12L.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
                 bg="#121212",
                 fg="#bbbbbb",
-                font=(self.font_family, 10),
+                font=(self.font_family, 12),
                 justify=tk.CENTER,
                 wraplength=330,
             ).pack(pady=(0, 10))
@@ -12092,7 +12104,7 @@ class _StahovanieMixin(_ControlAppBase):
                 textvariable=info_var,
                 bg="#121212",
                 fg="#bbbbbb",
-                font=(self.font_family, 10),
+                font=(self.font_family, 12),
                 justify=tk.CENTER,
                 wraplength=360,
             ).pack(pady=(0, 10))
@@ -12161,7 +12173,7 @@ class _StahovanieMixin(_ControlAppBase):
         dostalo konzistentný slovník s kľúčom "uspech").
         """
         if not lock.acquire(blocking=False):
-            messagebox.showinfo("Kinak", zaneprazdnene_sprava)
+            messagebox.showinfo("Kinak: Operácia prebieha", zaneprazdnene_sprava)
             return False
 
         progress_dialog = tk.Toplevel(self.master)
@@ -12269,7 +12281,7 @@ class _StahovanieMixin(_ControlAppBase):
 
                 if vysledok.get("_bez_internetu"):
                     messagebox.showerror(
-                        "Žiadne internetové pripojenie",
+                        "Kinak: Žiadne internetové pripojenie",
                         "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.",
                     )
                     return
@@ -12352,7 +12364,7 @@ class _StahovanieMixin(_ControlAppBase):
                 log_exception(f"{kontext}: lock už bol uvoľnený po zlyhaní submit", e_lock)
             log_exception(f"{kontext}: executor neprijal novú úlohu", e)
             if not getattr(self, "_closing", False):
-                messagebox.showerror("Chyba", "Sťahovanie sa nepodarilo spustiť. Skúste program reštartovať.")
+                messagebox.showerror("Kinak: Chyba", "Sťahovanie sa nepodarilo spustiť. Skúste program reštartovať.")
             return False
         return True
 
@@ -12381,14 +12393,14 @@ class _StahovanieMixin(_ControlAppBase):
             return False
 
         if not hasattr(self, "song_folder_path") or self.song_folder_path is None:
-            messagebox.showerror("Chyba", "Nie je nastavený priečinok pre dáta.")
+            messagebox.showerror("Kinak: Chyba", "Nie je nastavený priečinok pre dáta.")
             return False
 
         try:
             self.song_folder_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:
             log_exception(f"{kontext}: mkdir zlyhal", e)
-            messagebox.showerror("Chyba", mkdir_chybova_sprava)
+            messagebox.showerror("Kinak: Chyba", mkdir_chybova_sprava)
             return False
 
         return True
@@ -12436,7 +12448,7 @@ class _StahovanieMixin(_ControlAppBase):
                 zaloha = vysledok.get("zaloha")
                 zaloha_text = self._formatuj_zalohu_text(zaloha, "mesačné súbory")
                 messagebox.showinfo(
-                    "Refrény aktualizované",
+                    "Kinak: Refrény aktualizované",
                     f"Refrény žalmov pre rok {rok} boli úspešne stiahnuté.\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Spracovaných dní: {vysledok.get('celkovo', 0)}\n"
@@ -12488,7 +12500,7 @@ class _StahovanieMixin(_ControlAppBase):
                 chybne_kody = vysledok.get("chybne_kody") or []
                 chybne_text = self._formatuj_chybne_kody_text(chybne_kody, "Týždne s chybou")
                 messagebox.showinfo(
-                    "Cezročné týždne aktualizované",
+                    "Kinak: Cezročné týždne aktualizované",
                     f"Refrény žalmov pre týždne cezročného obdobia na rok {rok} boli úspešne stiahnuté.\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Spracovaných položiek: {vysledok.get('celkovo', 0)}\n"
@@ -12547,7 +12559,7 @@ class _StahovanieMixin(_ControlAppBase):
                 ),
                 bg="#121212",
                 fg="#bbbbbb",
-                font=(self.font_family, 10),
+                font=(self.font_family, 12),
                 justify=tk.LEFT,
                 wraplength=410,
             ).pack(pady=(0, 10), padx=20, anchor="w")
@@ -12582,7 +12594,7 @@ class _StahovanieMixin(_ControlAppBase):
                 zaloha = vysledok.get("zaloha")
                 zaloha_text = self._formatuj_zalohu_text(zaloha)
                 messagebox.showinfo(
-                    "Liturgické týždne aktualizované",
+                    "Kinak: Liturgické týždne aktualizované",
                     f"Refrény žalmov liturgických týždňov pre rok {rok} boli úspešne stiahnuté.\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Spracovaných položiek: {vysledok.get('celkovo', 0)}\n"
@@ -12643,7 +12655,7 @@ class _StahovanieMixin(_ControlAppBase):
                 ),
                 bg="#121212",
                 fg="#bbbbbb",
-                font=(self.font_family, 10),
+                font=(self.font_family, 12),
                 justify=tk.LEFT,
                 wraplength=410,
             ).pack(anchor="w", ipadx=10)
@@ -12677,7 +12689,7 @@ class _StahovanieMixin(_ControlAppBase):
                 chybne_kody = vysledok.get("chybne_kody", [])
                 chybne_text = self._formatuj_chybne_kody_text(chybne_kody, pripona=".txt")
                 messagebox.showinfo(
-                    "Pôstne a veľkonočné obdobie aktualizované",
+                    "Kinak: Pôstne a veľkonočné obdobie aktualizované",
                     f"Refrény žalmov pre pôstne a veľkonočné obdobie na rok {rok} boli úspešne stiahnuté.\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Spracovaných položiek: {vysledok.get('celkovo', 0)}\n"
@@ -12729,7 +12741,7 @@ class _StahovanieMixin(_ControlAppBase):
                 text="Prepíšu sa súbory 1AD.txt až 4AD.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
                 bg="#121212",
                 fg="#bbbbbb",
-                font=(self.font_family, 10),
+                font=(self.font_family, 12),
                 justify=tk.CENTER,
                 wraplength=330,
             ).pack(pady=(0, 10))
@@ -12764,7 +12776,7 @@ class _StahovanieMixin(_ControlAppBase):
                 chybne_kody = vysledok.get("chybne_kody") or []
                 chybne_text = self._formatuj_chybne_kody_text(chybne_kody, "Týždne s chybou")
                 messagebox.showinfo(
-                    "Adventné týždne aktualizované",
+                    "Kinak: Adventné týždne aktualizované",
                     f"Refrény žalmov adventných týždňov pre rok {rok} boli úspešne stiahnuté.\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Spracovaných položiek: {vysledok.get('celkovo', 0)}\n"
@@ -12815,7 +12827,7 @@ class _StahovanieMixin(_ControlAppBase):
                 text="Prepíšu sa súbory 1TS.txt až 7TS.txt.\nExistujúce súbory sa predtým automaticky zálohujú.",
                 bg="#121212",
                 fg="#bbbbbb",
-                font=(self.font_family, 10),
+                font=(self.font_family, 12),
                 justify=tk.CENTER,
                 wraplength=330,
             ).pack(pady=(0, 10))
@@ -12850,7 +12862,7 @@ class _StahovanieMixin(_ControlAppBase):
                 chybne_kody = vysledok.get("chybne_kody") or []
                 chybne_text = self._formatuj_chybne_kody_text(chybne_kody, "Súbory s chybou")
                 messagebox.showinfo(
-                    "Turíce a nadväzujúce sviatky aktualizované",
+                    "Kinak: Turíce a nadväzujúce sviatky aktualizované",
                     f"Refrény žalmov pre Turíce a nadväzujúce sviatky na rok {rok} boli úspešne stiahnuté.\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Spracovaných položiek: {vysledok.get('celkovo', 0)}\n"
@@ -12933,7 +12945,7 @@ class _StahovanieMixin(_ControlAppBase):
                 ),
                 bg="#121212",
                 fg="#bbbbbb",
-                font=(self.font_family, 10),
+                font=(self.font_family, 12),
                 justify=tk.CENTER,
                 wraplength=390,
             ).pack(pady=(0, 10))
@@ -12986,7 +12998,7 @@ class _StahovanieMixin(_ControlAppBase):
                 chybne_kody = vysledok.get("chybne_kody", [])
                 chybne_text = self._formatuj_chybne_kody_text(chybne_kody, pripona=".txt")
                 messagebox.showinfo(
-                    "Refrény žalmov aktualizované",
+                    "Kinak: Refrény žalmov aktualizované",
                     f"Refrény žalmov vianočného obdobia {rok}/{rok + 1} boli úspešne stiahnuté.\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Stiahnutých: {vysledok.get('stiahnutych', 0)}\n"
@@ -13046,7 +13058,7 @@ class _StahovanieMixin(_ControlAppBase):
                 ),
                 bg="#121212",
                 fg="#bbbbbb",
-                font=(self.font_family, 10),
+                font=(self.font_family, 12),
                 justify=tk.CENTER,
                 wraplength=390,
             ).pack(pady=(0, 10))
@@ -13095,7 +13107,7 @@ class _StahovanieMixin(_ControlAppBase):
                 chybne_kody = vysledok.get("chybne_kody", [])
                 chybne_text = self._formatuj_chybne_kody_text(chybne_kody, pripona=".txt")
                 messagebox.showinfo(
-                    "Refrény žalmov aktualizované",
+                    "Kinak: Refrény žalmov aktualizované",
                     f"Refrény žalmov cezročných sviatkov pre {rok} boli úspešne stiahnuté.\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Stiahnutých: {vysledok.get('stiahnutych', 0)}\n"
@@ -13167,7 +13179,7 @@ class _StahovanieMixin(_ControlAppBase):
 
         subor = self.song_folder_path / "citania.txt"
         if not subor.exists():
-            messagebox.showerror("Chyba", "Súbor citania.txt neexistuje.")
+            messagebox.showerror("Kinak: Chyba", "Súbor citania.txt neexistuje.")
             return
 
         # ------------------------------------------------------------
@@ -13458,7 +13470,7 @@ class _StahovanieMixin(_ControlAppBase):
 
         if zobrazit_potvrdenie:
             messagebox.showinfo(
-                "Hotovo",
+                "Kinak: Hotovo",
                 "Čítania boli upravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
                 "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi.\n\n"
                 "Tip v Pomocníkovi: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
@@ -13507,7 +13519,7 @@ class _StahovanieMixin(_ControlAppBase):
            pre volajúceho). Napokon vždy obnoví kurzor a uvoľní `lock`.
         """
         if not lock.acquire(blocking=False):
-            messagebox.showinfo("Kinak", zaneprazdnene_sprava)
+            messagebox.showinfo("Kinak: Operácia prebieha", zaneprazdnene_sprava)
             return False
 
         try:
@@ -13525,7 +13537,7 @@ class _StahovanieMixin(_ControlAppBase):
 
                 if bez_internetu:
                     messagebox.showerror(
-                        "Žiadne internetové pripojenie",
+                        "Kinak: Žiadne internetové pripojenie",
                         "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.",
                     )
                     return
@@ -13605,7 +13617,7 @@ class _StahovanieMixin(_ControlAppBase):
                 log_exception(f"{kontext}: lock už bol uvoľnený po zlyhaní submit", e_lock)
             log_exception(f"{kontext}: executor neprijal novú úlohu", e)
             if not getattr(self, "_closing", False):
-                messagebox.showerror("Chyba", "Sťahovanie sa nepodarilo spustiť. Skúste program reštartovať.")
+                messagebox.showerror("Kinak: Chyba", "Sťahovanie sa nepodarilo spustiť. Skúste program reštartovať.")
             return False
         return True
 
@@ -13636,7 +13648,7 @@ class _StahovanieMixin(_ControlAppBase):
             if uspech:
                 # Jedno zlúčené potvrdenie (upravenie pre projekciu už prebehlo cez on_success)
                 messagebox.showinfo(
-                    "Čítania aktualizované",
+                    "Kinak: Čítania aktualizované",
                     f"Čítania pre {datum.strftime('%d.%m.%Y')} boli úspešne stiahnuté!\n\n"
                     f"Zdroj: lc.kbs.sk\n"
                     f"Súbor: {vystup_cesta.name}\n\n"
@@ -13702,7 +13714,7 @@ class _StahovanieMixin(_ControlAppBase):
         def spracuj_vysledok(uspech):
             if uspech:
                 messagebox.showinfo(
-                    "Vešpery aktualizované",
+                    "Kinak: Vešpery aktualizované",
                     f"Vešpery pre {datum.strftime('%d.%m.%Y')} boli úspešne stiahnuté!\n\n"
                     f"Zdroj: breviar.kbs.sk\n"
                     f"Súbor: {vystup_cesta.name}\n\n"
@@ -16056,13 +16068,13 @@ class _HlavneOknoMixin(_ControlAppBase):
         liturgicke_nastroje_menu.add_command(label="Stiahnuť vešpery", command=self.open_vespery)
 
         refreny_zalmov_menu = vytvor_toolbar_menu(liturgicke_nastroje_menu)
-        refreny_zalmov_menu.add_command(label="Mesačné (1L–12L)", command=self.open_refreny_zalmov)
-        refreny_zalmov_menu.add_command(label="Adventné (1AD–4AD)", command=self.open_adventne_refreny)
-        refreny_zalmov_menu.add_command(label="Vianočné (1VI, 2VI, SJE, NEV...)", command=self.open_vianocne_sviatky)
-        refreny_zalmov_menu.add_command(label="Pôstne a veľkonočné (PS, 1P–VT–7VN)", command=self.open_postne_velkonocne_refreny)
+        refreny_zalmov_menu.add_command(label="Po mesiacoch – celý rok (1L–12L)", command=self.open_refreny_zalmov)
+        refreny_zalmov_menu.add_command(label="Adventné týždne (1AD–4AD)", command=self.open_adventne_refreny)
+        refreny_zalmov_menu.add_command(label="Vianočné obdobie (25. 12. až Krst Krista Pána; 1VI, 2VI…)", command=self.open_vianocne_sviatky)
+        refreny_zalmov_menu.add_command(label="Pôstne a veľkonočné obdobie (PS, 1P–5P, VT, 1VN–7VN…)", command=self.open_postne_velkonocne_refreny)
         refreny_zalmov_menu.add_command(label="Turíce a nadväzujúce sviatky (1TS–7TS)", command=self.open_turicne_sviatky)
-        refreny_zalmov_menu.add_command(label="Cezročné týždne (1C1–34C2)", command=self.open_cezrocne_tyzdenne_refreny)        
-        refreny_zalmov_menu.add_command(label="Cezročné sviatky (OND, NJK, BAR...)", command=self.open_liturgicke_sviatky)
+        refreny_zalmov_menu.add_command(label="Cezročné týždne (párny aj nepárny rok; 1C1–34C2)", command=self.open_cezrocne_tyzdenne_refreny)
+        refreny_zalmov_menu.add_command(label="Cezročné sviatky (sv. Ján Krstiteľ, sv. Cyril a Metod…)", command=self.open_liturgicke_sviatky)
         liturgicke_nastroje_menu.add_cascade(label="Stiahnuť refrény žalmov", menu=refreny_zalmov_menu)
 
         liturgicke_nastroje_btn["menu"] = liturgicke_nastroje_menu
@@ -16110,6 +16122,16 @@ class _HlavneOknoMixin(_ControlAppBase):
             panel_vyber, bg=UI_LEFT_PANEL_BG, bd=0,
             highlightthickness=0
         )
+        tk.Label(
+            panel_vyber,
+            text="Pieseň, žalm alebo modlitba",
+            font=(self.font_family, 13),
+            fg="#ffffff",
+            bg=UI_LEFT_PANEL_BG,
+            anchor="w",
+            justify=tk.LEFT,
+        ).pack(fill=tk.X, pady=(0, 5))
+
         self.manual_entry_border.pack(fill=tk.X, pady=(0, 10), padx=0)
 
         # Vnútorný Frame - tenká sivá linka (požiadavka: ružový → tenká sivá)
@@ -16134,7 +16156,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         self.manual_entry.pack(fill=tk.BOTH, expand=True, ipady=12, padx=4, pady=2)
 
         self.manual_entry_hint = tk.Label(
-            panel_vyber, text="Zadaj č. piesne alebo vyber žalm či modlitbu z menu nižšie.", font=(self.font_family, 11),
+            panel_vyber, text="Zadaj číslo alebo skratku, prípadne vyber položku z menu nižšie.", font=(self.font_family, 11),
             fg="#9a9aaa", bg=UI_LEFT_PANEL_BG, wraplength=273, justify=tk.LEFT, anchor="w"
         )
         self.manual_entry_hint.pack(fill=tk.X, pady=(0, 14))
@@ -17848,7 +17870,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
         except Exception as e:
             log_exception("otvorit_pomocnika", e)
-            messagebox.showerror("Chyba", f"Nepodarilo sa otvoriť pomocníka: {e}")  
+            messagebox.showerror("Kinak: Chyba", f"Nepodarilo sa otvoriť pomocníka: {e}")  
                   
     
     def _zatvorit_pomocnika(self):
@@ -18226,7 +18248,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 combo = getattr(self, "_wizard_monitor_combo", None)
                 if combo is None:
                     messagebox.showwarning(
-                        "Monitory nie sú dostupné",
+                        "Kinak: Monitory nie sú dostupné",
                         "Nepodarilo sa načítať zoznam monitorov. Test projekcie nie je možné spustiť.",
                         parent=wizard
                     )
@@ -18236,7 +18258,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 idx = combo.current()
                 if idx is None or idx < 0:
                     messagebox.showwarning(
-                        "Chýba výber monitora",
+                        "Kinak: Chýba výber monitora",
                         "Najprv vyberte monitor, na ktorý sa má projekcia zobraziť.",
                         parent=wizard
                     )
@@ -18245,7 +18267,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 # 3. Skontrolovať, či existuje projekčné okno
                 if not getattr(self, "projection_window", None):
                     messagebox.showwarning(
-                        "Projekcia nie je aktívna",
+                        "Kinak: Projekcia nie je aktívna",
                         "Najprv aktivujte projekciu (ENTER), aby bolo možné ju otestovať.",
                         parent=wizard
                     )
@@ -18256,11 +18278,11 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
                 # 5. Spustiť test
                 self.enter_aktivuj_projekciu()
-                messagebox.showinfo("Test projekcie", "Test bol úspešný!", parent=wizard)
+                messagebox.showinfo("Kinak: Test projekcie", "Test bol úspešný!", parent=wizard)
                 self.master.after(2500, self.enter_aktivuj_projekciu)
 
             except Exception as e:
-                messagebox.showerror("Chyba testu", f"Chyba pri pokuse o test: {e}", parent=wizard)
+                messagebox.showerror("Kinak: Chyba testu", f"Chyba pri pokuse o test: {e}", parent=wizard)
 
         # --- TEST PROJEKCIE ---
         test_frame = tk.Frame(f3_inner, bg=bg)
@@ -18880,7 +18902,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 return text_widget
 
             ovladanie_text = (
-                "● RÝCHLY NÁVOD\n\n"                
+                "● Rýchly návod\n\n"                
                 "Zadajte číslo piesne a potom používajte klávesy:\n\n"
                 "• PLUS (+)\t\tĎalšia strofa (možno použiť aj šípku →)\n"
                 "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
@@ -18888,7 +18910,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• BACKSPACE\t\tMaže číslo piesne a zároveň okamžite vypína projekciu\n"
                 "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
                 "Kinak je prenosná desktopová aplikácia na projekciu liturgických piesní, žalmov a modlitieb, so zabudovaným liturgickým kalendárom, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus a žaltárový týždeň liturgického roka.\n\n"
-                "● HLAVNÉ FUNKCIE\n\n"
+                "● Hlavné funkcie\n\n"
                 "• Projekcia textov na externý monitor alebo projektor\n"
                 "• Automatické spustenie projekcie na druhom monitore v režime celej obrazovky\n"
                 "  (vyžaduje zapnutú rozšírenú plochu v systéme)\n"
@@ -18898,26 +18920,26 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 
                 "Kalendár je zostavený tak, že bežné férie a spomienky (záväzné aj ľubovoľné) zobrazuje ako dni príslušného týždňa liturgického roka (napr. cezročného obdobia).\n\n"
                 "Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť raz za rok, naraz na celý liturgický rok.\n\n"
-                "● INDIKÁTOR PROJEKCIE\n\n"
+                "● Indikátor projekcie\n\n"
                 "• Zelená = projekcia aktívna\n"
                 "• Sivá   = projekcia vypnutá\n\n"
                 "V nastaveniach záložka Ovládanie je možné zapnúť malý náhľad projekcie v pravom dolnom rohu "
                 "ovládacieho okna – užitočné najmä vtedy, ak premietajúci nevidí priamo na projekčnú obrazovku.\n\n"              
-                "● OKNÁ DIREKTÓRIUM A SLÁVENIA\n\n"
+                "● Okná Direktórium a Slávenia\n\n"
                 "Rýchly výber piesne alebo skratky žalmu pre konkrétne slávenie — dvojklik na bunku, bez ručného zadávania.\n"
             )
 
             vyhladavanie_text = (
-                "● VYHĽADÁVANIE PIESNÍ, MODLITIEB A ŽALMOV\n\n"
+                "● Vyhľadávanie piesní, modlitieb a žalmov\n\n"
                 "Vyhľadávanie je možné vykonávať cez filtre alebo ručným zadaním do vstupného poľa.\n\n"
-                "● A) VYHĽADÁVANIE RUČNÝM ZADANÍM DO VSTUPNÉHO POĽA\n\n"
+                "● A) Vyhľadávanie ručným zadaním do vstupného poľa\n\n"
                 "Do poľa na zadanie piesne môžete ručne napísať:\n\n"
                 "• Čísla piesní (napr. 254)\n"
                 "• Skratky modlitieb (napr. dk)\n"
                 "• Časť názvu piesne alebo modlitby (napr. ruž → Ružencové bratstvo)\n"
                 "• Skratku žalmu (napr. 20c2)\n\n"
                 "Vstupné pole vyhľadáva podľa názvov .txt súborov.\n\n"
-                "● B) VYHĽADÁVANIE CEZ FILTRE\n\n"
+                "● B) Vyhľadávanie cez filtre\n\n"
                 "• Na vyhľadávanie modlitieb slúžia 3 filtre: „Modlitby a iné“, „Ruženec“ a „Večeradlo“\n"
                 "• Na vyhľadávanie piesní pre mládež slúži filter „Mládež“\n"                
                 "• Ostatné filtre slúžia na vyhľadávanie žalmov\n\n"
@@ -18925,7 +18947,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Ak je aktívny filter „Večeradlo“, aplikácia najprv hľadá súbor v podpriečinku piesne/Večeradlo/; ak neexistuje, použije súbor z hlavného priečinka piesne/ vrátane podpriečinka Mládež.\n\n"
                 "Ak je aktívny filter „Mládež“, aplikácia najprv hľadá súbor v podpriečinku piesne/Mládež/; ak neexistuje, použije súbor z hlavného priečinka piesne/ vrátane podpriečinka Večeradlo.\n\n"
                                 
-                "● POZNÁMKY K ŽALMOM\n\n"
+                "● Poznámky k žalmom\n\n"
                 "• A, B, C = liturgické roky (nedeľné žalmy)\n"
                 "• 1–6 = dni v týždni (pondelok–sobota)\n\n"
                 "Pri práci s Direktóriom stačí dvojklik na bunku — číslo piesne sa odošle do hlavného okna a okamžite sa načíta. "                
@@ -18933,11 +18955,11 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             )
 
             priprava_text = (
-                "● ÚPRAVA PIESNÍ\n\n"
+                "● Úprava piesní\n\n"
                 "Pri piesňach JKS je v poriadku, ak sa jedna strofa zobrazí aj na dve či tri obrazovky. "
                 "Ak chcete, aby sa celá strofa zobrazila naraz, odstráňte v textovom súbore prázdne riadky medzi veršami. "
                 "Odlišný vzhľad možno dosiahnuť aj rozdelením strofy na dlhšie riadky.\n\n"
-                "● ŠPECIÁLNE ZNAKY V PIESŇACH JKS\n\n"
+                "● Špeciálne znaky v piesňach JKS\n\n"
                 "• BODKA (·)\t\t\tObsahuje Ofertórium (použije sa dvakrát: úvod + obetovanie)\n"
                 "• PODČIARKOVNÍK (_)\t\t\tKoniec strofy\n"
                 "• KOMBINÁCIA (_·)\t\t\tKoniec úvodnej časti; nižšie sa nachádza Ofertórium\n\n"
@@ -18945,7 +18967,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "však zostanú vždy viditeľné, aby sa premietajúci vedel ľahko orientovať. "
                 "Je to užitočné najmä pri piesňach z JKS, kde môže byť jedna strofa rozdelená na viac obrazoviek. Značky vám pomôžu vidieť, kde končí strofa, aby ste nezačali ďalšiu práve vtedy,  keď už len dokončujete aktuálnu strofu a liturgia sa posúva ďalej.\n\n"
                 "Praktická rada: Ak pieseň začína bodkou (·), pri obetovaní stačí prejsť na najbližší riadok začínajúci bodkou.\n\n"
-                "● STRIEDANIE CHÓROV VO VEŠPERÁCH\n\n"
+                "● Striedanie chórov vo vešperách\n\n"
                 "Striedanie ľavého a pravého chóru je v projekcii dané striedaním obrazoviek.\n"
                 "(každá nová obrazovka = zmena chóru)\n\n"
                 "Označenie [L] / [P] slúži len ako vizuálna pomôcka – rýchla orientácia o tom, ktorý chór je práve na obrazovke.\n\n"
@@ -18953,10 +18975,10 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             )
 
             pomoc_text = (
-                "● AK PROJEKCIA NIE JE NA SPRÁVNOM MONITORE\n\n"
+                "● Ak projekcia nie je na správnom monitore\n\n"
                 "V systéme Windows stlačte Win + P a skontrolujte, či je zvolený režim Rozšíriť (Extend). Kinak môže automaticky otvoriť projekciu "
                 "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku. Podrobnosti nájdete v aplikácii Kinak v časti Pomoc → Rýchly sprievodca.\n\n"
-                "● AK SA PIESNE NENAČÍTAJÚ\n\n"
+                "● Ak sa piesne nenačítajú\n\n"
                 "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí byť v rovnakom priečinku ako priečinok "
                 "s názvom 'piesne'.\n\n"              
                                          
@@ -18976,48 +18998,48 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Ak priečinok neexistuje, je prázdny alebo neobsahuje textové súbory, "
                 "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"  
                 
-                "● AK SA ŽALMY NEZOBRAZUJÚ SPRÁVNE\n\n"
+                "● Ak sa žalmy nezobrazujú správne\n\n"
                 "Ak texty refrénov responzóriových žalmov nesedia s daným liturgickým dňom, je potrebné stiahnuť aktualizácie. "
                 "V hornom menu zvoľte Liturgické nástroje → Stiahnuť refrény žalmov a stiahnite refrény pre požadované obdobie. "
                 "Na stiahnutie je potrebné pripojenie na internet.\n\n"
-                "● NEČITATEĽNÁ DIAKRITIKA\n\n"
+                "● Nečitateľná diakritika\n\n"
                 "Databáza textov je uložená v priečinku piesne. Textové súbory používajú kódovanie ANSI alebo UTF‑8. "
                 "Ak sa súbor z nejakého dôvodu poškodí, môže sa stať, že sa na obrazovke zobrazia nečitateľné znaky diakritiky.\n\n"
                 "Riešenie je jednoduché:\n\n"
                 "otvorte súbor v Notepade, zvoľte Uložiť ako… a vyberte kódovanie ANSI alebo UTF‑8.\n"
                 "Po uložení sa text zobrazí správne.\n\n"
-                "● HROMADNÉ SKONVERTOVANIE CELÉHO PRIEČINKA\n\n"
+                "● Hromadné skonvertovanie celého priečinka\n\n"
                 "Ak sa chybná diakritika vyskytne vo viacerých súboroch, nemusíte ich opravovať jednotlivo. "
                 "V Nastaveniach záložka Pokročilé → Umiestnenie súborov kliknite na „Skonvertovať do UTF‑8…“. Aplikácia "
                 "automaticky prevedie všetky .txt súbory v priečinku na čisté UTF‑8 a pôvodné verzie uloží do "
                 "podpriečinka „_zaloha_original“, takže prevod možno vrátiť späť.\n\n"                               
                                           
-                "● LITURGICKÝ KALENDÁR - ŠPECIFIKÁCIA\n\n"
+                "● Liturgický kalendár – špecifikácia\n\n"
                 "Liturgické výpočty v aplikácii Kinak sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku.\n\n"
                 f"• Kalendár je zostavený pre: {KALENDAR_KRAJINA} (Slovensko)\n"
                 f"• Výpočty podľa Všeobecných noriem o liturgickom roku a o všeobecnom rímskom kalendári a Direktória KBS\n"
                 f"• Zdroje dát: {KALENDAR_ZDROJE}\n"
             )             
 
-            priecinok_piesni_text = ("""● PRIEČINOK PIESNÍ – ŠTRUKTÚRA A PRAVIDLÁ ZARAĎOVANIA
+            priecinok_piesni_text = ("""● Priečinok piesní – štruktúra a pravidlá zaraďovania
 
-● HLAVNÝ PRIEČINOK PIESNE/
+● Hlavný priečinok piesne/
 
 Do hlavného priečinka piesne/ patria číslované piesne (napr. 001.txt–196.txt) a súbory s liturgickým kódom (napr. 1AD.txt, PS.txt a pod.).
 
 Súbory bez číselného alebo liturgického prefixu aplikácia automaticky nezaraďuje do žiadneho konkrétneho liturgického obdobia – namiesto toho sa sami objavia vo filtri „Modlitby a iné“. Stačí teda takýto súbor jednoducho vložiť priamo do priečinka piesní a appka ho sama zaradí.
 
-● PODPRIEČINOK PIESNE/VEČERADLO/
+● Podpriečinok piesne/Večeradlo/
 
 Podpriečinok piesne/Večeradlo/ je samostatný priestor pre modlitby a piesne Večeradla. Môže obsahovať aj súbory s rovnakým názvom/číslom ako hlavný priečinok (napr. 016.txt) – s úplne iným obsahom – bez toho, aby si navzájom prekážali.
 
-● PODPRIEČINOK PIESNE/MLÁDEŽ/
+● Podpriečinok piesne/Mládež/
 
 Podpriečinok piesne/Mládež/ je určený pre piesne pre mládež (s číslovaním od 1001). Po zapnutí filtra „Mládež“ sa zoznam piesní načíta práve z tohto priečinka.
 
 Zdroj dát: mladeznickyspevnik.sk
 
-● VLASTNÉ PIESNE
+● Vlastné piesne
 
 Do priečinka piesne/ môžete pridávať vlastné piesne vo forme textových súborov .txt. Rovnako ich môžete umiestňovať aj do podpriečinkov Mládež/ a Večeradlo/.
 
@@ -19026,7 +19048,7 @@ Do priečinka piesne/ môžete pridávať vlastné piesne vo forme textových s�
 • Nemažte ani nepremenúvajte súbory, ktoré už v priečinku sú, a nemeňte štruktúru ostatných súborov, najmä skratky žalmov. Inak môže program piesne načítať nesprávne alebo vôbec.
 • Pred úpravami odporúčame zálohovať celý priečinok piesne/.
 
-● PRIORITA PRI ZHODE NÁZVOV
+● Priorita pri zhode názvov
 
 V hlavnom ovládacom okne môžete prepínať medzi zdrojmi piesní Večeradlo a Mládež.
 Pri ostatných filtroch sa ako hlavný zdroj piesní používa základný priečinok piesne.
@@ -19042,7 +19064,7 @@ Príklad
 Vo filtri „Večeradlo“ kliknete alebo napíšete 016 → vždy sa načíta piesne/Večeradlo/016.txt.
 Po prepnutí na iný filter (bežné piesne) sa 016 opäť správa ako predtým – načíta sa z hlavného priečinka piesne/016.txt.
 
-● ČO SA STANE, KEĎ SÚBOR CHÝBA?
+● Čo sa stane, keď súbor chýba?
 
 Logika je takáto:
 
@@ -19397,7 +19419,7 @@ class ControlApp(
             try:
                 log_info("Modul 'screeninfo' nebol nájdený — projekcia sa otvorí na hlavnom monitore.")
                 messagebox.showwarning(
-                    "Pozor",
+                    "Kinak: Pozor",
                     "Modul 'screeninfo' nebol nájdený.\n\n"
                     "Projekcia sa otvorí na hlavnom monitore.\n"
                     "Ak chcete používať viac monitorov, nainštalujte balík:\n"
@@ -20018,7 +20040,7 @@ if __name__ == "__main__":
                 display_log_path = "log_kinak.txt"
 
             messagebox.showerror(
-                "Kritická chyba pri štarte",
+                "Kinak: Kritická chyba pri štarte",
                 f"Aplikáciu Kinak nebolo možné spustiť.\n\n"
                 f"Podrobnosti nájdete v súbore:\n{display_log_path}\n\n"
                 f"Chyba: {str(e)}"
