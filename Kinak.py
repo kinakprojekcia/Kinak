@@ -603,32 +603,6 @@ def nazov_pohybliveho_slavenia_pre_datum(datum: date) -> str | None:
             return (POHYBLIVE_NAZVY_PRE_HLAVICKU.get(nazov) or nazov).upper()
     return None
 
-PORADOVE_MUZSKE = {
-    1: "PRVÝ",
-    2: "DRUHÝ",
-    3: "TRETÍ",
-    4: "ŠTVRTÝ",
-    5: "PIATY",
-    6: "ŠIESTY",
-    7: "SIEDMY",
-    8: "ÔSMY",
-    9: "DEVIATY",
-    10: "DESIATY",
-}
-
-PORADOVE_ZENSKE = {
-    1: "PRVÁ",
-    2: "DRUHÁ",
-    3: "TRETIA",
-    4: "ŠTVRTÁ",
-    5: "PIATA",
-    6: "ŠIESTA",
-    7: "SIEDMA",
-    8: "ÔSMA",
-    9: "DEVIATA",
-    10: "DESIATA",
-}
-
 # Slovenské názvy dní týždňa (weekday() 0=pondelok … 6=nedeľa)
 DNI_TYZDNA_SK = {
     0: "pondelok",
@@ -3653,7 +3627,6 @@ def _vybrat_ui_font() -> None:
 # používajú sa v ProjectionWindow.__init__ a ControlApp (nie len ako init hodnoty).
 TEXT_COLOR = "#e0e0e6"
 BACKGROUND_COLOR = "#121212"
-PANEL_BG_COLOR = "#121212"
 
 # Text zobrazený v rozbaľovacom menu súborov, keď nie je nič vybrané.
 SUBOR_ZIADNY = "Žiadna"
@@ -3671,12 +3644,9 @@ UI_BAR_BG = "#1a1a1a"          # horný panel nástrojov a stavový riadok - sid
 UI_PANEL_BG = "#181818"        # pravý panel s textom piesne (tmavý) - #181818
 UI_LEFT_PANEL_BG = "#1a1a1a"   # ľavý navigačný panel – ako sidebar #1a1a1a
 UI_BTN_BG = "#1e1e1e"          # ploché tlačidlá - #1e1e1e - svetlejší odtieň ako sidebar
-UI_BTN_ACTIVE_BG = "#262626"   # tlačidlá pri nabehnutí myši - highlight #262626
 UI_BTN_FG = "#e0e0e6"
 UI_ENTRY_BG = "#101010"        # pole s číslom piesne - #101010
 UI_PREVIEW_HDR_BG = "#121212"  # pásik "Náhľad projekcie" - #121212
-UI_MUTED_FG = "#6a6a75"        # pomocné texty
-UI_THUMB = "#604d13"           # posuvník
 
 # Akcentová farba (hover/focus rámik a šípka v zozname piesní) – odtieň sivej.
 KINAK_AKCENT = "#8c8c8c"
@@ -3719,7 +3689,6 @@ def stylizuj_optionmenu_tmavo(option_menu):
 # Definovaná ako konštanta, aby ju `.config(fg=...)` pri mazaní textu
 # neprepísalo späť na bielu.
 DIREKTORIUM_LABEL_FG = "#e0e0e6"  # rovnaká ako UI_BTN_FG / stavový riadok
-TEXT_PANEL_BG = "#1e1e1e"
 
 WRAP_PADDING_RATIO = 0.06
 MIN_WRAP = 240
@@ -3730,14 +3699,11 @@ PROJECTION_WRAP_RATIO = 0.94
 # Konštanty pre Live Preview panel (update_live_preview)
 PREVIEW_FONT_INIT   = 20   # počiatočná veľkosť písma pre iteratívny výpočet
 PREVIEW_FONT_MIN    = 8    # minimálna povolená veľkosť písma v preview
-PREVIEW_LOOP_LIMIT  = 15   # max. počet iterácií pri zmenšovaní písma (ochrana pred zacyklením)
 
 # Konštanty pre horný panel strofy (vypocitaj_velkost_pisma_pre_strofu)
 STROFA_FONT_INIT    = 40   # počiatočná veľkosť písma (najväčšia povolená)
 STROFA_FONT_MIN     = 14   # minimálna veľkosť písma (čitateľnosť)
 STROFA_LOOP_LIMIT   = 30   # ochrana pred zacyklením
-STROFA_PADDING_H    = 60   # horizontálny padding (2× padx=20 + rezerva)
-STROFA_PADDING_V    = 30   # vertikálny padding (2× pady=10 + rezerva)
 
 # Oneskorenia jednorazových inicializačných callbackov pri štarte ControlApp (ms)
 _STARTUP_FOCUS_DELAY_MS   = 300   # focus na manual_entry
@@ -3768,10 +3734,13 @@ LITURGICKE_OBDOBIA_JEMNE = {
 # na tmavom pozadí BACKGROUND_COLOR).
 VECERADLO_PROJEKCIA_MODRA = "#66B2FF"
 
+# Pevná červená farba textu v projekcii pre oznam.txt
+# Vždy červená, aby oznam upútal pozornosť (neprehliadnuteľný na čiernom pozadí).
+OZNAM_PROJEKCIA_CERVENA = "#ff4444"
+
 # Farba textu v comboboxe pri aktívnom filtri "Mládež"
 # (pôvodne oranžová, teraz zjednotená na odtieň bielej podľa požiadavky - #e0e0e6)
 MLADEZ_COMBOBOX_FARBA = "#e0e0e6"
-MLADEZ_COMBOBOX_FARBA_TMAVSIA = "#d0d0d8"  # pre focus/hover
 
 DEFAULT_CONFIG = {
     # Poznámka: "base_dir" sa ukladá do JSON len pre informáciu.
@@ -4064,13 +4033,6 @@ def _zapis_text_atomicky(cesta: Path | str, text: str, encoding: str = "utf-8") 
                 temp_path.unlink()
             except Exception as e:
                 log_exception("_zapis_text_atomicky: nepodarilo sa odstranit docasny subor", e)
-
-
-REFRENY_MESIACE_SK = {
-    1: "JANUÁR", 2: "FEBRUÁR", 3: "MAREC", 4: "APRÍL",
-    5: "MÁJ", 6: "JÚN", 7: "JÚL", 8: "AUGUST",
-    9: "SEPTEMBER", 10: "OKTÓBER", 11: "NOVEMBER", 12: "DECEMBER",
-}
 
 REFRENY_MESIACE_SUBORY = {
     1: "1L", 2: "2L", 3: "3L", 4: "4L",
@@ -9049,6 +9011,7 @@ if TYPE_CHECKING:
         _aktualna_vigilia: Any = None
         _aktualna_vynechane: Any = None
         _auto_nacitanie_after_id: Any = None
+        _oznam_styl_aktivny: Any = None
         _closing: Any = None
         _cezrocne_tyzdenne_lock: Any = None
         _citania_lock: Any = None
@@ -9352,6 +9315,8 @@ if TYPE_CHECKING:
         def _configure_canvas(self, *args: Any, **kwargs: Any) -> Any: ...
         def _stlmena_farba(self, *args: Any, **kwargs: Any) -> Any: ...
         def _farba_textu_pre_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _text_je_oznam(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _je_nacitany_oznam(self, *args: Any, **kwargs: Any) -> Any: ...
         def _aplikuj_medzery_ovladanie(self, *args: Any, **kwargs: Any) -> Any: ...
         def _oznac_prazdne_riadky_obsahu(self, *args: Any, **kwargs: Any) -> Any: ...
 else:
@@ -9627,7 +9592,7 @@ class _NastaveniaMixin(_ControlAppBase):
                 self.pomocnik_y = full_config.get("pomocnik_y", -1)
                 self.pomocnik_width = full_config.get("pomocnik_width", -1)
                 self.pomocnik_height = full_config.get("pomocnik_height", -1)
-                self.pomocnik_last_tab = max(0, min(full_config.get("pomocnik_last_tab", 0), 6))
+                self.pomocnik_last_tab = max(0, min(full_config.get("pomocnik_last_tab", 0), 7))
 
                 # Hlavné okno – uložené rozmery a pozícia
                 self.main_window_x      = full_config.get("main_window_x", -1)
@@ -9819,18 +9784,66 @@ class _NastaveniaMixin(_ControlAppBase):
         except Exception as e:
             log_exception("_oznac_prazdne_riadky_obsahu: zlyhalo označenie prázdnych riadkov", e)
 
+    def _text_je_oznam(self, text) -> bool:
+        """True, ak je vstupný text (po normalizácii diakritiky, medzier a veľkosti
+        písmen) presne slovo "oznam". Podreťazec nestačí - "oznamy" či "ozna" to nie sú."""
+        try:
+            return self.normalize_alnum(str(text or "")) == "oznam"
+        except Exception as e:
+            log_exception("_text_je_oznam: normalizácia zlyhala", e)
+            return str(text or "").strip().lower() == "oznam"
+
+    def _je_nacitany_oznam(self) -> bool:
+        """True, ak je práve NAČÍTANÝ súbor oznam.txt.
+
+        Jediný zdroj pravdy je skutočne načítaný súbor (nazov_piesne sa nastavuje až po
+        úspešnom načítaní; reset_ui / vyčistenie ho vynuluje). Nič sa tu neukladá do
+        príznaku, takže stav nemôže zostať zastaraný. Porovnáva sa presná zhoda názvu
+        súboru, nie podreťazec - pieseň s "oznam" v názve nezčervenie."""
+        try:
+            nazov = str(getattr(self, "nazov_piesne", "") or "").strip().lower()
+            if nazov != "oznam":
+                return False
+            cesta = getattr(self, "aktualny_subor_cesta", None)
+            if cesta is not None:
+                stem = cesta.stem if hasattr(cesta, "stem") else Path(str(cesta)).stem
+                return str(stem).strip().lower() == "oznam"
+            return True
+        except Exception as e:
+            log_exception("_je_nacitany_oznam: chyba pri vyhodnocovaní", e)
+            return False
+
     def _farba_textu_pre_projekciu(self, base_color: str) -> str:
         """
         Vráti farbu textu, ktorá sa má reálne použiť v projekcii (a v Live
         Preview, ktorý projekciu napodobňuje).
 
-        Ak je v Nastaveniach zapnutá voľba „Pri aktívnom filtri Večeradlo
-        použi modrú farbu textu pri projekcii“ a práve vybraný filter v
-        hlavnom okne je „Večeradlo“, vráti pevnú modrú farbu
-        (VECERADLO_PROJEKCIA_MODRA) namiesto farby liturgického obdobia
-        alebo vlastnej farby. Vo všetkých ostatných prípadoch vráti
-        nezmenenú `base_color` – tá sa naďalej ukladá aj do config.json.
+        Priorita:
+        1) Oznam - červená (OZNAM_PROJEKCIA_CERVENA), ak platí aspoň jedno:
+           a) vo vstupnom poli je presne "oznam" (okamžitá odozva ešte pred načítaním),
+           b) načítaný súbor je oznam.txt (_je_nacitany_oznam).
+           Farba teda sleduje to, čo sa REÁLNE zobrazuje: ak je načítaný oznam,
+           zostane červený, kým sa nenačíta iný súbor (aj keď sa v poli píše
+           "ozna" / "123"); a iná pieseň nikdy nezčervenie.
+        2) Večeradlo - modrá ak je zapnutá voľba v Nastaveniach
+        3) Inak nezmenená base_color
         """
+        try:
+            entry_text = ""
+            try:
+                entry_widget = getattr(self, "manual_entry", None)
+                if entry_widget is not None and hasattr(entry_widget, "winfo_exists") and entry_widget.winfo_exists():
+                    entry_text = str(entry_widget.get() or "")
+            except Exception:
+                entry_text = ""
+
+            if self._text_je_oznam(entry_text) or self._je_nacitany_oznam():
+                return OZNAM_PROJEKCIA_CERVENA
+
+        except Exception as e:
+            log_exception("_farba_textu_pre_projekciu: chyba pri vyhodnocovaní oznam", e)
+
+        # 2) Večeradlo - modrá ak je zapnutá voľba
         try:
             checkbox_var = getattr(self, "pouzit_modru_farbu_pri_veceradle_var", None)
             filter_var = getattr(self, "filter_var", None)
@@ -11563,13 +11576,34 @@ class _NastaveniaMixin(_ControlAppBase):
             log_exception("aktualizovat_vzhlad: zlyhala konfigurácia live_preview_label", e)
 
         # 4) Vstupné pole (Manual Entry) - text farbou obdobia, rámik tenká sivá (požiadavka)
+        # FIX: farba vstupného poľa sa riadi LEN tým, čo je v poli, nie tým čo je načítané.
+        # Ak je v poli "oznam" -> červená, inak liturgická farba (prípadne modrá pre Večeradlo),
+        # aby po vymazaní "oznam" nezostalo pole červené a zároveň aby nevznikol stav
+        # pole normálne / projekcia červená keď v poli stále je "oznam".
         try:
+            entry_je_oznam = False
             if getattr(self, "manual_entry", None) is not None:
-                self.manual_entry.config(fg=jemna_farba, insertbackground=jemna_farba)
-            # Rámik – tenká sivá namiesto liturgickej ružovej/fialovej
+                # Ak je v poli presne "oznam", pole zostáva červené (zhodne s projekciou)
+                entry_je_oznam = self._text_je_oznam(self.manual_entry.get())
+                if entry_je_oznam:
+                    farba_pola = OZNAM_PROJEKCIA_CERVENA
+                else:
+                    # Základná farba bez ohľadu na načítaný oznam - liturgická alebo modrá pre Večeradlo
+                    try:
+                        cb_var = getattr(self, "pouzit_modru_farbu_pri_veceradle_var", None)
+                        f_var = getattr(self, "filter_var", None)
+                        if cb_var is not None and f_var is not None and cb_var.get() and f_var.get() == "Večeradlo":
+                            farba_pola = VECERADLO_PROJEKCIA_MODRA
+                        else:
+                            farba_pola = text_color
+                    except Exception:
+                        farba_pola = text_color
+                self.manual_entry.config(fg=farba_pola, insertbackground=farba_pola)
+            # Rámik – tenká sivá namiesto liturgickej ružovej/fialovej (červený pri "oznam")
             inner_border = getattr(self, "manual_entry_inner", None)
             if inner_border is not None and inner_border.winfo_exists():
-                inner_border.config(highlightbackground="#4a4a4a", highlightcolor="#4a4a4a")
+                farba_ramika = OZNAM_PROJEKCIA_CERVENA if entry_je_oznam else "#4a4a4a"
+                inner_border.config(highlightbackground=farba_ramika, highlightcolor=farba_ramika)
             # Pre kompatibilitu - ak existuje starý border s bg
             border = getattr(self, "manual_entry_border", None)
             if border is not None and border.winfo_exists():
@@ -14056,6 +14090,40 @@ class _PiesneSuboryMixin(_ControlAppBase):
                 if self.is_text_visible:
                     self.vypni_projekciu()
 
+                # FIX: po vymazaní vstupu resetuj farbu vstupného poľa aj live preview na liturgickú
+                try:
+                    self._oznam_styl_aktivny = False
+                    base_color = self.text_color_var.get() if hasattr(self, "text_color_var") else "#e0e0e6"
+                    cb_var = getattr(self, "pouzit_modru_farbu_pri_veceradle_var", None)
+                    f_var = getattr(self, "filter_var", None)
+                    if cb_var is not None and f_var is not None and cb_var.get() and f_var.get() == "Večeradlo":
+                        base_color = VECERADLO_PROJEKCIA_MODRA
+                    # projekcia
+                    if hasattr(self, "projection_window") and self.projection_window is not None:
+                        try:
+                            self.projection_window.target_text_color = base_color
+                        except Exception:
+                            pass
+                    # live preview
+                    preview = getattr(self, "live_preview_label", None)
+                    if preview is not None and preview.winfo_exists():
+                        try:
+                            preview.config(fg=base_color, bg=BACKGROUND_COLOR)
+                        except Exception:
+                            pass
+                    # vstupné pole
+                    entry_w = getattr(self, "manual_entry", None)
+                    if entry_w is not None and entry_w.winfo_exists():
+                        try:
+                            entry_w.config(fg=base_color, insertbackground=base_color)
+                            inner = getattr(self, "manual_entry_inner", None)
+                            if inner is not None and inner.winfo_exists():
+                                inner.config(highlightbackground="#4a4a4a", highlightcolor="#4a4a4a")
+                        except Exception:
+                            pass
+                except Exception as e:
+                    log_exception("auto_nacitanie_suboru: reset farby po vymazaní", e)
+
             return
 
         # ------------------------------------------------------------
@@ -14088,6 +14156,44 @@ class _PiesneSuboryMixin(_ControlAppBase):
             # Vypni projekciu, ak beží
             if self.is_text_visible:
                 self.vypni_projekciu()
+
+            # FIX: aj pri nenájdenom súbore resetuj farbu (po vymazaní "oznam" na "ozna" atď.)
+            try:
+                # Ak už v poli nie je "oznam", zruš príznak červenej
+                entry_txt = ""
+                try:
+                    entry_txt = str(self.manual_entry.get() or "")
+                except Exception:
+                    entry_txt = ""
+                if not self._text_je_oznam(entry_txt):
+                    self._oznam_styl_aktivny = False
+                    base_color = self.text_color_var.get() if hasattr(self, "text_color_var") else "#e0e0e6"
+                    cb_var = getattr(self, "pouzit_modru_farbu_pri_veceradle_var", None)
+                    f_var = getattr(self, "filter_var", None)
+                    if cb_var is not None and f_var is not None and cb_var.get() and f_var.get() == "Večeradlo":
+                        base_color = VECERADLO_PROJEKCIA_MODRA
+                    preview = getattr(self, "live_preview_label", None)
+                    if preview is not None and preview.winfo_exists():
+                        try:
+                            preview.config(fg=base_color, bg=BACKGROUND_COLOR)
+                        except Exception:
+                            pass
+                    entry_w = getattr(self, "manual_entry", None)
+                    if entry_w is not None and entry_w.winfo_exists():
+                        try:
+                            entry_w.config(fg=base_color, insertbackground=base_color)
+                            inner = getattr(self, "manual_entry_inner", None)
+                            if inner is not None and inner.winfo_exists():
+                                inner.config(highlightbackground="#4a4a4a", highlightcolor="#4a4a4a")
+                        except Exception:
+                            pass
+                    if hasattr(self, "projection_window") and self.projection_window is not None:
+                        try:
+                            self.projection_window.target_text_color = base_color
+                        except Exception:
+                            pass
+            except Exception as e:
+                log_exception("auto_nacitanie_suboru: reset farby po nenájdení súboru", e)
 
             return
 
@@ -14811,7 +14917,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
    
        
     def odlozene_auto_nacitanie(self, event=None):
-        # 1. Ignorovať klávesy pre posun strofy a navigáciu
+        # 1. Ignorovať klávesy pre posun strofy a navigáciu (okrem BackSpace a Delete - tie musia prefarbovať!)
         if event is not None:
             keysym = getattr(event, "keysym", "")
             if keysym in (
@@ -14820,6 +14926,77 @@ class _PiesneSuboryMixin(_ControlAppBase):
                 "Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R", "Caps_Lock"
             ):
                 return
+
+        # --- OKAMŽITÁ KONTROLA FARBY PRE OZNAM UŽ PRI PÍSANÍ AJ PRI MAZANÍ BACKSPACE ---
+        try:
+            entry_text = ""
+            try:
+                entry_widget = getattr(self, "manual_entry", None)
+                if entry_widget is not None and hasattr(entry_widget, "winfo_exists") and entry_widget.winfo_exists():
+                    entry_text = str(entry_widget.get() or "").lower()
+            except Exception:
+                entry_text = ""
+
+            je_oznam_v_poli = self._text_je_oznam(entry_text)
+
+            if je_oznam_v_poli:
+                # V poli je presne "oznam" -> nastav červenú ihneď (aj pred Enterom)
+                try:
+                    cervena = OZNAM_PROJEKCIA_CERVENA
+                    preview = getattr(self, "live_preview_label", None)
+                    if preview is not None and preview.winfo_exists():
+                        preview.config(fg=cervena)
+                    pw = getattr(self, "projection_window", None)
+                    if pw is not None:
+                        try:
+                            pw.target_text_color = cervena
+                            aktualny = getattr(pw, "raw_text_content", "") or getattr(pw, "current_text_content", "")
+                            if aktualny:
+                                pw.update_text(aktualny)
+                        except Exception:
+                            pass
+                    entry_w = getattr(self, "manual_entry", None)
+                    if entry_w is not None and entry_w.winfo_exists():
+                        try:
+                            entry_w.config(fg=cervena, insertbackground=cervena)
+                            inner = getattr(self, "manual_entry_inner", None)
+                            if inner is not None and inner.winfo_exists():
+                                inner.config(highlightbackground=cervena, highlightcolor=cervena)
+                        except Exception:
+                            pass
+                    self._oznam_styl_aktivny = True
+                except Exception as e:
+                    log_exception("odlozene_auto_nacitanie: oznam farba preview zlyhala", e)
+            elif getattr(self, "_oznam_styl_aktivny", False):
+                # V poli už NIE JE presne "oznam" (napr. "ozna", "", "123"), ale predtým
+                # sme pole/náhľad prefarbili. Vrátime štýl.
+                # FIX: pri vymazaní "oznam" z poľa musí aj vstupné pole vrátiť pôvodnú farbu,
+                # nie zostať červené. Preto explicitne resetujeme farbu poľa na liturgickú,
+                # a zvyšok (projekcia/live preview) necháme na aktualizovat_vzhlad / auto_nacitanie.
+                self._oznam_styl_aktivny = False
+                try:
+                    # Reset vstupného poľa na liturgickú farbu (alebo modrú pre Večeradlo)
+                    try:
+                        base_color = self.text_color_var.get() if hasattr(self, "text_color_var") else "#e0e0e6"
+                        cb_var = getattr(self, "pouzit_modru_farbu_pri_veceradle_var", None)
+                        f_var = getattr(self, "filter_var", None)
+                        if cb_var is not None and f_var is not None and cb_var.get() and f_var.get() == "Večeradlo":
+                            base_color = VECERADLO_PROJEKCIA_MODRA
+                        entry_w = getattr(self, "manual_entry", None)
+                        if entry_w is not None and entry_w.winfo_exists():
+                            entry_w.config(fg=base_color, insertbackground=base_color)
+                            inner = getattr(self, "manual_entry_inner", None)
+                            if inner is not None and inner.winfo_exists():
+                                inner.config(highlightbackground="#4a4a4a", highlightcolor="#4a4a4a")
+                    except Exception:
+                        pass
+                    if hasattr(self, "aktualizovat_vzhlad"):
+                        self.aktualizovat_vzhlad()
+                except Exception as e:
+                    log_exception("odlozene_auto_nacitanie: návrat farby zlyhal", e)
+
+        except Exception as e:
+            log_exception("odlozene_auto_nacitanie: kontrola oznam farby", e)
 
         aid = self._auto_nacitanie_after_id
 
@@ -14837,9 +15014,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
         try:
             self._auto_nacitanie_after_id = self.master.after(400, self.auto_nacitanie_suboru)
         except Exception as e:
-            log_exception("odlozene_auto_nacitanie: master.after failed", e)        
-        
-
+            log_exception("odlozene_auto_nacitanie: master.after failed", e)
     def aktualizuj_popis(self, nazov_bez_ext):
         popis = next((v for k, v in self.popisy_suborov.items() if k.lower() == nazov_bez_ext.lower()), "")
         if popis:
@@ -15269,6 +15444,7 @@ class _TextObsahMixin(_ControlAppBase):
 
         # ------------------------------------------------------------
         # 1) Ak nemáme žiadne strofy → vymaž všetko
+        # FIX: farbu riešime až po tomto checku - pri prázdnych strofách je zbytočná
         # ------------------------------------------------------------
         if not self.aktualne_strofy:
             try:
@@ -15296,6 +15472,25 @@ class _TextObsahMixin(_ControlAppBase):
                     log_exception("zobraz_aktualnu_strofu: live_preview clear", e)
 
             return
+
+        # --- Aktualizácia farby pre oznam / večeradlo - až keď máme strofy ---
+        # Presunuté z úvodu metódy, aby nebežalo pri prázdnych strofách kde je zbytočné
+        try:
+            farba = self._farba_textu_pre_projekciu(self.text_color)
+            pw = getattr(self, "projection_window", None)
+            if pw is not None:
+                try:
+                    pw.target_text_color = farba
+                except Exception:
+                    pass
+            preview = getattr(self, "live_preview_label", None)
+            if preview is not None and preview.winfo_exists():
+                try:
+                    preview.config(fg=farba)
+                except Exception:
+                    pass
+        except Exception as e:
+            log_exception("zobraz_aktualnu_strofu: aktualizácia farby", e)
 
         # ------------------------------------------------------------
         # 2) NULTÁ STROFA – zobraz len číslo piesne
@@ -17477,6 +17672,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             subor_veceradlo = song_folder / "Večeradlo.txt"
             subor3 = song_folder / "citania.txt"
             subor4 = song_folder / "vespery.txt"
+            subor_oznam = song_folder / "oznam.txt"
 
             def nacitaj_text(path_obj):
                 if not path_obj.exists():
@@ -17501,8 +17697,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             tk.Label(
                 footer_frame,
-                text=("Citania.txt a Vespery.txt sú editovateľné priamo tu - stačí kliknúť do textu a písať, zmeny sa uložia automaticky.\n"
-                    "Po úprave kliknite späť do vyhľadávania piesní."),
+                text=("Citania.txt, Vespery.txt a Oznam.txt sú editovateľné priamo tu - stačí kliknúť do textu a písať, zmeny sa uložia automaticky.\n"
+                    "Po úprave kliknite späť do vstupného poľa."),
                 bg=bg, fg="#8ab4f8",
                 font=(safe_font_name, 11, "italic"),
                 justify="left"
@@ -17511,7 +17707,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             # --- CONTENT ---
             content = tk.Frame(self.pomocnik_okno, bg=bg)
             content.pack(fill="both", expand=True)
-            frame1, frame2, frame_veceradlo, frame3, frame4, frame5 = (
+            frame1, frame2, frame_veceradlo, frame3, frame4, frame_oznam, frame5 = (
+                tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg),
@@ -17519,7 +17716,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg)
             )
-            frames = {1: frame1, 2: frame2, 3: frame_veceradlo, 4: frame3, 5: frame4, 6: frame5}
+            frames = {1: frame1, 2: frame2, 3: frame_veceradlo, 4: frame3, 5: frame4, 6: frame_oznam, 7: frame5}
 
             font_size = tk.IntVar(value=self.pomocnik_font_size)
 
@@ -17555,6 +17752,12 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             text_veceradlo = vytvor_text(frame_veceradlo, nacitaj_text(subor_veceradlo), True)
             text3 = vytvor_text(frame3, nacitaj_text(subor3), False)
             text4 = vytvor_text(frame4, nacitaj_text(subor4), False)
+            text_oznam = vytvor_text(frame_oznam, nacitaj_text(subor_oznam), False)
+            # Oznam vždy červenou - výrazný
+            try:
+                text_oznam.config(fg="#ff6b6b")
+            except Exception:
+                pass
 
             SKRATKY_ZALMOV_TEXT = (
                 "SKRATKY ŽALMOVÉHO DIREKTÓRIA\n"
@@ -17713,6 +17916,11 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             text4.bind("<KeyRelease>", uloz_text4)
 
+            def uloz_text_oznam(event=None):
+                naplanuj_ulozenie_textu(subor_oznam, text_oznam, "oznam.txt", event)
+
+            text_oznam.bind("<KeyRelease>", uloz_text_oznam)
+
             def uloz_text3_hned(event=None):
                 zrus_planovane_ulozenie(subor3)
                 uloz_text_atomicky(subor3, text3, "citania.txt")
@@ -17720,6 +17928,10 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             def uloz_text4_hned(event=None):
                 zrus_planovane_ulozenie(subor4)
                 uloz_text_atomicky(subor4, text4, "vespery.txt")
+
+            def uloz_text_oznam_hned(event=None):
+                zrus_planovane_ulozenie(subor_oznam)
+                uloz_text_atomicky(subor_oznam, text_oznam, "oznam.txt")
 
             def backspace_fix(text_widget, save_func):
                 if text_widget.tag_ranges("sel"):
@@ -17731,6 +17943,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             text3.bind("<KeyPress-BackSpace>", lambda event: backspace_fix(text3, uloz_text3_hned))
             text4.bind("<KeyPress-BackSpace>", lambda event: backspace_fix(text4, uloz_text4_hned))
+            text_oznam.bind("<KeyPress-BackSpace>", lambda event: backspace_fix(text_oznam, uloz_text_oznam_hned))
 
             def zatvorit_pomocnika_s_ulozenim(event=None):
                 for after_id in list(text_save_after_ids.values()):
@@ -17741,6 +17954,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 text_save_after_ids.clear()
                 uloz_text_atomicky(subor3, text3, "citania.txt")
                 uloz_text_atomicky(subor4, text4, "vespery.txt")
+                uloz_text_atomicky(subor_oznam, text_oznam, "oznam.txt")
                 self._zatvorit_pomocnika()
                 return "break"
 
@@ -17754,6 +17968,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                     ("Večeradlo", 12),
                     ("Citania 🖉", 12),
                     ("Vespery 🖉", 12),
+                    ("Oznam 🖉", 12),
                     ("Skratky žalmov", 12),
                 ],
             )
@@ -17764,12 +17979,12 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 self._show_tab(which, frames, stripes, buttons, safe_font_name, bg, active)
                 self.manual_entry.focus_set()
 
-            for i in (1, 2, 3, 4, 5, 6):
+            for i in (1, 2, 3, 4, 5, 6, 7):
                 buttons[i].config(command=lambda i=i: show(i))
 
             def apply_font_preserve_focus():
                 size = font_size.get()
-                for t in (text1, text2, text_veceradlo, text3, text4, text5):
+                for t in (text1, text2, text_veceradlo, text3, text4, text_oznam, text5):
                     # Ak ide o text5 (Skratky žalmov), vynútime monospaced písmo
                     if t == text5:
                         #t.config(font=("Consolas", size))
@@ -17820,7 +18035,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             def reset_okna():
                 # Šírka 980px pokryje najdlhšie riadky záložky Skratky žalmov bez zalomovania
-                # a zároveň 6 záložiek (1 Poznámky, 2 Poznámky, Večeradlo, Citania, Vespery, Skratky)
+                # a zároveň 7 záložiek (1 Poznámky, 2 Poznámky, Večeradlo, Citania, Vespery, Oznam, Skratky)
                 # + ovládanie zoom (+ - Reset) v hlavičke.
                 # Ostatné záložky majú wrap="word" → zalamujú sa aj pri užšom okne.
                 self.pomocnik_width = 920
@@ -19394,6 +19609,10 @@ class ControlApp(
         self._slavnosti_geom_after_id = None
         self._live_preview_after_id = None
         self._auto_nacitanie_after_id = None
+        # Len vizuálny príznak: vstupné pole a náhľad sú práve nastavené na "oznam" červenú
+        # (slúži iba na zistenie, či treba štýl po zmene textu vrátiť). O farbe textu
+        # na projekcii NErozhoduje - to určuje _farba_textu_pre_projekciu zo stavu.
+        self._oznam_styl_aktivny = False
 
         self._direktorium_open = False
         self._slavnosti_open = False
