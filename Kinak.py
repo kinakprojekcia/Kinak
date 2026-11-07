@@ -65,7 +65,7 @@ except ImportError:
 # ZÁKLADNÉ NASTAVENIA
 # ==========================================================
 
-KINAK_VERSION = "3.5"
+KINAK_VERSION = "3.6"
 KINAK_WEB_URL = "https://kinak.sk"    #"https://kinakprojekcia.github.io/Kinak/"
 KINAK_QR_BASE64 = """iVBORw0KGgoAAAANSUhEUgAAAhwAAAIcCAYAAAC9/nd8AABOsElEQVR4nO3daZMk13Xm+f+51z0il1qwFXaRFHdxl0iKiyhRlNQSpVG3uq27zcZkPTZv5iPMx5hPMP22bczGxrrN1Npaau2iuImkxA1cBa7YCFQBtWVmhPs9Z15c98gEQIHIQroQUfH8YIkCsjIjPCOXePLec8+x6K4FIiIiIhNKr/YFiIiIyO1PgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyuebVvoBX6v967Vtf7Uu4rfyf3/v6qd5+0x//qT/eTX88T3v9pzX1x7tun9/TWrfH57TW7et50039+ZqaVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtTe9Ff1rrNoth02crbPrHu27Xv+nfj1PPXpn687Vus2M2/evhtNbt58PUtMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5LZulspprVuv+22bNXBa6/b4TH096zY7Y92uZ2rr9vldt8dnavr5vFm0wiEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkNEtFXpGpZxls26yKdZsNMbWpZ7Wc1tTXc9rbX7frEXkltMIh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wCEiIiKTU+AQERGRyW38LBV5da3b7IZ1m5WwbrNsprZus410PS9t3a7ntNbt+rft+/20tMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5JpX+wJeqXWb5bHpTturf916+6/b18NpH5/TXv+6zZKY+uM9rXX7+jytdft6Pq11+/o8rU1//NeNVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtdevVP7WpZwFMPSth3W5/alN/fa7b7JJ1+3i37etn3b4e1s2mX/+60QqHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik9u6WSqntemzEtbNpj+e6zab5rTWbXbJulm32Svr9v2uz6+8ElrhEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHKapSKvyLbN5pj64123x/O017Pp179ts2zWbRbMun2/r9v1bPpsF61wiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjnNUpFXZOrZCutm0z/eTZ9tcVqb/vna9OvfdOs2+2bTaYVDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyWmWyk+g2QQvbdNnc6zbrIqpr2fqx3/dvl9O+/Fu+uO/bp/fdXs8N/37d9NphUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJbd0slXWb5SG3t03/etu2WQ/rNhtl3a5n3WajnNa6zTpZt+uZmlY4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZxFdy1e7YsQERGR25tWOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyf3/haLfJyAgMggAAAAASUVORK5CYII="""
 
@@ -1460,24 +1460,36 @@ def zostav_text_hlavicky(
         f"{zaklad}{pripona}"
     )
 
-def zostav_text_status_baru(
+def zostav_status_bar_struktura(
     dnes: date | None = None,
     zobrazit_zalm: bool = True,
     zobrazit_zaltara: bool = True,
     vigilia: str | None = None,
     vynechane: str | None = None,
-) -> str:
-    """Zostaví text stavového riadku bez potreby vytvárať Tkinter widgety."""
+) -> dict:
+    """Zostaví stavový riadok ako štruktúru (bez Tkinter widgetov).
+
+    Vracia dict:
+      "dnes"   – (skratka_zalmu, text) alebo None   (napr. ("31c2", "Dnes: žalm 31c2"))
+      "zajtra" – (skratka_zalmu, text) alebo None
+      "ostatne" – zoznam ostatných textových častí (mesačné sviatky, žaltár, vigília…)
+
+    „Dnes“ a „Zajtra“ sa v GUI zobrazujú ako klikateľné tlačidlá, zvyšok ako text.
+    """
     dnes = dnes or date.today()
+    dnes_info: tuple[str, str] | None = None
+    zajtra_info: tuple[str, str] | None = None
     casti: list[str] = []
 
     if zobrazit_zalm:
         dnesny_kod = vypocitaj_kod_liturgickej_casti(dnes)
-        casti.append(f"Dnes: žalm {format_skratku_liturgickej_casti(dnesny_kod, dnes)}")
+        dnes_skratka = format_skratku_liturgickej_casti(dnesny_kod, dnes)
+        dnes_info = (dnes_skratka, f"Dnes: žalm {dnes_skratka}")
         if dnes < date.max:
             zajtra_den = dnes + timedelta(days=1)
             zajtrajsi_kod = vypocitaj_kod_liturgickej_casti(zajtra_den)
-            casti.append(f"Zajtra: žalm {format_skratku_liturgickej_casti(zajtrajsi_kod, zajtra_den)}")
+            zajtra_skratka = format_skratku_liturgickej_casti(zajtrajsi_kod, zajtra_den)
+            zajtra_info = (zajtra_skratka, f"Zajtra: žalm {zajtra_skratka}")
         # xL je tu fixne zobrazené zámerne. xL = mesačné sviatky podľa mesiacov (1L–12L).
         # Užívateľ ho použije, ak nenašiel vhodný žalm v navrhovaných skratkách.
         casti.append("Mesačné sviatky: xL (1L–12L)")
@@ -1530,7 +1542,26 @@ def zostav_text_status_baru(
     if prednost:
         casti.append(f"nedeľa má prednosť pred: {prednost}")
 
+    return {"dnes": dnes_info, "zajtra": zajtra_info, "ostatne": casti}
+
+
+def zostav_text_status_baru(
+    dnes: date | None = None,
+    zobrazit_zalm: bool = True,
+    zobrazit_zaltara: bool = True,
+    vigilia: str | None = None,
+    vynechane: str | None = None,
+) -> str:
+    """Zostaví text stavového riadku bez potreby vytvárať Tkinter widgety."""
+    st = zostav_status_bar_struktura(dnes, zobrazit_zalm, zobrazit_zaltara, vigilia, vynechane)
+    casti: list[str] = []
+    if st["dnes"]:
+        casti.append(st["dnes"][1])
+    if st["zajtra"]:
+        casti.append(st["zajtra"][1])
+    casti.extend(st["ostatne"])
     return "  " + "   |   ".join(casti) if casti else ""
+
 
 def zostavit_casove_vztahy_titulku(dnes: date | None = None) -> dict:
     """
@@ -3264,6 +3295,61 @@ def update_progress(
 # Inicializácia diagnostiky (Pathlib verzia)
 # ==========================================================
 
+# ==========================================================
+# ZRUŠENIE SŤAHOVANIA (cooperative cancel)
+# ==========================================================
+# Sťahovanie beží v pracovnom vlákne (ThreadPoolExecutor). Vlákna tohto
+# executora NIE SÚ daemon – Python pri ukončení procesu čaká, kým skončia.
+# Bez cancel príznaku preto zatvorenie aplikácie uprostred ročnej dávky
+# (stovky požiadaviek s pauzami) nechalo proces bežať na pozadí minúty.
+#
+# Príznak sa preto kontroluje na všetkých čakacích miestach (pauzy medzi
+# požiadavkami, retry pauzy) a pred každou HTTP požiadavkou. Udalosti sa
+# viažu na VLÁKNO (threading.local), nie na parametre funkcií – netreba tak
+# meniť signatúry desiatok stiahni_* funkcií a funguje aj v hlbokých
+# pomocných funkciách (_stiahni_lc_kbs_soup a pod.).
+#
+# Výnimka dedí z BaseException (rovnako ako asyncio.CancelledError), aby ju
+# NEZACHYTILI početné `except Exception:` v kóde a sťahovanie sa naozaj zastavilo.
+
+_STAHOVANIE_TLS = threading.local()
+
+
+class _StahovanieZrusene(BaseException):
+    """Sťahovanie bolo zrušené (tlačidlo Zrušiť alebo ukončenie aplikácie)."""
+
+
+def _nastav_zrusenie_stahovania(*udalosti: Any) -> None:
+    """Zaregistruje cancel udalosti pre AKTUÁLNE vlákno (volať na začiatku workera)."""
+    _STAHOVANIE_TLS.udalosti = tuple(u for u in udalosti if u is not None)
+
+
+def _vycisti_zrusenie_stahovania() -> None:
+    """Odregistruje cancel udalosti (vlákna executora sa znovupoužívajú)."""
+    _STAHOVANIE_TLS.udalosti = ()
+
+
+def _je_stahovanie_zrusene() -> bool:
+    return any(u.is_set() for u in getattr(_STAHOVANIE_TLS, "udalosti", ()))
+
+
+def _over_zrusenie() -> None:
+    """Vyhodí _StahovanieZrusene, ak bolo sťahovanie v tomto vlákne zrušené."""
+    if _je_stahovanie_zrusene():
+        raise _StahovanieZrusene()
+
+
+def _cakaj_s_moznostou_zrusenia(sekundy: float) -> None:
+    """Náhrada time.sleep(): čaká po krátkych kúskoch a reaguje na zrušenie do ~0,1 s."""
+    koniec = time.monotonic() + max(0.0, float(sekundy))
+    while True:
+        _over_zrusenie()
+        zostava = koniec - time.monotonic()
+        if zostava <= 0:
+            return
+        time.sleep(min(0.1, zostava))
+
+
 def chybaju_kniznice_pre_stahovanie() -> list[str]:
     """Vráti zoznam chýbajúcich knižníc potrebných na sťahovanie textov."""
     chybaju = []
@@ -3736,12 +3822,14 @@ DEFAULT_CONFIG = {
     "medzery_ovladanie": 50,
     "reserved_vertical_ratio": 0.20,
     "zobrazit_direktorium": False,
-    # Úvodná obrazovka (obsah hlavného okna, kým nie je vybraná pieseň)
+    # Úvodná obrazovka (obsah hlavného okna, kým nie je vybraná pieseň).
+    # Predvolene je zapnutá úvodná obrazovka a iba karta „Rýchly prístup“.
+    # Tieto hodnoty platia pri prvom spustení AJ po tlačidle „Obnoviť predvolené“.
     "uvodna_zapnute": True,
     "uvodna_rychly_pristup": True,
     "uvodna_odporucane": False,
     "uvodna_posledne": False,
-    "uvodna_poznamky": True,
+    "uvodna_poznamky": False,
     "uvodna_klavesy": False,
     "posledne_piesne": [],
     # Aktívna databáza čísel piesní v direktóriu: "A" (predvolená, čísla
@@ -4026,6 +4114,406 @@ LC_KBS_REFRENY_MAX_POKUSOV = 3
 LC_KBS_REFRENY_RETRY_DELAY_S = 1.5
 LC_KBS_DOCASNE_HTTP_STATUSY = {429, 500, 502, 503, 504}
 
+# ==========================================================
+# OFFLINE ČÍTANIA NA 7 DNÍ
+# ==========================================================
+CITANIA_OFFLINE_DNI = 7
+CITANIA_OFFLINE_DIR_NAME = "offline_citania"
+# Koľko dní dozadu sa v offline cache ponecháva (1 = ponechá sa včerajšok, staršie sa mažú)
+CITANIA_OFFLINE_PONECHAT_DNI_DOZADU = 1
+
+def ziskaj_offline_citania_dir(song_folder: Path | str | None = None, vytvor: bool = True) -> Path:
+    """
+    Vráti adresár pre offline cache čítaní.
+
+    Priorita:
+    1) Ak je zadaný song_folder (Nastavenia → Pokročilé → Umiestnenie súborov), cache je
+       jeho podpriečinok `offline_citania` – presne tam, kde sú aj piesne:
+       - C:\\Kinak\\piesne       →  C:\\Kinak\\piesne\\offline_citania
+       - D:\\Data\\MojePiesne    →  D:\\Data\\MojePiesne\\offline_citania
+       Do priečinka piesní aplikácia zapisuje aj citania.txt, takže je zaručene zapisovateľný.
+    2) Ak song_folder nie je zadaný a existuje LOCAL_SONG_FOLDER (BASE_DIR/piesne) →
+       portable režim → BASE_DIR/piesne/offline_citania
+    3) Štandard: CONFIG_DIR/offline_citania (inštalovaný režim, %LOCALAPPDATA%\\Kinak)
+
+    Staršie umiestnenia (offline_citania vedľa priečinka piesní, BASE_DIR/offline_citania) sa
+    už na zápis nepoužívajú; čítanie ich stále prehľadáva – pozri
+    _vsetky_mozne_offline_cache_priecinky().
+
+    Kandidát sa použije, iba ak už existuje on alebo jeho rodič (nevytvárajú sa celé
+    neexistujúce stromy) a nie je priamo v koreni disku.
+    Ak je `vytvor=False`, priečinok sa nevytvára (vhodné pre zobrazenie cesty a čítanie);
+    pri `vytvor=True` sa vytvorí a vráti sa prvý použiteľný kandidát.
+    """
+    kandidati: list[Path] = []
+
+    # 1) Explicitný song_folder z nastavení – cache priamo v ňom
+    if song_folder:
+        try:
+            sf = Path(song_folder)
+            if sf.is_file():
+                sf = sf.parent
+            kandidati.append(sf / CITANIA_OFFLINE_DIR_NAME)
+        except Exception as e:
+            log_exception("ziskaj_offline_citania_dir: spracovanie song_folder zlyhalo", e)
+
+    # 2) Portable detekcia – ak je vedľa exe priečinok piesne, sme v C:\Kinak režime
+    try:
+        if LOCAL_SONG_FOLDER.is_dir():
+            kandidati.append(LOCAL_SONG_FOLDER / CITANIA_OFFLINE_DIR_NAME)
+    except Exception:
+        pass
+
+    # 3) Štandardný AppData priečinok
+    kandidati.append(CONFIG_DIR / CITANIA_OFFLINE_DIR_NAME)
+
+    for cand in kandidati:
+        try:
+            # Vyhni sa zápisu do koreňa disku (C:\\offline_citania)
+            if len(cand.parts) >= 2 and cand.parent == Path(cand.anchor):
+                continue
+            if not (cand.exists() or cand.parent.exists()):
+                continue
+            if vytvor:
+                cand.mkdir(parents=True, exist_ok=True)
+            return cand
+        except Exception:
+            continue
+
+    # Fallback – temp
+    try:
+        fallback = Path(tempfile.gettempdir()) / f"Kinak_{CITANIA_OFFLINE_DIR_NAME}"
+        if vytvor:
+            fallback.mkdir(parents=True, exist_ok=True)
+        return fallback
+    except Exception as e2:
+        log_exception("ziskaj_offline_citania_dir: fallback mkdir zlyhal", e2)
+        return CONFIG_DIR / CITANIA_OFFLINE_DIR_NAME
+
+def cesta_offline_citania_pre_datum(datum: date, cache_dir: Path | str | None = None, song_folder: Path | str | None = None) -> Path:
+    """Vráti cestu k offline súboru pre daný dátum: YYYY-MM-DD.txt"""
+    if cache_dir is None:
+        cache_dir = ziskaj_offline_citania_dir(song_folder, vytvor=False)
+    cache_dir = Path(cache_dir)
+    return cache_dir / f"{datum.isoformat()}.txt"
+
+def _vsetky_mozne_offline_cache_priecinky(song_folder: Path | str | None = None) -> list[Path]:
+    """
+    Vráti zoznam všetkých miest, kde môže byť offline cache (pre čítanie s fallbackom).
+    Aktuálne umiestnenia sú prvé, staršie (iba na čítanie) nasledujú za nimi.
+    """
+    zoznam: list[Path] = []
+    seen = set()
+    def pridaj(p: Path):
+        try:
+            rp = p.resolve() if p.exists() else p
+            key = str(rp).lower()
+            if key not in seen:
+                seen.add(key)
+                zoznam.append(p)
+        except Exception:
+            if p not in zoznam:
+                zoznam.append(p)
+    # 1) aktuálne: podľa song_folder
+    if song_folder:
+        try:
+            sf = Path(song_folder)
+            if sf.is_file():
+                sf = sf.parent
+            pridaj(sf / CITANIA_OFFLINE_DIR_NAME)
+        except Exception:
+            sf = None
+    else:
+        sf = None
+    # 2) aktuálne: portable (BASE_DIR/piesne/offline_citania)
+    try:
+        if LOCAL_SONG_FOLDER.is_dir():
+            pridaj(LOCAL_SONG_FOLDER / CITANIA_OFFLINE_DIR_NAME)
+    except Exception:
+        pass
+    # 3) aktuálne: AppData
+    pridaj(CONFIG_DIR / CITANIA_OFFLINE_DIR_NAME)
+    # 4) staršie umiestnenia (už sa doň nezapisuje, len číta): cache vedľa priečinka piesní
+    if sf is not None:
+        pridaj(sf.parent / CITANIA_OFFLINE_DIR_NAME)
+    try:
+        if LOCAL_SONG_FOLDER.is_dir():
+            pridaj(BASE_DIR / CITANIA_OFFLINE_DIR_NAME)
+    except Exception:
+        pass
+    # 5) temp fallback
+    pridaj(Path(tempfile.gettempdir()) / f"Kinak_{CITANIA_OFFLINE_DIR_NAME}")
+    return zoznam
+
+def nacitaj_citania_z_offline_cache(datum: date, cache_dir: Path | str | None = None, song_folder: Path | str | None = None) -> str | None:
+    """Načíta text čítaní z offline cache – skúša všetky možné umiestnenia (nové aj staré)."""
+    try:
+        if cache_dir is not None:
+            cesty = [cesta_offline_citania_pre_datum(datum, cache_dir)]
+        else:
+            cesty = [cesta_offline_citania_pre_datum(datum, cd) for cd in _vsetky_mozne_offline_cache_priecinky(song_folder)]
+
+            def _mtime(p: Path) -> float:
+                try:
+                    return p.stat().st_mtime if p.is_file() else -1.0
+                except Exception:
+                    return -1.0
+            # Najčerstvejší súbor ako prvý (pri zhode ostáva poradie podľa priority umiestnení)
+            cesty.sort(key=_mtime, reverse=True)
+
+        for cesta in cesty:
+            if not cesta.is_file():
+                continue
+            # Skús UTF-8 (utf-8-sig zvláda aj súbor bez BOM a BOM odstráni), potom cp1250
+            for enc in ("utf-8-sig", "cp1250"):
+                try:
+                    with cesta.open("r", encoding=enc) as f:
+                        text = f.read()
+                except Exception:
+                    continue
+                if len(text) >= 200:
+                    return text
+                break  # súbor sa načítal, ale je príliš krátky – iné kódovanie ho nezlepší
+        return None
+    except Exception as e:
+        log_exception(f"nacitaj_citania_z_offline_cache: {datum}", e)
+        return None
+
+def vycisti_stare_offline_citania(
+    song_folder: Path | str | None = None,
+    zachovat: set | None = None,
+    ponechat_dni_dozadu: int = CITANIA_OFFLINE_PONECHAT_DNI_DOZADU,
+) -> int:
+    """
+    Zmaže staré offline čítania: súbory YYYY-MM-DD.txt s dátumom staršie než
+    (dnes - ponechat_dni_dozadu), teda pri predvolenej hodnote 1 ostáva včerajšok, dnešok a budúce dni.
+
+    Čistí všetky miesta, kde sa cache číta (aj staršie umiestnenia vedľa priečinka piesní).
+    Maže sa len súbor, ktorého názov presne zodpovedá YYYY-MM-DD.txt; iné súbory sa nedotknú.
+    `zachovat` je množina dátumov, ktoré sa nemajú mazať (napr. práve stiahnuté dni).
+    Chyby sa len logujú. Vráti počet zmazaných súborov.
+    """
+    zmazane = 0
+    try:
+        hranica = date.today() - timedelta(days=max(0, int(ponechat_dni_dozadu)))
+        for cd in _vsetky_mozne_offline_cache_priecinky(song_folder):
+            try:
+                if not cd.is_dir():
+                    continue
+                for f in cd.glob("*.txt"):
+                    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", f.stem):
+                        continue
+                    try:
+                        datum = date.fromisoformat(f.stem)
+                    except ValueError:
+                        continue
+                    if datum >= hranica or (zachovat and datum in zachovat):
+                        continue
+                    try:
+                        if f.is_file():
+                            f.unlink()
+                            zmazane += 1
+                    except Exception as e:
+                        log_exception(f"vycisti_stare_offline_citania: mazanie {f} zlyhalo", e)
+            except Exception as e:
+                log_exception(f"vycisti_stare_offline_citania: priečinok {cd} zlyhal", e)
+        if zmazane:
+            log_info(f"Offline čítania: zmazaných {zmazane} starých súborov (staršie než {hranica.isoformat()}).")
+    except Exception as e:
+        log_exception("vycisti_stare_offline_citania zlyhalo", e)
+    return zmazane
+
+def uloz_citania_do_offline_cache(datum: date, text: str, cache_dir: Path | str | None = None, song_folder: Path | str | None = None) -> bool:
+    """Uloží text čítaní do offline cache."""
+    try:
+        if cache_dir is None:
+            cache_dir = ziskaj_offline_citania_dir(song_folder)
+        cesta = cesta_offline_citania_pre_datum(datum, cache_dir)
+        cesta.parent.mkdir(parents=True, exist_ok=True)
+        _zapis_text_atomicky(cesta, text, encoding="utf-8")
+        return True
+    except Exception as e:
+        log_exception(f"uloz_citania_do_offline_cache: {datum}", e)
+        return False
+
+def zisti_datum_citania_v_subore(cesta: Path | str) -> date | None:
+    """Prečíta dátum z hlavičky citania.txt (samostatný riadok DD.MM.RRRR). None, ak sa nenájde."""
+    try:
+        with Path(cesta).open("r", encoding="utf-8-sig", errors="replace") as f:
+            for _ in range(20):
+                riadok = f.readline()
+                if not riadok:
+                    break
+                m = re.fullmatch(r"\s*(\d{2})\.(\d{2})\.(\d{4})\s*", riadok)
+                if m:
+                    return date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+    except Exception:
+        pass
+    return None
+
+def skontroluj_citania_txt_pri_starte(song_folder: Path | str | None = None) -> bool:
+    """
+    Kontrola citania.txt pri štarte podľa zadania:
+
+    - Ak súbor citania.txt pri štarte neexistuje → nerob nič, pokračuj v spustení appky.
+    - Ak citania.txt má dátum v minulosti alebo v budúcnosti:
+        → ak je dnešný deň uložený v priečinku offline_citania/, nahradí ho dneškom
+        → inak ponechá pôvodný (starý) obsah
+    - Ak má dátum dnes → ponechá ho.
+
+    Vracia True, ak došlo k nahradeniu, inak False.
+    """
+    try:
+        if song_folder is None:
+            # Ak nie je zadaný priečinok, nevieme určiť cestu k citania.txt – nerob nič
+            # (volajúci by mal vždy poslať song_folder_path)
+            return False
+
+        sf = Path(song_folder)
+        if sf.is_file():
+            sf = sf.parent
+
+        if not sf.is_dir():
+            return False
+
+        citania_cesta = sf / "citania.txt"
+
+        # 1) Ak súbor neexistuje → nerob nič
+        if not citania_cesta.is_file():
+            log_info(f"skontroluj_citania_txt_pri_starte: {citania_cesta} neexistuje – pokračujem bez zmeny.")
+            return False
+
+        datum_suboru = zisti_datum_citania_v_subore(citania_cesta)
+
+        # Ak sa dátum nepodarí prečítať, ponechaj pôvodný obsah
+        if datum_suboru is None:
+            log_info(f"skontroluj_citania_txt_pri_starte: {citania_cesta} bez dátumu – ponechávam.")
+            return False
+
+        dnes = date.today()
+
+        # Ak je dátum dnes, nič nerob
+        if datum_suboru == dnes:
+            return False
+
+        # Minulosť alebo budúcnosť → skús offline cache pre dnes
+        log_info(
+            f"skontroluj_citania_txt_pri_starte: citania.txt má dátum {datum_suboru.strftime('%d.%m.%Y')} "
+            f"(dnes {dnes.strftime('%d.%m.%Y')}) – hľadám v offline_citania/."
+        )
+
+        cache_text = nacitaj_citania_z_offline_cache(dnes, song_folder=sf)
+
+        if cache_text:
+            try:
+                _zapis_text_atomicky(citania_cesta, cache_text, encoding="utf-8")
+                log_info(f"skontroluj_citania_txt_pri_starte: citania.txt nahradený dneškom {dnes.isoformat()} z offline cache.")
+                return True
+            except Exception as e:
+                log_exception("skontroluj_citania_txt_pri_starte: zápis z offline cache zlyhal", e)
+                return False
+        else:
+            log_info(
+                f"skontroluj_citania_txt_pri_starte: offline cache pre {dnes.isoformat()} neexistuje – "
+                f"ponechaný pôvodný obsah z {datum_suboru.strftime('%d.%m.%Y')}."
+            )
+            return False
+
+    except Exception as e:
+        log_exception("skontroluj_citania_txt_pri_starte zlyhalo", e)
+        return False
+
+
+def stiahni_citania_na_7_dni(
+    pociatocny_datum: date,
+    hlavny_vystup: Path | str,
+    cache_dir: Path | str | None = None,
+    progress_callback=None,
+    song_folder: Path | str | None = None,
+) -> dict:
+    """
+    Stiahne čítania na 7 dní od pociatocny_datum (vrátane).
+    - Každý deň uloží do cache_dir/YYYY-MM-DD.txt
+    - Prvý deň (dnes) zároveň skopíruje do hlavny_vystup (citania.txt)
+    - Vracia dict s výsledkom: {"uspech": bool, "celkovo": 7, "stiahnute": int, "chyby": int, "subory": [...],
+      "zrusene": bool}. Pri zrušení (tlačidlo Zrušiť / ukončenie aplikácie) sa slučka zastaví a vráti sa
+      čiastočný výsledok; už uložené dni zostávajú.
+    """
+    _over_gregoriansky_datum(pociatocny_datum)
+    if chybaju_kniznice_pre_stahovanie():
+        return {"uspech": False, "celkovo": CITANIA_OFFLINE_DNI, "stiahnute": 0, "chyby": CITANIA_OFFLINE_DNI, "subory": [], "chybaju_kniznice": True}
+
+    if cache_dir is None:
+        cache_dir = ziskaj_offline_citania_dir(song_folder)
+    cache_dir = Path(cache_dir)
+    try:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        log_exception("stiahni_citania_na_7_dni: mkdir cache_dir zlyhal", e)
+        return {"uspech": False, "celkovo": CITANIA_OFFLINE_DNI, "stiahnute": 0, "chyby": CITANIA_OFFLINE_DNI, "subory": []}
+
+    hlavny_vystup = Path(hlavny_vystup)
+    stiahnute = 0
+    chyby = 0
+    subory = []
+    stiahnute_datumy = []
+
+    zrusene = False
+    try:
+        for i in range(CITANIA_OFFLINE_DNI):
+            _over_zrusenie()
+            datum = pociatocny_datum + timedelta(days=i)
+            cache_path = cache_dir / f"{datum.isoformat()}.txt"
+
+            # Progress hlásenie
+            if callable(progress_callback):
+                update_progress(progress_callback, f"Sťahujem {datum.strftime('%d.%m.%Y')} ({i+1}/{CITANIA_OFFLINE_DNI})...", i, CITANIA_OFFLINE_DNI)
+
+            uspech = False
+            try:
+                uspech = stiahni_citania_z_lc_kbs(datum, cache_path)
+            except Exception as e:
+                log_exception(f"stiahni_citania_na_7_dni: {datum}", e)
+                uspech = False
+
+            if uspech and cache_path.is_file():
+                stiahnute += 1
+                subory.append(cache_path.name)
+                stiahnute_datumy.append(datum)
+                # Prvý deň -> hlavný súbor
+                if i == 0:
+                    try:
+                        # Atómicky skopírovať obsah cache do hlavného výstupu
+                        with cache_path.open("r", encoding="utf-8") as src:
+                            text = src.read()
+                        _zapis_text_atomicky(hlavny_vystup, text, encoding="utf-8")
+                    except Exception as e:
+                        log_exception(f"stiahni_citania_na_7_dni: kopírovanie do hlavného súboru {hlavny_vystup}", e)
+            else:
+                chyby += 1
+                # Ak stiahnutie zlyhalo, ale v cache už niečo staršie existuje, ponecháme ho (offline fallback)
+
+            # Malé oneskorenie medzi požiadavkami, aby sme nezaťažili server
+            if i < CITANIA_OFFLINE_DNI - 1:
+                _cakaj_s_moznostou_zrusenia(0.6)
+
+            if callable(progress_callback):
+                update_progress(progress_callback, f"Spracované {i+1}/{CITANIA_OFFLINE_DNI}", i+1, CITANIA_OFFLINE_DNI)
+    except _StahovanieZrusene:
+        zrusene = True
+        log_info(f"stiahni_citania_na_7_dni: zrušené po {stiahnute} stiahnutých dňoch.")
+
+    uspech_celkovo = stiahnute > 0
+    return {
+        "uspech": uspech_celkovo,
+        "celkovo": CITANIA_OFFLINE_DNI,
+        "stiahnute": stiahnute,
+        "chyby": chyby,
+        "subory": subory,
+        "stiahnute_datumy": stiahnute_datumy,
+        "zrusene": zrusene,
+    }
+
 LC_KBS_USER_AGENTS: list[str] = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
@@ -4138,14 +4626,13 @@ def _stiahni_lc_kbs_soup(datum: date, session: Any = None, timeout: tuple[int, i
 
     try:
         for pokus in range(1, LC_KBS_REFRENY_MAX_POKUSOV + 1):
+            _over_zrusenie()
             url = f"https://lc.kbs.sk/?den={datum_str}&_={int(time.time())}"
             try:
                 headers = _lc_kbs_headers("refreny-zalmov")
                 resp = session.get(url, headers=headers, timeout=timeout) if session else requests_module.get(url, headers=headers, timeout=timeout)
                 resp.raise_for_status()
-                resp.encoding = resp.apparent_encoding or "utf-8"
-                if not resp.encoding or resp.encoding.lower() in ("iso-8859-1", "latin-1"):
-                    resp.encoding = "utf-8"
+                resp.encoding = _zisti_http_kodovanie(resp, "LC-KBS", fallback="utf-8")
                 return beautiful_soup(resp.text, "html.parser")
 
             except http_error_type as e:
@@ -4155,7 +4642,7 @@ def _stiahni_lc_kbs_soup(datum: date, session: Any = None, timeout: tuple[int, i
                         f"[LC-KBS] Dátum {datum_str}: HTTP {status_code}, "
                         f"skúšam znova ({pokus}/{LC_KBS_REFRENY_MAX_POKUSOV})."
                     )
-                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    _cakaj_s_moznostou_zrusenia(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
                     continue
 
                 log_info(
@@ -4170,7 +4657,7 @@ def _stiahni_lc_kbs_soup(datum: date, session: Any = None, timeout: tuple[int, i
                         f"[LC-KBS] Dátum {datum_str}: sieťová chyba ({e}), "
                         f"skúšam znova ({pokus}/{LC_KBS_REFRENY_MAX_POKUSOV})."
                     )
-                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    _cakaj_s_moznostou_zrusenia(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
                     continue
 
                 log_info(
@@ -4187,7 +4674,7 @@ def _stiahni_lc_kbs_soup(datum: date, session: Any = None, timeout: tuple[int, i
                         f"[LC-KBS] Dátum {datum_str}: požiadavka zlyhala ({e}), "
                         f"skúšam znova ({pokus}/{LC_KBS_REFRENY_MAX_POKUSOV})."
                     )
-                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    _cakaj_s_moznostou_zrusenia(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
                     continue
 
                 log_info(f"[LC-KBS] Dátum {datum_str}: požiadavka zlyhala ({e}), refrén preskakujem.")
@@ -4336,10 +4823,24 @@ def _najdi_datum_cezrocneho_vs_dna(tyzden: int, den_index: int, parita: int, pre
     return None
 
 
-def _stiahni_prvy_refren_lc_kbs(datum: date, session: Any = None) -> str | None:
+def _stiahni_prvy_refren_lc_kbs_so_stavom(datum: date, session: Any = None) -> tuple[str | None, bool]:
+    """
+    Vráti (refrén alebo None, server_odpovedal).
+
+    server_odpovedal=False  → sieťová/HTTP chyba (stránka sa vôbec nestiahla),
+    server_odpovedal=True   → stránka sa stiahla; ak je refrén None, tak sa v nej
+                              len nenašiel (iný problém ako výpadok servera).
+    Circuit breaker (_RefrenyKontext.zaznamenaj_vysledok) tieto dva prípady
+    rozlišuje – predtým ich zlučoval a hlásil „server neodpovedá“ aj pri
+    úspešne stiahnutých stránkach bez refrénu.
+    """
     soup = _stiahni_lc_kbs_soup(datum, session=session)
     refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-    return refreny[0] if refreny else None
+    return (refreny[0] if refreny else None), soup is not None
+
+
+def _stiahni_prvy_refren_lc_kbs(datum: date, session: Any = None) -> str | None:
+    return _stiahni_prvy_refren_lc_kbs_so_stavom(datum, session=session)[0]
 
 
 def stiahni_cezrocne_tyzdenne_refreny_pre_rok(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
@@ -4375,6 +4876,9 @@ def stiahni_cezrocne_tyzdenne_refreny_pre_rok(rok: int, vystup_priecinok: Path, 
             ctx.zapis_bloky(ctx.aktualny_subor, bloky)
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Cezročné týždenné refrény {rok}: predčasne ukončené – {e}")
+    except _StahovanieZrusene:
+        ctx.zrusene = True
+        log_info("[LC-KBS] Sťahovanie zrušené (tlačidlo Zrušiť alebo ukončenie aplikácie) – zvyšok sa nestiahol.")
     finally:
         ctx.zavri_session()
 
@@ -4387,6 +4891,7 @@ def stiahni_cezrocne_tyzdenne_refreny_pre_rok(rok: int, vystup_priecinok: Path, 
 
     return {
         "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        **ctx.priznaky_prerusenia(),
         "celkovo": ctx.pocitadlo.aktualny_slot,
         "chyby": ctx.pocitadlo.chyby,
         "chybne_kody": ctx.chybne_kody,
@@ -4544,108 +5049,6 @@ _ADVENTNE_NAZVY = {
 }
 
 
-def stiahni_liturgicke_tyzdne_refreny(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
-    ctx_or = _priprav_kontext_alebo_vrat_chybu(
-        rok, vystup_priecinok, "backup_lit_tyzdne", progress_callback,
-        "[LC-KBS] Sťahovanie liturgických týždňov preskočené: chýbajú knižnice."
-    )
-    if isinstance(ctx_or, dict):
-        return ctx_or
-    ctx: _RefrenyKontext = ctx_or
-
-    kody = [f"{t}P" for t in range(1, 6)] + ["VT"] + [f"{t}VN" for t in range(1, 8)] + [f"{t}AD" for t in range(1, 5)]
-    ctx.zalohuj_kody(kody)
-
-    celkovo = 5 * (3 + 6) + 6 + 7 * (3 + 6) + 4 * (3 + 6)
-    spracuj_slot = ctx.vytvor_spracuj_slot(celkovo)
-    ctx.progress(f"Začínam sťahovanie liturgických týždňov pre rok {rok}.", 0, celkovo)
-
-    try:
-        # Pôstne
-        for tyzden in range(1, 6):
-            ctx.aktualny_subor = f"{tyzden}P"
-            bloky = [_POSTNE_NAZVY[tyzden]]
-            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-                datum = _najdi_datum_postnej_nedele(tyzden, cyklus, rok)
-                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}P {cyklus}', datum)}")
-            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-                datum = _najdi_datum_postneho_vs_dna(tyzden, den_index, rok)
-                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}P deň {cislo_dna}', datum)}")
-            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
-            log_info(f"[LC-KBS] {tyzden}P ({rok}): uložené.")
-
-        # Veľký týždeň – špeciálne (viac refrénov na deň)
-        ctx.aktualny_subor = "VT"
-        nedela_kvetna = velkonocna_nedela(rok) - timedelta(days=7)
-        pondelok_vt = velkonocna_nedela(rok) - timedelta(days=6)
-        utorok_vt = velkonocna_nedela(rok) - timedelta(days=5)
-        streda_vt = velkonocna_nedela(rok) - timedelta(days=4)
-        stvrtok_vt = velkonocna_nedela(rok) - timedelta(days=3)
-        piatok_vt = velkonocna_nedela(rok) - timedelta(days=2)
-        polozky_vt = [
-            (nedela_kvetna, "PALMOVÁ (KVETNÁ) NEDEĽA – NEDEĽA UTRPENIA PÁNA"),
-            (pondelok_vt, "PONDELOK VEĽKÉHO TÝŽDŇA"),
-            (utorok_vt, "UTOROK VEĽKÉHO TÝŽDŇA"),
-            (streda_vt, "STREDA VEĽKÉHO TÝŽDŇA"),
-            (stvrtok_vt, "ZELENÝ ŠTVRTOK"),
-            (piatok_vt, "VEĽKÝ PIATOK"),
-        ]
-        bloky_vt = ["VEĽKÝ TÝŽDEŇ (SVÄTÝ TÝŽDEŇ)"]
-        for datum_vt, nazov_vt in polozky_vt:
-            ctx.pocitadlo.aktualny_slot += 1
-            ctx.progress(f"VT – {nazov_vt}: sťahujem {datum_vt.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
-            soup_vt = _stiahni_lc_kbs_soup(datum_vt, session=ctx.session)
-            refreny_vt = _extrahuj_refreny_zalmov_lc_kbs(soup_vt)
-            time.sleep(REFRENY_DELAY_S)
-            ctx.zaznamenaj_vysledok(bool(refreny_vt))
-            if not refreny_vt:
-                ctx.pocitadlo.chyby += 1
-                bloky_vt.append(nazov_vt + "\n\n1. [refrén sa nepodarilo stiahnuť]")
-                continue
-            riadky = [f"1. {refreny_vt[0]}"] if len(refreny_vt) == 1 else [f"{i}. {r}" for i, r in enumerate(refreny_vt, start=1)]
-            bloky_vt.append(nazov_vt + "\n\n" + "\n\n".join(riadky))
-        ctx.zapis_bloky("VT", bloky_vt, oddelovac="\n\n\n")
-        log_info(f"[LC-KBS] VT ({rok}): uložené.")
-
-        # Veľkonočné
-        for tyzden in range(1, 8):
-            ctx.aktualny_subor = f"{tyzden}VN"
-            bloky = [_VEĽKONOCNE_NAZVY[tyzden]]
-            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-                datum = _najdi_datum_veľkonocnej_nedele(tyzden, cyklus, rok)
-                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}VN {cyklus}', datum)}")
-            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-                datum = _najdi_datum_veľkonocneho_vs_dna(tyzden, den_index, rok)
-                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}VN deň {cislo_dna}', datum)}")
-            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
-            log_info(f"[LC-KBS] {tyzden}VN ({rok}): uložené.")
-
-        # Adventné
-        for tyzden in range(1, 5):
-            ctx.aktualny_subor = f"{tyzden}AD"
-            bloky = [_ADVENTNE_NAZVY[tyzden]]
-            for cyklus in CEZROCNE_NEDIELNE_CYKLY:
-                datum = _najdi_datum_adventnej_nedele(tyzden, cyklus, rok)
-                bloky.append(f"{cyklus}: {spracuj_slot(f'{tyzden}AD {cyklus}', datum)}")
-            for cislo_dna, den_index in CEZROCNE_DNI_TYZDNA.items():
-                datum = _najdi_datum_adventneho_vs_dna(tyzden, den_index, rok)
-                bloky.append(f"{cislo_dna}. {spracuj_slot(f'{tyzden}AD deň {cislo_dna}', datum)}")
-            ctx.zapis_bloky(ctx.aktualny_subor, bloky)
-    except _PredcasneUkoncenieStahovania as e:
-        log_info(f"[LC-KBS] Liturgické týždne {rok}: predčasne ukončené – {e}")
-    finally:
-        ctx.zavri_session()
-
-    log_info(f"[LC-KBS] Liturgické týždne {rok} – súhrn: spracovaných {ctx.pocitadlo.aktualny_slot}/{celkovo}, chyby {ctx.pocitadlo.chyby}.")
-    ctx.progress(f"Hotovo. Spracovaných položiek: {ctx.pocitadlo.aktualny_slot}, chyby: {ctx.pocitadlo.chyby}.", ctx.pocitadlo.aktualny_slot, celkovo)
-
-    return {
-        "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
-        "celkovo": ctx.pocitadlo.aktualny_slot,
-        "chyby": ctx.pocitadlo.chyby,
-        "subory": ctx.zapisane,
-        "zaloha": ctx.backup.retazec_alebo_none,
-    }
 
 
 class _PocitadloSlotov:
@@ -4678,13 +5081,13 @@ def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_
       `lambda: aktualny_subor`, keďže hodnota tejto premennej sa v jeho
       slučke priebežne mení pred každým novým týždňom/dňom.
     - celkovo_slotov, progress_callback: pozri `update_progress`.
-    - na_vysledok: voliteľný callback(uspech: bool) – circuit breaker
-      (pozri _RefrenyKontext.zaznamenaj_vysledok). Volá sa iba pri
+    - na_vysledok: voliteľný callback(uspech: bool, server_odpovedal: bool) –
+      circuit breaker (pozri _RefrenyKontext.zaznamenaj_vysledok). Volá sa iba pri
       skutočnom sieťovom pokuse, nie keď `datum` nebolo vôbec nájdené
       (to je zlyhanie vyhľadávacej logiky, nie servera).
     - session: voliteľná `requests.Session` zdieľaná pre všetky sloty v
       rámci jednej dávky (pozri _RefrenyKontext.session) – posiela sa
-      ďalej do _stiahni_prvy_refren_lc_kbs, aby sa pre každý dátum
+      ďalej do _stiahni_prvy_refren_lc_kbs_so_stavom, aby sa pre každý dátum
       nevytvárala nová session.
     """
     def spracuj_slot(label, datum):
@@ -4699,17 +5102,17 @@ def _vytvor_spracuj_slot(pocitadlo, chybne_kody, aktualny_subor_getter, celkovo_
             return "[dátum sa nepodarilo nájsť]"
         update_progress(progress_callback, f"{label}: sťahujem {datum.strftime('%d.%m.%Y')}...",
                          pocitadlo.aktualny_slot, celkovo_slotov)
-        refren = _stiahni_prvy_refren_lc_kbs(datum, session=session)
-        time.sleep(REFRENY_DELAY_S)
+        refren, server_odpovedal = _stiahni_prvy_refren_lc_kbs_so_stavom(datum, session=session)
+        _cakaj_s_moznostou_zrusenia(REFRENY_DELAY_S)
         if refren:
             if na_vysledok:
-                na_vysledok(True)
+                na_vysledok(True, True)
             return refren
         pocitadlo.chyby += 1
         if aktualny_subor and aktualny_subor not in chybne_kody:
             chybne_kody.append(aktualny_subor)
         if na_vysledok:
-            na_vysledok(False)
+            na_vysledok(False, server_odpovedal)
         return "[refrén sa nepodarilo stiahnuť]"
 
     return spracuj_slot
@@ -4777,6 +5180,10 @@ class _PredcasneUkoncenieStahovania(Exception):
 
 
 MAX_PO_SEBE_ZLYHANI_STAHOVANIA = 5
+# Stránky, ktoré sa stiahli (server žije), ale refrén sa v nich nenašiel. Zvyčajne
+# znamená zmenu štruktúry lc.kbs.sk; prah je vyšší, lebo jednotlivé dni bez refrénu
+# môžu byť legitímne.
+MAX_PO_SEBE_PRAZDNYCH_STRANOK = 10
 
 
 class _RefrenyKontext:
@@ -4810,7 +5217,12 @@ class _RefrenyKontext:
 
         # Circuit breaker proti kaskádovému zlyhaniu pri výpadku servera.
         self.po_sebe_zlyhani = 0
+        self.po_sebe_prazdnych = 0
         self.predcasne_ukoncene = False
+        self.zrusene = False
+        self.dovod_ukoncenia: str | None = None
+        self.pokusov = 0
+        self.uspesnych = 0
 
     def zavri_session(self) -> None:
         """Zatvorí session zdieľanú naprieč celou dávkou. Volať VŽDY na konci
@@ -4833,22 +5245,59 @@ class _RefrenyKontext:
     def zalohuj_kody(self, kody) -> None:
         self.backup.zalohuj_zoznam(kody)
 
-    def zaznamenaj_vysledok(self, uspech: bool) -> None:
+    def _preruš(self, dovod: str) -> None:
+        self.predcasne_ukoncene = True
+        self.dovod_ukoncenia = dovod
+        raise _PredcasneUkoncenieStahovania(dovod)
+
+    def zaznamenaj_vysledok(self, uspech: bool, server_odpovedal: bool = False) -> None:
         """
-        Zaznamená výsledok jedného sťahovacieho pokusu (jeden konkrétny
-        dátum). Ak zlyhá MAX_PO_SEBE_ZLYHANI_STAHOVANIA-krát za sebou (bez
-        prerušenia úspechom), vyhodí _PredcasneUkoncenieStahovania – server
-        je pravdepodobne nedostupný a ďalšie márne skúšanie nemá zmysel.
+        Zaznamená výsledok jedného sťahovacieho pokusu (jeden konkrétny dátum)
+        a vyhodnotí circuit breaker. Rozlišuje dva rôzne druhy zlyhania:
+
+        - server_odpovedal=False: stránka sa nestiahla (sieť/HTTP chyba).
+          MAX_PO_SEBE_ZLYHANI_STAHOVANIA takých za sebou → server je
+          pravdepodobne nedostupný.
+        - server_odpovedal=True: stránka sa stiahla, ale refrén v nej nie je.
+          To NIE JE výpadok servera – resetuje počítadlo sieťových zlyhaní.
+          Až MAX_PO_SEBE_PRAZDNYCH_STRANOK takých za sebou naznačuje zmenu
+          štruktúry stránky.
+
+        Pri spustení breakera nastaví `predcasne_ukoncene`/`dovod_ukoncenia`
+        (idú do výsledku cez priznaky_prerusenia) a vyhodí
+        _PredcasneUkoncenieStahovania.
         """
+        self.pokusov += 1
         if uspech:
+            self.uspesnych += 1
             self.po_sebe_zlyhani = 0
+            self.po_sebe_prazdnych = 0
+            return
+        if server_odpovedal:
+            self.po_sebe_zlyhani = 0
+            self.po_sebe_prazdnych += 1
+            if self.po_sebe_prazdnych >= MAX_PO_SEBE_PRAZDNYCH_STRANOK:
+                self._preruš(
+                    f"{self.po_sebe_prazdnych} stránok za sebou sa stiahlo, ale nenašiel sa v nich žiadny refrén – "
+                    "štruktúra stránky lc.kbs.sk sa pravdepodobne zmenila."
+                )
             return
         self.po_sebe_zlyhani += 1
         if self.po_sebe_zlyhani >= MAX_PO_SEBE_ZLYHANI_STAHOVANIA:
-            self.predcasne_ukoncene = True
-            raise _PredcasneUkoncenieStahovania(
-                f"{self.po_sebe_zlyhani} sťahovaní za sebou zlyhalo – server pravdepodobne neodpovedá."
+            self._preruš(
+                f"{self.po_sebe_zlyhani} sťahovaní za sebou zlyhalo – server lc.kbs.sk pravdepodobne neodpovedá "
+                "alebo je pripojenie nestabilné."
             )
+
+    def priznaky_prerusenia(self) -> dict:
+        """Kľúče pre návratový slovník stiahni_*: GUI podľa nich oznámi, že dávka nebola dokončená."""
+        return {
+            "predcasne_ukoncene": self.predcasne_ukoncene,
+            "zrusene": self.zrusene,
+            "dovod_ukoncenia": self.dovod_ukoncenia,
+            "pokusov": self.pokusov,
+            "uspesnych_pokusov": self.uspesnych,
+        }
 
     def vytvor_spracuj_slot(self, celkovo_slotov: int, pocitaj_datumy_nezistene: bool = False):
         """Vráti spracuj_slot uzavretý nad týmto kontextom."""
@@ -4957,8 +5406,8 @@ def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress
             ctx.progress(f"VT – {nazov_vt}: sťahujem {datum_vt.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
             soup_vt = _stiahni_lc_kbs_soup(datum_vt, session=ctx.session)
             refreny_vt = _extrahuj_refreny_zalmov_lc_kbs(soup_vt)
-            time.sleep(REFRENY_DELAY_S)
-            ctx.zaznamenaj_vysledok(bool(refreny_vt))
+            _cakaj_s_moznostou_zrusenia(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny_vt), server_odpovedal=soup_vt is not None)
             if not refreny_vt:
                 ctx.pocitadlo.chyby += 1
                 if "VT" not in ctx.chybne_kody:
@@ -5009,8 +5458,8 @@ def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress
             ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
             soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-            time.sleep(REFRENY_DELAY_S)
-            ctx.zaznamenaj_vysledok(bool(refreny))
+            _cakaj_s_moznostou_zrusenia(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny), server_odpovedal=soup is not None)
             if not refreny:
                 ctx.pocitadlo.chyby += 1
                 if kod not in ctx.chybne_kody:
@@ -5023,6 +5472,9 @@ def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress
             log_info(f"[LC-KBS] {kod} ({datum}): uložené.")
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Pôstne/veľkonočné refrény {rok}: predčasne ukončené – {e}")
+    except _StahovanieZrusene:
+        ctx.zrusene = True
+        log_info("[LC-KBS] Sťahovanie zrušené (tlačidlo Zrušiť alebo ukončenie aplikácie) – zvyšok sa nestiahol.")
     finally:
         ctx.zavri_session()
 
@@ -5035,6 +5487,7 @@ def stiahni_postne_velkonocne_refreny(rok: int, vystup_priecinok: Path, progress
 
     return {
         "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        **ctx.priznaky_prerusenia(),
         "celkovo": ctx.pocitadlo.aktualny_slot,
         "chyby": ctx.pocitadlo.chyby,
         "chybne_kody": ctx.chybne_kody,
@@ -5073,6 +5526,9 @@ def stiahni_adventne_vianocne_refreny(rok: int, vystup_priecinok: Path, progress
             ctx.zapis_bloky(ctx.aktualny_subor, bloky)
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Adventné/vianočné refrény {rok}: predčasne ukončené – {e}")
+    except _StahovanieZrusene:
+        ctx.zrusene = True
+        log_info("[LC-KBS] Sťahovanie zrušené (tlačidlo Zrušiť alebo ukončenie aplikácie) – zvyšok sa nestiahol.")
     finally:
         ctx.zavri_session()
 
@@ -5084,6 +5540,7 @@ def stiahni_adventne_vianocne_refreny(rok: int, vystup_priecinok: Path, progress
 
     return {
         "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        **ctx.priznaky_prerusenia(),
         "celkovo": ctx.pocitadlo.aktualny_slot,
         "chyby": ctx.pocitadlo.chyby,
         "chybne_kody": ctx.chybne_kody,
@@ -5167,8 +5624,8 @@ def stiahni_turicne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_c
             ctx.progress(f"{kod}: sťahujem {datum.strftime('%d.%m.%Y')}...", ctx.pocitadlo.aktualny_slot, celkovo)
             soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-            time.sleep(REFRENY_DELAY_S)
-            ctx.zaznamenaj_vysledok(bool(refreny))
+            _cakaj_s_moznostou_zrusenia(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny), server_odpovedal=soup is not None)
             if not refreny:
                 ctx.pocitadlo.chyby += 1
                 if kod not in ctx.chybne_kody:
@@ -5181,6 +5638,9 @@ def stiahni_turicne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_c
             log_info(f"[LC-KBS] {kod} ({datum}): uložené.")
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Turíce a nadväzujúce sviatky {rok}: predčasne ukončené – {e}")
+    except _StahovanieZrusene:
+        ctx.zrusene = True
+        log_info("[LC-KBS] Sťahovanie zrušené (tlačidlo Zrušiť alebo ukončenie aplikácie) – zvyšok sa nestiahol.")
     finally:
         ctx.zavri_session()
 
@@ -5193,6 +5653,7 @@ def stiahni_turicne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_c
 
     return {
         "uspech": (ctx.pocitadlo.aktualny_slot - ctx.pocitadlo.chyby) > 0,
+        **ctx.priznaky_prerusenia(),
         "celkovo": ctx.pocitadlo.aktualny_slot,
         "chyby": ctx.pocitadlo.chyby,
         "chybne_kody": ctx.chybne_kody,
@@ -5225,8 +5686,8 @@ def stiahni_refreny_zalmov_pre_rok(rok: int, vystup_priecinok: Path, progress_ca
             ctx.progress(f"{datum.strftime('%d.%m.%Y')}: sťahujem...", idx, celkovo)
             soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-            time.sleep(REFRENY_DELAY_S)
-            ctx.zaznamenaj_vysledok(bool(refreny))
+            _cakaj_s_moznostou_zrusenia(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny), server_odpovedal=soup is not None)
             if refreny:
                 text_refrenu = refreny[0]
             else:
@@ -5235,11 +5696,21 @@ def stiahni_refreny_zalmov_pre_rok(rok: int, vystup_priecinok: Path, progress_ca
             vysledky[datum.month].append(f"{datum.day}. {text_refrenu}")
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Refrény {rok}: predčasne ukončené – {e}")
+    except _StahovanieZrusene:
+        ctx.zrusene = True
+        log_info("[LC-KBS] Sťahovanie zrušené (tlačidlo Zrušiť alebo ukončenie aplikácie) – zvyšok sa nestiahol.")
     finally:
         ctx.zavri_session()
 
+    dni_v_mesiaci = {m: sum(1 for d in dni if d.month == m) for m in range(1, 13)}
     for mesiac in range(1, 13):
         kod = REFRENY_MESIACE_SUBORY[mesiac]
+        if len(vysledky[mesiac]) < dni_v_mesiaci[mesiac]:
+            # Dávka bola prerušená (zrušenie / výpadok servera) – neúplný mesiac sa
+            # NEZAPISUJE. Predtým sa zapísalo všetkých 12 súborov aj so skráteným
+            # obsahom, čím sa prepísali pôvodné, kompletné súbory.
+            log_info(f"[LC-KBS] Refrény {rok}: mesiac {mesiac} je neúplný – súbor {kod}.txt zostáva nezmenený.")
+            continue
         obsah = f"\n{mesiac}. MESIAC – REFRÉNY ŽALMOV PRE ROK {rok}\n\n" + "\n\n".join(vysledky[mesiac]) + "\n"
         ctx.zapis_obsah(kod, obsah)
 
@@ -5248,6 +5719,7 @@ def stiahni_refreny_zalmov_pre_rok(rok: int, vystup_priecinok: Path, progress_ca
 
     return {
         "uspech": (celkovo - chyby) > 0,
+        **ctx.priznaky_prerusenia(),
         "celkovo": celkovo,
         "chyby": chyby,
         "subory": ctx.zapisane,
@@ -5420,8 +5892,8 @@ def stiahni_liturgicke_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progres
             ctx.backup.zalohuj(kod)
             soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-            time.sleep(REFRENY_DELAY_S)
-            ctx.zaznamenaj_vysledok(bool(refreny))
+            _cakaj_s_moznostou_zrusenia(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny), server_odpovedal=soup is not None)
             if not refreny:
                 chyby += 1
                 ctx.chybne_kody.append(kod)
@@ -5433,6 +5905,9 @@ def stiahni_liturgicke_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progres
             stiahnutych += 1
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Liturgické sviatky {rok}: predčasne ukončené – {e}")
+    except _StahovanieZrusene:
+        ctx.zrusene = True
+        log_info("[LC-KBS] Sťahovanie zrušené (tlačidlo Zrušiť alebo ukončenie aplikácie) – zvyšok sa nestiahol.")
     finally:
         ctx.zavri_session()
 
@@ -5444,6 +5919,7 @@ def stiahni_liturgicke_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progres
 
     return {
         "uspech": stiahnutych > 0,
+        **ctx.priznaky_prerusenia(),
         "celkovo": celkovo,
         "stiahnutych": stiahnutych,
         "chyby": chyby,
@@ -5462,7 +5938,7 @@ def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]], na_vysledo
     rovnakým názvom sa zoskupia pod jeden spoločný nadpis; refrény sa
     označia číslom dňa v mesiaci (napr. "25.1", "25.2", "26.", ...).
 
-    na_vysledok: voliteľný callback(uspech: bool) – circuit breaker (pozri
+    na_vysledok: voliteľný callback(uspech: bool, server_odpovedal: bool) – circuit breaker (pozri
     _RefrenyKontext.zaznamenaj_vysledok), volaný po každom stiahnutom dni.
     session: voliteľná zdieľaná `requests.Session` z volajúcej dávky (pozri
     _RefrenyKontext.session) – posiela sa ďalej do _stiahni_lc_kbs_soup.
@@ -5485,9 +5961,9 @@ def _zostav_text_kompilovaneho_useku(polozky: list[tuple[date, str]], na_vysledo
     for datum, nazov in polozky:
         soup = _stiahni_lc_kbs_soup(datum, session=session)
         refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-        time.sleep(REFRENY_DELAY_S)
+        _cakaj_s_moznostou_zrusenia(REFRENY_DELAY_S)
         if na_vysledok:
-            na_vysledok(bool(refreny))
+            na_vysledok(bool(refreny), soup is not None)
 
         if nazov != aktualny_nazov:
             uzavri_blok()
@@ -5543,8 +6019,8 @@ def stiahni_vianocne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_
             ctx.backup.zalohuj(kod)
             soup = _stiahni_lc_kbs_soup(datum, session=ctx.session)
             refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
-            time.sleep(REFRENY_DELAY_S)
-            ctx.zaznamenaj_vysledok(bool(refreny))
+            _cakaj_s_moznostou_zrusenia(REFRENY_DELAY_S)
+            ctx.zaznamenaj_vysledok(bool(refreny), server_odpovedal=soup is not None)
             if not refreny:
                 chyby += 1
                 ctx.chybne_kody.append(kod)
@@ -5598,6 +6074,9 @@ def stiahni_vianocne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_
             ctx.chybne_kody.append("2VI")
     except _PredcasneUkoncenieStahovania as e:
         log_info(f"[LC-KBS] Vianočné obdobie {rok}/{rok + 1}: predčasne ukončené – {e}")
+    except _StahovanieZrusene:
+        ctx.zrusene = True
+        log_info("[LC-KBS] Sťahovanie zrušené (tlačidlo Zrušiť alebo ukončenie aplikácie) – zvyšok sa nestiahol.")
     finally:
         ctx.zavri_session()
 
@@ -5609,6 +6088,7 @@ def stiahni_vianocne_sviatky_pre_rok(rok: int, vystup_priecinok: Path, progress_
 
     return {
         "uspech": stiahnutych > 0,
+        **ctx.priznaky_prerusenia(),
         "celkovo": celkovo,
         "stiahnutych": stiahnutych,
         "chyby": chyby,
@@ -5682,6 +6162,7 @@ def stiahni_citania_z_lc_kbs(datum: date, vystup_cesta: Path | str) -> bool:
     try:
         datum_str = datum.strftime("%Y-%m-%d")
         for pokus in range(1, LC_KBS_REFRENY_MAX_POKUSOV + 1):
+            _over_zrusenie()
             url = f"https://lc.kbs.sk/?den={datum_str}&_={int(time.time())}"
             headers = _lc_kbs_headers("citania")
             try:
@@ -5694,12 +6175,12 @@ def stiahni_citania_z_lc_kbs(datum: date, vystup_cesta: Path | str) -> bool:
             except http_exc as e:
                 sc = getattr(getattr(e, "response", None), "status_code", None)
                 if sc in LC_KBS_DOCASNE_HTTP_STATUSY and pokus < LC_KBS_REFRENY_MAX_POKUSOV:
-                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    _cakaj_s_moznostou_zrusenia(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
                     continue
                 return False
             except (to_exc, conn_exc, req_exc):
                 if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
-                    time.sleep(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
+                    _cakaj_s_moznostou_zrusenia(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
                     continue
                 return False
         if response is None:
@@ -7026,6 +7507,7 @@ def stiahni_vespery_z_breviar(datum, vystup_cesta, oznacit_chory=True):
         log_info(f"[BREVIAR] Sťahujem vešpery pre {datum.isoformat()} ...")
         url = _breviar_url_vespery(datum)
 
+        _over_zrusenie()
         resp = requests_module.get(url, headers=_BREVIAR_HEADERS, timeout=20)
         resp.raise_for_status()
         enc = _zisti_http_kodovanie(resp, "BREVIAR", fallback="windows-1250")
@@ -8940,6 +9422,7 @@ if TYPE_CHECKING:
         _direktorium_geom_after_id: Any = None
         _direktorium_open: Any = None
         _download_executor: Any = None
+        _download_cancel_event: Any = None
         _liturgicke_tyzdne_lock: Any = None
         _live_preview_after_id: Any = None
         _live_preview_updating: Any = None
@@ -9067,6 +9550,10 @@ if TYPE_CHECKING:
         song_var: Any = None
         status_bar_frame: Any = None
         status_bar_zaltár_label: Any
+        status_bar_btn_dnes: Any = None
+        status_bar_btn_zajtra: Any = None
+        def klik_status_bar_zalm(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nastav_zalm_podla_kodu(self, *args: Any, **kwargs: Any) -> Any: ...
         statusbar_jks_piesne: Any = None
         statusbar_jks_piesne_var: Any = None
         statusbar_skratka_zalmu: Any = None
@@ -9122,12 +9609,13 @@ if TYPE_CHECKING:
         def _synchronizuj_zivy_nahlad_a_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
         def _udalost_je_v_editovatelnom_widgete(self, *args: Any, **kwargs: Any) -> Any: ...
         def _update_nazov_label(self, *args: Any, **kwargs: Any) -> Any: ...
+        def prejst_na_uvodnu_obrazovku(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _backspace_vrati_na_uvod(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_config_dict(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_inicializuj_premenne(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_naplanuj_zaznam(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_nacitaj_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
         def _vytvor_rok_spinbox(self, *args: Any, **kwargs: Any) -> Any: ...
-        def _vytvor_sekciu(self, *args: Any, **kwargs: Any) -> Any: ...
         def _wire_tab_switching(self, *args: Any, **kwargs: Any) -> Any: ...
         def _zablokovat_klik(self, *args: Any, **kwargs: Any) -> Any: ...
         def _zapis_config_na_disk(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9139,11 +9627,12 @@ if TYPE_CHECKING:
         def _zostav_config_dict(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_adventne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_cezrocne_tyzdenne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _pouzi_offline_citania(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _obnov_zastarane_citania(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_citania_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_direktorium_label(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_info_liturgickeho_roka(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_liturgicke_sviatky_gui(self, *args: Any, **kwargs: Any) -> Any: ...
-        def aktualizovat_liturgicke_tyzdne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_postne_velkonocne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_refreny_zalmov_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_status_bar(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9185,6 +9674,7 @@ if TYPE_CHECKING:
         def open_citanie(self, *args: Any, **kwargs: Any) -> Any: ...
         def open_direktorium(self, *args: Any, **kwargs: Any) -> Any: ...
         def open_liturgicke_sviatky(self, *args: Any, **kwargs: Any) -> Any: ...
+        def open_offline_citania_prehladac(self, *args: Any, **kwargs: Any) -> Any: ...
         def open_postne_velkonocne_refreny(self, *args: Any, **kwargs: Any) -> Any: ...
         def open_refreny_zalmov(self, *args: Any, **kwargs: Any) -> Any: ...
         def open_slavnosti(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9534,7 +10024,7 @@ class _NastaveniaMixin(_ControlAppBase):
                 # Okno O aplikácii – uložené rozmery
                 self.about_window_width  = full_config.get("about_window_width", -1)
                 self.about_window_height = full_config.get("about_window_height", -1)
-                self.about_last_tab = max(1, min(full_config.get("about_last_tab", 1), 6))
+                self.about_last_tab = max(1, min(full_config.get("about_last_tab", 1), 7))
                 self.about_font_size = max(8, min(full_config.get("about_font_size", 12), 40))
 
                 # Preferovaný monitor – načítanie z configu
@@ -10050,18 +10540,6 @@ class _NastaveniaMixin(_ControlAppBase):
         new_config = self._zostav_config_dict(**extra)
         self._zapis_config_na_disk(new_config, aktualizovat_label)
 
-    def _vytvor_sekciu(self, rodic, nadpis, popis):
-        """Vytvorí LabelFrame s nadpisom a krátkym vysvetlivkovým textom."""
-        frame = tk.LabelFrame(rodic, text=f" {nadpis} ", padx=10, pady=8, 
-                            font=(self.font_family, 10, "bold"), fg="#333333")
-        frame.pack(fill=tk.X, padx=15, pady=8)
-
-        if popis:
-            lbl_popis = tk.Label(frame, text=popis, font=(self.font_family, 9, "italic"),
-                                fg="#666666", wraplength=550, justify=tk.LEFT)
-            lbl_popis.pack(anchor="w", pady=(0, 5))
-        
-        return frame
 
     # ==========================================================
     # HLAVNÁ METÓDA OKNA NASTAVENÍ
@@ -10690,7 +11168,8 @@ class _NastaveniaMixin(_ControlAppBase):
         cb_uvod.pack(anchor="w")
         Tooltip(cb_uvod,
                 "Úvodná obrazovka vyplní prázdne hlavné okno. Zmizne po zadaní čísla piesne "
-                "a vráti sa po jeho zmazaní (Backspace). Nikdy sa nepremieta na plátno.")
+                "a vráti sa po jeho zmazaní (Backspace), po klávese Home alebo tlačidle Home v hornej lište. "
+                "Nikdy sa nepremieta na plátno.")
         for _kluc, _popis in UVODNA_MOZNOSTI:
             tmavy_check(
                 frame_uvod,
@@ -11303,7 +11782,7 @@ class _NastaveniaMixin(_ControlAppBase):
         podpriečinkov, napr. hlavný priečinok vs. "Večeradlo", navzájom
         neprepísali). Samotný priečinok "_zaloha_original" je z prevodu
         vynechaný, takže opakované spustenie znovu neprevádza už zálohované
-        súbory.
+        súbory. Vynechaný je aj podpriečinok "offline_citania" (offline cache čítaní).
         """
         folder = self.song_folder_path
 
@@ -11320,7 +11799,9 @@ class _NastaveniaMixin(_ControlAppBase):
         subory = sorted(
             (
                 f for f in folder.rglob("*.txt")
-                if f.is_file() and "_zaloha_original" not in f.relative_to(folder).parts
+                if f.is_file()
+                and "_zaloha_original" not in f.relative_to(folder).parts
+                and CITANIA_OFFLINE_DIR_NAME not in f.relative_to(folder).parts
             ),
             key=lambda x: x.relative_to(folder).as_posix().lower(),
         )
@@ -11786,20 +12267,15 @@ class _StahovanieMixin(_ControlAppBase):
         sp_den.focus_set()
 
     def open_citanie(self):
-        """Zobrazí dialóg: Stiahnuť čítania na Dnes alebo na vybraný dátum."""
+        """Zobrazí dialóg: Stiahnuť čítania na Dnes alebo na vybraný dátum + 7 dní offline."""
 
-        def akcia(datum):
+        def akcia_jedneho_dna(datum):
             def po_uspesnom_stiahnuti():
-                # Automatická úprava čítaní pre projekciu prebehne potichu
-                # (zobrazit_potvrdenie=False) – jediné okno, ktoré používateľ
-                # uvidí, je finálne "Čítania aktualizované" zo spracuj_vysledok
-                # v aktualizovat_citania_gui (analogicky ako pri vešperách).
                 try:
                     self.upravit_citania_pre_projekciu(zobrazit_potvrdenie=False)
                 except Exception as e:
                     log_exception("open_citanie/upravit", e)
                     messagebox.showerror("Kinak: Chyba", f"Úprava čítaní zlyhala: {e}")
-
             try:
                 self.aktualizovat_citania_gui(
                     datum=datum,
@@ -11809,11 +12285,338 @@ class _StahovanieMixin(_ControlAppBase):
                 log_exception("open_citanie/start_thread", e)
                 messagebox.showerror("Kinak: Chyba", f"Nepodarilo sa spustiť sťahovanie: {e}")
 
-        self._zobraz_dialog_stiahnutia(
-            title="Stiahnuť čítania",
-            nadpis="Stiahnuť čítania na:",
-            akcia=akcia,
+        def akcia_7_dni(datum):
+            def po_uspesnom_stiahnuti():
+                try:
+                    self.upravit_citania_pre_projekciu(zobrazit_potvrdenie=False)
+                except Exception as e:
+                    log_exception("open_citanie_7dni/upravit", e)
+            try:
+                self.aktualizovat_citania_7_dni_gui(
+                    datum=datum,
+                    on_success=po_uspesnom_stiahnuti,
+                )
+            except Exception as e:
+                log_exception("open_citanie_7dni/start_thread", e)
+                messagebox.showerror("Kinak: Chyba", f"Nepodarilo sa spustiť sťahovanie na 7 dní: {e}")
+
+        # Vlastný dialóg s podporou 7 dní offline
+        dialog = tk.Toplevel(self.master)
+        dialog.title("Stiahnuť čítania")
+        dialog.configure(bg="#121212")
+        dialog.resizable(False, False)
+        dialog.transient(self.master)
+        dialog.grab_set()
+        dialog.lift()
+        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+
+        self.master.update_idletasks()
+        mx = self.master.winfo_x() + self.master.winfo_width() // 2
+        my = self.master.winfo_y() + self.master.winfo_height() // 2
+        dw, dh = 340, 420
+        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+
+        tk.Label(
+            dialog,
+            text="Stiahnuť čítania na:",
+            bg="#121212",
+            fg="#ffffff",
+            font=(self.font_family, 13, "bold")
+        ).pack(pady=(18, 10))
+
+        btn_style = {
+            "bg": "#262626",
+            "fg": "#ffffff",
+            "activebackground": "#2a2a2a",
+            "activeforeground": "#ffffff",
+            "font": (self.font_family, 12, "bold"),
+            "relief": "flat",
+            "bd": 0,
+            "padx": 28,
+            "pady": 8,
+            "cursor": "hand2"
+        }
+
+        btn_style_7dni = {
+            "bg": "#1e3a5f",
+            "fg": "#ffffff",
+            "activebackground": "#2a5a8f",
+            "activeforeground": "#ffffff",
+            "font": (self.font_family, 11, "bold"),
+            "relief": "flat",
+            "bd": 0,
+            "padx": 20,
+            "pady": 8,
+            "cursor": "hand2"
+        }
+
+        def _spusti_jeden(datum):
+            self.reset_ui()
+            dialog.destroy()
+            akcia_jedneho_dna(datum)
+
+        def _spusti_7dni(datum):
+            self.reset_ui()
+            dialog.destroy()
+            akcia_7_dni(datum)
+
+        # Dnes – 1 deň
+        tk.Button(
+            dialog, text="Dnes (1 deň)",
+            command=lambda: _spusti_jeden(date.today()),
+            **btn_style
+        ).pack()
+
+        # Dnes – 7 dní offline (zvýraznené)
+        tk.Button(
+            dialog, text="Dnes + 7 dní (offline) ★",
+            command=lambda: _spusti_7dni(date.today()),
+            **btn_style_7dni
+        ).pack(pady=(6, 0))
+
+        tk.Label(
+            dialog,
+            text="── alebo vybrať dátum ──",
+            bg="#121212",
+            fg="#888888",
+            font=(self.font_family, 10)
+        ).pack(pady=(14, 6))
+
+        dnes = date.today()
+        frame_datum = tk.Frame(dialog, bg="#121212")
+        frame_datum.pack()
+
+        spin_style = {
+            "bg": "#121212",
+            "fg": "#ffffff",
+            "buttonbackground": "#262626",
+            "relief": "flat",
+            "bd": 1,
+            "font": (self.font_family, 13, "bold"),
+            "justify": "center",
+            "highlightthickness": 1,
+            "highlightbackground": "#2a2a2a",
+            "highlightcolor": "#aaaaaa",
+        }
+
+        sp_den = tk.Spinbox(
+            frame_datum, from_=1, to=31, width=3,
+            format="%02.0f", **spin_style
         )
+        sp_den.pack(side=tk.LEFT)
+        sp_den.delete(0, tk.END)
+        sp_den.insert(0, f"{dnes.day:02d}")
+
+        tk.Label(frame_datum, text=".", bg="#121212", fg="#888888",
+                 font=(self.font_family, 14, "bold")).pack(side=tk.LEFT, padx=2)
+
+        sp_mes = tk.Spinbox(
+            frame_datum, from_=1, to=12, width=3,
+            format="%02.0f", **spin_style
+        )
+        sp_mes.pack(side=tk.LEFT)
+        sp_mes.delete(0, tk.END)
+        sp_mes.insert(0, f"{dnes.month:02d}")
+
+        tk.Label(frame_datum, text=".", bg="#121212", fg="#888888",
+                 font=(self.font_family, 14, "bold")).pack(side=tk.LEFT, padx=2)
+
+        rok_var = tk.StringVar(value=str(dnes.year))
+        sp_rok = tk.Spinbox(
+            frame_datum, from_=GREGORIANSKY_MIN_ROK, to=GREGORIANSKY_MAX_ROK, width=5,
+            textvariable=rok_var, state="readonly", readonlybackground="#121212", **spin_style
+        )
+        sp_rok.pack(side=tk.LEFT)
+
+        chyba_var = tk.StringVar(value="")
+        tk.Label(dialog, textvariable=chyba_var, bg="#121212",
+                 fg="#ff6b6b", font=(self.font_family, 9)).pack(pady=(4, 0))
+
+        def stiahni_vybraty_jeden():
+            try:
+                den = int(sp_den.get())
+                mes = int(sp_mes.get())
+                rok = _validuj_rok_pre_gui(rok_var.get())
+                vybrany = date(rok, mes, den)
+            except ValueError:
+                chyba_var.set("Neplatný dátum – skontroluj hodnoty.")
+                return
+            _spusti_jeden(vybrany)
+
+        def stiahni_vybraty_7dni():
+            try:
+                den = int(sp_den.get())
+                mes = int(sp_mes.get())
+                rok = _validuj_rok_pre_gui(rok_var.get())
+                vybrany = date(rok, mes, den)
+            except ValueError:
+                chyba_var.set("Neplatný dátum – skontroluj hodnoty.")
+                return
+            _spusti_7dni(vybrany)
+
+        tk.Button(
+            dialog, text="Stiahnuť vybraný dátum (1 deň)",
+            command=stiahni_vybraty_jeden,
+            **{**btn_style, "padx": 14}
+        ).pack(pady=(2, 0))
+
+        tk.Button(
+            dialog, text="Stiahnuť 7 dní od dátumu (offline) ★",
+            command=stiahni_vybraty_7dni,
+            **{**btn_style_7dni, "padx": 10}
+        ).pack(pady=(6, 0))
+
+        def otvor_prehladac():
+            dialog.destroy()
+            self.open_offline_citania_prehladac()
+
+        tk.Button(
+            dialog, text="📂 Prehliadať offline čítania",
+            command=otvor_prehladac,
+            bg="#2a2a2a", fg="#cccccc", activebackground="#3a3a3a", activeforeground="#ffffff",
+            font=(self.font_family, 10), relief="flat", bd=0, padx=10, pady=6, cursor="hand2"
+        ).pack(pady=(10, 0))
+
+        tk.Label(
+            dialog,
+            text="★ offline = uloží do cache, dostupné aj bez internetu",
+            bg="#121212", fg="#666666", font=(self.font_family, 8),
+        ).pack(pady=(6, 0))
+
+        dialog.bind("<Return>", lambda e: stiahni_vybraty_jeden())
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
+        dialog.focus_force()
+        sp_den.focus_set()
+
+    def zobraz_offline_citania_dna(self, datum):
+        try:
+            cache_text = nacitaj_citania_z_offline_cache(datum, None, self.song_folder_path)
+            if not cache_text:
+                messagebox.showinfo("Kinak: Offline čítania", f"Pre dátum {datum.strftime('%d.%m.%Y')} nie sú v offline cache žiadne čítania.\n\nSkús najprv stiahnuť čítania na 7 dní.")
+                return False
+            vystup_cesta = self.song_folder_path / "citania.txt"
+            _zapis_text_atomicky(vystup_cesta, cache_text, encoding="utf-8")
+            try:
+                self.upravit_citania_pre_projekciu(zobrazit_potvrdenie=False)
+            except Exception as e:
+                log_exception("zobraz_offline_citania_dna/upravit", e)
+            self.nacitat_piesne(nazov_suboru="citania")
+            self.manual_entry.delete(0, tk.END)
+            self.manual_entry.insert(0, "citania")
+            return True
+        except Exception as e:
+            log_exception(f"zobraz_offline_citania_dna: {datum}", e)
+            messagebox.showerror("Kinak: Chyba", f"Nepodarilo sa zobraziť čítania pre {datum}: {e}")
+            return False
+
+    def open_offline_citania_prehladac(self):
+        cache_dir = ziskaj_offline_citania_dir(self.song_folder_path, vytvor=False)
+        dialog = tk.Toplevel(self.master)
+        dialog.title("Offline čítania – prehliadač")
+        dialog.configure(bg="#121212")
+        dialog.resizable(False, False)
+        dialog.transient(self.master)
+        dialog.grab_set()
+        dialog.lift()
+        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        self.master.update_idletasks()
+        mx = self.master.winfo_x() + self.master.winfo_width() // 2
+        my = self.master.winfo_y() + self.master.winfo_height() // 2
+        dw, dh = 640, 520
+        dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+        tk.Label(dialog, text="Offline čítania", bg="#121212", fg="#ffffff", font=(self.font_family, 14, "bold")).pack(pady=(16, 4))
+        tk.Label(dialog, text=f"Priečinok: {cache_dir}", bg="#121212", fg="#888888", font=(self.font_family, 8), wraplength=600).pack(pady=(0, 8))
+        frame_list = tk.Frame(dialog, bg="#121212")
+        frame_list.pack(fill=tk.BOTH, expand=True, padx=12, pady=6)
+        scrollbar = tk.Scrollbar(frame_list)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        listbox = tk.Listbox(frame_list, bg="#1e1e1e", fg="#ffffff", selectbackground="#2a5a8f", selectforeground="#ffffff", font=(self.font_family, 11), yscrollcommand=scrollbar.set, height=14)
+        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=listbox.yview)
+        subory_info = []
+        try:
+            # Hľadaj vo všetkých možných cache priečinkoch; pri rovnakom dni vyhrá najčerstvejší súbor
+            najnovsie: dict = {}
+            dni = ["Po", "Ut", "St", "Št", "Pi", "So", "Ne"]
+            for cd in _vsetky_mozne_offline_cache_priecinky(self.song_folder_path):
+                if cd.exists():
+                    for f in sorted(cd.glob("*.txt")):
+                        try:
+                            datum = date.fromisoformat(f.stem)
+                            st = f.stat()
+                            predch = najnovsie.get(datum)
+                            if predch is None or st.st_mtime > predch[0]:
+                                najnovsie[datum] = (st.st_mtime, f, cd, st.st_size)
+                        except Exception:
+                            continue
+            for datum, (_mt, f, cd, velkost) in najnovsie.items():
+                den_tyzdna = dni[datum.weekday()]
+                oznac = " ★ DNES" if datum == date.today() else ""
+                text = f"{datum.strftime('%d.%m.%Y')} ({den_tyzdna}){oznac} – {velkost//1024+1} kB [{cd.parent}]"
+                subory_info.append((datum, f, text))
+            subory_info.sort(key=lambda x: x[0])
+        except Exception as e:
+            log_exception("open_offline_citania_prehladac: načítanie cache zlyhalo", e)
+        if not subory_info:
+            listbox.insert(tk.END, "— žiadne offline čítania —")
+            listbox.insert(tk.END, "")
+            listbox.insert(tk.END, "Stiahni najprv: Liturgické nástroje → Stiahnuť čítania → Dnes + 7 dní (offline)")
+        else:
+            for datum, cesta, text in subory_info:
+                listbox.insert(tk.END, text)
+        info_var = tk.StringVar(value="Vyber deň a klikni Zobraziť")
+        tk.Label(dialog, textvariable=info_var, bg="#121212", fg="#bbbbbb", font=(self.font_family, 10), wraplength=420, justify=tk.CENTER).pack(pady=(8, 4))
+        btn_frame = tk.Frame(dialog, bg="#121212")
+        btn_frame.pack(pady=(6, 12))
+        btn_style = {"bg": "#262626", "fg": "#ffffff", "activebackground": "#2a2a2a", "activeforeground": "#ffffff", "font": (self.font_family, 11, "bold"), "relief": "flat", "bd": 0, "padx": 16, "pady": 8, "cursor": "hand2"}
+        btn_style_modry = {"bg": "#1e3a5f", "fg": "#ffffff", "activebackground": "#2a5a8f", "activeforeground": "#ffffff", "font": (self.font_family, 12, "bold"), "relief": "flat", "bd": 0, "padx": 20, "pady": 8, "cursor": "hand2"}
+        def zobraz_vybraty():
+            sel = listbox.curselection()
+            if not sel:
+                info_var.set("Najprv vyber deň zo zoznamu.")
+                return
+            idx = sel[0]
+            if idx >= len(subory_info):
+                info_var.set("Vyber platný deň.")
+                return
+            datum, cesta, text = subory_info[idx]
+            self.reset_ui()
+            dialog.destroy()
+            self.zobraz_offline_citania_dna(datum)
+        def zobraz_dnes():
+            dnes = date.today()
+            for datum, cesta, text in subory_info:
+                if datum == dnes:
+                    self.reset_ui()
+                    dialog.destroy()
+                    self.zobraz_offline_citania_dna(datum)
+                    return
+            info_var.set(f"Dnešné čítania ({dnes.strftime('%d.%m.%Y')}) nie sú v cache.")
+            if messagebox.askyesno("Kinak: Offline", "Dnešné čítania nie sú v offline cache. Chceš ich stiahnuť teraz?"):
+                dialog.destroy()
+
+                def po_uspesnom_stiahnuti():
+                    try:
+                        self.upravit_citania_pre_projekciu(zobrazit_potvrdenie=False)
+                    except Exception as e:
+                        log_exception("open_offline_citania_prehladac/upravit", e)
+                        messagebox.showerror("Kinak: Chyba", f"Úprava čítaní zlyhala: {e}")
+
+                self.aktualizovat_citania_gui(datum=dnes, on_success=po_uspesnom_stiahnuti)
+        tk.Button(btn_frame, text="Zobraziť vybraný deň", command=zobraz_vybraty, **btn_style_modry).pack(side=tk.LEFT, padx=6)
+        tk.Button(btn_frame, text="Dnes", command=zobraz_dnes, **btn_style).pack(side=tk.LEFT, padx=6)
+        tk.Button(btn_frame, text="Zavrieť", command=dialog.destroy, **btn_style).pack(side=tk.LEFT, padx=6)
+        def on_double_click(event):
+            zobraz_vybraty()
+        listbox.bind("<Double-Button-1>", on_double_click)
+        dialog.bind("<Escape>", lambda e: dialog.destroy())
+        dialog.bind("<Return>", lambda e: zobraz_vybraty())
+        if subory_info:
+            listbox.selection_set(0)
+            listbox.focus_set()
+        dialog.focus_force()
+
+
 
 
     def _potvrd_a_spusti_stiahnutie(self, dialog, rok_var, chyba_var, potvrdzujuci_text_fn, akcia_po_potvrdeni):
@@ -12068,6 +12871,45 @@ class _StahovanieMixin(_ControlAppBase):
         )
 
 
+    def _zobraz_prerusene_stahovanie(self, vysledok: dict) -> None:
+        """
+        Oznámi používateľovi, že dávka sťahovania NEBOLA dokončená – buď ju
+        prerušil circuit breaker (`predcasne_ukoncene`, s dôvodom), alebo ju
+        zrušil používateľ (`zrusene`). Predtým sa takýto výsledok tváril ako
+        bežný čiastočný úspech a používateľ sa o prerušení nedozvedel.
+        """
+        if getattr(self, "_closing", False):
+            return
+        subory = vysledok.get("subory") or []
+        zrusene = bool(vysledok.get("zrusene"))
+        if zrusene and not subory:
+            # Používateľ zrušil skôr, než sa čokoľvek uložilo – nie je čo oznamovať.
+            return
+
+        riadky: list[str] = []
+        if zrusene:
+            titulok = "Kinak: Sťahovanie zrušené"
+            riadky.append("Sťahovanie bolo zrušené.")
+        else:
+            titulok = "Kinak: Sťahovanie prerušené"
+            riadky.append("Sťahovanie bolo predčasne prerušené, takže nie je kompletné.")
+            dovod = vysledok.get("dovod_ukoncenia")
+            if dovod:
+                riadky.append(str(dovod))
+
+        pokusov = vysledok.get("pokusov")
+        if pokusov:
+            riadky.append(f"Úspešných sťahovaní: {vysledok.get('uspesnych_pokusov', 0)} z {pokusov} pokusov.")
+        riadky.append(f"Uložených súborov: {len(subory)}. Ostatné súbory zostali v pôvodnom stave.")
+        zaloha = vysledok.get("zaloha")
+        if zaloha:
+            riadky.append(f"Záloha pôvodných súborov: {zaloha}")
+        if not zrusene:
+            riadky.append("Skúste sťahovanie zopakovať neskôr.")
+
+        log_info(f"Sťahovanie {'zrušené' if zrusene else 'prerušené'}: " + " | ".join(riadky))
+        messagebox.showwarning(titulok, "\n\n".join(riadky))
+
     def _spusti_stahovanie_s_progressom(
         self,
         *,
@@ -12104,9 +12946,15 @@ class _StahovanieMixin(_ControlAppBase):
            Priebeh sa do dialógu hlási thread-safe cez `self.master.after(...)`.
         4. Po dokončení: zavrie dialóg, obnoví kurzor, uvoľní `lock`, nastaví
            fokus na `self.manual_entry`; pri úspechu najprv obnoví zoznam
-           súborov a potom vždy zavolá `spracuj_vysledok(vysledok)` – tá
+           súborov a potom zavolá `spracuj_vysledok(vysledok)` – tá
            funkcia (vlastná pre každého volajúceho) zobrazí konkrétny
            messagebox pri úspechu, alebo `zobraz_chybu_stahovania(...)` pri zlyhaní.
+           Ak bola dávka prerušená (výsledok má `predcasne_ukoncene`/`zrusene`),
+           `spracuj_vysledok` sa NEVOLÁ a zobrazí sa oznam
+           `_zobraz_prerusene_stahovanie` (dôvod, počty, záloha).
+        5. Tlačidlo „Zrušiť“ / zatvorenie dialógu nastaví cancel príznak –
+           worker sa zastaví pri najbližšej kontrole (do ~0,1 s, resp. po
+           dokončení rozbehnutej HTTP požiadavky).
 
         `vysledok_pri_zlyhani` sa použije ako náhradný výsledok, ak samotné
         worker vlákno vyhodí neočakávanú výnimku (aby `spracuj_vysledok` vždy
@@ -12123,13 +12971,14 @@ class _StahovanieMixin(_ControlAppBase):
         progress_dialog.transient(self.master)
         progress_dialog.lift()
 
+        # Cancel príznak tohto konkrétneho sťahovania (nastaví ho tlačidlo Zrušiť
+        # / zatvorenie dialógu). Worker ho kontroluje cez _over_zrusenie().
+        zrusit_event = threading.Event()
+
         def zrusit_zobrazenie():
-            # Nejde o skutočné zrušenie sťahovania (worker vlákno beží ďalej
-            # na pozadí ako daemon a bezpečne dobehne, vrátane finálneho
-            # messageboxu cez po_stiahnuti) – len skryje dialóg, aby
-            # používateľ nebol pri pomalom pripojení zaseknutý bez možnosti
-            # okno zatvoriť. `lock` sa preto zámerne NEUVOĽŇUJE tu – uvoľní
-            # ho až po_stiahnuti(), keď sťahovanie na pozadí naozaj skončí.
+            # Len zatvorí dialóg a vráti kurzor – NEZASTAVUJE sťahovanie. Používa sa
+            # iba v obslužných vetvách (aplikácia sa ukončuje / executor neprijal
+            # úlohu). `lock` sa tu zámerne neuvoľňuje.
             try:
                 if progress_dialog.winfo_exists():
                     progress_dialog.destroy()
@@ -12139,9 +12988,23 @@ class _StahovanieMixin(_ControlAppBase):
                 self.master.config(cursor="")
             except tk.TclError:
                 pass
-            log_info(f"{kontext}: dialóg priebehu zatvorený používateľom, sťahovanie pokračuje na pozadí.")
 
-        progress_dialog.protocol("WM_DELETE_WINDOW", zrusit_zobrazenie)
+        def zrusit_stahovanie():
+            # Skutočné zrušenie: nastaví príznak a čaká, kým worker dobehne
+            # (najneskôr po dokončení práve prebiehajúcej HTTP požiadavky).
+            # Dialóg zostane otvorený s hláškou „Ruším…“ a zavrie ho až
+            # po_stiahnuti(), ktoré zároveň uvoľní `lock`.
+            if zrusit_event.is_set():
+                return
+            zrusit_event.set()
+            log_info(f"{kontext}: používateľ zrušil sťahovanie.")
+            try:
+                stav_var.set("Ruším sťahovanie…")
+                zrusit_btn.configure(state=tk.DISABLED)
+            except (tk.TclError, NameError):
+                pass
+
+        progress_dialog.protocol("WM_DELETE_WINDOW", zrusit_stahovanie)
 
         self.master.update_idletasks()
         mx = self.master.winfo_x() + self.master.winfo_width() // 2
@@ -12173,16 +13036,17 @@ class _StahovanieMixin(_ControlAppBase):
             font=(self.font_family, 10),
         ).pack()
 
-        tk.Button(
+        zrusit_btn = tk.Button(
             progress_dialog,
             text="Zrušiť",
-            command=zrusit_zobrazenie,
+            command=zrusit_stahovanie,
             width=12,
-        ).pack(pady=(10, 2))
+        )
+        zrusit_btn.pack(pady=(10, 2))
 
         tk.Label(
             progress_dialog,
-            text="Sťahovanie bude pokračovať na pozadí.",
+            text="Zrušením sa sťahovanie zastaví. Už uložené súbory zostanú.",
             bg="#121212",
             fg="#888888",
             font=(self.font_family, 8),
@@ -12226,14 +13090,22 @@ class _StahovanieMixin(_ControlAppBase):
                     )
                     return
 
-                if vysledok.get("uspech"):
+                prerusene = bool(vysledok.get("predcasne_ukoncene") or vysledok.get("zrusene"))
+
+                if vysledok.get("uspech") or (prerusene and vysledok.get("subory")):
                     try:
                         self.subory_zoznam = self.ziskaj_zoznam_suborov()
                         self.filtrovat_subory(self.filter_var.get())
                     except Exception as e:
                         log_exception(f"{kontext}: obnova zoznamu zlyhala", e)
 
-                spracuj_vysledok(vysledok)
+                if prerusene:
+                    # Dávka sa nedokončila (zrušenie / circuit breaker). Bežný
+                    # „úspešne stiahnuté“ messagebox by bol zavádzajúci, preto
+                    # sa zobrazí iba oznam o prerušení.
+                    self._zobraz_prerusene_stahovanie(vysledok)
+                else:
+                    spracuj_vysledok(vysledok)
             finally:
                 try:
                     self.master.config(cursor="")
@@ -12249,32 +13121,42 @@ class _StahovanieMixin(_ControlAppBase):
                     log_exception(f"{kontext}: focus_set zlyhal", e)
 
         def vlakno():
-            # Kontrola internetu sa robí až TU (v pozadovom vlákne), nie v GUI
-            # vlákne pred spustením – socket.create_connection() je blokujúca
-            # operácia a inak by na krátky čas zamrazila celé okno ešte pred
-            # zobrazením progress dialógu.
-            if not _over_internet_socket():
-                vysledok = dict(vysledok_pri_zlyhani)
-                vysledok["_bez_internetu"] = True
-                try:
-                    self.master.after(0, lambda: po_stiahnuti(vysledok))
-                except Exception as e:
-                    log_exception(f"{kontext}: master.after (bez internetu) zlyhal", e)
-                    try:
-                        lock.release()
-                    except RuntimeError:
-                        pass
-                return
-
+            # Cancel udalosti sa viažu na toto vlákno (executor vlákna znovupoužíva,
+            # preto sa vždy odregistrujú vo finally).
+            _nastav_zrusenie_stahovania(zrusit_event, getattr(self, "_download_cancel_event", None))
             try:
-                vysledok = stiahni_funkcia(
-                    rok,
-                    self.song_folder_path,
-                    progress_callback=progress_callback,
-                )
-            except Exception as e:
-                log_exception(f"{kontext}: vlákno zlyhalo", e)
-                vysledok = dict(vysledok_pri_zlyhani)
+                # Kontrola internetu sa robí až TU (v pozadovom vlákne), nie v GUI
+                # vlákne pred spustením – socket.create_connection() je blokujúca
+                # operácia a inak by na krátky čas zamrazila celé okno ešte pred
+                # zobrazením progress dialógu.
+                if not _over_internet_socket():
+                    vysledok = dict(vysledok_pri_zlyhani)
+                    vysledok["_bez_internetu"] = True
+                    try:
+                        self.master.after(0, lambda: po_stiahnuti(vysledok))
+                    except Exception as e:
+                        log_exception(f"{kontext}: master.after (bez internetu) zlyhal", e)
+                        try:
+                            lock.release()
+                        except RuntimeError:
+                            pass
+                    return
+
+                try:
+                    vysledok = stiahni_funkcia(
+                        rok,
+                        self.song_folder_path,
+                        progress_callback=progress_callback,
+                    )
+                except _StahovanieZrusene:
+                    # Zrušenie, ktoré stiahni_* nezachytilo samo (mimo svojho try).
+                    vysledok = dict(vysledok_pri_zlyhani)
+                    vysledok["zrusene"] = True
+                except Exception as e:
+                    log_exception(f"{kontext}: vlákno zlyhalo", e)
+                    vysledok = dict(vysledok_pri_zlyhani)
+            finally:
+                _vycisti_zrusenie_stahovania()
 
             try:
                 self.master.after(0, lambda: po_stiahnuti(vysledok))
@@ -12467,47 +13349,6 @@ class _StahovanieMixin(_ControlAppBase):
             vysledok_pri_zlyhani={"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None},
         )
 
-    def aktualizovat_liturgicke_tyzdne_refreny_gui(self, rok=None):
-        """
-        GUI wrapper pre stiahnutie refrénov pôstnych, VT, veľkonočných a adventných týždňov.
-        Sťahuje 17 súborov: 1P–5P, VT, 1VN–7VN, 1AD–4AD.
-        """
-        if rok is None:
-            rok = date.today().year
-
-        if not self._priprav_stahovanie_gui("aktualizovat_liturgicke_tyzdne_refreny_gui"):
-            return False
-
-        def spracuj_vysledok(vysledok):
-            if vysledok.get("uspech"):
-                zaloha = vysledok.get("zaloha")
-                zaloha_text = self._formatuj_zalohu_text(zaloha)
-                messagebox.showinfo(
-                    "Kinak: Liturgické týždne aktualizované",
-                    f"Refrény žalmov liturgických týždňov pre rok {rok} boli úspešne stiahnuté.\n\n"
-                    f"Zdroj: lc.kbs.sk\n"
-                    f"Spracovaných položiek: {vysledok.get('celkovo', 0)}\n"
-                    f"Chyby: {vysledok.get('chyby', 0)}\n"
-                    f"Súhrn: {len(vysledok.get('subory', []))} súborov uložených, {vysledok.get('chyby', 0)} chýb.\n"
-                    f"Súbory: 1P–5P, VT, 1VN–7VN, 1AD–4AD\n"
-                    f"{zaloha_text}"
-                )
-            else:
-                zobraz_chybu_stahovania("refrény liturgických týždňov", "lc.kbs.sk")
-
-        return self._spusti_stahovanie_s_progressom(
-            lock=self._liturgicke_tyzdne_lock,
-            zaneprazdnene_sprava="Sťahovanie liturgických týždňov už prebieha, čakajte prosím.",
-            dialog_titulok="Sťahujem refrény žalmov",
-            dw=490, dh=150, wraplength=450, sirka_progressbar=420,
-            uvodna_sprava=f"Pripravujem sťahovanie liturgických týždňov pre rok {rok}...",
-            maximum=153,
-            kontext="aktualizovat_liturgicke_tyzdne_refreny_gui",
-            stiahni_funkcia=stiahni_liturgicke_tyzdne_refreny,
-            rok=rok,
-            spracuj_vysledok=spracuj_vysledok,
-            vysledok_pri_zlyhani={"uspech": False, "celkovo": 0, "chyby": 0, "subory": [], "zaloha": None},
-        )
 
 
 
@@ -13425,6 +14266,16 @@ class _StahovanieMixin(_ControlAppBase):
                     return
 
                 if bez_internetu:
+                    # Špeciálny fallback pre čítania – skús offline cache
+                    if kontext == "aktualizovat_citania_gui":
+                        datum_arg = stiahni_args[0] if stiahni_args else date.today()
+                        vystup_arg = stiahni_args[1] if len(stiahni_args) > 1 else None
+                        if self._pouzi_offline_citania(
+                            datum_arg, vystup_arg, on_success,
+                            bez_internetu=True, kontext=kontext,
+                        ):
+                            return
+
                     messagebox.showerror(
                         "Kinak: Žiadne internetové pripojenie",
                         "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.",
@@ -13448,28 +14299,54 @@ class _StahovanieMixin(_ControlAppBase):
                 except RuntimeError as e:
                     log_exception(f"{kontext}: lock už bol uvoľnený", e)
 
-        def vlakno():
-            # Rovnako ako v _spusti_stahovanie_s_progressom: kontrola internetu
-            # sa vykonáva až tu (v pozadovom vlákne), aby blokujúci
-            # socket.create_connection() nezamrazil GUI vlákno pred spustením.
-            if not _over_internet_socket():
-                try:
-                    self.master.after(0, lambda: po_stiahnuti(False, bez_internetu=True))
-                except Exception as e:
-                    log_exception(f"{kontext}: master.after (bez internetu) zlyhal", e)
-                    try:
-                        lock.release()
-                    except RuntimeError:
-                        pass
-                return
-
+        def uvolni_po_zruseni():
+            # Sťahovanie zastavilo ukončenie aplikácie – žiadny messagebox, len upratať.
             try:
-                uspech = stiahni_funkcia(*stiahni_args, **kwargs)
-                if vytvor_log_spravu is not None:
-                    log_info(vytvor_log_spravu(uspech))
-            except Exception as e:
-                log_exception(f"{kontext}: vlákno zlyhalo", e)
-                uspech = False
+                self.master.config(cursor="")
+            except tk.TclError:
+                pass
+            try:
+                lock.release()
+            except RuntimeError:
+                pass
+
+        def vlakno():
+            # Táto operácia nemá vlastné tlačidlo Zrušiť; zastaví ju len ukončenie aplikácie.
+            _nastav_zrusenie_stahovania(getattr(self, "_download_cancel_event", None))
+            try:
+                # Rovnako ako v _spusti_stahovanie_s_progressom: kontrola internetu
+                # sa vykonáva až tu (v pozadovom vlákne), aby blokujúci
+                # socket.create_connection() nezamrazil GUI vlákno pred spustením.
+                if not _over_internet_socket():
+                    try:
+                        self.master.after(0, lambda: po_stiahnuti(False, bez_internetu=True))
+                    except Exception as e:
+                        log_exception(f"{kontext}: master.after (bez internetu) zlyhal", e)
+                        try:
+                            lock.release()
+                        except RuntimeError:
+                            pass
+                    return
+
+                try:
+                    uspech = stiahni_funkcia(*stiahni_args, **kwargs)
+                    if vytvor_log_spravu is not None:
+                        log_info(vytvor_log_spravu(uspech))
+                except _StahovanieZrusene:
+                    log_info(f"{kontext}: sťahovanie zrušené (ukončenie aplikácie).")
+                    try:
+                        self.master.after(0, uvolni_po_zruseni)
+                    except Exception:
+                        try:
+                            lock.release()
+                        except RuntimeError:
+                            pass
+                    return
+                except Exception as e:
+                    log_exception(f"{kontext}: vlákno zlyhalo", e)
+                    uspech = False
+            finally:
+                _vycisti_zrusenie_stahovania()
 
             try:
                 self.master.after(0, lambda: po_stiahnuti(uspech))
@@ -13511,20 +14388,76 @@ class _StahovanieMixin(_ControlAppBase):
         return True
 
 
-    def aktualizovat_citania_gui(self, datum=None, on_success=None):
+    def _pouzi_offline_citania(self, datum, vystup_cesta=None, on_success=None, *,
+                               bez_internetu=False, zobraz_spravu=True, kontext="offline_citania"):
+        """
+        Spoločný offline fallback pre čítania: načíta čítania pre `datum` z offline cache,
+        zapíše ich do `vystup_cesta` (predvolene citania.txt v priečinku piesní),
+        voliteľne ukáže hlášku a zavolá `on_success`.
+        Vracia True, ak sa čítania z cache použili; False, ak v cache nie sú alebo zápis zlyhal.
+        """
+        try:
+            cache_text = nacitaj_citania_z_offline_cache(datum, song_folder=self.song_folder_path)
+            if not cache_text:
+                return False
+            vystup = Path(vystup_cesta) if vystup_cesta else self.song_folder_path / "citania.txt"
+            _zapis_text_atomicky(vystup, cache_text, encoding="utf-8")
+        except Exception as e:
+            log_exception(f"{kontext}: offline fallback zlyhal", e)
+            return False
+
+        if zobraz_spravu:
+            uvod = "Internet nie je dostupný, ale" if bez_internetu else "Čítania sa nepodarilo stiahnuť, ale"
+            messagebox.showinfo(
+                "Kinak: Čítania (offline)",
+                f"{uvod} našli sa čítania v offline cache pre {datum.strftime('%d.%m.%Y')}!\n\n"
+                f"Súbor: {vystup.name}\n"
+                f"Cache: {cesta_offline_citania_pre_datum(datum, song_folder=self.song_folder_path).name}\n\n"
+                "Môžete ich použiť pre projekciu (zadajte 'citania').\n\n"
+                "Tip: Pre plnú offline zásobu na 7 dní použite 'Stiahnuť na 7 dní (offline)'."
+            )
+        if callable(on_success):
+            try:
+                on_success()
+            except Exception as e:
+                log_exception(f"{kontext}: on_success z offline cache zlyhal", e)
+        return True
+
+    def _obnov_zastarane_citania(self, cesta):
+        """
+        Ak má citania.txt dátum v minulosti a v offline cache sú čítania na dnes, nahradí ich
+        dnešnými. Súbor s dnešným alebo budúcim dátumom (napr. vybraným v prehliadači) ani súbor
+        bez rozpoznateľného dátumu nemení.
+        """
+        try:
+            dnes = date.today()
+            datum_suboru = zisti_datum_citania_v_subore(cesta)
+            if datum_suboru is None or datum_suboru >= dnes:
+                return False
+            if self._pouzi_offline_citania(
+                dnes, cesta, lambda: self.upravit_citania_pre_projekciu(zobrazit_potvrdenie=False),
+                zobraz_spravu=False, kontext="obnov_zastarane_citania",
+            ):
+                log_info(f"citania.txt mal dátum {datum_suboru} – nahradený dnešnými čítaniami z offline cache.")
+                return True
+        except Exception as e:
+            log_exception("_obnov_zastarane_citania zlyhalo", e)
+        return False
+
+    def aktualizovat_citania_gui(self, datum=None, on_success=None, pouzit_offline_cache=True):
         """
         GUI wrapper pre stiahnutie čítaní z lc.kbs.sk.
         Sťahovanie prebieha vo vlákne na pozadí – GUI nezmrazí.
         Po dokončení sa výsledok odovzdá späť do hlavného vlákna cez master.after().
+        
+        Nové: podporuje offline cache – ak nie je internet alebo sťahovanie zlyhá,
+        skúsi načítať čítania z offline cache (ak existujú).
+        Tiež po úspešnom stiahnutí uloží kópiu do offline cache.
         """
 
         if datum is None:
             datum = date.today()
 
-        # Spoločný preflight (chýbajúce knižnice, internet, priečinok na piesne
-        # + jeho vytvorenie) – rovnaký helper ako pre ostatných 8 GUI
-        # downloaderov, aby prípadná budúca zmena poradia/textu kontrol
-        # nemusela byť ručne zosúladená na viacerých miestach.
         if not self._priprav_stahovanie_gui(
             "aktualizovat_citania_gui",
             "Nepodarilo sa pripraviť priečinok pre citania.txt.",
@@ -13535,7 +14468,6 @@ class _StahovanieMixin(_ControlAppBase):
 
         def spracuj_vysledok(uspech):
             if uspech:
-                # Jedno zlúčené potvrdenie (upravenie pre projekciu už prebehlo cez on_success)
                 messagebox.showinfo(
                     "Kinak: Čítania aktualizované",
                     f"Čítania pre {datum.strftime('%d.%m.%Y')} boli úspešne stiahnuté!\n\n"
@@ -13544,30 +14476,340 @@ class _StahovanieMixin(_ControlAppBase):
                     "Čítania boli pripravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
                     "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi.\n\n"
                     "Tip v Pomocníkovi: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
-                    "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."                    
+                    "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
                 )
             else:
-                zobraz_chybu_stahovania("čítania", "lc.kbs.sk")
+                # Skús offline cache ako fallback
+                if pouzit_offline_cache and self._pouzi_offline_citania(
+                    datum, vystup_cesta, on_success, kontext="aktualizovat_citania_gui",
+                ):
+                    return
 
-                # fokus späť do vstupného poľa – spoľahlivo
+                zobraz_chybu_stahovania("čítania", "lc.kbs.sk")
                 def vrat_fokus():
                     try:
                         self.manual_entry.focus_set()
                     except Exception as e:
                         log_exception("aktualizovat_citania_gui: focus_set zlyhal", e)
-
                 self.master.after(30, vrat_fokus)
+
+        # Obalová funkcia ktorá po úspešnom stiahnutí uloží aj do offline cache
+        def stiahni_s_cache(datum_arg, vystup_arg):
+            uspech = stiahni_citania_z_lc_kbs(datum_arg, vystup_arg)
+            if uspech:
+                try:
+                    cache_dir = ziskaj_offline_citania_dir(self.song_folder_path)
+                    # Ulož do cache
+                    if Path(vystup_arg).is_file():
+                        with Path(vystup_arg).open("r", encoding="utf-8") as f:
+                            text = f.read()
+                        uloz_citania_do_offline_cache(datum_arg, text, cache_dir)
+                except Exception as e:
+                    log_exception(f"stiahni_s_cache: uloženie do offline cache zlyhalo pre {datum_arg}", e)
+            return uspech
 
         return self._spusti_jednoduche_stahovanie(
             lock=self._citania_lock,
             zaneprazdnene_sprava="Sťahovanie čítaní už prebieha, čakajte prosím.",
             kontext="aktualizovat_citania_gui",
-            stiahni_funkcia=stiahni_citania_z_lc_kbs,
+            stiahni_funkcia=stiahni_s_cache,
             stiahni_args=(datum, vystup_cesta),
             vytvor_log_spravu=lambda uspech: f"Čítania pre {datum} stiahnuté: {uspech}",
             on_success=on_success,
             spracuj_vysledok=spracuj_vysledok,
         )
+
+    def aktualizovat_citania_7_dni_gui(self, datum=None, on_success=None):
+        """
+        GUI wrapper pre stiahnutie čítaní na 7 dní offline.
+        Zobrazí progress dialóg a postupne sťahuje každý deň.
+        """
+        if datum is None:
+            datum = date.today()
+
+        if not self._priprav_stahovanie_gui(
+            "aktualizovat_citania_7_dni_gui",
+            "Nepodarilo sa pripraviť priečinok pre citania.txt.",
+        ):
+            return False
+
+        if not self._citania_lock.acquire(blocking=False):
+            messagebox.showinfo("Kinak: Operácia prebieha", "Sťahovanie čítaní už prebieha, čakajte prosím.")
+            return False
+
+        vystup_cesta = self.song_folder_path / "citania.txt"
+        cache_dir = ziskaj_offline_citania_dir(self.song_folder_path)
+
+        # Progress dialóg
+        progress_dialog = tk.Toplevel(self.master)
+        progress_dialog.title("Sťahujem čítania na 7 dní (offline)")
+        progress_dialog.configure(bg="#121212")
+        progress_dialog.resizable(False, False)
+        progress_dialog.transient(self.master)
+        progress_dialog.lift()
+
+        # Cancel príznak tohto sťahovania (tlačidlo Zrušiť / zatvorenie dialógu).
+        zrusit_event = threading.Event()
+
+        def zrusit_stahovanie():
+            # Skutočné zrušenie: worker sa zastaví pri najbližšej kontrole. Dialóg
+            # zostane s hláškou „Ruším…“, kým worker nedobehne; zavrie ho po_stiahnuti().
+            if zrusit_event.is_set():
+                return
+            zrusit_event.set()
+            log_info("aktualizovat_citania_7_dni_gui: používateľ zrušil sťahovanie.")
+            try:
+                stav_var.set("Ruším sťahovanie…")
+                zrusit_btn.configure(state=tk.DISABLED)
+            except (tk.TclError, NameError):
+                pass
+
+        progress_dialog.protocol("WM_DELETE_WINDOW", zrusit_stahovanie)
+
+        self.master.update_idletasks()
+        mx = self.master.winfo_x() + self.master.winfo_width() // 2
+        my = self.master.winfo_y() + self.master.winfo_height() // 2
+        dw, dh = 460, 226
+        progress_dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
+
+        stav_var = tk.StringVar(value=f"Pripravujem sťahovanie od {datum.strftime('%d.%m.%Y')} na 7 dní...")
+        pocet_var = tk.StringVar(value="")
+
+        tk.Label(
+            progress_dialog,
+            textvariable=stav_var,
+            bg="#121212",
+            fg="#ffffff",
+            font=(self.font_family, 11, "bold"),
+            wraplength=420,
+            justify=tk.CENTER,
+        ).pack(pady=(18, 8))
+
+        progress = ttk.Progressbar(progress_dialog, mode="determinate", length=380, maximum=CITANIA_OFFLINE_DNI)
+        progress.pack(pady=(0, 8))
+
+        tk.Label(
+            progress_dialog,
+            textvariable=pocet_var,
+            bg="#121212",
+            fg="#bbbbbb",
+            font=(self.font_family, 10),
+        ).pack()
+
+        zrusit_btn = tk.Button(
+            progress_dialog,
+            text="Zrušiť",
+            command=zrusit_stahovanie,
+            width=12,
+        )
+        zrusit_btn.pack(pady=(10, 2))
+
+        tk.Label(
+            progress_dialog,
+            text="Zrušením sa sťahovanie zastaví. Už stiahnuté dni zostanú uložené.",
+            bg="#121212",
+            fg="#888888",
+            font=(self.font_family, 8),
+        ).pack(pady=(0, 0))
+
+        try:
+            self.master.config(cursor="wait")
+            self.master.update_idletasks()
+        except Exception as e:
+            log_exception("aktualizovat_citania_7_dni_gui: cursor=wait zlyhal", e)
+
+        def nastav_progress(sprava, aktualny=None, spolu=None):
+            try:
+                if not progress_dialog.winfo_exists():
+                    return
+                stav_var.set(sprava)
+                if spolu:
+                    progress.configure(maximum=spolu)
+                if aktualny is not None:
+                    progress.configure(value=aktualny)
+                if aktualny is not None and spolu:
+                    pocet_var.set(f"{aktualny} / {spolu}")
+            except tk.TclError:
+                pass
+
+        def progress_callback(sprava, aktualny=None, spolu=None):
+            try:
+                self.master.after(0, lambda: nastav_progress(sprava, aktualny, spolu))
+            except Exception as e:
+                log_exception("aktualizovat_citania_7_dni_gui: progress after zlyhal", e)
+
+        def po_stiahnuti(vysledok):
+            try:
+                if progress_dialog.winfo_exists():
+                    progress_dialog.destroy()
+
+                if vysledok.get("_bez_internetu"):
+                    messagebox.showerror(
+                        "Kinak: Žiadne internetové pripojenie",
+                        "Nie ste pripojení na internet.\n\nSkontrolujte Wi-Fi/kábel a skúste znova.\n\n"
+                        "Ak máte staršie offline čítania v cache, môžete ich stále použiť – súbory zostávajú uložené."
+                    )
+                    return
+
+                if vysledok.get("chybaju_kniznice"):
+                    zobraz_chybu_chybajucich_kniznic_pre_stahovanie()
+                    return
+
+                if vysledok.get("uspech"):
+                    # Vyčisti staré offline čítania (ponechá sa včerajšok a novšie, práve stiahnuté dni vždy)
+                    vycisti_stare_offline_citania(
+                        self.song_folder_path,
+                        zachovat=set(vysledok.get("stiahnute_datumy") or []),
+                    )
+                    try:
+                        self.subory_zoznam = self.ziskaj_zoznam_suborov()
+                        self.filtrovat_subory(self.filter_var.get())
+                    except Exception as e:
+                        log_exception("aktualizovat_citania_7_dni_gui: obnova zoznamu zlyhala", e)
+
+                    zrusene = bool(vysledok.get("zrusene"))
+                    # Pri zrušení sa on_success (automatické načítanie čítaní) nevolá.
+                    if callable(on_success) and not zrusene:
+                        try:
+                            on_success()
+                        except Exception as e:
+                            log_exception("aktualizovat_citania_7_dni_gui: on_success zlyhal", e)
+
+                    stiahnute = vysledok.get("stiahnute", 0)
+                    chyby = vysledok.get("chyby", 0)
+                    stiahnute_datumy = vysledok.get("stiahnute_datumy", [])
+
+                    datumy_text = ", ".join(d.strftime("%d.%m.") for d in stiahnute_datumy) if stiahnute_datumy else "žiadne"
+
+                    messagebox.showinfo(
+                        "Kinak: Sťahovanie čítaní zrušené" if zrusene else "Kinak: Čítania na 7 dní stiahnuté",
+                        ("Sťahovanie bolo zrušené – stiahli sa len niektoré dni.\n\n" if zrusene
+                         else "Offline čítania na 7 dní boli stiahnuté!\n\n") +
+                        f"Od: {datum.strftime('%d.%m.%Y')}\n"
+                        f"Do: {(datum + timedelta(days=CITANIA_OFFLINE_DNI-1)).strftime('%d.%m.%Y')}\n\n"
+                        f"Úspešne: {stiahnute}/{CITANIA_OFFLINE_DNI}\n"
+                        f"Chyby: {chyby}\n"
+                        f"Dátumy: {datumy_text}\n\n"
+                        f"Cache priečinok: {cache_dir}\n"
+                        f"Hlavný súbor: {vystup_cesta.name} (čítania na {datum.strftime('%d.%m.%Y')})\n\n"
+                        "Teraz môžete používať čítania aj bez internetu – ak sťahovanie zlyhá, "
+                        "program automaticky použije offline cache.\n\n"
+                        "Dnešné čítania načítate zadaním 'citania'. Konkrétny deň vyberiete tlačidlom '📂 Offline' – "
+                        "čítania sa načítajú rovnako a podľa potreby ich môžete doladiť pre projekciu v Pomocníkovi.\n\n"
+                        "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pomocníkovi prázdny riadok. "
+                        "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
+                    )
+                elif vysledok.get("zrusene"):
+                    messagebox.showinfo(
+                        "Kinak: Sťahovanie zrušené",
+                        "Sťahovanie čítaní bolo zrušené, žiadne nové čítania sa nestiahli.",
+                    )
+                else:
+                    # Úplné zlyhanie
+                    cache_exist = list(cache_dir.glob("*.txt")) if cache_dir.exists() else []
+                    if cache_exist:
+                        messagebox.showwarning(
+                            "Kinak: Čítania – čiastočné zlyhanie",
+                            f"Nepodarilo sa stiahnuť nové čítania z lc.kbs.sk.\n\n"
+                            f"V offline cache však zostáva {len(cache_exist)} starších súborov, "
+                            "ktoré môžete stále použiť.\n\n"
+                            f"Cache: {cache_dir}"
+                        )
+                    else:
+                        zobraz_chybu_stahovania("čítania na 7 dní", "lc.kbs.sk")
+
+            finally:
+                try:
+                    self.master.config(cursor="")
+                except tk.TclError:
+                    pass
+                try:
+                    self._citania_lock.release()
+                except RuntimeError as e:
+                    log_exception("aktualizovat_citania_7_dni_gui: lock už bol uvoľnený", e)
+                try:
+                    self.manual_entry.focus_set()
+                except Exception as e:
+                    log_exception("aktualizovat_citania_7_dni_gui: focus_set zlyhal", e)
+
+        def vlakno():
+            _nastav_zrusenie_stahovania(zrusit_event, getattr(self, "_download_cancel_event", None))
+            try:
+                if not _over_internet_socket():
+                    vysledok = {"uspech": False, "celkovo": CITANIA_OFFLINE_DNI, "stiahnute": 0, "chyby": CITANIA_OFFLINE_DNI, "subory": [], "_bez_internetu": True}
+                    try:
+                        self.master.after(0, lambda: po_stiahnuti(vysledok))
+                    except Exception as e:
+                        log_exception("aktualizovat_citania_7_dni_gui: master.after (bez internetu) zlyhal", e)
+                        try:
+                            self._citania_lock.release()
+                        except RuntimeError:
+                            pass
+                    return
+
+                try:
+                    vysledok = stiahni_citania_na_7_dni(
+                        datum,
+                        vystup_cesta,
+                        cache_dir,
+                        progress_callback=progress_callback,
+                    )
+                except _StahovanieZrusene:
+                    vysledok = {"uspech": False, "celkovo": CITANIA_OFFLINE_DNI, "stiahnute": 0, "chyby": 0, "subory": [], "zrusene": True}
+                except Exception as e:
+                    log_exception("aktualizovat_citania_7_dni_gui: vlákno zlyhalo", e)
+                    vysledok = {"uspech": False, "celkovo": CITANIA_OFFLINE_DNI, "stiahnute": 0, "chyby": CITANIA_OFFLINE_DNI, "subory": []}
+            finally:
+                _vycisti_zrusenie_stahovania()
+
+            try:
+                self.master.after(0, lambda: po_stiahnuti(vysledok))
+            except Exception as e:
+                log_exception("aktualizovat_citania_7_dni_gui: master.after zlyhal", e)
+                try:
+                    self._citania_lock.release()
+                except RuntimeError:
+                    pass
+
+        if getattr(self, "_closing", False):
+            try:
+                if progress_dialog.winfo_exists():
+                    progress_dialog.destroy()
+            except Exception:
+                pass
+            try:
+                self.master.config(cursor="")
+            except tk.TclError:
+                pass
+            try:
+                self._citania_lock.release()
+            except RuntimeError as e:
+                log_exception("aktualizovat_citania_7_dni_gui: lock už bol uvoľnený pri ukončovaní", e)
+            log_info("aktualizovat_citania_7_dni_gui: sťahovanie sa nespustilo, aplikácia sa ukončuje.")
+            return False
+
+        try:
+            self._download_executor.submit(vlakno)
+        except RuntimeError as e:
+            try:
+                if progress_dialog.winfo_exists():
+                    progress_dialog.destroy()
+            except Exception:
+                pass
+            try:
+                self.master.config(cursor="")
+            except tk.TclError:
+                pass
+            try:
+                self._citania_lock.release()
+            except RuntimeError as e_lock:
+                log_exception("aktualizovat_citania_7_dni_gui: lock už bol uvoľnený po zlyhaní submit", e_lock)
+            log_exception("aktualizovat_citania_7_dni_gui: executor neprijal novú úlohu", e)
+            if not getattr(self, "_closing", False):
+                messagebox.showerror("Kinak: Chyba", "Sťahovanie sa nepodarilo spustiť. Skúste program reštartovať.")
+            return False
+        return True
+
 
     def open_vespery(self):
         """Zobrazí dialóg: Stiahnuť vešpery na Dnes alebo na vybraný dátum."""
@@ -13632,6 +14874,11 @@ class _StahovanieMixin(_ControlAppBase):
 
     def _shutdown_executor(self) -> None:
         self._closing = True
+        # Najprv signál na zastavenie rozbehnutých sťahovaní – ex.shutdown(wait=False)
+        # worker vlákno nezastaví a Python by pri ukončení čakal, kým dobehne.
+        ev = getattr(self, "_download_cancel_event", None)
+        if ev is not None:
+            ev.set()
         try:
             ex = getattr(self, '_download_executor', None)
             if ex is not None:
@@ -13872,10 +15119,28 @@ class _PiesneSuboryMixin(_ControlAppBase):
 
         nazov_pre_hladanie = raw_clean
         hladany_subor_meno = self.najdi_subor_podla_prefixu(nazov_pre_hladanie)
-        
+
+        # Zastaraný citania.txt (dátum v minulosti) → ak sú v offline cache dnešné čítania, použi ich
+        if hladany_subor_meno and Path(hladany_subor_meno).stem.lower() == "citania":
+            self._obnov_zastarane_citania(self.song_folder_path / hladany_subor_meno)
+
         if not hladany_subor_meno:
-            messagebox.showinfo("Kinak: Nenájdené", f"Súbor '{raw}' neexistuje v priečinku piesní.")
-            return
+            # Offline fallback pre čítania – ak je hľadaný súbor citania a existuje v offline cache
+            if nazov_pre_hladanie.lower() == "citania" and self._pouzi_offline_citania(
+                date.today(), zobraz_spravu=False, kontext="skus_manualne_nacitanie",
+            ):
+                # Skús znovu nájsť; ak prefix nenájde, priamo načítaj
+                hladany_subor_meno = self.najdi_subor_podla_prefixu(nazov_pre_hladanie)
+                if not hladany_subor_meno:
+                    try:
+                        self.nacitat_piesne(nazov_suboru="citania")
+                        return
+                    except Exception as e:
+                        log_exception("skus_manualne_nacitanie: offline citania fallback zlyhal", e)
+
+            if not hladany_subor_meno:
+                messagebox.showinfo("Kinak: Nenájdené", f"Súbor '{raw}' neexistuje v priečinku piesní.")
+                return
 
         # --- Pathlib spracovanie ---
         song_folder = self.song_folder_path
@@ -15636,6 +16901,12 @@ class _KlavesoveSkratkyMixin(_ControlAppBase):
         # ďalšie skratky
         self.master.bind('<Escape>', self.potvrdit_ukoncenie)
         self.master.bind('c', self.clear_screen)   
+
+        # Home = späť na úvodnú obrazovku (zmaže pole, obsah aj výber a vypne projekciu,
+        # rovnako ako Backspace pri zmazaní čísla). Zámerne iba bind na hlavné okno,
+        # NIE bind_all: v ostatných oknách (Pomocník, Nastavenia...) musí Home ďalej
+        # slúžiť na posun kurzora v textových poliach.
+        self.master.bind('<Home>', self.prejst_na_uvodnu_obrazovku)
         
     
     def _global_backspace_handler(self, event):
@@ -15652,6 +16923,11 @@ class _KlavesoveSkratkyMixin(_ControlAppBase):
         
         if getattr(self, "is_text_visible", False):
             self.vypni_projekciu()     
+
+        # Backspace pri PRÁZDNOM vstupnom poli zároveň vráti úvodnú obrazovku (vyčistí
+        # obsah a výber) – aj vtedy, keď bol obsah načítaný tlačidlom (napr. „Žalm dnes“),
+        # kde sa predtým iba vypla projekcia a obsah ostal na obrazovke.
+        self._backspace_vrati_na_uvod(event)
                                                                                                                  
     # def manual_entry_enter volá vždy vtedy, keď je na manual_entry widgete naviazaný bind na kláves Enter.
 
@@ -15691,6 +16967,29 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         # tenká deliaca čiara nad stavovým riadkom
         tk.Frame(self.status_bar_frame, bg=UI_BTN_BG, height=1).pack(side=tk.TOP, fill=tk.X)
+
+        # „Dnes: žalm …“ a „Zajtra: žalm …“ sú klikateľné tlačidlá – kliknutím sa
+        # nastaví filter + súbor žalmu (rovnako ako pri automatickom filtri).
+        def _vytvor_status_tlacidlo(cmd_name: str) -> tk.Button:
+            btn = tk.Button(
+                self.status_bar_frame,
+                text="",
+                font=(self.font_family, 14),
+                fg=UI_BTN_FG, bg=UI_BTN_BG,
+                activeforeground=UI_BTN_FG, activebackground=MENU_BTN_ACTIVE_BG,
+                relief="flat", bd=0, padx=12, pady=0,
+                highlightthickness=1,
+                highlightbackground=MENU_BTN_BORDER, highlightcolor=MODRA_OKRAJ_HOVER,
+                cursor="hand2", takefocus=0,
+                command=lambda: self.klik_status_bar_zalm(cmd_name),
+            )
+            btn.bind("<Enter>", lambda e, b=btn: b.config(bg=MENU_BTN_ACTIVE_BG, highlightbackground=MODRA_OKRAJ_HOVER))
+            btn.bind("<Leave>", lambda e, b=btn: b.config(bg=UI_BTN_BG, highlightbackground=MENU_BTN_BORDER))
+            return btn
+
+        self.status_bar_btn_dnes = _vytvor_status_tlacidlo("dnes")
+        self.status_bar_btn_zajtra = _vytvor_status_tlacidlo("zajtra")
+        self._status_bar_zalm_kody = {"dnes": None, "zajtra": None}
 
         self.status_bar_zaltár_label = tk.Label(
             self.status_bar_frame,
@@ -15924,6 +17223,20 @@ class _HlavneOknoMixin(_ControlAppBase):
                 widget.bind("<Leave>", lambda e, w=widget: w.config(bg=toolbar_btn_bg, fg=toolbar_btn_fg))
             return widget
 
+        # Tlačidlo „Home“ – prvé zľava, vždy viditeľné (rovnako ako kláves Home).
+        # Vypne projekciu a vyčistí pole, obsah aj výber; pri zapnutej úvodnej
+        # obrazovke sa po tom zobrazí úvod.
+        uvod_btn = styl_toolbar_widget(tk.Button(
+            buttons_frame,
+            text="🏠 Home",
+            command=self.prejst_na_uvodnu_obrazovku,
+            takefocus=0,
+        ))
+        try:
+            Tooltip(uvod_btn, "Home (kláves Home)\nVypne projekciu a vymaže pole, obsah a výber.\nPri zapnutej úvodnej obrazovke ju zobrazí.")
+        except Exception:
+            pass
+
         styl_toolbar_widget(tk.Button(
             buttons_frame,
             text="Nastavenia",
@@ -15949,6 +17262,12 @@ class _HlavneOknoMixin(_ControlAppBase):
         liturgicke_nastroje_menu.add_cascade(label="Stiahnuť refrény žalmov", menu=refreny_zalmov_menu)
 
         liturgicke_nastroje_btn["menu"] = liturgicke_nastroje_menu
+
+        offline_btn = styl_toolbar_widget(tk.Button(buttons_frame, text="📂 Offline", command=self.open_offline_citania_prehladac))
+        try:
+            Tooltip(offline_btn, "Prehliadať offline čítania\n(uložené podľa Nastavenia \n→ Umiestnenie súborov)")
+        except Exception:
+            pass
 
         pomoc_btn = styl_toolbar_widget(tk.Menubutton(buttons_frame, text="Pomoc"))
         pomoc_menu = vytvor_toolbar_menu(pomoc_btn)
@@ -16286,7 +17605,7 @@ class _HlavneOknoMixin(_ControlAppBase):
             log_exception("aktualizovat_zarovanie_cisla_strofy zlyhalo", e)
 
     def aktualizovat_status_bar(self):
-        """Aktualizuje obsah status baru (skratka žalmu + týždeň žaltára + vigília + vynechané slávenie)."""
+        """Aktualizuje obsah status baru (klikateľné tlačidlá Dnes/Zajtra + týždeň žaltára + vigília + vynechané slávenie)."""
         try:
             if self.status_bar_frame is None or self.status_bar_zaltár_label is None:
                 return
@@ -16295,7 +17614,7 @@ class _HlavneOknoMixin(_ControlAppBase):
             zobrazit_zaltara = getattr(self, "statusbar_tyzden_zaltara_var", None)
             # zobrazit_jks     = getattr(self, "statusbar_jks_piesne_var",     None)
 
-            text_statusu = zostav_text_status_baru(
+            st = zostav_status_bar_struktura(
                 date.today(),
                 bool(zobrazit_zalm and zobrazit_zalm.get()),
                 bool(zobrazit_zaltara and zobrazit_zaltara.get()),
@@ -16303,14 +17622,107 @@ class _HlavneOknoMixin(_ControlAppBase):
                 getattr(self, "_aktualna_vynechane", None),
             )
 
-            if text_statusu:
-                self.status_bar_zaltár_label.config(text=text_statusu)
+            btn_dnes = getattr(self, "status_bar_btn_dnes", None)
+            btn_zajtra = getattr(self, "status_bar_btn_zajtra", None)
+            label = self.status_bar_zaltár_label
+            sep_text = "   |   "
+
+            # Najprv všetko odpoj a potom v správnom poradí znova zobraz
+            for w in (btn_dnes, btn_zajtra, label):
+                if w is not None:
+                    w.pack_forget()
+
+            kody = {"dnes": None, "zajtra": None}
+            ma_tlacidlo = False
+            zvysok_texty: list[str] = []
+
+            if btn_dnes is not None and st["dnes"]:
+                kody["dnes"] = st["dnes"][0]
+                btn_dnes.config(text=st["dnes"][1])
+                btn_dnes.pack(side=tk.LEFT, padx=(15, 0), pady=6)
+                ma_tlacidlo = True
+            if btn_zajtra is not None and st["zajtra"]:
+                kody["zajtra"] = st["zajtra"][0]
+                btn_zajtra.config(text=st["zajtra"][1])
+                btn_zajtra.pack(side=tk.LEFT, padx=(8, 0), pady=6)
+                ma_tlacidlo = True
+            self._status_bar_zalm_kody = kody
+
+            zvysok_texty.extend(st["ostatne"])
+            if zvysok_texty:
+                zvysok = sep_text.join(zvysok_texty)
+                # Ak pred textom stoja tlačidlá, pridaj oddeľovač; inak ľavý okraj ako predtým
+                zvysok = (sep_text + zvysok) if ma_tlacidlo else ("  " + zvysok)
+                label.config(text=zvysok)
+                label.pack(side=tk.LEFT, fill=tk.Y)
+            else:
+                label.config(text="")
+
+            if ma_tlacidlo or zvysok_texty:
                 self.status_bar_frame.pack(side=tk.BOTTOM, fill=tk.X)
             else:
-                self.status_bar_zaltár_label.config(text="")
                 self.status_bar_frame.pack_forget()
         except Exception as e:
             log_exception("aktualizovat_status_bar: chyba", e)
+
+    def klik_status_bar_zalm(self, ktory: str):
+        """Kliknutie na tlačidlo „Dnes: žalm …“ / „Zajtra: žalm …“ v stavovom riadku.
+
+        Nastaví modré tlačidlá (filter + súbor) a načíta príslušný žalm –
+        rovnakým spôsobom ako automatický filter podľa dnešného dňa.
+        """
+        try:
+            kod = (getattr(self, "_status_bar_zalm_kody", None) or {}).get(ktory)
+            if not kod:
+                log_info(f"klik_status_bar_zalm({ktory}): kód žalmu nie je k dispozícii")
+                return
+            self.nastav_zalm_podla_kodu(kod)
+        except Exception as e:
+            log_exception(f"klik_status_bar_zalm({ktory}): chyba", e)
+
+    def nastav_zalm_podla_kodu(self, kod: str) -> bool:
+        """Nastaví filter + súbor pre daný kód žalmu (napr. „31c2“) a načíta ho.
+
+        Ak sa pre kód nenájde filter v modrých tlačidlách, načíta sa ako pri
+        ručnom zadaní kódu do vyhľadávacieho poľa.
+        """
+        vysledok = self._najdi_filter_pre_kod(kod)
+        if not vysledok:
+            log_info(f"nastav_zalm_podla_kodu: filter pre kód {kod} nenájdený, načítavam ručne")
+            try:
+                self.nacitat_z_okna_pomocok(kod)
+                return True
+            except Exception as e:
+                log_exception("nastav_zalm_podla_kodu: ručné načítanie zlyhalo", e)
+                return False
+
+        filter_name, kod_real = vysledok
+
+        # Potlač vymazávanie výberu (FocusIn na manual_entry -> vymazat_subor_menu)
+        self._suppress_vymazat = True
+        try:
+            self.filter_var.set(filter_name)
+            self.filtrovat_subory(filter_name)
+            self.nacitat_podla_menu(kod_real)
+            self.subor_var.set(kod_real)
+
+            def _reapply():
+                try:
+                    if self.filter_var.get() != filter_name:
+                        self.filter_var.set(filter_name)
+                        self.filtrovat_subory(filter_name)
+                    if self.subor_var.get() != kod_real:
+                        self.subor_var.set(kod_real)
+                except Exception as e:
+                    log_exception("nastav_zalm_podla_kodu: _reapply zlyhalo", e)
+
+            self.master.after(200, _reapply)
+            self.master.after(400, lambda: setattr(self, "_suppress_vymazat", False))
+            return True
+        except Exception as e:
+            log_exception("nastav_zalm_podla_kodu: chyba", e)
+            self._suppress_vymazat = False
+            return False
 
     # ------------------------------------------------------------------
     # AUTO FILTER PODĽA DNES – nové metódy
@@ -16332,6 +17744,9 @@ class _HlavneOknoMixin(_ControlAppBase):
             if label is not None:
                 try:
                     txt = label.cget("text") if label.winfo_exists() else ""
+                    btn_d = getattr(self, "status_bar_btn_dnes", None)
+                    if btn_d is not None:
+                        txt = f"{btn_d.cget('text')} {txt}"
                 except Exception:
                     txt = ""
                 if txt and "Dnes:" in txt:
@@ -16690,8 +18105,10 @@ UVODNA_KLAVESY = (
     ("\u2212", "predchádzajúca (aj šípky)"),
     ("Enter", "zobraziť / skryť projekciu"),
     ("\u232b", "zmaže číslo a vypne projekciu"),
+    ("Home", "späť na úvodnú obrazovku"),
     ("Esc", "zavrieť okno / ukončiť"),
 )
+UVODNA_KLAVESY_V_RIADKU = 3   # pás klávesov sa zalamuje do riadkov po tomto počte položiek
 UVODNA_POSLEDNE_MAX = 8
 UVODNA_TICK_MS = 300
 UVODNA_ZAZNAM_ODKLAD_MS = 2500   # pieseň sa zapíše do histórie, až keď zostane vybraná
@@ -16771,17 +18188,19 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
 
     def _uvodna_config_dict(self):
         zapnute = getattr(self, "uvodna_zapnute_var", None)
-        vysledok: dict[str, Any] = {"uvodna_zapnute": bool(zapnute.get()) if zapnute is not None else True}
+        vysledok: dict[str, Any] = {
+            "uvodna_zapnute": bool(zapnute.get()) if zapnute is not None else bool(DEFAULT_CONFIG.get("uvodna_zapnute", True))
+        }
         premenne = getattr(self, "uvodna_vars", {})
         for kluc, _ in UVODNA_MOZNOSTI:
             var = premenne.get(kluc)
-            vysledok[f"uvodna_{kluc}"] = bool(var.get()) if var is not None else True
+            vysledok[f"uvodna_{kluc}"] = bool(var.get()) if var is not None else bool(DEFAULT_CONFIG.get(f"uvodna_{kluc}", False))
         vysledok["posledne_piesne"] = list(getattr(self, "posledne_piesne", []))
         return vysledok
 
     def _uvodna_je_zapnuta(self, kluc):
         var = getattr(self, "uvodna_vars", {}).get(kluc)
-        return True if var is None else bool(var.get())
+        return bool(DEFAULT_CONFIG.get(f"uvodna_{kluc}", False)) if var is None else bool(var.get())
 
     # ---------- história naposledy použitých piesní ----------
     def _uvodna_naplanuj_zaznam(self, nazov):
@@ -16829,6 +18248,65 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         self._uvodna_frame = tk.Frame(rodic, bg=UI_PANEL_BG, bd=0, highlightthickness=0)
         self._uvodna_stav = None
         self.master.after(100, self._uvodna_tick)
+
+    def prejst_na_uvodnu_obrazovku(self, event=None):
+        """
+        Kláves Home / tlačidlo „Home“: návrat na úvodnú obrazovku. Správa sa
+        rovnako ako Backspace pri zmazaní čísla – vypne projekciu, vyčistí
+        vstupné pole, panel „Obsah súboru“, výber súboru a popisy (reset_ui).
+        Rovnakú cestu používa aj Backspace pri prázdnom poli
+        (_backspace_vrati_na_uvod), takže Home a Backspace dávajú rovnaký výsledok.
+        """
+        # V hľadacom poli (combobox) Home ďalej posúva kurzor na začiatok textu.
+        if event is not None and getattr(event, "widget", None) is getattr(self, "song_combobox", None):
+            return None
+        try:
+            self.reset_ui()
+            self.aktualne_cislo_piesne = "000"
+            try:
+                # po „oznam“ je pole/náhľad prefarbené načerveno – vráť základnú farbu
+                self._vrat_farbu_na_zakladnu()
+            except Exception as e:
+                log_exception("prejst_na_uvodnu_obrazovku: reset farby zlyhal", e)
+            try:
+                # hľadacie pole späť na placeholder (programové current() nevyvolá výber)
+                self.song_combobox.current(0)
+            except Exception:
+                pass
+            self._obnov_focus_manual_entry_bez_vymazania()
+            self.uvodna_prekresli()
+        except Exception as e:
+            log_exception("prejst_na_uvodnu_obrazovku: zlyhalo", e)
+        return "break"
+
+    def _backspace_vrati_na_uvod(self, event=None):
+        """
+        Volá ho _global_backspace_handler (KeyRelease-BackSpace). Ak je vstupné pole
+        už prázdne a v paneli „Obsah súboru“ niečo je, vráti úvodnú obrazovku
+        (rovnako ako Home). Predtým sa obsah načítaný tlačidlom (pole prázdne, vybraný
+        súbor) Backspace-om nevymazal.
+
+        Podmienky (handler je viazaný cez bind_all, preto musí byť opatrný):
+        - udalosť pochádza z hlavného okna (nie z Pomocníka, Nastavení a pod.),
+        - nie je to hľadacie pole (tam Backspace maže hľadaný text),
+        - vstupné pole je prázdne (nie je čo mazať) a obsah je naozaj načítaný
+          (inak je úvod už zobrazený a nie je čo robiť).
+        """
+        try:
+            widget = getattr(event, "widget", None)
+            if widget is None or not hasattr(widget, "winfo_toplevel"):
+                return
+            if widget.winfo_toplevel() is not self.master:
+                return
+            if widget is getattr(self, "song_combobox", None):
+                return
+            if self.manual_entry.get().strip():
+                return
+            if not self.obsah_suboru_text.get("1.0", "end-1c").strip():
+                return
+        except tk.TclError:
+            return
+        self.prejst_na_uvodnu_obrazovku()
 
     def uvodna_prekresli(self):
         """Vynúti prekreslenie (po zmene nastavení alebo načítaní configu)."""
@@ -17103,9 +18581,10 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
     def _uvodna_pas_klaves(self, obal, riadok):
         pas = tk.Frame(obal, bg=UVODNA_KARTA_BG, padx=14, pady=12)
         pas.grid(row=riadok, column=0, columnspan=2, sticky="ew")
-        for klaves, popis in UVODNA_KLAVESY:
+        for i, (klaves, popis) in enumerate(UVODNA_KLAVESY):
+            r, c = divmod(i, UVODNA_KLAVESY_V_RIADKU)
             skupina = tk.Frame(pas, bg=UVODNA_KARTA_BG)
-            skupina.pack(side=tk.LEFT, padx=(0, 22))
+            skupina.grid(row=r, column=c, sticky="w", padx=(0, 28), pady=(0, 8) if r == 0 else 0)
             tk.Label(
                 skupina, text=klaves, font=(self.font_family, 13, "bold"),
                 fg="#FFFFFF", bg="#3a3a3a", bd=1, relief=tk.RIDGE, padx=10, pady=2,
@@ -18696,7 +20175,10 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 tk.Frame(content, bg=bg),
                 tk.Frame(content, bg=bg)
             )
-            frames = {1: frame1, 2: frame2, 3: frame3, 4: frame4, 5: frame5, 6: frame6}
+            frame_citania = tk.Frame(content, bg=bg)
+            # Poradie záložiek: 1 Ovládanie, 2 Vyhľadávanie, 3 Úprava textov, 4 Priečinok piesní,
+            # 5 Čítania, 6 Pomoc (frame5), 7 Web (frame6)
+            frames = {1: frame1, 2: frame2, 3: frame3, 4: frame4, 5: frame_citania, 6: frame5, 7: frame6}
             font_size = tk.IntVar(value=self.about_font_size)
             text_widgets = []
 
@@ -18787,7 +20269,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• Zobrazenie aktuálnych liturgických informácií zo zabudovaného liturgického kalendára priamo v hlavičke a v stavovom riadku\n\n"
                 
                 "Kalendár je zostavený tak, že bežné férie a spomienky (záväzné aj ľubovoľné) zobrazuje ako dni príslušného týždňa liturgického roka (napr. cezročného obdobia).\n\n"
-                "Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť raz za rok, naraz na celý liturgický rok.\n\n"
+                "Kalendár, výpočty a piesne fungujú vždy bez internetu. Internet treba len na stiahnutie čítaní a vešpier na daný deň, potom sú uložené v počítači. Responzóriové žalmy stačí stiahnuť raz za rok, naraz na celý liturgický rok. Podrobnosti o čítaniach a offline režime nájdete v záložke Čítania.\n\n"
                 "● Indikátor projekcie\n\n"
                 "• Zelená = projekcia aktívna\n"
                 "• Sivá   = projekcia vypnutá\n\n"
@@ -18866,6 +20348,11 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Ak priečinok neexistuje, je prázdny alebo neobsahuje textové súbory, "
                 "piesne sa v aplikácii nezobrazia ani nenačítajú.\n\n"  
                 
+                "● Ak sa čítania nenačítajú bez internetu\n\n"
+                "Čítania na daný deň treba aspoň raz stiahnuť. Najjednoduchšie je zvoliť Liturgické nástroje → "
+                "Stiahnuť čítania → Dnes + 7 dní (offline). Čo je uložené, uvidíte po kliknutí na tlačidlo 📂 Offline "
+                "v hornej lište. Ak je zoznam prázdny, čítania ešte stiahnuté nie sú. Skontrolujte aj, či je v „Nastavenia "
+                "záložka Pokročilé → Umiestnenie súborov“ správne vybraný priečinok piesní. Podrobnosti nájdete v záložke Čítania.\n\n"
                 "● Ak sa žalmy nezobrazujú správne\n\n"
                 "Ak texty refrénov responzóriových žalmov nesedia s daným liturgickým dňom, je potrebné stiahnuť aktualizácie. "
                 "V hornom menu zvoľte Liturgické nástroje → Stiahnuť refrény žalmov a stiahnite refrény pre požadované obdobie. "
@@ -18880,7 +20367,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Ak sa chybná diakritika vyskytne vo viacerých súboroch, nemusíte ich opravovať jednotlivo. "
                 "V Nastaveniach záložka Pokročilé → Umiestnenie súborov kliknite na „Skonvertovať do UTF‑8…“. Aplikácia "
                 "automaticky prevedie všetky .txt súbory v priečinku na čisté UTF‑8 a pôvodné verzie uloží do "
-                "podpriečinka „_zaloha_original“, takže prevod možno vrátiť späť.\n\n"                               
+                "podpriečinka „_zaloha_original“, takže prevod možno vrátiť späť. "
+                "Podpriečinok „offline_citania“ (stiahnuté čítania) sa pri prevode vynecháva.\n\n"                               
                                           
                 "● Liturgický kalendár – špecifikácia\n\n"
                 "Liturgické výpočty v aplikácii Kinak sa riadia smernicami pre Rímskokatolícku cirkev na Slovensku.\n\n"
@@ -18888,6 +20376,46 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 f"• Výpočty podľa Všeobecných noriem o liturgickom roku a o všeobecnom rímskom kalendári a Direktória KBS\n"
                 f"• Zdroje dát: {KALENDAR_ZDROJE}\n"
             )             
+
+            citania_text = (
+                "Čítania na daný deň sa sťahujú z internetu a ukladajú sa do počítača. "
+                "Po stiahnutí ich môžete používať aj bez pripojenia.\n\n"
+                "● Stiahnutie čítaní\n\n"
+                "V hornom menu zvoľte Liturgické nástroje → Stiahnuť čítania. V okne si môžete vybrať:\n\n"
+                "• Dnes (1 deň) – stiahnu sa čítania na dnes\n"
+                "• Dnes + 7 dní (offline) – stiahnu sa čítania na dnes a na ďalších šesť dní\n"
+                "• Stiahnuť vybraný dátum (1 deň) – čítania na dátum, ktorý nastavíte v okne\n"
+                "• Stiahnuť 7 dní od dátumu (offline) – čítania na sedem dní od zvoleného dátumu\n\n"
+                "Samozrejme, čítania si môžete stiahnuť aj na dlhšie obdobie dopredu. "
+                "Jedným stiahnutím získate maximálne 7 čítaní a opakovaním sťahovania "
+                "si ich pripravíte na viac týždňov vopred.\n\n"           
+                                
+                "Každé stiahnutie sa uloží aj do offline úložiska, takže čítania sú potom dostupné aj bez internetu.\n\n"
+                "Vešpery sa sťahujú samostatne cez Liturgické nástroje → Stiahnuť vešpery.\n\n"
+                "● Zobrazenie čítaní po štarte aplikácie Kinak\n\n"
+                "Zadajte do vstupného poľa „citania“ alebo kliknite na tlačidlo „Čítania“ v úvodnej obrazovke – načíta sa súbor z priečinka piesne/citania.txt\n\n"
+                "Čo sa stane potom:\n\n"
+                "• citania.txt neexistuje → vypíše, že súbor neexistuje (v hornom menu zvoľte Liturgické nástroje → Stiahnuť čítania)\n"
+                "• citania.txt má dátum v minulosti ALEBO v budúcnosti → ak je dnešok v offline_citania/, nahradí ho dneškom, inak nechá pôvodný obsah\n"
+                "• citania.txt má dátum dnes → ponechá ho\n\n"
+                "Po spustení aplikácie Kinak automaticky zobrazí dnešné čítania, ak je príslušný súbor k dispozícii.\n"
+                "Následne môžete v okne „Offline čítania - prehliadač“ vybrať minulé alebo budúce čítanie. Po výbere sa toto čítanie zobrazí.\n\n"
+                "● Prehliadač offline čítaní\n\n"
+                "Tlačidlom „📂 Offline“ v hornej lište (alebo tlačidlom „📂 Prehliadať offline čítania“ v okne Stiahnuť čítania) "
+                "otvoríte zoznam dní, ktoré máte uložené. Dnešný deň je označený ★ DNES.\n\n"
+                "• Deň vyberte zo zoznamu a zobrazte ho dvojklikom, klávesom Enter alebo tlačidlom „Zobraziť vybraný deň“\n"
+                "• Tlačidlo „Dnes“ zobrazí dnešné čítania; ak v úložisku nie sú, Kinak ponúkne ich stiahnutie\n"
+                "• Zobrazený deň sa načíta ako citania.txt, takže ho môžete podľa potreby doladiť pre projekciu "
+                "v Pomocníkovi (menu Pomoc → Pomocník)\n\n"
+                "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pomocníkovi prázdny riadok. "
+                "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný.\n\n"
+                "● Kde sú čítania uložené\n\n"
+                "Offline čítania sa ukladajú do priečinka piesne/offline_citania/, teda do priečinka, ktorý máte v "
+                "Nastavenia záložka Pokročilé → Umiestnenie súborov. Každý deň je jeden súbor s názvom vo formáte "
+                "RRRR-MM-DD.txt (napr. 2026-11-05.txt).\n\n"
+                "Kinak uchováva len čítania od včerajška dopredu. Staršie súbory sa mažú automaticky pri štarte "
+                "aplikácie a po každom stiahnutí čítaní na 7 dní.\n"
+            )
 
             priecinok_piesni_text = ("""● Priečinok piesní – štruktúra a pravidlá zaraďovania
 
@@ -18906,6 +20434,10 @@ Podpriečinok piesne/Večeradlo/ je samostatný priestor pre modlitby a piesne V
 Podpriečinok piesne/Mládež/ je určený pre piesne pre mládež (s číslovaním od 1001). Po zapnutí filtra „Mládež“ sa zoznam piesní načíta práve z tohto priečinka.
 
 Zdroj dát: mladeznickyspevnik.sk
+
+● Podpriečinok piesne/offline_citania/
+
+Vytvára ho aplikácia sama. Obsahuje stiahnuté čítania po dňoch (súbory RRRR-MM-DD.txt), aby ste ich mohli používať bez internetu.
 
 ● Vlastné piesne
 
@@ -18946,6 +20478,7 @@ Rovnaká logika sa uplatňuje aj pri filtri „Mládež“.
             vlozit_text(frame2, "Vyhľadávanie", vyhladavanie_text)
             vlozit_text(frame3, "Úprava textov", priprava_text)
             vlozit_text(frame4, "Priečinok piesní", priecinok_piesni_text)
+            vlozit_text(frame_citania, "Čítania a offline režim", citania_text)
             vlozit_text(frame5, "Pomoc pri probléme", pomoc_text)
 
             # --- 6. karta: Web / QR kód ---
@@ -19032,6 +20565,7 @@ Rovnaká logika sa uplatňuje aj pri filtri „Mládež“.
                     ("Vyhľadávanie", 12),
                     ("Úprava textov", 12),
                     ("Priečinok piesní", 16),
+                    ("Čítania", 9),
                     ("Pomoc", 8),
                     ("Web", 6),
                 ],
@@ -19044,7 +20578,7 @@ Rovnaká logika sa uplatňuje aj pri filtri „Mládež“.
                 self._show_tab(which, frames, stripes, buttons, safe_font_name, bg, active)
                 self.manual_entry.focus_set()
 
-            for i in (1, 2, 3, 4, 5, 6):
+            for i in (1, 2, 3, 4, 5, 6, 7):
                 buttons[i].config(command=lambda i=i: show(i))
 
             def apply_font_preserve_focus():
@@ -19132,7 +20666,7 @@ Rovnaká logika sa uplatňuje aj pri filtri „Mládež“.
                 command=reset_okna
             ).pack(side="left", padx=(5, 0))
 
-            last = max(1, min(int(getattr(self, "about_last_tab", 1) or 1), 6))
+            last = max(1, min(int(getattr(self, "about_last_tab", 1) or 1), 7))
             show(last)
 
             # 6) Zatváranie okna 
@@ -19201,6 +20735,10 @@ class ControlApp(
         self._cezrocne_tyzdenne_lock = threading.Lock()
         self._liturgicke_tyzdne_lock = threading.Lock()
 
+        # Nastaví sa pri ukončovaní aplikácie (_shutdown_executor) – všetky bežiace
+        # sťahovania sa zastavia pri najbližšej kontrole, takže proces nezostane
+        # visieť na pozadí (vlákna ThreadPoolExecutor nie sú daemon).
+        self._download_cancel_event = threading.Event()
         self._download_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="KinakDL")
         # POZN.: `atexit.register(fn, **kwargs)` iba ULOŽÍ volanie na neskôr –
         # nevyhodnocuje ho a nekontroluje jeho signatúru hneď teraz. Prípadný
@@ -19236,6 +20774,9 @@ class ControlApp(
         self.song_folder_label: tk.Label = cast(tk.Label, None)
         self.status_bar_frame: tk.Frame = cast(tk.Frame, None)
         self.status_bar_zaltár_label: tk.Label = cast(tk.Label, None)
+        self.status_bar_btn_dnes: tk.Button | None = None
+        self.status_bar_btn_zajtra: tk.Button | None = None
+        self._status_bar_zalm_kody: dict = {"dnes": None, "zajtra": None}
         self.live_preview_label: tk.Label = cast(tk.Label, None)
         self.preview_container: tk.Widget = cast(tk.Widget, None)
         self.filter_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
@@ -19625,12 +21166,31 @@ class ControlApp(
         # Zabezpečenie existencie priečinka (Pathlib)
         self.song_folder_path.mkdir(parents=True, exist_ok=True)
 
+        # === KONTROLA citania.txt PRI ŠTARTE ===
+        # Ak citania.txt má dátum v minulosti alebo budúcnosti → ak je dnešný deň
+        # uložený v priečinku offline_citania/, jednoducho ho prekopíruj.
+        # Následne spusti úpravu pre projekciu (rovnako ako _obnov_zastarane_citania).
+        # Ak súbor neexistuje, nerob nič a pokračuj.
+        try:
+            if skontroluj_citania_txt_pri_starte(self.song_folder_path):
+                try:
+                    # Po prekopírovaní dneška z offline_citania/ uprav pre projekciu
+                    self.upravit_citania_pre_projekciu(zobrazit_potvrdenie=False)
+                    log_info("Kontrola citania.txt pri štarte: po prekopírovaní spustená úprava pre projekciu.")
+                except Exception as e:
+                    log_exception("Kontrola citania.txt pri štarte: úprava pre projekciu zlyhala", e)
+        except Exception as e:
+            log_exception("Kontrola citania.txt pri štarte zlyhala", e)
+
         # Načítanie zoznamu piesní
         self.zoznam_piesni_data = self.nacitaj_piesne_do_zoznamu_z_priecinka()
         
         # Vytvorenie GUI a skratiek
         self.vytvorit_gui()
         self.nastavit_globalne_skratky()
+
+        # Vyčistenie starých offline čítaní (ponechá sa včerajšok a novšie)
+        vycisti_stare_offline_citania(self.song_folder_path)
 
         # Automatický filter podľa Dnes (ak je zapnutý v Nastaveniach)
         # POZN.: Pôvodná verzia volala auto-filter po 200ms, ale startup focus
@@ -19732,7 +21292,11 @@ class ControlApp(
 
 
 # Farba titulkového pruhu okna (len Windows 11, build 22000+). Formát "#RRGGBB".
-TITLEBAR_BG_COLOR = "#0e0e0e"
+# Zámerne o niečo svetlejšia čierna než pozadie okna (UI_WINDOW_BG = #0e0e0e),
+# aby pruh (a 1 px rámik okna, ktorý má rovnakú farbu) nesplýval s čiernou
+# pracovnou plochou. Ak je to stále málo / príliš, stačí zmeniť túto hodnotu
+# (napr. #1a1a1a = tmavšia, #2b2b2b = výraznejšia).
+TITLEBAR_BG_COLOR = "#202020"
 TITLEBAR_FG_COLOR = "#e6e6e6"
 
 
