@@ -692,6 +692,10 @@ LITURGICKE_CASTI_PODLA_KODU = {
     "VPLB": "VÝROČIE POSVIACKY LATERÁNSKEJ BAZILIKY",
 }
 
+# Názvy mesiacov (nominatív, malými) – text tlačidla „Mesačné žalmy: 11L (november)“.
+MESIACE_NAZVY = ("január", "február", "marec", "apríl", "máj", "jún",
+                 "júl", "august", "september", "október", "november", "december")
+
 RIMSKE_MESIACE = {
     "I": 1,
     "II": 2,
@@ -1405,7 +1409,7 @@ def get_parnost_roka(datum: date) -> int:
     return 2 if lit_rok_cislo % 2 == 0 else 1
 
 def format_skratku_liturgickej_casti(kod: str, datum: date) -> str:
-    """Skratka do hlavičky; cezročné obdobie doplní párnosť roka ako c1/c2."""
+    """Skratka do hlavičky/stavového riadku (veľkými písmenami, ako ostatné kódy); cezročné obdobie doplní párnosť roka ako C1/C2."""
     if kod == "2VIN":
         return "2VI"
     if kod in ("PS", "PPS"):
@@ -1423,7 +1427,7 @@ def format_skratku_liturgickej_casti(kod: str, datum: date) -> str:
     match = re.fullmatch(r"(\d+)C", kod)
     if match:
         parnost = get_parnost_roka(datum)
-        return f"{match.group(1)}c{parnost}"
+        return f"{match.group(1)}C{parnost}"
     return kod
 
 
@@ -1470,15 +1474,18 @@ def zostav_status_bar_struktura(
     """Zostaví stavový riadok ako štruktúru (bez Tkinter widgetov).
 
     Vracia dict:
-      "dnes"   – (skratka_zalmu, text) alebo None   (napr. ("31c2", "Dnes: žalm 31c2"))
+      "dnes"   – (skratka_zalmu, text) alebo None   (napr. ("31C2", "Dnes: žalm 31C2"))
       "zajtra" – (skratka_zalmu, text) alebo None
-      "ostatne" – zoznam ostatných textových častí (mesačné sviatky, žaltár, vigília…)
+      "mesiac" – (kód, text) alebo None   (napr. ("11L", "Mesačné žalmy: 11L (november)"))
+      "ostatne" – zoznam ostatných textových častí (žaltár, vigília…)
 
-    „Dnes“ a „Zajtra“ sa v GUI zobrazujú ako klikateľné tlačidlá, zvyšok ako text.
+    „Dnes“, „Zajtra“ a „Mesačné žalmy“ sa v GUI zobrazujú ako klikateľné tlačidlá,
+    zvyšok ako text.
     """
     dnes = dnes or date.today()
     dnes_info: tuple[str, str] | None = None
     zajtra_info: tuple[str, str] | None = None
+    mesiac_info: tuple[str, str] | None = None
     casti: list[str] = []
 
     if zobrazit_zalm:
@@ -1490,9 +1497,12 @@ def zostav_status_bar_struktura(
             zajtrajsi_kod = vypocitaj_kod_liturgickej_casti(zajtra_den)
             zajtra_skratka = format_skratku_liturgickej_casti(zajtrajsi_kod, zajtra_den)
             zajtra_info = (zajtra_skratka, f"Zajtra: žalm {zajtra_skratka}")
-        # xL je tu fixne zobrazené zámerne. xL = mesačné sviatky podľa mesiacov (1L–12L).
-        # Užívateľ ho použije, ak nenašiel vhodný žalm v navrhovaných skratkách.
-        casti.append("Mesačné sviatky: xL (1L–12L)")
+        # Mesačné žalmy = súbory 1L–12L (po jednom na mesiac, kategória „Mesačné“; refrény žalmov po dňoch mesiaca).
+        # Tlačidlo ukazuje kód AKTUÁLNEHO mesiaca (predtým zástupné „xL (1L–12L)“, ktoré
+        # nebolo jasné) a kliknutím sa načíta. Používateľ ho použije, ak medzi
+        # ponúknutými skratkami „Dnes“/„Zajtra“ nenašiel vhodný žalm.
+        mesiac_kod = f"{dnes.month}L"
+        mesiac_info = (mesiac_kod, f"Mesačné žalmy: {mesiac_kod} ({MESIACE_NAZVY[dnes.month - 1]})")
 
     if zobrazit_zaltara:
         tyzden = vypocitaj_tyzden_zaltara(dnes)
@@ -1542,7 +1552,7 @@ def zostav_status_bar_struktura(
     if prednost:
         casti.append(f"nedeľa má prednosť pred: {prednost}")
 
-    return {"dnes": dnes_info, "zajtra": zajtra_info, "ostatne": casti}
+    return {"dnes": dnes_info, "zajtra": zajtra_info, "mesiac": mesiac_info, "ostatne": casti}
 
 
 def zostav_text_status_baru(
@@ -1559,6 +1569,8 @@ def zostav_text_status_baru(
         casti.append(st["dnes"][1])
     if st["zajtra"]:
         casti.append(st["zajtra"][1])
+    if st["mesiac"]:
+        casti.append(st["mesiac"][1])
     casti.extend(st["ostatne"])
     return "  " + "   |   ".join(casti) if casti else ""
 
@@ -3681,7 +3693,27 @@ TEXT_COLOR = "#e0e0e6"
 BACKGROUND_COLOR = "#121212"
 
 # Text zobrazený v rozbaľovacom menu súborov, keď nie je nič vybrané.
-SUBOR_ZIADNY = "Žiadna"
+SUBOR_ZIADNY = "Vybrať…"   # zástupný text druhého tlačidla (zároveň interná hodnota „nič nevybrané“)
+
+# Skupiny v rozbaľovacom menu „Kategória“ (hlavné okno). Pod nadpismi skupín sú
+# názvy kategórií presne tak, ako sú v self.obdobie_subory. Kategória, ktorá tu
+# chýba, sa pridá na koniec pod nadpis „Ostatné“ (aby sa nikdy nestratila).
+KATEGORIE_SKUPINY = [
+    ("Žalmy", ["Adventné", "Vianočné", "Pôstne", "Veľkonočné", "Turíce a sviatky",
+               "Cezročné sviatky", "Cezročné C1", "Cezročné C2", "Mesačné"]),
+    ("Modlitby", ["Modlitby a iné", "Ruženec"]),
+    ("Zbierky", ["Večeradlo", "Mládež"]),
+]
+# Mládež: položky (druhé tlačidlo) nemá – piesne sa vyberajú v zozname hore.
+KATEGORIE_BEZ_POLOZIEK = frozenset({"Mládež"})
+# Večeradlo (modlitby v druhom tlačidle) aj Mládež: piesne sú v zozname hore.
+KATEGORIE_S_PIESNOU_HORE = frozenset({"Večeradlo", "Mládež"})
+KATEGORIA_HINT_PIESEN_HORE = "↑ Pieseň vyberieš v zozname hore"
+# Nadpisy skupín v menu „Kategória“: väčšie a modré (nie tučné), aby sa odlíšili od položiek.
+# Farba platí pre normálny aj hover stav (pozri _zostav_menu_kategorii).
+KATEGORIE_NADPIS_FG = "#7EB6FF"
+KATEGORIE_NADPIS_VELKOST = 11
+SIPKA_MENU = "▾"   # šípka rozbaľovacieho zoznamu na tlačidlách (indicatoron=0 ju inak nezobrazí)
 COMBO_HLAVICKA = "Hľadať pieseň podľa čísla alebo názvu…"
 
 # Tmavý vzhľad rozbaľovacích tlačidiel (OptionMenu) v ľavom paneli.
@@ -9552,6 +9584,7 @@ if TYPE_CHECKING:
         status_bar_zaltár_label: Any
         status_bar_btn_dnes: Any = None
         status_bar_btn_zajtra: Any = None
+        status_bar_btn_mesiac: Any = None
         def klik_status_bar_zalm(self, *args: Any, **kwargs: Any) -> Any: ...
         def nastav_zalm_podla_kodu(self, *args: Any, **kwargs: Any) -> Any: ...
         statusbar_jks_piesne: Any = None
@@ -9562,6 +9595,10 @@ if TYPE_CHECKING:
         statusbar_tyzden_zaltara_var: Any = None
         strofa_label: Any = None
         subor_menu: Any = None
+        kategoria_hint_label: Any = None
+        _subor_vypnuty: Any = False
+        _filter_view_var: Any = None
+        _subor_view_var: Any = None
         subor_var: Any = None
         subory_zoznam: Any = None
         text_color_var: Any = None
@@ -9611,6 +9648,7 @@ if TYPE_CHECKING:
         def _update_nazov_label(self, *args: Any, **kwargs: Any) -> Any: ...
         def prejst_na_uvodnu_obrazovku(self, *args: Any, **kwargs: Any) -> Any: ...
         def _backspace_vrati_na_uvod(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _aktualizuj_stav_kategorie(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_config_dict(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_inicializuj_premenne(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_naplanuj_zaznam(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -11084,7 +11122,7 @@ class _NastaveniaMixin(_ControlAppBase):
         )
         self.checkbox_auto_filter_dnes.pack(anchor="w", pady=(8, 0))
         Tooltip(self.checkbox_auto_filter_dnes,
-                "Pri štarte nastaví filter podľa žalmu zo stavového riadku (napr. Cezročné C2 → 28c2).")
+                "Pri štarte nastaví filter podľa žalmu zo stavového riadku (napr. Cezročné C2 → 28C2).")
 
         # Inicializácia stavu po vytvorení + reakcia na zmenu var
         try:
@@ -11454,8 +11492,8 @@ class _NastaveniaMixin(_ControlAppBase):
                 self.manual_entry.config(state="normal")
             if self.filter_menu is not None:
                 self.filter_menu.config(state="normal")
-            if self.subor_menu is not None:
-                self.subor_menu.config(state="normal")
+            # Druhé tlačidlo sa nezapína naslepo: pri kategórii Mládež musí zostať vypnuté.
+            self._aktualizuj_stav_kategorie()
         except Exception as e:
             log_exception("zatvorit_nastavenia: aktivácia prvkov zlyhala", e)
 
@@ -16934,6 +16972,128 @@ class _KlavesoveSkratkyMixin(_ControlAppBase):
 class _HlavneOknoMixin(_ControlAppBase):
     """Zostavenie hlavného GUI okna a stavového riadku."""
 
+    # ---------- Kategória / Položka: menu, texty, štýl, pomocný popis ----------
+
+    def _zostav_menu_kategorii(self) -> None:
+        """Prestaví rozbaľovacie menu „Kategória“ do skupín s farebnými nadpismi (bez hover efektu)."""
+        try:
+            menu = self.filter_menu["menu"]
+            menu.delete(0, "end")
+            # Aktívna (hover) položka by inak dostala 1 px 3D rámik (activeborderwidth=1),
+            # ktorý je vidieť aj na nadpisoch skupín. Hover ostáva len ako plná farba.
+            menu.config(activeborderwidth=0)
+            dostupne = list(self.obdobie_subory.keys())
+            pouzite: set[str] = set()
+            skupiny = [(n, [k for k in kategorie if k in dostupne]) for n, kategorie in KATEGORIE_SKUPINY]
+            pouzite.update(k for _, kat in skupiny for k in kat)
+            zvysok = [k for k in dostupne if k not in pouzite]
+            if zvysok:
+                skupiny.append(("Ostatné", zvysok))
+            prva = True
+            for nadpis, kategorie in skupiny:
+                if not kategorie:
+                    continue
+                if not prva:
+                    menu.add_separator()
+                prva = False
+                # Nadpis sa pri prejdení myšou nesmie meniť. Preto NIE JE vypnutou položkou:
+                # Tk (hlavne na Windows) kreslí vypnuté položky pod myšou inak (biely,
+                # „vyrazený“ text), a to sa nedá ovplyvniť farbami. Je to bežná položka
+                # s prázdnym príkazom, ktorej normálne aj hover farby sú rovnaké
+                # (pozadie menu + modrý text), takže sa pri hoveri nemá čo prekresliť.
+                # Kliknutie naň nič nezvolí (menu sa len zatvorí).
+                pozadie = menu.cget("bg")
+                menu.add_command(label=nadpis, command=lambda: None,
+                                 font=(self.font_family, KATEGORIE_NADPIS_VELKOST),
+                                 foreground=KATEGORIE_NADPIS_FG, activeforeground=KATEGORIE_NADPIS_FG,
+                                 background=pozadie, activebackground=pozadie)
+                for nazov in kategorie:
+                    menu.add_command(label=nazov, command=lambda v=nazov: self._vyber_kategoriu(v))
+        except Exception as e:
+            log_exception("_zostav_menu_kategorii zlyhalo", e)
+
+    def _vyber_kategoriu(self, nazov: str) -> None:
+        """To isté, čo robí tk.OptionMenu pri výbere: nastaví premennú a zavolá filter."""
+        self.filter_var.set(nazov)
+        self.filtrovat_subory(nazov)
+
+    def _on_kategoria_zmena(self, *_args) -> None:
+        self._aktualizuj_stav_kategorie()
+
+    def _on_polozka_zmena(self, *_args) -> None:
+        self._aktualizuj_texty_chipov()
+        self._aktualizuj_vzhlad_chipov()
+
+    def _aktualizuj_stav_kategorie(self) -> None:
+        """
+        Zosúladí druhé tlačidlo a pomocný popis s vybranou kategóriou. Stav sa odvodzuje
+        z hodnoty kategórie (nie z toho, čo naposledy nastavilo iné miesto v kóde),
+        takže ho nemôže rozhádzať ani hromadné zapnutie/vypnutie ovládacích prvkov.
+        """
+        try:
+            kategoria = self.filter_var.get()
+            self._subor_vypnuty = kategoria in KATEGORIE_BEZ_POLOZIEK
+            if self.subor_menu is not None:
+                self.subor_menu.config(state="disabled" if self._subor_vypnuty else "normal")
+            hint = getattr(self, "kategoria_hint_label", None)
+            if hint is not None:
+                if kategoria in KATEGORIE_S_PIESNOU_HORE:
+                    hint.grid()
+                else:
+                    hint.grid_remove()
+        except (tk.TclError, AttributeError):
+            return
+        self._aktualizuj_texty_chipov()
+        self._aktualizuj_vzhlad_chipov()
+
+    def _aktualizuj_texty_chipov(self) -> None:
+        """Text tlačidiel = hodnota + šípka; vypnutá položka ukazuje len „–“."""
+        try:
+            self._filter_view_var.set(f"{self.filter_var.get()}  {SIPKA_MENU}")
+            if self._subor_vypnuty:
+                text = "–"
+            else:
+                hodnota = self.subor_var.get()
+                if len(hodnota) > 9:
+                    hodnota = hodnota[:8].rstrip() + "…"
+                text = f"{hodnota}  {SIPKA_MENU}"
+            self._subor_view_var.set(text)
+        except (tk.TclError, AttributeError):
+            pass
+
+    def _nastav_chip(self, w: Any, *, bg: str, fg: str, border: str, hover_bg: str, bold: bool, kurzor: str) -> None:
+        w._normal_bg = bg
+        w._hover_bg = hover_bg
+        w._normal_border = border
+        try:
+            w.config(
+                bg=bg, fg=fg, activebackground=hover_bg, activeforeground="#FFFFFF", disabledforeground=fg,
+                highlightbackground=border, highlightcolor=border, cursor=kurzor,
+                font=(self.font_family, 13, "bold" if bold else "normal"),
+            )
+        except tk.TclError:
+            pass
+
+    def _aktualizuj_vzhlad_chipov(self) -> None:
+        """
+        Kategória je „tichší“ filter (obrys), Položka je výsledok výberu:
+        nevybraná = tlmená, vybraná = plne modrá, vypnutá = takmer neviditeľná.
+        """
+        try:
+            self._nastav_chip(self.filter_menu, bg=UI_LEFT_PANEL_BG, fg="#C4CDDB", border=MODRA_OKRAJ,
+                              hover_bg="#2C3646", bold=True, kurzor="hand2")
+            if self._subor_vypnuty:
+                self._nastav_chip(self.subor_menu, bg="#222222", fg="#6B7280", border="#333333",
+                                  hover_bg="#222222", bold=False, kurzor="arrow")
+            elif self.subor_var.get() == SUBOR_ZIADNY:
+                self._nastav_chip(self.subor_menu, bg=UI_LEFT_PANEL_BG, fg="#9CA3AF", border="#4A5568",
+                                  hover_bg="#2C3646", bold=False, kurzor="hand2")
+            else:
+                self._nastav_chip(self.subor_menu, bg="#3F4F6A", fg="#FFFFFF", border=MODRA_OKRAJ,
+                                  hover_bg="#5A7090", bold=True, kurzor="hand2")
+        except AttributeError:
+            pass
+
     def vytvorit_gui(self):
         self.master.configure(bg=UI_WINDOW_BG)
         style = ttk.Style()
@@ -16968,8 +17128,9 @@ class _HlavneOknoMixin(_ControlAppBase):
         # tenká deliaca čiara nad stavovým riadkom
         tk.Frame(self.status_bar_frame, bg=UI_BTN_BG, height=1).pack(side=tk.TOP, fill=tk.X)
 
-        # „Dnes: žalm …“ a „Zajtra: žalm …“ sú klikateľné tlačidlá – kliknutím sa
-        # nastaví filter + súbor žalmu (rovnako ako pri automatickom filtri).
+        # „Dnes: žalm …“, „Zajtra: žalm …“ a „Mesačné žalmy: 11L (…)“ sú klikateľné
+        # tlačidlá – kliknutím sa nastaví filter + súbor žalmu (rovnako ako pri
+        # automatickom filtri).
         def _vytvor_status_tlacidlo(cmd_name: str) -> tk.Button:
             btn = tk.Button(
                 self.status_bar_frame,
@@ -16989,7 +17150,8 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         self.status_bar_btn_dnes = _vytvor_status_tlacidlo("dnes")
         self.status_bar_btn_zajtra = _vytvor_status_tlacidlo("zajtra")
-        self._status_bar_zalm_kody = {"dnes": None, "zajtra": None}
+        self.status_bar_btn_mesiac = _vytvor_status_tlacidlo("mesiac")
+        self._status_bar_zalm_kody = {"dnes": None, "zajtra": None, "mesiac": None}
 
         self.status_bar_zaltár_label = tk.Label(
             self.status_bar_frame,
@@ -17346,7 +17508,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         self.manual_entry.pack(fill=tk.BOTH, expand=True, ipady=12, padx=4, pady=2)
 
         self.manual_entry_hint = tk.Label(
-            panel_vyber, text="Zadaj číslo alebo skratku, prípadne vyber položku z menu nižšie.", font=(self.font_family, 11),
+            panel_vyber, text="Zadaj číslo alebo skratku, prípadne vyber skratku (položku) z menu nižšie.", font=(self.font_family, 11),
             fg="#9a9aaa", bg=UI_LEFT_PANEL_BG, wraplength=273, justify=tk.LEFT, anchor="w"
         )
         self.manual_entry_hint.pack(fill=tk.X, pady=(0, 14))
@@ -17368,54 +17530,82 @@ class _HlavneOknoMixin(_ControlAppBase):
         self.subor_var = tk.StringVar(value=SUBOR_ZIADNY)
         self.subory_zoznam = self.ziskaj_zoznam_suborov()
 
-        # --- CHIPY: Turíce a sviatky + 10C2 / 4TS ako chipy nad zoznamom ---
+        # --- Dve tlačidlá nad zoznamom: „Kategória“ (filter) a „Položka“ (výber) ---
+        # Mriežka 3 : 2 s uniform => šírky sa nemenia podľa textu. Riadky: popisky,
+        # tlačidlá, pomocný popis (zobrazuje sa len pri Večeradle a Mládeži).
         chips_frame = tk.Frame(panel_vyber, bg=UI_LEFT_PANEL_BG)
         chips_frame.pack(fill=tk.X, pady=(0, 12))
+        chips_frame.columnconfigure(0, weight=3, uniform="chip")
+        chips_frame.columnconfigure(1, weight=2, uniform="chip")
+
+        popisok_font = (self.font_family, 9)
+        tk.Label(chips_frame, text="Kategória", font=popisok_font, fg="#8D99AD",
+                 bg=UI_LEFT_PANEL_BG, anchor="w").grid(row=0, column=0, sticky="w", padx=(2, 0))
+        tk.Label(chips_frame, text="Položka", font=popisok_font, fg="#8D99AD",
+                 bg=UI_LEFT_PANEL_BG, anchor="w").grid(row=0, column=1, sticky="w", padx=(8, 0))
+
+        self._subor_vypnuty = False
 
         self.filter_menu = tk.OptionMenu(chips_frame, self.filter_var, *list(self.obdobie_subory.keys()), command=self.filtrovat_subory)
         self.filter_menu.config(font=(self.font_family, 13, "bold"), width=14, bd=0, relief="flat")
         stylizuj_optionmenu_tmavo(self.filter_menu)
-        self.filter_menu.config(indicatoron=0, anchor="center", highlightthickness=1, highlightbackground="#2a2a2a", pady=8, padx=4)
-        # tlmene modrá ako tlačidlá v Nastaveniach – jasne ukazuje, že ide o ovládač výberu
-        self.filter_menu.config(
-            bg="#3F4F6A", fg="#FFFFFF", activebackground="#5A7090", activeforeground="#FFFFFF",
-            disabledforeground="#8D99AD", highlightbackground=MODRA_OKRAJ, highlightcolor=MODRA_OKRAJ,
-        )
-        self.filter_menu.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
-
-        # --- Vizuálny oddeľovač pre modlitbové filtre ---
-        try:
-            menu = self.filter_menu["menu"]
-            kluc_filterov = list(self.obdobie_subory.keys())
-            if "Modlitby a iné" in kluc_filterov:
-                idx = kluc_filterov.index("Modlitby a iné")
-                menu.insert_separator(idx)
-        except Exception as e:
-            log_exception("Pridanie oddeľovača do filter_menu zlyhalo", e)
+        self.filter_menu.config(indicatoron=0, anchor="center", highlightthickness=1, pady=8, padx=4)
+        self.filter_menu.grid(row=1, column=0, sticky="ew", padx=(0, 6))
+        # Menu rozdelené do skupín s nadpismi (Žalmy / Modlitby / Zbierky)
+        self._zostav_menu_kategorii()
 
         self.subor_menu = tk.OptionMenu(chips_frame, self.subor_var, *[SUBOR_ZIADNY], command=self.nacitat_podla_menu)
-        self.subor_menu.config(font=(self.font_family, 13, "bold"), width=7, bd=0, relief="flat")
+        self.subor_menu.config(font=(self.font_family, 13, "bold"), width=9, bd=0, relief="flat")
         stylizuj_optionmenu_tmavo(self.subor_menu)
-        self.subor_menu.config(indicatoron=0, anchor="center", highlightthickness=1, highlightbackground="#2a2a2a", pady=8, padx=4)
-        # tlmene modrá ako tlačidlá v Nastaveniach – jasne ukazuje, že ide o ovládač výberu
-        self.subor_menu.config(
-            bg="#3F4F6A", fg="#FFFFFF", activebackground="#5A7090", activeforeground="#FFFFFF",
-            disabledforeground="#8D99AD", highlightbackground=MODRA_OKRAJ, highlightcolor=MODRA_OKRAJ,
-        )
-        self.subor_menu.pack(side=tk.LEFT, fill=tk.X, expand=False)
+        self.subor_menu.config(indicatoron=0, anchor="center", highlightthickness=1, pady=8, padx=4)
+        self.subor_menu.grid(row=1, column=1, sticky="ew")
 
-        # --- VÝRAZNEJŠÍ HOVER pre Cezročné C2 a Žiadna ---
-        def _pridaj_hover_efekt(widget, normal_bg="#3F4F6A", hover_bg="#5A7090"):
+        # Pomocný popis pod tlačidlami (Večeradlo, Mládež): kde je výber piesne.
+        self.kategoria_hint_label = tk.Label(
+            chips_frame, text=KATEGORIA_HINT_PIESEN_HORE, font=(self.font_family, 10),
+            fg="#AAB3C2", bg=UI_LEFT_PANEL_BG, anchor="w", justify=tk.LEFT,
+        )
+        self.kategoria_hint_label.grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        self.kategoria_hint_label.grid_remove()
+
+        # Hover: farby sa berú z atribútov nastavených v _aktualizuj_vzhlad_chipov
+        # (štýl sa mení podľa stavu), vypnuté tlačidlo na hover nereaguje.
+        def _hover_on(e):
+            w = e.widget
             try:
-                widget.bind("<Enter>", lambda e, w=widget, hb=hover_bg: w.config(bg=hb, highlightbackground=MODRA_OKRAJ_HOVER))
-                widget.bind("<Leave>", lambda e, w=widget, nb=normal_bg: w.config(bg=nb, highlightbackground=MODRA_OKRAJ))
-                # kurzor ruka pre lepší UX
-                widget.config(cursor="hand2")
-            except Exception:
+                if str(w.cget("state")) == "disabled":
+                    return
+                w.config(bg=getattr(w, "_hover_bg", "#5A7090"), highlightbackground=MODRA_OKRAJ_HOVER)
+            except tk.TclError:
                 pass
 
-        _pridaj_hover_efekt(self.filter_menu)
-        _pridaj_hover_efekt(self.subor_menu)
+        def _hover_off(e):
+            w = e.widget
+            try:
+                w.config(bg=getattr(w, "_normal_bg", "#3F4F6A"),
+                         highlightbackground=getattr(w, "_normal_border", MODRA_OKRAJ))
+            except tk.TclError:
+                pass
+
+        for _w in (self.filter_menu, self.subor_menu):
+            _w.bind("<Enter>", _hover_on)
+            _w.bind("<Leave>", _hover_off)
+
+        # Zobrazený text = hodnota + šípka ▾. OptionMenu má indicatoron=0 (bez šípky),
+        # preto sa do tlačidla dáva zrkadlová premenná, ktorá sa synchronizuje cez trace.
+        self._filter_view_var = tk.StringVar()
+        self._subor_view_var = tk.StringVar()
+        self.filter_menu.config(textvariable=self._filter_view_var)
+        self.subor_menu.config(textvariable=self._subor_view_var)
+        self.filter_var.trace_add("write", self._on_kategoria_zmena)
+        self.subor_var.trace_add("write", self._on_polozka_zmena)
+        self._on_kategoria_zmena()
+
+        try:
+            Tooltip(self.filter_menu, "Kategória: skupina súborov\n(žalmy podľa obdobia, modlitby, zbierky piesní).")
+            Tooltip(self.subor_menu, "Položka: konkrétny žalm alebo modlitba\nz vybranej kategórie.")
+        except Exception as e:
+            log_exception("Tooltipy kategórie/položky zlyhali", e)
 
         # --- BOX: Odporúčané piesne (killer feature) ---
         odporucane_box = tk.Frame(panel_vyber, bg="#1a1a1a", bd=0, highlightthickness=1, highlightbackground="#262626")
@@ -17605,7 +17795,7 @@ class _HlavneOknoMixin(_ControlAppBase):
             log_exception("aktualizovat_zarovanie_cisla_strofy zlyhalo", e)
 
     def aktualizovat_status_bar(self):
-        """Aktualizuje obsah status baru (klikateľné tlačidlá Dnes/Zajtra + týždeň žaltára + vigília + vynechané slávenie)."""
+        """Aktualizuje obsah status baru (klikateľné tlačidlá Dnes/Zajtra/Mesačné žalmy + týždeň žaltára + vigília + vynechané slávenie)."""
         try:
             if self.status_bar_frame is None or self.status_bar_zaltár_label is None:
                 return
@@ -17624,15 +17814,16 @@ class _HlavneOknoMixin(_ControlAppBase):
 
             btn_dnes = getattr(self, "status_bar_btn_dnes", None)
             btn_zajtra = getattr(self, "status_bar_btn_zajtra", None)
+            btn_mesiac = getattr(self, "status_bar_btn_mesiac", None)
             label = self.status_bar_zaltár_label
             sep_text = "   |   "
 
             # Najprv všetko odpoj a potom v správnom poradí znova zobraz
-            for w in (btn_dnes, btn_zajtra, label):
+            for w in (btn_dnes, btn_zajtra, btn_mesiac, label):
                 if w is not None:
                     w.pack_forget()
 
-            kody = {"dnes": None, "zajtra": None}
+            kody = {"dnes": None, "zajtra": None, "mesiac": None}
             ma_tlacidlo = False
             zvysok_texty: list[str] = []
 
@@ -17645,6 +17836,11 @@ class _HlavneOknoMixin(_ControlAppBase):
                 kody["zajtra"] = st["zajtra"][0]
                 btn_zajtra.config(text=st["zajtra"][1])
                 btn_zajtra.pack(side=tk.LEFT, padx=(8, 0), pady=6)
+                ma_tlacidlo = True
+            if btn_mesiac is not None and st["mesiac"]:
+                kody["mesiac"] = st["mesiac"][0]
+                btn_mesiac.config(text=st["mesiac"][1])
+                btn_mesiac.pack(side=tk.LEFT, padx=(8, 0), pady=6)
                 ma_tlacidlo = True
             self._status_bar_zalm_kody = kody
 
@@ -17666,7 +17862,7 @@ class _HlavneOknoMixin(_ControlAppBase):
             log_exception("aktualizovat_status_bar: chyba", e)
 
     def klik_status_bar_zalm(self, ktory: str):
-        """Kliknutie na tlačidlo „Dnes: žalm …“ / „Zajtra: žalm …“ v stavovom riadku.
+        """Kliknutie na tlačidlo „Dnes: žalm …“ / „Zajtra: žalm …“ / „Mesačné žalmy: 11L (…)“ v stavovom riadku.
 
         Nastaví modré tlačidlá (filter + súbor) a načíta príslušný žalm –
         rovnakým spôsobom ako automatický filter podľa dnešného dňa.
@@ -17681,7 +17877,7 @@ class _HlavneOknoMixin(_ControlAppBase):
             log_exception(f"klik_status_bar_zalm({ktory}): chyba", e)
 
     def nastav_zalm_podla_kodu(self, kod: str) -> bool:
-        """Nastaví filter + súbor pre daný kód žalmu (napr. „31c2“) a načíta ho.
+        """Nastaví filter + súbor pre daný kód žalmu (napr. „31C2“) a načíta ho.
 
         Ak sa pre kód nenájde filter v modrých tlačidlách, načíta sa ako pri
         ručnom zadaní kódu do vyhľadávacieho poľa.
@@ -17736,7 +17932,7 @@ class _HlavneOknoMixin(_ControlAppBase):
            cez vypocitaj_kod_liturgickej_casti() + format_skratku_liturgickej_casti(),
            čo je presne to, čo zostav_text_status_baru() používa pre „Dnes:“.
 
-        Vracia napr. „28c2“, „1AD“, „2VN“, „1L“ alebo None pri chybe.
+        Vracia napr. „28C2“, „1AD“, „2VN“, „1L“ alebo None pri chybe.
         """
         try:
             # 1) Pokus o parsovanie zo stavového riadku
@@ -17750,7 +17946,7 @@ class _HlavneOknoMixin(_ControlAppBase):
                 except Exception:
                     txt = ""
                 if txt and "Dnes:" in txt:
-                    # Príklad textu: "  Dnes: žalm 28c2   |   Zajtra: žalm 29c2 ..."
+                    # Príklad textu: "  Dnes: žalm 28C2   |   Zajtra: žalm 29C2 ..."
                     m = re.search(r"Dnes:\s*žalm\s+([A-Za-z0-9]+)", txt, re.IGNORECASE)
                     if m:
                         kod = m.group(1).strip()
@@ -17837,8 +18033,8 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         Logika podľa zadania:
         - Pri štarte aplikácie sa načíta stavový riadok, z položky Dnes: sa vyberie aktuálny žalm
-          (napr. Dnes: žalm 28c2).
-        - Modré tlačidlá sa automaticky nastavia tak, aby obsahovali výber: Cezročné2 → 28c2
+          (napr. Dnes: žalm 28C2).
+        - Modré tlačidlá sa automaticky nastavia tak, aby obsahovali výber: Cezročné2 → 28C2
 
         V praxi:
         - filter_var = "Cezročné C2" (alebo iný podľa kódu)
@@ -18141,7 +18337,7 @@ def uvodna_normalizuj_posledne(zoznam, nova=None, maximum=UVODNA_POSLEDNE_MAX):
     """Vráti zoznam naposledy použitých piesní (najnovšia prvá, bez duplicít).
 
     Berú sa len položky začínajúce číslicou (piesne a žalmy ako 257 alebo
-    29c2); „vespery“, „citania“ a pod. sa do histórie nezapisujú.
+    29C2); „vespery“, „citania“ a pod. sa do histórie nezapisujú.
     """
     vysledok = []
     kandidati = ([nova] if nova else []) + list(zoznam or [])
@@ -18900,7 +19096,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Pre zobrazenie odporúčaných piesní musí byť táto funkcia zapnutá v nastaveniach.\n\n"
                 "Liturgický deň sa vypočíta automaticky. Ak slávnosť pripadne na deň s vyššou prednosťou, program zohľadní jej presun podľa Direktória KBS. "               
                 "Pri nedeliach sa používa cyklus A/B/C. Pri bežných dňoch cez rok sa rozlišuje "
-                "nepárny a párny rok, napr. 20c1 alebo 20c2.\n\n"
+                "nepárny a párny rok, napr. 20C1 alebo 20C2.\n\n"
                 
                 "ADVENTNÉ OBDOBIE\n"
                 "─────────────────────\n"
@@ -18963,8 +19159,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 
                 "CEZROČNÉ OBDOBIE\n"
                 "─────────────────────\n"
-                "  Xc1  –  X. týždeň cezročného obdobia, nepárny rok (napr. 14c1)\n"
-                "  Xc2  –  X. týždeň cezročného obdobia, párny rok (napr. 14c2)\n\n"
+                "  NC1  –  N. týždeň cezročného obdobia, nepárny rok (napr. 14C1)\n"
+                "  NC2  –  N. týždeň cezročného obdobia, párny rok (napr. 14C2)\n\n"
                 "CEZROČNÉ SVIATKY\n"
                 "─────────────────────\n"
                 # Poznámka „ak nepadne na nedeľu " pri ZOS chýba správne – 2. XI. sa slávi vždy, aj keď padne na nedeľu - hoci je ZOS iba spomienka je tam výnimka.
@@ -18986,7 +19182,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "  OND\t–  Sv. Ondreja, apoštola (30. XI.) – ak nepadne na nedeľu\n\n"
 
 
-                "MESAČNÉ SVIATKY (xL)\n"
+                "MESAČNÉ SVIATKY (1L–12L)\n"
                 "─────────────────────\n"
                 "  1L  –  Zjavenie Pána (6. I.)\n"
                 "  2L  –  Obetovanie Pána (2. II.)\n"
@@ -19000,7 +19196,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 " 10L  –  Sviatky mučeníkov (v októbri)\n"
                 " 11L  –  Všetkých svätých (1. XI.)\n"
                 " 12L  –  Nepoškvrnené počatie Panny Márie (8. XII.) – ak nepadne na nedeľu\n\n"
-                "  xL  –  Fixná pripomienka v stavovom riadku. Použi ju, ak si medzi ponúknutými skratkami nenašiel vhodný žalm.\n\n" 
+                "  Stavový riadok ukazuje tlačidlo s kódom aktuálneho mesiaca (napr. 11L v novembri). Kliknutím sa načíta – použi ho, ak si medzi ponúknutými skratkami „Dnes“ a „Zajtra“ nenašiel vhodný žalm.\n\n" 
                 
                 "PRAKTICKÁ POZNÁMKA\n"
                 "─────────────────────\n"
@@ -20287,7 +20483,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• Čísla piesní (napr. 254)\n"
                 "• Skratky modlitieb (napr. dk)\n"
                 "• Časť názvu piesne alebo modlitby (napr. ruž → Ružencové bratstvo)\n"
-                "• Skratku žalmu (napr. 20c2)\n\n"
+                "• Skratku žalmu (napr. 20C2)\n\n"
                 "Vstupné pole vyhľadáva podľa názvov .txt súborov.\n\n"
                 "● B) Vyhľadávanie cez filtre\n\n"
                 "• Na vyhľadávanie modlitieb slúžia 3 filtre: „Modlitby a iné“, „Ruženec“ a „Večeradlo“\n"
@@ -20776,7 +20972,8 @@ class ControlApp(
         self.status_bar_zaltár_label: tk.Label = cast(tk.Label, None)
         self.status_bar_btn_dnes: tk.Button | None = None
         self.status_bar_btn_zajtra: tk.Button | None = None
-        self._status_bar_zalm_kody: dict = {"dnes": None, "zajtra": None}
+        self.status_bar_btn_mesiac: tk.Button | None = None
+        self._status_bar_zalm_kody: dict = {"dnes": None, "zajtra": None, "mesiac": None}
         self.live_preview_label: tk.Label = cast(tk.Label, None)
         self.preview_container: tk.Widget = cast(tk.Widget, None)
         self.filter_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
