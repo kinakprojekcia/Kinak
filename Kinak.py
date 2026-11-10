@@ -65,7 +65,7 @@ except ImportError:
 # ZÁKLADNÉ NASTAVENIA
 # ==========================================================
 
-KINAK_VERSION = "3.6"
+KINAK_VERSION = "3.7"
 KINAK_WEB_URL = "https://kinak.sk"    #"https://kinakprojekcia.github.io/Kinak/"
 KINAK_QR_BASE64 = """iVBORw0KGgoAAAANSUhEUgAAAhwAAAIcCAYAAAC9/nd8AABOsElEQVR4nO3daZMk13Xm+f+51z0il1qwFXaRFHdxl0iKiyhRlNQSpVG3uq27zcZkPTZv5iPMx5hPMP22bczGxrrN1Npaau2iuImkxA1cBa7YCFQBtWVmhPs9Z15c98gEQIHIQroQUfH8YIkCsjIjPCOXePLec8+x6K4FIiIiIhNKr/YFiIiIyO1PgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyuebVvoBX6v967Vtf7Uu4rfyf3/v6qd5+0x//qT/eTX88T3v9pzX1x7tun9/TWrfH57TW7et50039+ZqaVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtTe9Ff1rrNoth02crbPrHu27Xv+nfj1PPXpn687Vus2M2/evhtNbt58PUtMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5LZulspprVuv+22bNXBa6/b4TH096zY7Y92uZ2rr9vldt8dnavr5vFm0wiEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkNEtFXpGpZxls26yKdZsNMbWpZ7Wc1tTXc9rbX7frEXkltMIh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wCEiIiKTU+AQERGRyW38LBV5da3b7IZ1m5WwbrNsprZus410PS9t3a7ntNbt+rft+/20tMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5JpX+wJeqXWb5bHpTturf916+6/b18NpH5/TXv+6zZKY+uM9rXX7+jytdft6Pq11+/o8rU1//NeNVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtdevVP7WpZwFMPSth3W5/alN/fa7b7JJ1+3i37etn3b4e1s2mX/+60QqHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik9u6WSqntemzEtbNpj+e6zab5rTWbXbJulm32Svr9v2uz6+8ElrhEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHKapSKvyLbN5pj64123x/O017Pp179ts2zWbRbMun2/r9v1bPpsF61wiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjnNUpFXZOrZCutm0z/eTZ9tcVqb/vna9OvfdOs2+2bTaYVDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyWmWyk+g2QQvbdNnc6zbrIqpr2fqx3/dvl9O+/Fu+uO/bp/fdXs8N/37d9NphUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJbd0slXWb5SG3t03/etu2WQ/rNhtl3a5n3WajnNa6zTpZt+uZmlY4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZxFdy1e7YsQERGR25tWOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyf3/haLfJyAgMggAAAAASUVORK5CYII="""
 
@@ -3713,6 +3713,11 @@ KATEGORIA_HINT_PIESEN_HORE = "↑ Pieseň vyberieš v zozname hore"
 # Farba platí pre normálny aj hover stav (pozri _zostav_menu_kategorii).
 KATEGORIE_NADPIS_FG = "#7EB6FF"
 KATEGORIE_NADPIS_VELKOST = 11
+# True  = nadpisy skupín sú vypnuté položky: klik na ne nič nerobí a menu sa vôbec nezatvorí
+#         (žiadne blikanie), šípky ich preskakujú.
+# False = starý spôsob: nadpis je bežná položka, menu sa po kliknutí zatvorí a hneď znova otvorí
+#         (viditeľné bliknutie). Použi, ak by sa vypnuté nadpisy na tvojom systéme vykresľovali zle.
+KATEGORIE_NADPIS_NEAKTIVNY = True
 SIPKA_MENU = "▾"   # šípka rozbaľovacieho zoznamu na tlačidlách (indicatoron=0 ju inak nezobrazí)
 COMBO_HLAVICKA = "Hľadať pieseň podľa čísla alebo názvu…"
 
@@ -3818,6 +3823,9 @@ LITURGICKE_OBDOBIA_JEMNE = {
 # na tmavom pozadí BACKGROUND_COLOR).
 VECERADLO_PROJEKCIA_MODRA = "#66B2FF"
 
+# Zadania vo vstupnom poli (po normalizácii: bez diakritiky, medzier, veľkosti písmen),
+# ktoré znamenajú oznam.txt. Platí presná zhoda – „ozna“ ani „oznamovanie“ to nie sú.
+OZNAM_VSTUPY = frozenset({"oznam", "oznamy"})
 # Pevná červená farba textu v projekcii pre oznam.txt
 # Vždy červená, aby oznam upútal pozornosť (neprehliadnuteľný na čiernom pozadí).
 OZNAM_PROJEKCIA_CERVENA = "#ff4444"
@@ -3855,12 +3863,13 @@ DEFAULT_CONFIG = {
     "reserved_vertical_ratio": 0.20,
     "zobrazit_direktorium": False,
     # Úvodná obrazovka (obsah hlavného okna, kým nie je vybraná pieseň).
-    # Predvolene je zapnutá úvodná obrazovka a iba karta „Rýchly prístup“.
+    # Predvolene je zapnutá úvodná obrazovka a karty „Rýchly prístup“ a „Skratky“.
     # Tieto hodnoty platia pri prvom spustení AJ po tlačidle „Obnoviť predvolené“.
     "uvodna_zapnute": True,
     "uvodna_rychly_pristup": True,
     "uvodna_odporucane": False,
     "uvodna_posledne": False,
+    "uvodna_skratky": True,
     "uvodna_poznamky": False,
     "uvodna_klavesy": False,
     "posledne_piesne": [],
@@ -9653,6 +9662,8 @@ if TYPE_CHECKING:
         def _uvodna_inicializuj_premenne(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_naplanuj_zaznam(self, *args: Any, **kwargs: Any) -> Any: ...
         def _uvodna_nacitaj_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _uvodna_skry_okamzite(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _uvodna_aktualizuj_viditelnost(self, *args: Any, **kwargs: Any) -> Any: ...
         def _vytvor_rok_spinbox(self, *args: Any, **kwargs: Any) -> Any: ...
         def _wire_tab_switching(self, *args: Any, **kwargs: Any) -> Any: ...
         def _zablokovat_klik(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -10232,12 +10243,13 @@ class _NastaveniaMixin(_ControlAppBase):
 
     def _text_je_oznam(self, text) -> bool:
         """True, ak je vstupný text (po normalizácii diakritiky, medzier a veľkosti
-        písmen) presne slovo "oznam". Podreťazec nestačí - "oznamy" či "ozna" to nie sú."""
+        písmen) presne „oznam“ alebo „oznamy“ (OZNAM_VSTUPY). Podreťazec nestačí -
+        „ozna“ či „oznamovanie“ to nie sú."""
         try:
-            return self.normalize_alnum(str(text or "")) == "oznam"
+            return self.normalize_alnum(str(text or "")) in OZNAM_VSTUPY
         except Exception as e:
             log_exception("_text_je_oznam: normalizácia zlyhala", e)
-            return str(text or "").strip().lower() == "oznam"
+            return str(text or "").strip().lower() in OZNAM_VSTUPY
 
     def _je_nacitany_oznam(self) -> bool:
         """True, ak je práve NAČÍTANÝ súbor oznam.txt.
@@ -10967,7 +10979,19 @@ class _NastaveniaMixin(_ControlAppBase):
             "<ButtonRelease-1>",
             lambda e: self.ulozit_nastavenia(aktualizovat_label=False)
         )
-        Tooltip(font_size_slider, "Najväčšie písmo, aké sa použije. Dlhý text sa automaticky zmenší, aby sa zmestil na obrazovku.")
+        Tooltip(font_size_slider, "Najväčšie písmo, aké sa použije na projekcii. Dlhý text sa automaticky zmenší, aby sa zmestil na obrazovku. Nemení veľkosť písma v hlavnom ovládacom okne.")
+
+        # Jasne napisane priamo pri posuvniku: slider meni PROJEKCIU,
+        # nie hlavne ovladacie okno. Overene v kode: font_size_var ->
+        # self.font_size -> ulozit_nastavenia() -> pw.font_size, a
+        # ProjectionWindow ho pouziva ako base_size v update_text() /
+        # on_configure(). Hlavne okno pouziva pevne FONT (12) a
+        # strofa_label vlastny vypocet zo STROFA_FONT_INIT (40),
+        # nie self.font_size.
+        vytvor_popis(
+            frame_font,
+            "Menší / väčší text na projekcii (na plátne / TV). Nemení veľkosť písma v hlavnom ovládacom okne.",
+        )
 
         vytvor_popis(
             frame_font,
@@ -11205,8 +11229,10 @@ class _NastaveniaMixin(_ControlAppBase):
         )
         cb_uvod.pack(anchor="w")
         Tooltip(cb_uvod,
-                "Úvodná obrazovka vyplní prázdne hlavné okno. Zmizne po zadaní čísla piesne "
-                "a vráti sa po jeho zmazaní (Backspace), po klávese Home alebo tlačidle Home v hornej lište. "
+                "Úvodná obrazovka sa zobrazuje, len kým nie je nič vybrané: vstupné pole je prázdne "
+                "a nie je načítaná žiadna pieseň. Zmizne hneď, ako začneš písať číslo (napr. 245) alebo "
+                "slovo (napr. citania), aj keď sa pieseň ešte len hľadá, a vráti sa po zmazaní vstupu "
+                "(Backspace), po klávese Home alebo tlačidle Home v hornej lište. "
                 "Nikdy sa nepremieta na plátno.")
         for _kluc, _popis in UVODNA_MOZNOSTI:
             tmavy_check(
@@ -12509,7 +12535,7 @@ class _StahovanieMixin(_ControlAppBase):
             self.open_offline_citania_prehladac()
 
         tk.Button(
-            dialog, text="📂 Prehliadať offline čítania",
+            dialog, text="📂 Offline čítania (archív)",
             command=otvor_prehladac,
             bg="#2a2a2a", fg="#cccccc", activebackground="#3a3a3a", activeforeground="#ffffff",
             font=(self.font_family, 10), relief="flat", bd=0, padx=10, pady=6, cursor="hand2"
@@ -12550,7 +12576,7 @@ class _StahovanieMixin(_ControlAppBase):
     def open_offline_citania_prehladac(self):
         cache_dir = ziskaj_offline_citania_dir(self.song_folder_path, vytvor=False)
         dialog = tk.Toplevel(self.master)
-        dialog.title("Offline čítania – prehliadač")
+        dialog.title("Offline čítania (archív)")
         dialog.configure(bg="#121212")
         dialog.resizable(False, False)
         dialog.transient(self.master)
@@ -12562,7 +12588,7 @@ class _StahovanieMixin(_ControlAppBase):
         my = self.master.winfo_y() + self.master.winfo_height() // 2
         dw, dh = 640, 520
         dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
-        tk.Label(dialog, text="Offline čítania", bg="#121212", fg="#ffffff", font=(self.font_family, 14, "bold")).pack(pady=(16, 4))
+        tk.Label(dialog, text="Offline čítania (archív)", bg="#121212", fg="#ffffff", font=(self.font_family, 14, "bold")).pack(pady=(16, 4))
         tk.Label(dialog, text=f"Priečinok: {cache_dir}", bg="#121212", fg="#888888", font=(self.font_family, 8), wraplength=600).pack(pady=(0, 8))
         frame_list = tk.Frame(dialog, bg="#121212")
         frame_list.pack(fill=tk.BOTH, expand=True, padx=12, pady=6)
@@ -14240,8 +14266,8 @@ class _StahovanieMixin(_ControlAppBase):
             messagebox.showinfo(
                 "Kinak: Hotovo",
                 "Čítania boli upravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
-                "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi.\n\n"
-                "Tip v Pomocníkovi: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
+                "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pracovných textoch.\n\n"
+                "Tip v Pracovných textoch: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
                 "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
             )
         try:
@@ -14512,8 +14538,8 @@ class _StahovanieMixin(_ControlAppBase):
                     f"Zdroj: lc.kbs.sk\n"
                     f"Súbor: {vystup_cesta.name}\n\n"
                     "Čítania boli pripravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
-                    "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi.\n\n"
-                    "Tip v Pomocníkovi: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
+                    "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pracovných textoch.\n\n"
+                    "Tip v Pracovných textoch: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
                     "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
                 )
             else:
@@ -14732,9 +14758,11 @@ class _StahovanieMixin(_ControlAppBase):
                         f"Hlavný súbor: {vystup_cesta.name} (čítania na {datum.strftime('%d.%m.%Y')})\n\n"
                         "Teraz môžete používať čítania aj bez internetu – ak sťahovanie zlyhá, "
                         "program automaticky použije offline cache.\n\n"
-                        "Dnešné čítania načítate zadaním 'citania'. Konkrétny deň vyberiete tlačidlom '📂 Offline' – "
-                        "čítania sa načítajú rovnako a podľa potreby ich môžete doladiť pre projekciu v Pomocníkovi.\n\n"
-                        "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pomocníkovi prázdny riadok. "
+                        "Čítania z hlavného súboru načítate zadaním 'citania' alebo tlačidlom 'Čítania (dátum)' v paneli Rýchly prístup "
+                        "na úvodnej obrazovke – dátum v názve tlačidla je dátum čítaní uložených v súbore citania.txt. "
+                        "Iný uložený deň vyberiete tlačidlom 'Offline čítania (archív)' vedľa neho (alebo tlačidlom '📂 Offline' v hornej lište) – "
+                        "čítania sa načítajú rovnako a podľa potreby ich môžete doladiť pre projekciu v Pracovných textoch.\n\n"
+                        "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pracovných textoch prázdny riadok. "
                         "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
                     )
                 elif vysledok.get("zrusene"):
@@ -14888,7 +14916,7 @@ class _StahovanieMixin(_ControlAppBase):
                     f"Zdroj: breviar.kbs.sk\n"
                     f"Súbor: {vystup_cesta.name}\n\n"
                     "Vešpery boli pripravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
-                    "(do vstupného poľa zadajte 'vespery') alebo ich podľa potreby ďalej doladiť pre projekciu v Pomocníkovi. "                    
+                    "(do vstupného poľa zadajte 'vespery') alebo ich podľa potreby ďalej doladiť pre projekciu v Pracovných textoch. "                    
                 )
                 self.manual_entry.focus_set()
             else:
@@ -15054,6 +15082,9 @@ class _PiesneSuboryMixin(_ControlAppBase):
         prefix_clean = self.normalize_alnum(prefix)
         if not prefix_clean:
             return None
+        # „oznamy“ je to isté ako „oznam“ (súbor oznam.txt)
+        if prefix_clean in OZNAM_VSTUPY:
+            prefix_clean = "oznam"
 
         # 2. Príprava cesty
         priečinok = self.song_folder_path
@@ -15200,6 +15231,11 @@ class _PiesneSuboryMixin(_ControlAppBase):
         # Načítanie samotnej piesne
         self.nacitat_piesne(nazov_suboru=nazov_bez_ext)
         self._aktualizuj_direktorium_pre_subor(nazov_bez_ext)
+        try:
+            self._uvodna_skry_okamzite()
+            self._uvodna_aktualizuj_viditelnost()
+        except Exception as e:
+            log_exception("skus_manualne_nacitanie: uvodna viditelnost zlyhala", e)
 
     def auto_nacitanie_suboru(self, event=None):
 
@@ -15254,6 +15290,12 @@ class _PiesneSuboryMixin(_ControlAppBase):
                 except Exception as e:
                     log_exception("auto_nacitanie_suboru: reset farby po vymazaní", e)
 
+                # Vstup aj obsah su prazdne a nic nie je vybrane -> uvodna hned naspat.
+                try:
+                    self._uvodna_aktualizuj_viditelnost()
+                except Exception as e:
+                    log_exception("auto_nacitanie_suboru: uvodna viditelnost zlyhala", e)
+
             return
 
         # ------------------------------------------------------------
@@ -15300,6 +15342,16 @@ class _PiesneSuboryMixin(_ControlAppBase):
             except Exception as e:
                 log_exception("auto_nacitanie_suboru: reset farby po nenájdení súboru", e)
 
+            # Vstup je neprazdny (pouzivatel nieco pise), takze uvodna
+            # zostava skryta, aj ked sa subor nenasiel a obsah je prazdny.
+            # Inak by uvodna prekrila prazdny panel a vyzeralo by to, ze
+            # sa nic nestalo.
+            try:
+                self._uvodna_skry_okamzite()
+                self._uvodna_aktualizuj_viditelnost()
+            except Exception as e:
+                log_exception("auto_nacitanie_suboru: uvodna viditelnost zlyhala", e)
+
             return
 
         # ------------------------------------------------------------
@@ -15307,8 +15359,13 @@ class _PiesneSuboryMixin(_ControlAppBase):
         # ------------------------------------------------------------
         nazov_bez_ext = Path(hladany_subor).stem
 
-        # Ak je to ten istý súbor → nič nemeníme
+        # Ak je to ten istý súbor → nič nemeníme, ale uvodna musi
+        # byt prec (piesen je nacitana).
         if nazov_bez_ext == self.nazov_piesne:
+            try:
+                self._uvodna_skry_okamzite()
+            except Exception as e:
+                log_exception("auto_nacitanie_suboru: uvodna skrytie zlyhalo", e)
             return
 
         # Reset výberov a popisov
@@ -15760,6 +15817,15 @@ class _PiesneSuboryMixin(_ControlAppBase):
                 # 6. Spracovanie liturgického direktória
                 self._aktualizuj_direktorium_pre_subor(nazov_bez_ext)
 
+                # Vyber z menu maza vstupne pole, ale piesen JE vybrata
+                # (subor_var + obsah + nazov), takze uvodna musi
+                # zostat skryta. Priame skrytie + aktualizuj.
+                try:
+                    self._uvodna_skry_okamzite()
+                    self._uvodna_aktualizuj_viditelnost()
+                except Exception as e:
+                    log_exception("nacitat_podla_menu: uvodna viditelnost zlyhala", e)
+
             else:
                 # Ak nie je vybraný súbor, vyčistíme všetko
                 self.popis_label.config(text="")
@@ -15930,6 +15996,12 @@ class _PiesneSuboryMixin(_ControlAppBase):
             )
 
         if not hladany_subor_cesta:
+            # Subor sa nenasiel, ale vyber (vstup / menu) moze byt
+            # neprazdny -> uvodna sa riadi vyberom, nie len obsahom.
+            try:
+                self._uvodna_aktualizuj_viditelnost()
+            except Exception as e:
+                log_exception("nacitat_piesne: uvodna viditelnost zlyhala", e)
             return
 
         self.aktualny_subor_cesta = hladany_subor_cesta
@@ -16018,7 +16090,16 @@ class _PiesneSuboryMixin(_ControlAppBase):
         try:
             self.oznac_aktualnu_strofu_v_obsahu()
         except Exception as e:
-            log_exception("Chyba pri zvýrazňovaní strofy v náhľade", e)                              
+            log_exception("Chyba pri zvýrazňovaní strofy v náhľade", e)
+        # OKAMZITE + PRIAMO: piesen je nacitana, uvodna musi ist prec hned.
+        # Priame skrytie nezavisi od ticku, pecate ani od vyhodnocovania
+        # viditelnosti – je to poistka pre pripad, ze by aktualizuj
+        # z nejakeho dovodu nezabral (napr. chyba v citania.txt).
+        try:
+            self._uvodna_skry_okamzite()
+            self._uvodna_aktualizuj_viditelnost()
+        except Exception as e:
+            log_exception("nacitat_piesne: uvodna viditelnost zlyhala", e)
    
        
     def odlozene_auto_nacitanie(self, event=None):
@@ -16098,6 +16179,17 @@ class _PiesneSuboryMixin(_ControlAppBase):
             self._auto_nacitanie_after_id = self.master.after(400, self.auto_nacitanie_suboru)
         except Exception as e:
             log_exception("odlozene_auto_nacitanie: master.after failed", e)
+        # OKAMZITE: ked pouzivatel nieco pise (napr. „citania“ / „245“),
+        # uvodna musi ist prec hned, nie az po 400 ms debounce + 300 ms
+        # ticku. Priame skrytie nezavisi od ticku ani od pecate.
+        # Ked je pole prazdne, len aktualizuj (uvodna sa vrati, len ak
+        # nie je vybrane vobec nic).
+        try:
+            if str(self.manual_entry.get() or "").strip():
+                self._uvodna_skry_okamzite()
+            self._uvodna_aktualizuj_viditelnost()
+        except Exception as e:
+            log_exception("odlozene_auto_nacitanie: uvodna viditelnost zlyhala", e)
 
     def aktualizuj_popis(self, nazov_bez_ext):
         popis = next((v for k, v in self.popisy_suborov.items() if k.lower() == nazov_bez_ext.lower()), "")
@@ -16982,6 +17074,11 @@ class _HlavneOknoMixin(_ControlAppBase):
             # Aktívna (hover) položka by inak dostala 1 px 3D rámik (activeborderwidth=1),
             # ktorý je vidieť aj na nadpisoch skupín. Hover ostáva len ako plná farba.
             menu.config(activeborderwidth=0)
+            if KATEGORIE_NADPIS_NEAKTIVNY:
+                # Farba textu vypnutých položiek je vlastnosťou celého menu (nie položky).
+                # Vypnuté sú v tomto menu iba nadpisy skupín, takže sa farba nadpisu pri
+                # prejdení myšou nemení a Tk nekreslí „vyrazený“ biely text.
+                menu.config(disabledforeground=KATEGORIE_NADPIS_FG)
             dostupne = list(self.obdobie_subory.keys())
             pouzite: set[str] = set()
             skupiny = [(n, [k for k in kategorie if k in dostupne]) for n, kategorie in KATEGORIE_SKUPINY]
@@ -16996,21 +17093,47 @@ class _HlavneOknoMixin(_ControlAppBase):
                 if not prva:
                     menu.add_separator()
                 prva = False
-                # Nadpis sa pri prejdení myšou nesmie meniť. Preto NIE JE vypnutou položkou:
-                # Tk (hlavne na Windows) kreslí vypnuté položky pod myšou inak (biely,
-                # „vyrazený“ text), a to sa nedá ovplyvniť farbami. Je to bežná položka
-                # s prázdnym príkazom, ktorej normálne aj hover farby sú rovnaké
-                # (pozadie menu + modrý text), takže sa pri hoveri nemá čo prekresliť.
-                # Kliknutie naň nič nezvolí (menu sa len zatvorí).
+                # Nadpis sa pri prejdení myšou nesmie meniť a klik naň nesmie nič zvoliť.
+                # KATEGORIE_NADPIS_NEAKTIVNY = True: nadpis je vypnutá položka s modrou farbou
+                # z menu-level `disabledforeground`; menu sa pri kliknutí nezatvorí (bez blikania).
+                # False (záloha): nadpis je bežná položka s rovnakou normálnou aj hover farbou.
+                # Tk Menu sa pri kliknutí na command položku vždy zatvorí,
+                # preto ho _znova_otvor_menu_kategorii hneď znova otvorí (bliknutie).
                 pozadie = menu.cget("bg")
-                menu.add_command(label=nadpis, command=lambda: None,
-                                 font=(self.font_family, KATEGORIE_NADPIS_VELKOST),
-                                 foreground=KATEGORIE_NADPIS_FG, activeforeground=KATEGORIE_NADPIS_FG,
-                                 background=pozadie, activebackground=pozadie)
+                if KATEGORIE_NADPIS_NEAKTIVNY:
+                    # Vypnutá položka: kliknutie ju neinvokuje, takže sa menu nezatvorí
+                    # a nemusí sa znova otvárať (žiadne blikanie).
+                    # Normálne AJ hover (active) farby sú rovnaké (modrý text na pozadí menu),
+                    # aby sa nadpis pri prejdení myšou nijako nezmenil.
+                    menu.add_command(label=nadpis, state="disabled",
+                                     font=(self.font_family, KATEGORIE_NADPIS_VELKOST),
+                                     foreground=KATEGORIE_NADPIS_FG, activeforeground=KATEGORIE_NADPIS_FG,
+                                     background=pozadie, activebackground=pozadie)
+                else:
+                    menu.add_command(label=nadpis, command=self._znova_otvor_menu_kategorii,
+                                     font=(self.font_family, KATEGORIE_NADPIS_VELKOST),
+                                     foreground=KATEGORIE_NADPIS_FG, activeforeground=KATEGORIE_NADPIS_FG,
+                                     background=pozadie, activebackground=pozadie)
                 for nazov in kategorie:
                     menu.add_command(label=nazov, command=lambda v=nazov: self._vyber_kategoriu(v))
         except Exception as e:
             log_exception("_zostav_menu_kategorii zlyhalo", e)
+
+    def _znova_otvor_menu_kategorii(self) -> None:
+        """Klik na modrý nadpis skupiny (Žalmy / Modlitby / Zbierky / Ostatné).
+
+        Nič nevyberie a menu Kategória ostane otvorené, aby si používateľ
+        mohol hneď kliknúť na položku pod nadpisom bez znovootvárania menu.
+        """
+        try:
+            menu = self.filter_menu["menu"]
+            x = self.filter_menu.winfo_rootx()
+            y = self.filter_menu.winfo_rooty() + self.filter_menu.winfo_height()
+            # Menu sa práve zatvára, preto ho otvoríme až po dokončení
+            # zatvárania, inak by sa post() stratil.
+            self.master.after(10, lambda: menu.post(x, y) if menu.winfo_exists() else None)
+        except Exception as e:
+            log_exception("_znova_otvor_menu_kategorii zlyhalo", e)
 
     def _vyber_kategoriu(self, nazov: str) -> None:
         """To isté, čo robí tk.OptionMenu pri výbere: nastaví premennú a zavolá filter."""
@@ -17337,6 +17460,16 @@ class _HlavneOknoMixin(_ControlAppBase):
             return "break"
 
         self.song_combobox.bind("<Tab>", prepni_focus_tab)
+        # OKAMZITE: aj pisanie do Zoznamu piesni je vyber - uvodna musi
+        # ist prec hned, nie az pri dalsom ticku.
+        def _uvodna_po_pisani_v_comboboxe(event=None):
+            try:
+                if str(self.song_combobox.get() or "").strip():
+                    self._uvodna_skry_okamzite()
+                self._uvodna_aktualizuj_viditelnost()
+            except Exception as e:
+                log_exception("song_combobox: uvodna viditelnost zlyhala", e)
+        self.song_combobox.bind("<KeyRelease>", _uvodna_po_pisani_v_comboboxe)
 
         # --- Rámik pre tlačidlá napravo ---
         buttons_frame = tk.Frame(horny_frame, bg=UI_BAR_BG)
@@ -17427,16 +17560,16 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         offline_btn = styl_toolbar_widget(tk.Button(buttons_frame, text="📂 Offline", command=self.open_offline_citania_prehladac))
         try:
-            Tooltip(offline_btn, "Prehliadať offline čítania\n(uložené podľa Nastavenia \n→ Umiestnenie súborov)")
+            Tooltip(offline_btn, "Offline čítania (archív)\n(uložené podľa Nastavenia \n→ Umiestnenie súborov)")
         except Exception:
             pass
 
         pomoc_btn = styl_toolbar_widget(tk.Menubutton(buttons_frame, text="Pomoc"))
         pomoc_menu = vytvor_toolbar_menu(pomoc_btn)
-        pomoc_menu.add_command(label="Pomocník", command=self.otvorit_pomocnika)       
-        pomoc_menu.add_command(label="Rýchly sprievodca", command=self.zobraz_rychly_sprievodca)
+        pomoc_menu.add_command(label="Rýchly štart", command=self.zobraz_rychly_sprievodca)
+        pomoc_menu.add_command(label="Návod", command=self.zobrazit_o_aplikacii)
         pomoc_menu.add_separator()
-        pomoc_menu.add_command(label="O aplikácii", command=self.zobrazit_o_aplikacii)
+        pomoc_menu.add_command(label="Pracovné texty", command=self.otvorit_pomocnika)
         pomoc_btn["menu"] = pomoc_menu
 
         # --- INDIKÁTOR ŽIAROVKY presunutý do lišty Náhľad projekcie ---
@@ -18016,7 +18149,7 @@ class _HlavneOknoMixin(_ControlAppBase):
                     except ValueError:
                         pass
 
-            # Fallback pre mesačné sviatky: 1L-12L
+            # Fallback pre mesačné žalmy: 1L-12L (refrény žalmov po dňoch mesiaca)
             if re.fullmatch(r"(\d+)L", kod_upper):
                 if "Mesačné" in self.obdobie_subory:
                     return "Mesačné", kod_upper
@@ -18293,7 +18426,8 @@ UVODNA_MOZNOSTI = (
     ("rychly_pristup", "Rýchly prístup (žalm dnes a zajtra, čítania, vešpery)"),
     ("odporucane", "Odporúčané piesne k dnešnému žalmu"),
     ("posledne", "Naposledy použité piesne"),
-    ("poznamky", "Okno Pomocník (tlačidlo na otvorenie)"),
+    ("skratky", "Skratky (modlitby, pobožnosti, hymny – zoznam v súbore skratky.txt)"),
+    ("poznamky", "Pracovné texty (tlačidlo na otvorenie)"),
     ("klavesy", "Ovládanie kláves (pripomienka)"),
 )
 UVODNA_KLAVESY = (
@@ -18353,6 +18487,79 @@ def uvodna_normalizuj_posledne(zoznam, nova=None, maximum=UVODNA_POSLEDNE_MAX):
     return vysledok
 
 
+UVODNA_SKRATKY_SUBOR = "skratky.txt"
+UVODNA_SKRATKY_UKAZKA = """# Skratky na úvodnej obrazovke (Nastavenia → Úvodná obrazovka → Skratky).
+# Každý riadok: SKRATKA - Popis. Skratka je to, čo by ste zadali do vstupného poľa.
+# Riadok v hranatých zátvorkách, napr. [Modlitby], začína novú skupinu.
+# Riadky začínajúce znakom # sa preskočia. Zmeny sa prejavia hneď po uložení súboru.
+
+[Modlitby]
+KR - Krédo
+AP - Anjel Pána
+RA - Raduj sa, nebies Kráľovná
+NL - Modlitba za kňazov
+MK - Modlitba za kňazov
+DK - Duša Kristova
+KK - Modlitba zasvätenia
+
+[Pobožnosti a litánie]
+SO - Ctíme túto Sviatosť
+LL - Loretánske litánie
+
+[Hymny]
+526 - Teba, Bože, chválime (Te Deum)
+543 - Príď, Duchu Svätý, tvorivý (Veni Creator)
+"""
+
+
+def uvodna_parsuj_skratky(text):
+    """Rozparsuje text súboru skratky.txt.
+
+    Vráti zoznam skupín [(názov skupiny, [(skratka, popis), ...]), ...].
+    Riadok „[Názov]“ začína skupinu, „SKRATKA - Popis“ je položka (oddeľovač
+    je pomlčka, polpomlčka, dlhá pomlčka alebo dvojbodka s medzerami okolo),
+    prázdne riadky a riadky s # sa preskočia. Položky pred prvým nadpisom
+    patria do skupiny bez názvu. Prázdne skupiny sa vynechajú.
+    """
+    skupiny = []
+    aktualna = None
+    for riadok in str(text or "").splitlines():
+        r = riadok.strip().lstrip("\ufeff")
+        if not r or r.startswith("#"):
+            continue
+        m = re.fullmatch(r"\[(.+)\]", r)
+        if m:
+            aktualna = (m.group(1).strip(), [])
+            skupiny.append(aktualna)
+            continue
+        m = re.match(r"(\S+)\s+[-\u2013\u2014:]\s+(.+)", r)
+        if m:
+            kod, popis = m.group(1), m.group(2).strip()
+        else:
+            casti = r.split(None, 1)
+            kod = casti[0].rstrip(":") or casti[0]   # aj „KR: Krédo“
+            popis = casti[1].strip() if len(casti) > 1 else kod
+        if aktualna is None:
+            aktualna = ("", [])
+            skupiny.append(aktualna)
+        aktualna[1].append((kod, popis))
+    return [(nazov, polozky) for nazov, polozky in skupiny if polozky]
+
+
+def uvodna_nacitaj_skratky_zo_suboru(cesta):
+    """Načíta a rozparsuje skratky.txt; pri chybe vráti prázdny zoznam."""
+    try:
+        cesta = Path(cesta)
+        try:
+            text = cesta.read_text(encoding="utf-8-sig")
+        except UnicodeDecodeError:
+            text = cesta.read_text(encoding="cp1250", errors="replace")
+        return uvodna_parsuj_skratky(text)
+    except Exception as e:
+        log_exception("Úvodná obrazovka: načítanie skratky.txt zlyhalo", e)
+        return []
+
+
 class _UvodnaObrazovkaMixin(_ControlAppBase):
     """Úvodná obrazovka hlavného okna (karty s rýchlym prístupom, históriou a pod.)."""
 
@@ -18370,6 +18577,12 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         self._uvodna_stav = None
         self._uvodna_datum = None
         self._uvodna_zaznam_id = None
+        # Pečať obsahu citania.txt (mtime + veľkosť). Úvodná obrazovka sa
+        # prebuduje aj pri zmene citania.txt v rámci toho istého dňa,
+        # aby popis tlačidla „Čítania (dátum)“ nikdy neukazoval starý dátum.
+        # POZOR: ulozena pecat MUSI mat iny nazov ako metoda
+        # _uvodna_citania_pecat(), inak by ju prepisala (vid _uvodna_aktualizuj).
+        self._uvodna_citania_pecat_hodnota = None
 
     def _uvodna_nacitaj_nastavenia(self, cfg):
         try:
@@ -18397,6 +18610,205 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
     def _uvodna_je_zapnuta(self, kluc):
         var = getattr(self, "uvodna_vars", {}).get(kluc)
         return bool(DEFAULT_CONFIG.get(f"uvodna_{kluc}", False)) if var is None else bool(var.get())
+
+    def _uvodna_nie_je_vybrane(self):
+        """True, len ked nie je vybrane vobec nic.
+
+        Uvodna obrazovka sa ma zobrazovat IBA v tomto stave. Nestaci
+        pozerat sa len na panel Obsah (stary stav) ani len na vstupne
+        pole (to by pokazilo vyber z menu Kategoria / Polozka, ktory
+        vstupne pole zamerne maza a piesen nacita cez subor_var).
+        Vybrane je cokolvek z toho: text vo vstupnom poli (aj ked sa
+        piesen este len hlada), nacitana piesen (nazov / strofy /
+        obsah), vyber v menu Kategoria / Polozka, alebo rozpracovany
+        vyber v comboboxe Zoznam piesni. Kazda cast je v try/except,
+        aby chyba jedneho widgetu (napr. pocas startu) neskryla /
+        nezobrazila uvodnu obrazovku nespravne.
+        """
+        try:
+            pole = getattr(self, "manual_entry", None)
+            if pole is not None and pole.winfo_exists():
+                if str(pole.get() or "").strip():
+                    return False
+        except Exception:
+            pass
+        try:
+            if str(getattr(self, "nazov_piesne", "") or "").strip():
+                return False
+        except Exception:
+            pass
+        try:
+            strofy = getattr(self, "aktualne_strofy", None) or []
+            if any(str(s or "").strip() for s in strofy):
+                return False
+        except Exception:
+            pass
+        try:
+            obsah = getattr(self, "obsah_suboru_text", None)
+            if obsah is not None and obsah.winfo_exists():
+                if str(obsah.get("1.0", "end-1c") or "").strip():
+                    return False
+        except Exception:
+            pass
+        try:
+            subor_var = getattr(self, "subor_var", None)
+            if subor_var is not None:
+                if str(subor_var.get() or "").strip() not in ("", SUBOR_ZIADNY):
+                    return False
+        except Exception:
+            pass
+        try:
+            combo = getattr(self, "song_combobox", None)
+            if combo is not None and combo.winfo_exists():
+                text = str(combo.get() or "").strip()
+                hlavicka = ""
+                try:
+                    hodnoty = getattr(self, "cele_hodnoty_comboboxu", None) or []
+                    if hodnoty:
+                        hlavicka = str(hodnoty[0] or "").strip()
+                except Exception:
+                    hlavicka = ""
+                if text and text not in ("", COMBO_HLAVICKA, hlavicka):
+                    return False
+        except Exception:
+            pass
+        return True
+
+    def _uvodna_zobraz_okamzite(self):
+        """Priamo ukaze uvodnu obrazovku, bez zavislosti na ticku.
+
+        Protivaha k _uvodna_skry_okamzite: vola sa z explicitnych akcii
+        pouzivatela (Home, Backspace), kde zobrazenie musi nastat hned
+        a nesmie ho zablokovat chyba v obnove obsahu ani v pecati.
+        Respektuje vypnutie v Nastaveniach (zapnute False -> skryje).
+        """
+        try:
+            zapnute = bool(self.uvodna_zapnute_var.get()) if hasattr(self, "uvodna_zapnute_var") else True
+        except Exception:
+            zapnute = True
+        if not zapnute:
+            try:
+                self._uvodna_skry_okamzite()
+            except Exception:
+                pass
+            return
+        frame = getattr(self, "_uvodna_frame", None)
+        rodic = getattr(self, "_uvodna_rodic", None)
+        if frame is None or rodic is None:
+            return
+        try:
+            self._uvodna_obnov_obsah()
+        except Exception as e:
+            log_exception("Úvodná obrazovka: obnova obsahu zlyhala (zobraz_okamzite)", e)
+        try:
+            frame.place(in_=rodic, x=0, y=0, relwidth=1, relheight=1)
+            frame.lift()
+        except Exception as e:
+            log_exception("Úvodná obrazovka: zobrazenie zlyhalo", e)
+            return
+        self._uvodna_stav = True
+        try:
+            self._uvodna_datum = date.today()
+        except Exception:
+            pass
+        try:
+            self._uvodna_citania_pecat_hodnota = self._uvodna_citania_pecat()
+        except Exception:
+            pass
+
+    def _uvodna_skry_okamzite(self):
+        """Priamo schova ram uvodnej obrazovky, bez zavislosti na ticku,
+        na pecati citania.txt ani na vyhodnocovani viditelnosti.
+
+        Poistka pre pripad, ze _uvodna_aktualizuj_viditelnost zlyha
+        alebo sa vobec nezavola: po nacitani piesne (alebo po zacati
+        pisania) musi byt uvodna obrazovka prec, bodka. Stav sa
+        nastavi na False, takze dalsi tick ju uz nebude znova
+        ukazovat, kym sa vsetko nevymaze a aktualizuj ju znova
+        neukaze cez normalnu cestu (reset_ui / Home / Backspace).
+        Nikdy sa tu nevolá _uvodna_obnov_obsah ani place(), len
+        place_forget(), takze tato metoda nemoze uvodnu obrazovku
+        omylom ZOBRAZIT.
+        """
+        try:
+            frame = getattr(self, "_uvodna_frame", None)
+            if frame is not None:
+                try:
+                    frame.place_forget()
+                except Exception:
+                    pass
+            self._uvodna_stav = False
+        except Exception:
+            pass
+
+    # ---------- dátum čítaní pre tlačidlo „Čítania (dátum)“ ----------
+    def _uvodna_citania_cesta(self):
+        """Cesta k citania.txt, alebo None, ak priečinok piesní nie je známy."""
+        try:
+            priecinok = getattr(self, "song_folder_path", None)
+            if priecinok is None:
+                return None
+            return Path(priecinok) / "citania.txt"
+        except Exception:
+            return None
+
+    def _uvodna_citania_datum(self):
+        """Dátum čítaní z hlavičky citania.txt (riadok DD.MM.RRRR).
+
+        Používa existujúcu funkciu zisti_datum_citania_v_subore(), ktorá
+        číta prvých 20 riadkov súboru. Ak sa dátum nepodarí prečítať
+        (súbor neexistuje, je prázdny alebo bez hlavičky), vráti None
+        a tlačidlo zostane bez dátumu, teda len „Čítania“.
+        """
+        try:
+            cesta = self._uvodna_citania_cesta()
+            if cesta is None or not cesta.is_file():
+                return None
+            return zisti_datum_citania_v_subore(cesta)
+        except Exception as e:
+            log_exception("Úvodná obrazovka: čítanie dátumu citania.txt zlyhalo", e)
+            return None
+
+    @staticmethod
+    def _uvodna_pecat_suboru(cesta):
+        """Pečať súboru: (mtime_ns, veľkosť), alebo None, ak súbor neexistuje."""
+        try:
+            if cesta is None or not cesta.is_file():
+                return None
+            st = cesta.stat()
+            return (st.st_mtime_ns, st.st_size)
+        except Exception:
+            return None
+
+    def _uvodna_citania_pecat(self):
+        """Pečať obsahu, od ktorého závisí úvodná obrazovka:
+        (pečať citania.txt, pečať skratky.txt – len ak je karta Skratky zapnutá).
+
+        Slúži na zistenie, že sa citania.txt zmenil (stiahnutie, výber
+        iného dňa z archívu, úprava v Pracovných textoch) alebo že sa upravil
+        skratky.txt, aj vtedy, keď sa nezmenil kalendárny deň. Porovnáva sa
+        v _uvodna_aktualizuj_viditelnost().
+        """
+        try:
+            skratky = None
+            if self._uvodna_je_zapnuta("skratky"):
+                skratky = self._uvodna_pecat_suboru(self._uvodna_skratky_cesta())
+            return (self._uvodna_pecat_suboru(self._uvodna_citania_cesta()), skratky)
+        except Exception:
+            return None
+
+    def _uvodna_citania_popis(self):
+        """Popis tlačidla čítaní: „Čítania (9. 11. 2026)“ alebo len „Čítania“.
+
+        Formát dátumu je zámerne bez úvodnej nuly (9. 11. 2026, nie
+        09. 11. 2026), aby zodpovedal návrhu používateľského rozhrania.
+        Tlačidlo tak otvára presne ten obsah, ktorého dátum ukazuje,
+        teda aktuálny obsah súboru citania.txt.
+        """
+        datum = self._uvodna_citania_datum()
+        if datum is None:
+            return "Čítania"
+        return f"Čítania ({datum.day}. {datum.month}. {datum.year})"
 
     # ---------- história naposledy použitých piesní ----------
     def _uvodna_naplanuj_zaznam(self, nazov):
@@ -18470,7 +18882,9 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             except Exception:
                 pass
             self._obnov_focus_manual_entry_bez_vymazania()
-            self.uvodna_prekresli()
+            # Priamo zobrazit (nie len cez prekresli/aktualizuj): Home je
+            # explicitny prikaz pouzivatela, uvodna musi prist hned.
+            self._uvodna_zobraz_okamzite()
         except Exception as e:
             log_exception("prejst_na_uvodnu_obrazovku: zlyhalo", e)
         return "break"
@@ -18499,7 +18913,17 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             if self.manual_entry.get().strip():
                 return
             if not self.obsah_suboru_text.get("1.0", "end-1c").strip():
-                return
+                # Obsah je uz prazdny, ale uvodna moze byt skryta kvoli
+                # zastaranemu stavu (napr. po chybe v obnove). Ak nie je
+                # vybrane vobec nic a uvodna je skryta, vrat ju aj tak.
+                # Inak by Backspace po zmazani vstupu nerobil nic.
+                try:
+                    if not self._uvodna_nie_je_vybrane():
+                        return
+                    if getattr(self, "_uvodna_stav", None) is not False:
+                        return
+                except Exception:
+                    return
         except tk.TclError:
             return
         self.prejst_na_uvodnu_obrazovku()
@@ -18534,15 +18958,35 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         if frame is None or rodic is None:
             return
         zapnute = bool(self.uvodna_zapnute_var.get()) if hasattr(self, "uvodna_zapnute_var") else True
-        je_prazdne = not self.obsah_suboru_text.get("1.0", "end-1c").strip()
+        # Uvodna sa zobrazuje LEN ked nie je vybrane vobec nic. Stare
+        # pravidlo „obsah je prazdny“ tu zlyhavalo: pri „citania“
+        # v poli (alebo pri vybere z menu, ktory pole maza) ostal
+        # obsah prazdny / este sa len hladal a uvodna prekrila panel.
+        je_prazdne = self._uvodna_nie_je_vybrane()
         dnes = date.today()
         if zapnute and je_prazdne:
-            if self._uvodna_stav is not True or self._uvodna_datum != dnes:
-                self._uvodna_obnov_obsah()
+            # Pecat citania.txt sa pocita AZ tu, len pre vetvu ZOBRAZIT.
+            # Skrytie na nej nesmie zavisiet: ak by stat() / citanie
+            # suboru zlyhalo, uvodna by inak ostala visiet aj po
+            # nacitani piesne.
+            citania_pecat = self._uvodna_citania_pecat()
+            if self._uvodna_stav is not True or self._uvodna_datum != dnes or getattr(self, "_uvodna_citania_pecat_hodnota", None) != citania_pecat:
+                # Obnova obsahu nesmie zablokovat zobrazenie: aj ked karta
+                # padne, ram sa umiestni a uvodna sa ukaze (so starym /
+                # ciastocnym obsahom), nie aby ostala skryta.
+                try:
+                    self._uvodna_obnov_obsah()
+                except Exception as e:
+                    log_exception("Úvodná obrazovka: obnova obsahu zlyhala", e)
                 frame.place(in_=rodic, x=0, y=0, relwidth=1, relheight=1)
                 frame.lift()
                 self._uvodna_stav = True
                 self._uvodna_datum = dnes
+                # ULOZENA pecat ma INY nazov ako metoda _uvodna_citania_pecat().
+                # Predtym sa tu metoda prepisala tuple-om a dalsie volanie
+                # self._uvodna_citania_pecat() padlo na TypeError, takze sa
+                # uvodna po prvom zobrazeni uz nikdy neukazala (Home / Backspace).
+                self._uvodna_citania_pecat_hodnota = citania_pecat
         elif self._uvodna_stav is not False:
             frame.place_forget()
             self._uvodna_stav = False
@@ -18572,6 +19016,7 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         stav: Literal["normal", "active", "disabled"] = tk.NORMAL,
         kompaktne=False,
         styl: Literal["primarne", "sekundarne", "terciarne"] = "sekundarne",
+        fokusovatelne=False,
     ):
         """Tlačidlo s 1 px okrajom v jednom zo štýlov (primárne / sekundárne / terciárne).
         Okraj tvorí rámik okolo tlačidla (highlightthickness sa na Windows pri tk.Button
@@ -18586,7 +19031,7 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             activebackground=farby["active"], activeforeground=farby["fg"],
             disabledforeground="#8D99AD", relief=tk.FLAT, bd=0, highlightthickness=0,
             padx=10 if kompaktne else 12, pady=5 if kompaktne else 8,
-            cursor="hand2", takefocus=0, state=stav,
+            cursor="hand2", takefocus=1 if fokusovatelne else 0, state=stav,
         )
         btn.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
 
@@ -18668,6 +19113,8 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             stavitelia.append(self._uvodna_karta_odporucane)
         if self._uvodna_je_zapnuta("posledne"):
             stavitelia.append(self._uvodna_karta_posledne)
+        if self._uvodna_je_zapnuta("skratky"):
+            stavitelia.append(self._uvodna_karta_skratky)
         if self._uvodna_je_zapnuta("poznamky"):
             stavitelia.append(self._uvodna_karta_poznamky)
 
@@ -18689,7 +19136,10 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             pozicia += 1
 
         if self._uvodna_je_zapnuta("klavesy"):
-            self._uvodna_pas_klaves(obal, riadok=(pozicia + 1) // 2)
+            try:
+                self._uvodna_pas_klaves(obal, riadok=(pozicia + 1) // 2)
+            except Exception as e:
+                log_exception("Úvodná obrazovka: pás kláves zlyhal", e)
 
     def _uvodna_karta_rychly_pristup(self, karta):
         self._uvodna_nadpis(karta, "Rýchly prístup")
@@ -18708,17 +19158,42 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
                 styl="primarne" if text.startswith("Žalm dnes") else "sekundarne",
             ).pack(fill=tk.X, pady=(0, 6))
 
+        # 1. riadok – dvojica čítaní: aktuálny obsah vs. archív.
+        # „Čítania (dátum)“ otvára presne ten obsah, ktorého dátum ukazuje,
+        # teda aktuálny citania.txt. „Offline čítania (archív)“ otvára okno
+        # s uloženými čítaniami podľa dátumu, z ktorého sa dá vybrať iný deň.
+        # Obe tlačidlá sú fokusovateľné klávesou Tab (na rozdiel od ostatných
+        # tlačidiel úvodnej obrazovky), pretože časť používateľov ovláda
+        # program prevažne klávesnicou a nepoužíva myš.
         rad = tk.Frame(karta, bg=UVODNA_KARTA_BG)
-        rad.pack(fill=tk.X)
-        for i, (text, subor) in enumerate((("Čítania", "citania"), ("Vešpery", "vespery"))):
-            try:
-                existuje = (self.song_folder_path / f"{subor}.txt").exists()
-            except Exception:
-                existuje = False
-            self._uvodna_tlacidlo(
-                rad, text, lambda s=subor: self._uvodna_otvor(s),
-                stav=tk.NORMAL if existuje else tk.DISABLED,
-            ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6) if i == 0 else 0)
+        rad.pack(fill=tk.X, pady=(0, 6))
+        try:
+            citania_existuje = (self.song_folder_path / "citania.txt").exists()
+        except Exception:
+            citania_existuje = False
+        self._uvodna_tlacidlo(
+            rad, self._uvodna_citania_popis(),
+            lambda: self._uvodna_otvor("citania"),
+            stav=tk.NORMAL if citania_existuje else tk.DISABLED,
+            fokusovatelne=True,
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
+        # Archív je vždy aktívny, aj keď citania.txt chýba: okno archívu
+        # samo vysvetlí prázdny stav a ponúkne stiahnutie čítaní.
+        self._uvodna_tlacidlo(
+            rad, "Offline čítania (archív)",
+            lambda: self.open_offline_citania_prehladac(),
+            fokusovatelne=True,
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        # 2. riadok – Vešpery zostávajú, len sa presunuli na vlastný riadok,
+        # aby dvojica čítaní mala vedľa seba dosť miesta na celý popis.
+        try:
+            vespery_existuju = (self.song_folder_path / "vespery.txt").exists()
+        except Exception:
+            vespery_existuju = False
+        self._uvodna_tlacidlo(
+            karta, "Vešpery", lambda: self._uvodna_otvor("vespery"),
+            stav=tk.NORMAL if vespery_existuju else tk.DISABLED,
+        ).pack(fill=tk.X)
         return True
 
     def _uvodna_karta_odporucane(self, karta):
@@ -18767,11 +19242,78 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             ).grid(row=i // stlpcov, column=i % stlpcov, sticky="ew", padx=2, pady=2)
         return True
 
+    # ---------- karta „Skratky“ (zoznam zo súboru skratky.txt) ----------
+    def _uvodna_skratky_cesta(self):
+        """Cesta k skratky.txt v priečinku piesní, alebo None, ak priečinok nie je známy."""
+        try:
+            priecinok = getattr(self, "song_folder_path", None)
+            if priecinok is None:
+                return None
+            return Path(priecinok) / UVODNA_SKRATKY_SUBOR
+        except Exception:
+            return None
+
+    def _uvodna_skratky_zabezpec_subor(self, cesta):
+        """Ak skratky.txt ešte neexistuje, vytvorí ho s ukážkovým zoznamom."""
+        try:
+            if cesta is not None and not cesta.exists() and cesta.parent.is_dir():
+                _zapis_text_atomicky(cesta, UVODNA_SKRATKY_UKAZKA, encoding="utf-8")
+                log_info(f"Úvodná obrazovka: vytvorený ukážkový {cesta}")
+        except Exception as e:
+            log_exception("Úvodná obrazovka: vytvorenie skratky.txt zlyhalo", e)
+
+    def _uvodna_uprav_skratky(self):
+        """Otvorí skratky.txt v predvolenom editore (Poznámkový blok a pod.)."""
+        cesta = self._uvodna_skratky_cesta()
+        if cesta is None:
+            messagebox.showinfo("Kinak: Skratky", "Priečinok piesní nie je nastavený.")
+            return
+        self._uvodna_skratky_zabezpec_subor(cesta)
+        try:
+            if sys.platform.startswith("win"):
+                os.startfile(str(cesta))  # type: ignore[attr-defined]
+            else:
+                import subprocess
+                subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(cesta)])
+        except Exception as e:
+            log_exception("Úvodná obrazovka: otvorenie skratky.txt zlyhalo", e)
+            messagebox.showinfo(
+                "Kinak: Skratky",
+                f"Súbor sa nepodarilo otvoriť automaticky. Otvorte ho ručne:\n\n{cesta}",
+            )
+
+    def _uvodna_karta_skratky(self, karta):
+        cesta = self._uvodna_skratky_cesta()
+        if cesta is None:
+            return False
+        self._uvodna_skratky_zabezpec_subor(cesta)
+        skupiny = uvodna_nacitaj_skratky_zo_suboru(cesta)
+        self._uvodna_nadpis(karta, "Skratky")
+        if not skupiny:
+            tk.Label(
+                karta, text=f"Zoznam je prázdny. Doplňte riadky do súboru {UVODNA_SKRATKY_SUBOR}.",
+                wraplength=360, justify=tk.LEFT, anchor="w",
+                font=(self.font_family, 11), fg="#c9cfdc", bg=UVODNA_KARTA_BG,
+            ).pack(fill=tk.X)
+        for i, (nazov, polozky) in enumerate(skupiny):
+            if nazov:
+                tk.Label(
+                    karta, text=nazov, anchor="w",
+                    font=(self.font_family, 11, "bold"), fg="#c9cfdc", bg=UVODNA_KARTA_BG,
+                ).pack(fill=tk.X, pady=(0 if i == 0 else 8, 2))
+            for kod, popis in polozky:
+                self._uvodna_riadok(karta, kod, popis, lambda k=kod: self._uvodna_otvor(k))
+        self._uvodna_tlacidlo(
+            karta, f"Upraviť zoznam ({UVODNA_SKRATKY_SUBOR})", self._uvodna_uprav_skratky,
+            styl="terciarne", kompaktne=True,
+        ).pack(fill=tk.X, pady=(10, 0))
+        return True
+
     def _uvodna_karta_poznamky(self, karta):
         """Karta „Okno Pomocník“ – len tlačidlo na otvorenie okna Pomocník
         (kľúč „poznamky“ ostáva kvôli kompatibilite s existujúcim config.json)."""
-        self._uvodna_nadpis(karta, "Okno Pomocník")
-        self._uvodna_tlacidlo(karta, "Otvoriť Pomocníka", self.otvorit_pomocnika, styl="terciarne").pack(fill=tk.X)
+        self._uvodna_nadpis(karta, "Pracovné texty")
+        self._uvodna_tlacidlo(karta, "Otvoriť Pracovné texty", self.otvorit_pomocnika, styl="terciarne").pack(fill=tk.X)
         return True
 
     def _uvodna_pas_klaves(self, obal, riadok):
@@ -18947,7 +19489,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             # --- OKNO ---
             self.pomocnik_okno = tk.Toplevel(self.master)
             self.pomocnik_okno.transient(self.master)
-            self.pomocnik_okno.title("Pomocník")
+            self.pomocnik_okno.title("Pracovné texty")
             self.pomocnik_okno.configure(bg="#1a1a1a")
             self.pomocnik_okno.protocol("WM_DELETE_WINDOW", self._zatvorit_pomocnika)
 
@@ -19182,8 +19724,10 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "  OND\t–  Sv. Ondreja, apoštola (30. XI.) – ak nepadne na nedeľu\n\n"
 
 
-                "MESAČNÉ SVIATKY (1L–12L)\n"
+                "MESAČNÉ ŽALMY (1L–12L)\n"
                 "─────────────────────\n"
+                "Súbory 1L až 12L obsahujú refrény žalmov na každý deň daného mesiaca – číslo pred riadkom je deň v mesiaci "
+                "(napr. v 11L je riadok 9 refrén na 9. novembra). Používajú sa najmä pri týchto sviatkoch:\n\n"
                 "  1L  –  Zjavenie Pána (6. I.)\n"
                 "  2L  –  Obetovanie Pána (2. II.)\n"
                 "  3L  –  Sv. Jozef, ženích (19. III.) – ak nepadne na nedeľu\n"
@@ -19196,7 +19740,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 " 10L  –  Sviatky mučeníkov (v októbri)\n"
                 " 11L  –  Všetkých svätých (1. XI.)\n"
                 " 12L  –  Nepoškvrnené počatie Panny Márie (8. XII.) – ak nepadne na nedeľu\n\n"
-                "  Stavový riadok ukazuje tlačidlo s kódom aktuálneho mesiaca (napr. 11L v novembri). Kliknutím sa načíta – použi ho, ak si medzi ponúknutými skratkami „Dnes“ a „Zajtra“ nenašiel vhodný žalm.\n\n" 
+                "Tlačidlo „Mesačné žalmy: 11L (november)“ v stavovom riadku otvorí súbor aktuálneho mesiaca. "
+                "Použi ho, ak si medzi ponúknutými skratkami „Dnes“ a „Zajtra“ nenašiel vhodný žalm – hľadaný deň je v ňom pod svojím číslom.\n\n"
                 
                 "PRAKTICKÁ POZNÁMKA\n"
                 "─────────────────────\n"
@@ -19463,7 +20008,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
         wizard = tk.Toplevel(self.master)
         self.wizard_window = wizard
-        wizard.title("Kinak – Rýchly sprievodca")
+        wizard.title("Kinak – Rýchly štart")
 
         # --- ZÁKLADNÉ NASTAVENIA OKNA ---
         self._setup_wizard_window(wizard)
@@ -19585,7 +20130,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             "• PLUS (+) \t\tĎalšia strofa (možno použiť aj šípku →)\n"
             "• MÍNUS (-) \t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
             "• ENTER \t\tAktivovať projekciu (zobraziť/skryť text)\n"
-            "• BACKSPACE \t\tMaže číslo piesne a zároveň okamžite vypína projekciu\n"
+            "• BACKSPACE \t\tMaže číslo piesne a zároveň okamžite vypína projekciu. Keď je pole už prázdne, vráti úvodnú obrazovku (vymaže pole, obsah aj výber).\n"
+            "• HOME \t\tRESET na jeden stisk: vypne projekciu, vymaže pole, obsah aj výber a ukáže úvod. To isté, čo Backspace pri prázdnom poli, len hneď. Pozor, je hneď nad šípkami, bez potvrdenia a bez vrátenia. (V hľadacom poli hore neplatí, tam posúva kurzor.)\n"
             "• ESC \t\tZavrieť okno / ukončiť program\n"
         )
         txt1.insert("end", navod_text)
@@ -20007,7 +20553,28 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         # reset interných premenných
         self.nazov_piesne = ""
         self.aktualne_strofy = []
-        self.aktualny_index_strofa = 0        
+        self.aktualny_index_strofa = 0
+        # Reset comboboxu na hlavicku PRED aktualizuj: inak by pomocnik
+        # _uvodna_nie_je_vybrane videl staru vybratu piesen v Zozname
+        # piesni a uvodnu by neukazal, aj ked je vsetko ostatne prazdne.
+        try:
+            combo = getattr(self, "song_combobox", None)
+            if combo is not None and combo.winfo_exists():
+                try:
+                    combo.current(0)
+                except Exception:
+                    try:
+                        combo.set(COMBO_HLAVICKA)
+                    except Exception:
+                        pass
+        except Exception as e:
+            log_exception("reset_ui: reset comboboxu zlyhal", e)
+        # Vsetko je prazdne a nic nie je vybrane -> uvodna hned naspat,
+        # nie az pri dalsom ticku.
+        try:
+            self._uvodna_aktualizuj_viditelnost()
+        except Exception as e:
+            log_exception("reset_ui: uvodna viditelnost zlyhala", e)
     
     # ==========================================================
     # LIVE PREVIEW – oddelenie debounce a exekúcie (oprava leak-u after_id)
@@ -20298,7 +20865,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         """
         about_window = tk.Toplevel(self.master)
         self.about_window = about_window
-        about_window.title("O aplikácii")
+        about_window.title("Návod")
         
         try:
             # 1) Základná konfigurácia okna
@@ -20453,7 +21020,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• PLUS (+)\t\tĎalšia strofa (možno použiť aj šípku →)\n"
                 "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
                 "• ENTER\t\tAktivovať projekciu (skryť/zobraziť text)\n"
-                "• BACKSPACE\t\tMaže číslo piesne a zároveň okamžite vypína projekciu\n"
+                "• BACKSPACE\t\tMaže číslo piesne a zároveň okamžite vypína projekciu. Keď je pole už prázdne, vráti úvodnú obrazovku (vymaže pole, obsah aj výber).\n"
+                "• HOME\t\tRESET na jeden stisk: vypne projekciu, vymaže pole, obsah aj výber a ukáže úvod. To isté, čo Backspace pri prázdnom poli, len hneď. Pozor, je hneď nad šípkami, bez potvrdenia a bez vrátenia. (V hľadacom poli hore neplatí, tam posúva kurzor.)\n"
                 "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
                 "Kinak je prenosná desktopová aplikácia na projekciu liturgických piesní, žalmov a modlitieb, so zabudovaným liturgickým kalendárom, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus a žaltárový týždeň liturgického roka.\n\n"
                 "● Hlavné funkcie\n\n"
@@ -20523,7 +21091,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             pomoc_text = (
                 "● Ak projekcia nie je na správnom monitore\n\n"
                 "V systéme Windows stlačte Win + P a skontrolujte, či je zvolený režim Rozšíriť (Extend). Kinak môže automaticky otvoriť projekciu "
-                "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku. Podrobnosti nájdete v aplikácii Kinak v časti Pomoc → Rýchly sprievodca.\n\n"
+                "na druhom monitore alebo projektore iba vtedy, keď ho operačný systém vidí ako samostatnú obrazovku. Podrobnosti nájdete v aplikácii Kinak v časti Pomoc → Rýchly štart.\n\n"
                 "● Ak sa piesne nenačítajú\n\n"
                 "Pri presúvaní aplikácie vždy presuňte celý priečinok Kinak. Súbor Kinak.exe musí byť v rovnakom priečinku ako priečinok "
                 "s názvom 'piesne'.\n\n"              
@@ -20589,21 +21157,23 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Každé stiahnutie sa uloží aj do offline úložiska, takže čítania sú potom dostupné aj bez internetu.\n\n"
                 "Vešpery sa sťahujú samostatne cez Liturgické nástroje → Stiahnuť vešpery.\n\n"
                 "● Zobrazenie čítaní po štarte aplikácie Kinak\n\n"
-                "Zadajte do vstupného poľa „citania“ alebo kliknite na tlačidlo „Čítania“ v úvodnej obrazovke – načíta sa súbor z priečinka piesne/citania.txt\n\n"
+                "Zadajte do vstupného poľa „citania“ alebo kliknite na tlačidlo „Čítania (dátum)“ v paneli Rýchly prístup na úvodnej obrazovke – načíta sa súbor z priečinka piesne/citania.txt\n\n"
+                "Dátum v názve tlačidla (napr. „Čítania (9. 11. 2026)“) je dátum čítaní uložených v súbore citania.txt a mení sa automaticky, keď sa súbor zmení. Hneď tak vidíte, s ktorým dňom pracujete. "
+                "Iný uložený deň vyberiete tlačidlom „Offline čítania (archív)“, ktoré je v paneli Rýchly prístup hneď vedľa neho.\n\n"
                 "Čo sa stane potom:\n\n"
                 "• citania.txt neexistuje → vypíše, že súbor neexistuje (v hornom menu zvoľte Liturgické nástroje → Stiahnuť čítania)\n"
                 "• citania.txt má dátum v minulosti ALEBO v budúcnosti → ak je dnešok v offline_citania/, nahradí ho dneškom, inak nechá pôvodný obsah\n"
                 "• citania.txt má dátum dnes → ponechá ho\n\n"
                 "Po spustení aplikácie Kinak automaticky zobrazí dnešné čítania, ak je príslušný súbor k dispozícii.\n"
-                "Následne môžete v okne „Offline čítania - prehliadač“ vybrať minulé alebo budúce čítanie. Po výbere sa toto čítanie zobrazí.\n\n"
-                "● Prehliadač offline čítaní\n\n"
-                "Tlačidlom „📂 Offline“ v hornej lište (alebo tlačidlom „📂 Prehliadať offline čítania“ v okne Stiahnuť čítania) "
+                "Následne môžete v okne „Offline čítania (archív)“ vybrať minulé alebo budúce čítanie. Po výbere sa toto čítanie zobrazí.\n\n"
+                "● Offline čítania (archív)\n\n"
+                "Tlačidlom „📂 Offline“ v hornej lište (alebo tlačidlom „📂 Offline čítania (archív)“ v okne Stiahnuť čítania) "
                 "otvoríte zoznam dní, ktoré máte uložené. Dnešný deň je označený ★ DNES.\n\n"
                 "• Deň vyberte zo zoznamu a zobrazte ho dvojklikom, klávesom Enter alebo tlačidlom „Zobraziť vybraný deň“\n"
                 "• Tlačidlo „Dnes“ zobrazí dnešné čítania; ak v úložisku nie sú, Kinak ponúkne ich stiahnutie\n"
                 "• Zobrazený deň sa načíta ako citania.txt, takže ho môžete podľa potreby doladiť pre projekciu "
-                "v Pomocníkovi (menu Pomoc → Pomocník)\n\n"
-                "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pomocníkovi prázdny riadok. "
+                "v Pracovných textoch (menu Pomoc → Pracovné texty)\n\n"
+                "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pracovných textoch prázdny riadok. "
                 "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný.\n\n"
                 "● Kde sú čítania uložené\n\n"
                 "Offline čítania sa ukladajú do priečinka piesne/offline_citania/, teda do priečinka, ktorý máte v "
