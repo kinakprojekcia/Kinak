@@ -20388,12 +20388,12 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         txt1.insert("1.0", "1. Ovládanie\n\n", "nadpis")
         navod_text = (            
             "Zadajte číslo piesne a potom používajte klávesy:\n\n"
-            "• PLUS (+) \t\tĎalšia strofa (možno použiť aj šípku →)\n"
-            "• MÍNUS (-) \t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
-            "• ENTER \t\tAktivovať projekciu (zobraziť/skryť text)\n"
-            "• BACKSPACE \t\tMaže číslo piesne a zároveň okamžite vypína projekciu. Keď je pole už prázdne, vráti úvodnú obrazovku (vymaže pole, obsah aj výber).\n"
-            "• HOME \t\tRESET na jeden stisk: vypne projekciu, vymaže pole, obsah aj výber a ukáže úvod. To isté, čo Backspace pri prázdnom poli, len hneď. Pozor, je hneď nad šípkami, bez potvrdenia a bez vrátenia. (V hľadacom poli hore neplatí, tam posúva kurzor.)\n"
-            "• ESC \t\tZavrieť okno / ukončiť program\n"
+            "• PLUS (+)\t\tĎalšia strofa (možno použiť aj šípku →)\n"
+            "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
+            "• ENTER\t\tAktivovať projekciu (skryť/zobraziť text)\n"
+            "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
+            "• BACKSPACE - Maže číslo piesne a zároveň okamžite vypína projekciu. Keď je pole už prázdne, vráti úvodnú obrazovku (vymaže pole, obsah aj výber).\n\n"
+            "• HOME - RESET na jeden stisk: vypne projekciu, vymaže pole, obsah aj výber a ukáže úvodnú obrazovku. To isté, čo Backspace pri prázdnom poli, len hneď. (V hľadacom poli hore neplatí, tam posúva kurzor.)\n\n"
         )
         txt1.insert("end", navod_text)
         txt1.tag_config("nadpis", font=(safe_font_name, 16, "bold"), foreground="white")
@@ -21281,9 +21281,10 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• PLUS (+)\t\tĎalšia strofa (možno použiť aj šípku →)\n"
                 "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
                 "• ENTER\t\tAktivovať projekciu (skryť/zobraziť text)\n"
-                "• BACKSPACE\t\tMaže číslo piesne a zároveň okamžite vypína projekciu. Keď je pole už prázdne, vráti úvodnú obrazovku (vymaže pole, obsah aj výber).\n"
-                "• HOME\t\tRESET na jeden stisk: vypne projekciu, vymaže pole, obsah aj výber a ukáže úvod. To isté, čo Backspace pri prázdnom poli, len hneď. Pozor, je hneď nad šípkami, bez potvrdenia a bez vrátenia. (V hľadacom poli hore neplatí, tam posúva kurzor.)\n"
                 "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
+                "• BACKSPACE - Maže číslo piesne a zároveň okamžite vypína projekciu. Keď je pole už prázdne, vráti úvodnú obrazovku (vymaže pole, obsah aj výber).\n\n"
+                "• HOME - RESET na jeden stisk: vypne projekciu, vymaže pole, obsah aj výber a ukáže úvodnú obrazovku. To isté, čo Backspace pri prázdnom poli, len hneď. (V hľadacom poli hore neplatí, tam posúva kurzor.)\n\n"
+                               
                 "Kinak je prenosná desktopová aplikácia na projekciu liturgických piesní, žalmov a modlitieb, so zabudovaným liturgickým kalendárom, ktorý automaticky určuje a zobrazuje aktuálne slávenie, cyklus a žaltárový týždeň liturgického roka.\n\n"
                 "● Hlavné funkcie\n\n"
                 "• Projekcia textov na externý monitor alebo projektor\n"
