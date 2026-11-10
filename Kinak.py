@@ -3854,7 +3854,7 @@ DEFAULT_CONFIG = {
     # _zostav_config_dict r. ~9063) a táto konštanta sa pri tom nikde nečíta.
     "liturgical_year": "",
     "default_filter_obdobie": "Cezročné C2",
-    "auto_filter_podla_dnes": True,
+    "auto_filter_podla_dnes": False,
     "pouzit_vlastnu_farbu": False,
     "bottom_margin": 40,
     # Výška prázdnych riadkov medzi strofami v texte ovládacieho okna (v %,
@@ -9612,6 +9612,11 @@ if TYPE_CHECKING:
         subory_zoznam: Any = None
         text_color_var: Any = None
         uvodna_vars: Any = None
+        _combo_popup: Any = None
+        _combo_lb: Any = None
+        _combo_sb: Any = None
+        _combo_popup_viditelny: bool = False
+        _combo_posledny_text: str = ""
         uvodna_zapnute_var: Any = None
         vyber_farbu_button: Any = None
         wizard_window: Any = None
@@ -9750,6 +9755,10 @@ if TYPE_CHECKING:
         def vypni_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
         def vypocitaj_velkost_pisma_pre_strofu(self, *args: Any, **kwargs: Any) -> Any: ...
         def vytvorit_gui(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _combo_filter_zhody(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _combo_filter_po_pisani(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _combo_filter_nastav(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _combo_popup_zatvor(self, *args: Any, **kwargs: Any) -> Any: ...
         def vytvorit_nastavenia_okno(self, *args: Any, **kwargs: Any) -> Any: ...
         def zapni_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
         def zatvorit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -15386,6 +15395,11 @@ class _PiesneSuboryMixin(_ControlAppBase):
         self._aktualizuj_direktorium_pre_subor(nazov_bez_ext)                
                                 
     def filtrovat_subory(self, vybrane_obdobie):
+        # Zatvor živý zoznam zhôd pod poľom na hľadanie piesní
+        try:
+            self._combo_popup_zatvor()
+        except Exception as e:
+            log_exception("filtrovat_subory: zatvorenie zoznamu zhôd", e)
         # Vyčisti vstupné pole
         try:
             self.manual_entry.delete(0, tk.END)
@@ -17217,6 +17231,249 @@ class _HlavneOknoMixin(_ControlAppBase):
         except AttributeError:
             pass
 
+    # ------------------------------------------------------------------
+    # Živé filtrovanie v poli „Hľadať pieseň podľa čísla alebo názvu…“
+    # Pod poľom sa počas písania zobrazuje zoznam zhôd (vlastné okienko,
+    # ktoré si nezoberie fokus, takže sa dá písať ďalej). Šípky ↑/↓ menia
+    # výber, Enter alebo klik pieseň otvorí, Esc zoznam zatvorí.
+    # ------------------------------------------------------------------
+    COMBO_FILTER_MAX_RIADKOV = 10
+
+    def _combo_filter_zhody(self, text):
+        """Položky zoznamu piesní, ktoré obsahujú VŠETKY zadané slová
+        (bez ohľadu na diakritiku a veľkosť písmen). Poradie: najprv presná
+        zhoda čísla (úvodné nuly sa ignorujú, „24“ nájde 024), potom čísla
+        začínajúce zadaným textom (240, 245...), potom ostatné."""
+        tokeny = normalize_diacritics(str(text or "")).split()
+        if not tokeny:
+            return []
+        t0 = tokeny[0]
+        t0z = t0.lstrip("0") or t0
+        poradie = ([], [], [])
+        for h in getattr(self, "cele_hodnoty_comboboxu", []):
+            if h == COMBO_HLAVICKA:
+                continue
+            h_norm = normalize_diacritics(h)
+            if not all(t in h_norm for t in tokeny):
+                continue
+            cislo = h_norm.split(" - ", 1)[0].strip()
+            cislo_z = cislo.lstrip("0") or cislo
+            if cislo_z == t0z:
+                poradie[0].append(h)
+            elif cislo.startswith(t0) or cislo_z.startswith(t0z):
+                poradie[1].append(h)
+            else:
+                poradie[2].append(h)
+        return poradie[0] + poradie[1] + poradie[2]
+
+    def _combo_popup_vytvor(self):
+        popup = tk.Toplevel(self.master)
+        popup.withdraw()
+        popup.overrideredirect(True)
+        try:
+            popup.attributes("-topmost", True)
+        except tk.TclError:
+            pass
+        popup.configure(bg=MENU_BTN_BORDER)
+        ram = tk.Frame(popup, bg=MENU_BTN_BG)
+        ram.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
+        lb = tk.Listbox(
+            ram, activestyle="none", exportselection=False, width=1,
+            bg=MENU_BTN_BG, fg=MENU_BTN_FG,
+            selectbackground="#454545", selectforeground="#FFFFFF",
+            relief="flat", bd=0, highlightthickness=0,
+            font=(self.font_family, 12),
+        )
+        sb = ttk.Scrollbar(ram, orient="vertical", command=lb.yview)
+        lb.configure(yscrollcommand=sb.set)
+        lb.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        def _koleso(e):
+            smer = -1 if (getattr(e, "delta", 0) > 0 or getattr(e, "num", 0) == 4) else 1
+            lb.yview_scroll(smer, "units")
+            return "break"
+        lb.bind("<MouseWheel>", _koleso)
+        lb.bind("<Button-4>", _koleso)
+        lb.bind("<Button-5>", _koleso)
+
+        def _hover(e):
+            i = lb.nearest(e.y)
+            if 0 <= i < lb.size():
+                lb.selection_clear(0, tk.END)
+                lb.selection_set(i)
+                lb.activate(i)
+        lb.bind("<Motion>", _hover)
+
+        self._combo_popup, self._combo_lb, self._combo_sb = popup, lb, sb
+        return popup, lb, sb
+
+    def _combo_popup_zobraz(self, zhody):
+        if not zhody:
+            self._combo_popup_zatvor()
+            return
+        combo = self.song_combobox
+        popup = getattr(self, "_combo_popup", None)
+        if popup is None or not popup.winfo_exists():
+            popup, lb, sb = self._combo_popup_vytvor()
+        else:
+            lb, sb = self._combo_lb, self._combo_sb
+        lb.delete(0, tk.END)
+        for h in zhody:
+            lb.insert(tk.END, h)
+        lb.selection_clear(0, tk.END)
+        lb.selection_set(0)
+        lb.activate(0)
+        lb.see(0)
+        riadkov = min(len(zhody), self.COMBO_FILTER_MAX_RIADKOV)
+        lb.configure(height=riadkov)
+        lb.pack_forget()
+        sb.pack_forget()
+        if len(zhody) > riadkov:
+            sb.pack(side=tk.RIGHT, fill=tk.Y)
+        lb.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        popup.update_idletasks()
+        x = combo.winfo_rootx()
+        y = combo.winfo_rooty() + combo.winfo_height()
+        w = max(combo.winfo_width(), 200)
+        popup.geometry(f"{w}x{popup.winfo_reqheight()}+{x}+{y}")
+        popup.deiconify()
+        popup.lift()
+        self._combo_popup_viditelny = True
+
+    def _combo_popup_zatvor(self):
+        self._combo_popup_viditelny = False
+        popup = getattr(self, "_combo_popup", None)
+        try:
+            if popup is not None and popup.winfo_exists():
+                popup.withdraw()
+        except tk.TclError:
+            pass
+
+    def _combo_popup_posun(self, delta):
+        lb = getattr(self, "_combo_lb", None)
+        if lb is None or not lb.size():
+            return
+        sel = lb.curselection()
+        i = (sel[0] if sel else -1) + delta
+        i = max(0, min(lb.size() - 1, i))
+        lb.selection_clear(0, tk.END)
+        lb.selection_set(i)
+        lb.activate(i)
+        lb.see(i)
+
+    def _combo_popup_aktualna_hodnota(self):
+        lb = getattr(self, "_combo_lb", None)
+        if lb is None:
+            return None
+        sel = lb.curselection()
+        return lb.get(sel[0]) if sel else None
+
+    def _combo_filter_po_pisani(self, event=None):
+        """Volá sa po každom stlačení klávesy v poli – prefiltruje zoznam,
+        len ak sa text naozaj zmenil (šípky, Enter a pod. ho nemenia)."""
+        combo = self.song_combobox
+        text = combo.get()
+        if text == getattr(self, "_combo_posledny_text", None):
+            return
+        self._combo_posledny_text = text
+        if (not text.strip() or text == COMBO_HLAVICKA
+                or text in getattr(self, "cele_hodnoty_comboboxu", [])):
+            self._combo_popup_zatvor()
+            return
+        self._combo_popup_zobraz(self._combo_filter_zhody(text))
+
+    def _combo_filter_nastav(self, on_song_selected):
+        combo = self.song_combobox
+        self._combo_popup_viditelny = False
+        self._combo_posledny_text = ""
+
+        def potvrd(hodnota=None):
+            if hodnota is None:
+                hodnota = self._combo_popup_aktualna_hodnota()
+            self._combo_popup_zatvor()
+            if hodnota:
+                self.song_var.set(hodnota)
+                self._combo_posledny_text = hodnota
+                try:
+                    combo.icursor(tk.END)
+                except tk.TclError:
+                    pass
+            on_song_selected()
+
+        def on_return(event=None):
+            if self._combo_popup_viditelny:
+                potvrd()
+                return "break"
+            return on_song_selected(event)
+
+        def on_escape(event=None):
+            # Esc zatvára len zoznam zhôd; inak by zavrel / ukončil aplikáciu.
+            if self._combo_popup_viditelny:
+                self._combo_popup_zatvor()
+                return "break"
+            return None
+
+        def on_down(event=None):
+            if self._combo_popup_viditelny:
+                self._combo_popup_posun(+1)
+                return "break"
+            text = combo.get().strip()
+            if (text and text != COMBO_HLAVICKA
+                    and text not in self.cele_hodnoty_comboboxu):
+                zhody = self._combo_filter_zhody(text)
+                if zhody:
+                    self._combo_popup_zobraz(zhody)
+                    return "break"
+            return None   # inak natívny rozbaľovací zoznam so všetkými piesňami
+
+        def on_up(event=None):
+            if self._combo_popup_viditelny:
+                self._combo_popup_posun(-1)
+                return "break"
+            return None
+
+        def on_focus_out(event=None):
+            def kontrola():
+                try:
+                    fg = self.master.focus_get()
+                except (KeyError, tk.TclError):
+                    fg = None
+                if fg is not combo and fg is not self._combo_lb:
+                    self._combo_popup_zatvor()
+            self.master.after(150, kontrola)
+
+        def on_press(event):
+            try:
+                if combo.identify(event.x, event.y) == "downarrow":
+                    self._combo_popup_zatvor()   # natívny zoznam má prednosť
+            except tk.TclError:
+                pass
+
+        def on_configure(event):
+            if event.widget is self.master and self._combo_popup_viditelny:
+                self._combo_popup_zatvor()   # okno sa pohlo / zmenilo veľkosť
+
+        combo.bind("<Return>", on_return)
+        combo.bind("<Escape>", on_escape)
+        combo.bind("<Down>", on_down)
+        combo.bind("<Up>", on_up)
+        combo.bind("<FocusOut>", on_focus_out, add="+")
+        combo.bind("<Button-1>", on_press, add="+")
+        combo.bind("<<ComboboxSelected>>", lambda e: self._combo_popup_zatvor(), add="+")
+        self.master.bind("<Configure>", on_configure, add="+")
+
+        # Klik v zozname zhôd (vytvára sa líhavo, preto bind cez wrapper)
+        def klik(event):
+            lb = self._combo_lb
+            i = lb.nearest(event.y)
+            if 0 <= i < lb.size():
+                potvrd(lb.get(i))
+            return "break"
+        self._combo_popup_klik = klik
+        _popup, lb_zhody, _sb = self._combo_popup_vytvor()
+        lb_zhody.bind("<Button-1>", klik)
+        self._combo_popup_zatvor()
+
     def vytvorit_gui(self):
         self.master.configure(bg=UI_WINDOW_BG)
         style = ttk.Style()
@@ -17388,11 +17645,7 @@ class _HlavneOknoMixin(_ControlAppBase):
 
             # Ak používateľ napísal len časť názvu
             if selection not in self.cele_hodnoty_comboboxu:
-                sel_norm = normalize_diacritics(selection)
-                zhody = [
-                    h for h in self.cele_hodnoty_comboboxu
-                    if sel_norm in normalize_diacritics(h)
-                ]
+                zhody = self._combo_filter_zhody(selection)
                 if zhody:
                     selection = zhody[0]
                     self.song_var.set(selection)
@@ -17470,6 +17723,14 @@ class _HlavneOknoMixin(_ControlAppBase):
             except Exception as e:
                 log_exception("song_combobox: uvodna viditelnost zlyhala", e)
         self.song_combobox.bind("<KeyRelease>", _uvodna_po_pisani_v_comboboxe)
+
+        def _combo_filter_pri_klaves(event=None):
+            try:
+                self._combo_filter_po_pisani(event)
+            except Exception as e:
+                log_exception("song_combobox: živé filtrovanie zlyhalo", e)
+        self.song_combobox.bind("<KeyRelease>", _combo_filter_pri_klaves, add="+")
+        self._combo_filter_nastav(on_song_selected)
 
         # --- Rámik pre tlačidlá napravo ---
         buttons_frame = tk.Frame(horny_frame, bg=UI_BAR_BG)
