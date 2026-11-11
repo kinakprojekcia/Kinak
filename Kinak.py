@@ -3871,7 +3871,6 @@ DEFAULT_CONFIG = {
     "uvodna_posledne": False,
     "uvodna_skratky": True,
     "uvodna_poznamky": False,
-    "uvodna_klavesy": False,
     "posledne_piesne": [],
     # Aktívna databáza čísel piesní v direktóriu: "A" (predvolená, čísla
     # z Kinak.py) alebo "B" (pôvodné čísla z Kinak_povodne_direktorium.py).
@@ -3912,6 +3911,9 @@ DEFAULT_CONFIG = {
     # Predvolene vypnuté; pri hľadaní chyby sa dá kedykoľvek zapnúť v nastaveniach
     # (pozri nastav_diagnostiku()).
     "diagnostika_povolena": False,
+    # Pás veľkých tlačidiel pod panelom Aktuálna strofa
+    # (Predchádzajúca / Premietnuť / Skryť / Ďalšia). Predvolene vypnutý.
+    "zobrazit_velke_ovladanie": False,
 }
 
 # FONT_SIZE je predvolená hodnota; ControlApp spravuje aktuálny stav
@@ -4878,10 +4880,6 @@ def _stiahni_prvy_refren_lc_kbs_so_stavom(datum: date, session: Any = None) -> t
     soup = _stiahni_lc_kbs_soup(datum, session=session)
     refreny = _extrahuj_refreny_zalmov_lc_kbs(soup)
     return (refreny[0] if refreny else None), soup is not None
-
-
-def _stiahni_prvy_refren_lc_kbs(datum: date, session: Any = None) -> str | None:
-    return _stiahni_prvy_refren_lc_kbs_so_stavom(datum, session=session)[0]
 
 
 def stiahni_cezrocne_tyzdenne_refreny_pre_rok(rok: int, vystup_priecinok: Path, progress_callback=None) -> dict:
@@ -6196,8 +6194,6 @@ def stiahni_citania_z_lc_kbs(datum: date, vystup_cesta: Path | str) -> bool:
     assert requests_module is not None and beautiful_soup is not None
     req_exc = getattr(requests_module, "RequestException", Exception)
     http_exc = getattr(requests_module, "HTTPError", req_exc)
-    to_exc = getattr(requests_module, "Timeout", req_exc)
-    conn_exc = getattr(requests_module, "ConnectionError", req_exc)
     session = _vytvor_lc_kbs_session()
     response = None
     try:
@@ -6219,7 +6215,8 @@ def stiahni_citania_z_lc_kbs(datum: date, vystup_cesta: Path | str) -> bool:
                     _cakaj_s_moznostou_zrusenia(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
                     continue
                 return False
-            except (to_exc, conn_exc, req_exc):
+            except req_exc:
+                # Timeout, ConnectionError aj ďalšie sieťové chyby sú podtriedy RequestException.
                 if pokus < LC_KBS_REFRENY_MAX_POKUSOV:
                     _cakaj_s_moznostou_zrusenia(LC_KBS_REFRENY_RETRY_DELAY_S * pokus)
                     continue
@@ -6246,7 +6243,7 @@ def stiahni_citania_z_lc_kbs(datum: date, vystup_cesta: Path | str) -> bool:
         log_exception(f"stiahni_citania_z_lc_kbs: neočakávaná chyba (URL: {url or 'neznáma'})", e)
         return False
     finally:
-        if 'session' in locals() and session is not None:
+        if session is not None:
             try:
                 session.close()
             except Exception:
@@ -7519,16 +7516,16 @@ def oznac_chory(riadky: list, oznacit_lp: bool = True) -> list:
 
     return vys
 
-def stiahni_vespery_z_breviar(datum, vystup_cesta, oznacit_chory=True):
+def stiahni_vespery_z_breviar(datum, vystup_cesta):
     """
     Stiahne Vešpery z breviar.kbs.sk a uloží do TXT súboru
     vo formáte pripravenom na projekciu.
 
+    Zobrazenie/skrytie značiek [L]/[P] sa rieši až pri projekcii podľa nastavení.
+
     Args:
         datum:        date objekt
         vystup_cesta: Path objekt (napr. Path("piesne/vespery.txt"))
-        oznacit_chory: zachované pre kompatibilitu volaní; zobrazenie/skrytie
-                       [L]/[P] sa rieši až pri projekcii podľa nastavení.
 
     Returns:
         bool: True ak úspešné, False ak zlyhalo
@@ -9586,7 +9583,6 @@ if TYPE_CHECKING:
         slavnosti_window_width: Any = None
         slider_res_vert: Any = None
         song_combobox: Any = None
-        song_folder_label: Any = None
         song_folder_path: Any = None
         song_var: Any = None
         status_bar_frame: Any = None
@@ -9628,6 +9624,17 @@ if TYPE_CHECKING:
         zobrazovat_specialne_znaky_var: Any = None
         zobrazovat_znaky_chorov: Any = None
         zobrazovat_znaky_chorov_var: Any = None
+        zobrazit_velke_ovladanie: Any = None
+        zobrazit_velke_ovladanie_var: Any = None
+        velke_ovladanie_frame: Any = None
+        panel_obsah_frame: Any = None
+        btn_predchadzajuca: Any = None
+        btn_premietnut: Any = None
+        btn_skryt: Any = None
+        btn_dalsia: Any = None
+        checkbox_velke_ovladanie: Any = None
+        _velke_tlacidla: Any = None
+        _velke_tlacidla_aktivne: Any = None
         zoznam_piesni_data: Any = None
         def _aktualizuj_direktorium_pre_subor(self, *args: Any, **kwargs: Any) -> Any: ...
         def _build_footer(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9683,6 +9690,7 @@ if TYPE_CHECKING:
         def aktualizovat_cezrocne_tyzdenne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def _pouzi_offline_citania(self, *args: Any, **kwargs: Any) -> Any: ...
         def _obnov_zastarane_citania(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _obnov_zoznam_suborov_podla_aktualneho_filtra(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_citania_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_direktorium_label(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_info_liturgickeho_roka(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9761,6 +9769,17 @@ if TYPE_CHECKING:
         def _combo_popup_zatvor(self, *args: Any, **kwargs: Any) -> Any: ...
         def vytvorit_nastavenia_okno(self, *args: Any, **kwargs: Any) -> Any: ...
         def zapni_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def ma_nacitany_obsah(self, *args: Any, **kwargs: Any) -> Any: ...
+        def ma_vybratu_polozku(self, *args: Any, **kwargs: Any) -> Any: ...
+        def nacitaj_z_pola_alebo_vyberu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _vrat_focus_do_pola(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _akcia_premietnut(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _akcia_skryt(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _akcia_dalsia_strofa(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _akcia_predchadzajuca_strofa(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _aktualizuj_velke_tlacidla(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _aplikuj_velke_ovladanie_viditelnost(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _vytvor_velke_ovladanie_pas(self, *args: Any, **kwargs: Any) -> Any: ...
         def zatvorit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
         def ziskaj_aktualnu_a_celkovu(self, *args: Any, **kwargs: Any) -> Any: ...
         def ziskaj_zoznam_suborov(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -10024,6 +10043,10 @@ class _NastaveniaMixin(_ControlAppBase):
                 
                 self.zobrazovat_live_preview = bool(full_config.get("zobrazovat_live_preview", DEFAULT_CONFIG["zobrazovat_live_preview"]))
                 set_safe("zobrazovat_live_preview_var", self.zobrazovat_live_preview)
+
+                # Pás veľkých tlačidiel: predvolene vypnutý (False).
+                self.zobrazit_velke_ovladanie = bool(full_config.get("zobrazit_velke_ovladanie", DEFAULT_CONFIG.get("zobrazit_velke_ovladanie", False)))
+                set_safe("zobrazit_velke_ovladanie_var", self.zobrazit_velke_ovladanie)
                 set_safe("cislo_strofy_v_strede_var", self.cislo_strofy_v_strede)
                 
                 self.zobrazovat_specialne_znaky = bool(full_config.get("zobrazovat_specialne_znaky", True))
@@ -10106,7 +10129,14 @@ class _NastaveniaMixin(_ControlAppBase):
             # ------------------------------------------------------------
             # 7) Finálny stav
             # ------------------------------------------------------------
-            self.config = full_config    
+            self.config = full_config
+            # Pás veľkých tlačidiel: po načítaní configu zosynchronizuj
+            # viditeľnosť. Pred vytvorením GUI ešte pás neexistuje – vtedy
+            # _aplikuj_velke_ovladanie_viditelnost ticho skončí.
+            try:
+                self._aplikuj_velke_ovladanie_viditelnost()
+            except Exception as e:
+                log_exception("nacitat_nastavenia: velke ovladanie viditelnost zlyhala", e)
                 
         finally:
             # Tento kód sa vykoná VŽDY, bez ohľadu na to, či vyššie nastala chyba alebo nie.
@@ -10147,6 +10177,7 @@ class _NastaveniaMixin(_ControlAppBase):
         self.zobrazit_direktorium = self.zobrazit_direktorium_var.get() if hasattr(self, "zobrazit_direktorium_var") else False
         self.fade_speed = self.fade_speed_var.get() if hasattr(self, "fade_speed_var") else "mierne rýchle"
         self.zobrazovat_live_preview = self.zobrazovat_live_preview_var.get() if hasattr(self, "zobrazovat_live_preview_var") else True
+        self.zobrazit_velke_ovladanie = self.zobrazit_velke_ovladanie_var.get() if hasattr(self, "zobrazit_velke_ovladanie_var") else False
         self.zobrazovat_specialne_znaky = self.zobrazovat_specialne_znaky_var.get() if hasattr(self, "zobrazovat_specialne_znaky_var") else True
         self.zobrazovat_znaky_chorov = self.zobrazovat_znaky_chorov_var.get() if hasattr(self, "zobrazovat_znaky_chorov_var") else True
         self.pouzit_modru_farbu_pri_veceradle = self.pouzit_modru_farbu_pri_veceradle_var.get() if hasattr(self, "pouzit_modru_farbu_pri_veceradle_var") else False
@@ -10173,6 +10204,7 @@ class _NastaveniaMixin(_ControlAppBase):
         # Chýbajúce konfiguračné atribúty preto doplníme na jednom mieste.
         config_attr_defaults = {
             "statusbar_tyzden_zaltara": DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", False),
+            "zobrazit_velke_ovladanie": DEFAULT_CONFIG.get("zobrazit_velke_ovladanie", False),
             "medzery_ovladanie": DEFAULT_CONFIG.get("medzery_ovladanie", 50),
             "statusbar_skratka_zalmu": True,
             "statusbar_jks_piesne": True,
@@ -10476,6 +10508,7 @@ class _NastaveniaMixin(_ControlAppBase):
             "medzery_ovladanie": int(self.medzery_ovladanie),
             "reserved_vertical_ratio": float(self.reserved_vertical_ratio),
             "zobrazit_direktorium": bool(self.zobrazit_direktorium),
+            "zobrazit_velke_ovladanie": bool(getattr(self, "zobrazit_velke_ovladanie", False)),
             "direktorium_verzia": getattr(self, "direktorium_verzia", "A"),
             "zobrazovat_live_preview": bool(self.zobrazovat_live_preview),
             "zobrazovat_specialne_znaky": bool(self.zobrazovat_specialne_znaky),
@@ -10557,8 +10590,14 @@ class _NastaveniaMixin(_ControlAppBase):
 
             self.config = new_config
 
-            if aktualizovat_label and self.song_folder_label is not None:
-                self.song_folder_label.config(text=str(new_config.get("song_folder", "")))
+            if aktualizovat_label:
+                _folder_label = getattr(self, "folder_label", None)
+                if _folder_label is not None:
+                    try:
+                        if _folder_label.winfo_exists():
+                            _folder_label.config(text=str(new_config.get("song_folder", "")))
+                    except tk.TclError:
+                        pass
 
         except PermissionError as e:
             log_exception("ulozit_nastavenia: Prístup zamietnutý do AppData", e)
@@ -10598,6 +10637,12 @@ class _NastaveniaMixin(_ControlAppBase):
         self._synchronizuj_zivy_nahlad_a_projekciu(aktualizovat_label)
         new_config = self._zostav_config_dict(**extra)
         self._zapis_config_na_disk(new_config, aktualizovat_label)
+        # Pás veľkých tlačidiel: prepínač v Nastaveniach sa prejaví hneď,
+        # bez reštartu. (_zbieraj vyššie už prečítalo čerstvú hodnotu z var.)
+        try:
+            self._aplikuj_velke_ovladanie_viditelnost()
+        except Exception as e:
+            log_exception("ulozit_nastavenia: velke ovladanie viditelnost zlyhala", e)
 
 
     # ==========================================================
@@ -10981,7 +11026,6 @@ class _NastaveniaMixin(_ControlAppBase):
             variable=self.font_size_var,
             from_=20,
             to=MAX_FONT_SIZE,
-            command=lambda v: None
         )
 
         font_size_slider.bind(
@@ -11030,7 +11074,8 @@ class _NastaveniaMixin(_ControlAppBase):
         )
         self.checkbox_vlastna_farba.pack(side=tk.LEFT, padx=(0, 10))
 
-        tmave_tlacidlo(radek_farba, "Vybrať farbu…", self.vybrat_vlastnu_farbu_textu).pack(side=tk.LEFT)
+        self.vyber_farbu_button = tmave_tlacidlo(radek_farba, "Vybrať farbu…", self.vybrat_vlastnu_farbu_textu)
+        self.vyber_farbu_button.pack(side=tk.LEFT)
 
         # Indikátor farby (Zaoblený polygon)
         self.indikator_farby = tk.Canvas(radek_farba, width=40, height=30, highlightthickness=0, bg=bg, bd=0)
@@ -11196,6 +11241,16 @@ class _NastaveniaMixin(_ControlAppBase):
         self.checkbox_cislo_strofy_v_strede.pack(anchor="w")
         Tooltip(self.checkbox_cislo_strofy_v_strede,
                 "Určuje, či sa číslo 254-1/15 zobrazí v strede alebo vpravo.")
+
+        self.checkbox_velke_ovladanie = tmavy_check(
+            frame_basic_view,
+            "Zobraziť pás veľkých tlačidiel (Predchádzajúca / Premietnuť / Skryť / Ďalšia)",
+            self.zobrazit_velke_ovladanie_var,
+            command=lambda: [self.ulozit_nastavenia(), self._aplikuj_velke_ovladanie_viditelnost()],
+        )
+        self.checkbox_velke_ovladanie.pack(anchor="w")
+        Tooltip(self.checkbox_velke_ovladanie,
+                "Skryje len pás tlačidiel pod panelom Aktuálna strofa. Klávesy + - Enter fungujú ďalej aj bez pásu.")
 
         # Medzery medzi strofami v texte ovládacieho okna (projekcia sa nemení)
         tk.Label(
@@ -11663,6 +11718,16 @@ class _NastaveniaMixin(_ControlAppBase):
             raw = self.config.get("zobrazit_direktorium", False)
             self.zobrazit_direktorium_var.set(bool(raw))
 
+        # Pás veľkých tlačidiel
+        if hasattr(self, "zobrazit_velke_ovladanie_var"):
+            raw = self.config.get("zobrazit_velke_ovladanie", DEFAULT_CONFIG["zobrazit_velke_ovladanie"])
+            self.zobrazit_velke_ovladanie_var.set(bool(raw))
+            self.zobrazit_velke_ovladanie = bool(raw)
+            try:
+                self._aplikuj_velke_ovladanie_viditelnost()
+            except Exception as e:
+                log_exception("obnovit_nastavenia_v_gui: velke ovladanie viditelnost zlyhala", e)
+
         # Auto filter podľa Dnes
         if hasattr(self, "auto_filter_podla_dnes_var"):
             raw = self.config.get("auto_filter_podla_dnes", DEFAULT_CONFIG["auto_filter_podla_dnes"])
@@ -11802,6 +11867,42 @@ class _NastaveniaMixin(_ControlAppBase):
             self.aktualizovat_vzhlad()
             self.ulozit_nastavenia()
 
+    def _obnov_zoznam_suborov_podla_aktualneho_filtra(self):
+        """Obnoví zoznam piesní (menu Položka) podľa aktuálne zvolenej Kategórie.
+
+        Jednotná logika pre zmenit_priecinok_piesni() aj
+        skonvertovat_piesne_do_utf8() – predtým ju obe funkcie duplikovali,
+        a navyše chybne čítali default_filter_var (predvolený filter
+        z Nastavení) namiesto filter_var (aktuálne zvolená Kategória
+        v hlavnom okne). Výsledkom bol rozpad: čip Kategórie ukazoval
+        napr. „Večeradlo“, ale zoznam patril predvolenému filtru, lebo
+        filtrovat_subory() filter_var sama nenastavuje.
+
+        Fallback (prázdny filter, napr. po TclError pri zatváraní):
+        menu sa prebuduje zo všetkých súborov v priečinku.
+        Chyby sa len zalogujú, nepropagujú sa volajúcemu.
+        """
+        try:
+            filter_var = getattr(self, "filter_var", None)
+            aktualny_filter = filter_var.get() if filter_var is not None else None
+        except (tk.TclError, AttributeError):
+            aktualny_filter = None
+        try:
+            if aktualny_filter:
+                self.filtrovat_subory(aktualny_filter)
+            else:
+                subory = self.ziskaj_zoznam_suborov()
+                menu = self.subor_menu["menu"]
+                menu.delete(0, "end")
+                for subor in subory:
+                    menu.add_command(
+                        label=subor,
+                        command=lambda value=subor: self.subor_var.set(value)
+                    )
+        except Exception as e:
+            log_exception("_obnov_zoznam_suborov_podla_aktualneho_filtra: obnovenie zoznamu súborov zlyhalo", e)
+
+
     def zmenit_priecinok_piesni(self):
         # otvorí dialóg na výber priečinka, predvolený je aktuálny self.song_folder_path
         nova_cesta = filedialog.askdirectory(initialdir=self.song_folder_path)
@@ -11817,27 +11918,10 @@ class _NastaveniaMixin(_ControlAppBase):
         # ulož nastavenia do config.json
         self.ulozit_nastavenia()
 
-        # obnov zoznam súborov podľa aktuálneho filtra
-        try:
-            aktualne_obdobie = self.default_filter_var.get()
-        except tk.TclError:
-            aktualne_obdobie = None
+        # Obnov zoznam podľa aktuálne zvolenej Kategórie (filter_var),
+        # nie podľa predvoleného filtra z Nastavení.
+        self._obnov_zoznam_suborov_podla_aktualneho_filtra()
 
-        if aktualne_obdobie:
-            # použijeme aktuálny filter
-            self.filtrovat_subory(aktualne_obdobie)
-        else:
-            # fallback – načítaj všetky súbory
-            subory = self.ziskaj_zoznam_suborov()
-            menu = self.subor_menu["menu"]
-            menu.delete(0, "end")
-
-            for subor in subory:
-                menu.add_command(
-                    label=subor,
-                    command=lambda value=subor: self.subor_var.set(value)
-                )               
-                
 
     def skonvertovat_piesne_do_utf8(self):
         """
@@ -11957,26 +12041,8 @@ class _NastaveniaMixin(_ControlAppBase):
         )
 
         # Obnov zoznam piesní, aby sa v GUI hneď zobrazila prípadne opravená
-        # diakritika (rovnaká logika ako po zmene priečinka piesní).
-        try:
-            aktualne_obdobie = self.default_filter_var.get()
-        except tk.TclError:
-            aktualne_obdobie = None
-
-        try:
-            if aktualne_obdobie:
-                self.filtrovat_subory(aktualne_obdobie)
-            else:
-                subory_zoznam = self.ziskaj_zoznam_suborov()
-                menu = self.subor_menu["menu"]
-                menu.delete(0, "end")
-                for s in subory_zoznam:
-                    menu.add_command(
-                        label=s,
-                        command=lambda value=s: self.subor_var.set(value)
-                    )
-        except Exception as e:
-            log_exception("skonvertovat_piesne_do_utf8: obnovenie zoznamu súborov zlyhalo", e)
+        # diakritika – podľa aktuálne zvolenej Kategórie.
+        self._obnov_zoznam_suborov_podla_aktualneho_filtra()
 
         zhrnutie_riadky = "\n".join(f"  • {k}: {v}" for k, v in stats.items())
         sprava = (
@@ -12147,38 +12213,10 @@ class _NastaveniaMixin(_ControlAppBase):
         except Exception as e:
             log_exception("aktualizovat_vzhlad: záverečná aktualizácia stavu zlyhala", e)
 
-        # 8) Scrollbar – čo najviac priblížený k ploche panela #181818, trochu hrubší
+        # Štýl scrollbaru „KinakDark.Vertical.TScrollbar“ a option_add pre zoznam
+        # piesní (TCombobox Listbox) sa nastavujú iba raz: scrollbar v
+        # ControlApp.__init__, option_add vo vytvorit_gui. Tu sa neopakujú.
         try:
-            # UI_PANEL_BG #181818 - thumb #1c1c1c
-            tlmena, tlmena_active = "#1c1c1c", "#222222"
-
-            style = ttk.Style()
-            style.configure(
-                "KinakDark.Vertical.TScrollbar",
-                troughcolor="#181818",
-                background=tlmena,
-                darkcolor=tlmena,
-                lightcolor=tlmena,
-                bordercolor="#181818",
-                arrowcolor="#181818",
-                width=10
-            )
-            style.map(
-                "KinakDark.Vertical.TScrollbar",
-                background=[("active", tlmena_active), ("pressed", tlmena_active), ("disabled", "#181818"), ("!active", tlmena)],
-                darkcolor=[("active", tlmena_active), ("disabled", "#181818"), ("!active", tlmena)],
-                lightcolor=[("active", tlmena_active), ("disabled", "#181818"), ("!active", tlmena)]
-            )
-        except Exception as e:
-            log_exception("aktualizovat_vzhlad: scrollbar tlmený pásik", e)
-
-        try:
-            # Zoznam piesní – dropdown Listbox (ten pásik pri hover/výbere)
-            self.master.option_add("*TCombobox*Listbox.selectBackground", "#454545")  # sivý pásik (bez liturgickej farby)
-            self.master.option_add("*TCombobox*Listbox.selectForeground", "#FFFFFF")
-            self.master.option_add("*TCombobox*Listbox.background", MENU_BTN_BG)
-            self.master.option_add("*TCombobox*Listbox.foreground", MENU_BTN_FG)
-
             # Rolovacie menu – filtre (OptionMenu) – aktívny pásik
             if hasattr(self, "filter_menu") and self.filter_menu.winfo_exists():
                 try:
@@ -14089,21 +14127,7 @@ class _StahovanieMixin(_ControlAppBase):
         text = re.sub(r'\s*”\s*$', '”', text, flags=re.M)
 
         # ------------------------------------------------------------
-        # 7. Oprava skratiek
-        # ------------------------------------------------------------
-        skratky = [
-            "Gn","Ex","Lv","Nm","Dt","Joz","Sdc","Rut","Sam","Kr","Krn","Ezd","Neh","Tob","Jdt","Est",
-            "Mach","Job","Prís","Kaz","Pies","Múd","Sir","Iz","Jer","Nár","Bar","Ez","Dan","Oz","Joel",
-            "Am","Abd","Jon","Mich","Nah","Hab","Sof","Ag","Zach","Mal",
-            "Mt","Mk","Lk","Jn","Sk","Rim","Kor","Gal","Ef","Flp","Kol","Sol","Tim","Tít","Flm","Hebr",
-            "Jak","Pt","Júd","Zjv"
-        ]
-
-        for sk in skratky:
-            text = re.sub(rf'\b{sk}\.', f'{sk}.', text)
-
-        # ------------------------------------------------------------
-        # 8. Vloženie prázdneho riadku za krátkou vetou po nadpise
+        # 7. Vloženie prázdneho riadku za krátkou vetou po nadpise
         # ------------------------------------------------------------
         def vloz_prazdny_riadok_za_vetu_bez_bodky(text):
             riadky = text.split("\n")
@@ -14136,7 +14160,7 @@ class _StahovanieMixin(_ControlAppBase):
         text = vloz_prazdny_riadok_za_vetu_bez_bodky(text)
 
         # ------------------------------------------------------------
-        # 9. Extrakcia refrénov
+        # 8. Extrakcia refrénov
         # ------------------------------------------------------------
         refreny = []
         refreny_seen = set()
@@ -14182,13 +14206,13 @@ class _StahovanieMixin(_ControlAppBase):
         )
 
         # ------------------------------------------------------------
-        # 10. Vyčistenie medzier
+        # 9. Vyčistenie medzier
         # ------------------------------------------------------------
         text = re.sub(r' +', ' ', text)
         text = re.sub(r'\n\s*\n+', '\n\n', text).strip()        
 
         # ------------------------------------------------------------
-        # 11. Rozdelenie na bloky
+        # 10. Rozdelenie na bloky
         # ------------------------------------------------------------
         bloky = []
         casti = text.split("\n\n")
@@ -14266,7 +14290,7 @@ class _StahovanieMixin(_ControlAppBase):
             vloz_dalsi_refren()
 
         # ------------------------------------------------------------
-        # 12. Uloženie
+        # 11. Uloženie
         # ------------------------------------------------------------
         finalny = "\n\n".join(bloky)
         _zapis_text_atomicky(subor, finalny, encoding="utf-8")
@@ -14915,8 +14939,6 @@ class _StahovanieMixin(_ControlAppBase):
 
         vystup_cesta = self.song_folder_path / "vespery.txt"
 
-        oznacit = getattr(self, "zobrazovat_znaky_chorov", True)
-
         def spracuj_vysledok(uspech):
             if uspech:
                 messagebox.showinfo(
@@ -14941,7 +14963,6 @@ class _StahovanieMixin(_ControlAppBase):
             kontext="aktualizovat_vespery_gui",
             stiahni_funkcia=stiahni_vespery_z_breviar,
             stiahni_args=(datum, vystup_cesta),
-            stiahni_kwargs={"oznacit_chory": oznacit},
             vytvor_log_spravu=lambda uspech: f"[BREVIAR] Vešpery pre {datum} stiahnuté: {uspech}",
             on_success=on_success,
             spracuj_vysledok=spracuj_vysledok,
@@ -15063,6 +15084,11 @@ class _PiesneSuboryMixin(_ControlAppBase):
         self.subor_var.set(SUBOR_ZIADNY)
         self.popis_label.config(text="")
         self.direktorium_label.config(text="")
+        # Pás veľkých tlačidiel: výber je preč, stlmenie sa môže zmeniť.
+        try:
+            self._aktualizuj_velke_tlacidla()
+        except Exception as e:
+            log_exception("vymazat_subor_menu: velke tlacidla zlyhali", e)
         
         
     def normalize_alnum(self, s: str) -> str:
@@ -16114,6 +16140,12 @@ class _PiesneSuboryMixin(_ControlAppBase):
             self._uvodna_aktualizuj_viditelnost()
         except Exception as e:
             log_exception("nacitat_piesne: uvodna viditelnost zlyhala", e)
+
+        # Pás veľkých tlačidiel: nový obsah → rozsvietiť.
+        try:
+            self._aktualizuj_velke_tlacidla()
+        except Exception as e:
+            log_exception("nacitat_piesne: velke tlacidla zlyhali", e)
    
        
     def odlozene_auto_nacitanie(self, event=None):
@@ -16204,6 +16236,12 @@ class _PiesneSuboryMixin(_ControlAppBase):
             self._uvodna_aktualizuj_viditelnost()
         except Exception as e:
             log_exception("odlozene_auto_nacitanie: uvodna viditelnost zlyhala", e)
+
+        # Pás veľkých tlačidiel: písanie / mazanie v poli mení stlmenie.
+        try:
+            self._aktualizuj_velke_tlacidla()
+        except Exception as e:
+            log_exception("odlozene_auto_nacitanie: velke tlacidla zlyhali", e)
 
     def aktualizuj_popis(self, nazov_bez_ext):
         popis = next((v for k, v in self.popisy_suborov.items() if k.lower() == nazov_bez_ext.lower()), "")
@@ -16822,6 +16860,302 @@ class _ProjekciaMixin(_ControlAppBase):
         self.aktualizuj_popis(nazov)
         return "break"  
 
+    # ==========================================================
+    # PÁS VEĽKÝCH TLAČIDIEL (skill: velke-ovladanie-pas)
+    # Pod panelom Aktuálna strofa, nad panelom obsahu.
+    # 4 tlačidlá: Predchádzajúca / Premietnuť / Skryť / Ďalšia.
+    # Žiadna nová klávesa, žiadna nová logika načítania –
+    # každé tlačidlo len volá existujúcu akciu (zapni / vypni /
+    # posun). Premietnuť je jednosmerné (nie toggle), Skryť je
+    # jednosmerné (nie toggle).
+    # ==========================================================
+
+    def ma_nacitany_obsah(self) -> bool:
+        """True, ak je práve načítaný nejaký obsah (pieseň / čítania / oznam)."""
+        try:
+            return bool(getattr(self, "aktualne_strofy", None) and getattr(self, "nazov_piesne", ""))
+        except Exception as e:
+            log_exception("ma_nacitany_obsah", e)
+            return False
+
+    def ma_vybratu_polozku(self) -> bool:
+        """True, ak je v rozbaľovacom menu vybraná položka (nie „Vybrať…“)."""
+        try:
+            var = getattr(self, "subor_var", None)
+            if var is None:
+                return False
+            return str(var.get() or "").strip() != SUBOR_ZIADNY
+        except Exception as e:
+            log_exception("ma_vybratu_polozku", e)
+            return False
+
+    def nacitaj_z_pola_alebo_vyberu(self) -> bool:
+        """Načíta pieseň z poľa, alebo z vybratej položky menu. Vráti True, ak sa podarilo načítať."""
+        try:
+            raw = ""
+            try:
+                entry = getattr(self, "manual_entry", None)
+                if entry is not None and entry.winfo_exists():
+                    raw = str(entry.get() or "")
+            except Exception:
+                raw = ""
+            clean = re.sub(r'[^0-9A-Za-z_-]', '', raw)
+            vybrany = ""
+            try:
+                var = getattr(self, "subor_var", None)
+                if var is not None:
+                    vybrany = str(var.get() or "").strip()
+            except Exception:
+                vybrany = ""
+            if vybrany == SUBOR_ZIADNY:
+                vybrany = ""
+            hladany = clean or vybrany
+            if not hladany:
+                return False
+            hladany_full = self.najdi_subor_podla_prefixu(hladany)
+            if not hladany_full:
+                messagebox.showinfo(
+                    "Kinak: Nenájdené",
+                    f"Súbor „{hladany}“ neexistuje.\n\n"
+                    "Môžete ho doplniť alebo vytvoriť a pridať do priečinka piesní."
+                )
+                return False
+            nazov = Path(hladany_full).stem
+            self.nacitat_piesne(nazov_suboru=nazov, zobrazit_na_projekcii=True)
+            self.aktualizuj_popis(nazov)
+            return True
+        except Exception as e:
+            log_exception("nacitaj_z_pola_alebo_vyberu", e)
+            return False
+
+    def _vrat_focus_do_pola(self):
+        try:
+            entry = getattr(self, "manual_entry", None)
+            if entry is not None and entry.winfo_exists():
+                entry.focus_set()
+        except Exception as e:
+            log_exception("_vrat_focus_do_pola", e)
+
+    def _akcia_premietnut(self):
+        try:
+            if getattr(self, "is_text_visible", False):
+                return
+            if self.ma_nacitany_obsah():
+                self.zapni_projekciu()
+            elif self.nacitaj_z_pola_alebo_vyberu():
+                self.zapni_projekciu()
+        except Exception as e:
+            log_exception("_akcia_premietnut", e)
+        finally:
+            self._vrat_focus_do_pola()
+            self._aktualizuj_velke_tlacidla()
+
+    def _akcia_skryt(self):
+        try:
+            if not getattr(self, "is_text_visible", False):
+                return
+            self.vypni_projekciu()
+        except Exception as e:
+            log_exception("_akcia_skryt", e)
+        finally:
+            self._vrat_focus_do_pola()
+            self._aktualizuj_velke_tlacidla()
+
+    def _akcia_dalsia_strofa(self):
+        try:
+            self.posun_strofu(+1)
+        except Exception as e:
+            log_exception("_akcia_dalsia_strofa", e)
+        finally:
+            self._vrat_focus_do_pola()
+
+    def _akcia_predchadzajuca_strofa(self):
+        try:
+            self.posun_strofu(-1)
+        except Exception as e:
+            log_exception("_akcia_predchadzajuca_strofa", e)
+        finally:
+            self._vrat_focus_do_pola()
+
+    def _aktualizuj_velke_tlacidla(self):
+        try:
+            zoznam = getattr(self, "_velke_tlacidla", None) or []
+            if not zoznam:
+                return
+            ma_obsah = bool(self.ma_nacitany_obsah())
+            ma_vstup = False
+            try:
+                entry = getattr(self, "manual_entry", None)
+                if entry is not None and entry.winfo_exists():
+                    ma_vstup = bool(entry.get().strip())
+            except Exception:
+                ma_vstup = False
+            ma_vyber = bool(self.ma_vybratu_polozku())
+            aktivne = bool(ma_obsah or ma_vstup or ma_vyber)
+            self._velke_tlacidla_aktivne = aktivne
+            for btn, lbl, ram, povodna_bg in zoznam:
+                try:
+                    if not btn.winfo_exists():
+                        continue
+                except Exception:
+                    continue
+                try:
+                    if aktivne:
+                        btn.config(bg=povodna_bg, fg="#FFFFFF")
+                        lbl.config(bg=povodna_bg, fg="#c9c9c9")
+                        ram.config(bg=povodna_bg)
+                    else:
+                        btn.config(bg="#262626", fg="#6a6a72")
+                        lbl.config(bg="#262626", fg="#6a6a72")
+                        ram.config(bg="#262626")
+                except Exception:
+                    continue
+                # Stavové bodky podľa obrázka: ● = práve platí, ○ = neplatí.
+                # Keď sa premieta → Premietnuť ●, Skryť ○; keď nie → naopak.
+                # Bodky sa prepínajú aj v stlmenom stave (farba textu je sivá).
+                try:
+                    viditelne = bool(getattr(self, "is_text_visible", False))
+                    if ram is getattr(self, "btn_premietnut", None):
+                        btn.config(text="● Premietnuť" if viditelne else "○ Premietnuť")
+                    elif ram is getattr(self, "btn_skryt", None):
+                        btn.config(text="○ Skryť" if viditelne else "● Skryť")
+                except Exception:
+                    pass
+        except Exception as e:
+            log_exception("_aktualizuj_velke_tlacidla", e)
+
+    def _aplikuj_velke_ovladanie_viditelnost(self):
+        try:
+            ram = getattr(self, "velke_ovladanie_frame", None)
+            if ram is None:
+                return
+            try:
+                if not ram.winfo_exists():
+                    return
+            except Exception:
+                return
+            if getattr(self, "zobrazit_velke_ovladanie", False):
+                try:
+                    if ram.winfo_ismapped():
+                        return
+                except Exception:
+                    pass
+                try:
+                    panel = getattr(self, "panel_obsah_frame", None)
+                    if panel is not None and panel.winfo_exists():
+                        ram.pack(side=tk.TOP, fill=tk.X, pady=(0, 10), before=panel)
+                    else:
+                        ram.pack(side=tk.TOP, fill=tk.X, pady=(0, 10))
+                except Exception:
+                    try:
+                        ram.pack(side=tk.TOP, fill=tk.X, pady=(0, 10))
+                    except Exception:
+                        pass
+            else:
+                try:
+                    ram.pack_forget()
+                except Exception:
+                    pass
+        except Exception as e:
+            log_exception("_aplikuj_velke_ovladanie_viditelnost", e)
+
+    def _vytvor_velke_ovladanie_pas(self, pravy_stlpec):
+        """Postaví pás veľkých tlačidiel. Volá sa z vytvorit_gui() po paneli Aktuálna strofa."""
+        try:
+            # Poistka proti zdvojeniu pri prípadnom opätovnom postavení GUI.
+            self._velke_tlacidla = []
+            ram = tk.Frame(pravy_stlpec, bg=UI_WINDOW_BG)
+            # Default: pás je vypnutý (zobrazit_velke_ovladanie = False v DEFAULT_CONFIG).
+            # Rámček sa preto NEpackuje hneď viditeľný – viditeľnosť riadi
+            # výhradne _aplikuj_velke_ovladanie_viditelnost() podľa nastavenia
+            # (volá ju vytvorit_gui() po postavení GUI). Predtým sa rámček
+            # packol vždy viditeľný a až dodatočne skrýval, takže pri každom
+            # postavení GUI preblikol aj pri vypnutom nastavení.
+            self.velke_ovladanie_frame = ram
+
+            def vytvor_tlacidlo(nazov, skratka, bg_farba, akcia):
+                ramec = tk.Frame(ram, bg=bg_farba)
+                btn = tk.Button(
+                    ramec, text=nazov, command=akcia,
+                    font=(self.font_family, 15, "bold"),
+                    bg=bg_farba, fg="#FFFFFF",
+                    activebackground=bg_farba, activeforeground="#FFFFFF",
+                    relief="flat", bd=0, highlightthickness=0,
+                    padx=8, pady=8, cursor="hand2", takefocus=0,
+                )
+                btn.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+                lbl = tk.Label(
+                    ramec, text=skratka,
+                    font=(self.font_family, 11),
+                    bg=bg_farba, fg="#c9c9c9",
+                    padx=8, pady=0,
+                )
+                lbl.pack(fill=tk.X, padx=2, pady=(0, 8))
+                self._velke_tlacidla.append((btn, lbl, ramec, bg_farba))
+
+                def _enter(event, b=btn, l=lbl, r=ramec, farba=bg_farba):
+                    try:
+                        if not getattr(self, "_velke_tlacidla_aktivne", True):
+                            b.config(bg="#2e2e2e", fg="#6a6a72")
+                            l.config(bg="#2e2e2e", fg="#6a6a72")
+                            r.config(bg="#2e2e2e")
+                        else:
+                            b.config(bg=farba)
+                            l.config(bg=farba)
+                            r.config(bg=farba)
+                    except Exception:
+                        pass
+
+                def _leave(event, b=btn, l=lbl, r=ramec, farba=bg_farba):
+                    try:
+                        if not getattr(self, "_velke_tlacidla_aktivne", True):
+                            b.config(bg="#262626", fg="#6a6a72")
+                            l.config(bg="#262626", fg="#6a6a72")
+                            r.config(bg="#262626")
+                        else:
+                            b.config(bg=farba)
+                            l.config(bg=farba)
+                            r.config(bg=farba)
+                    except Exception:
+                        pass
+
+                for widget in (ramec, btn, lbl):
+                    widget.bind("<Enter>", _enter)
+                    widget.bind("<Leave>", _leave)
+                ramec.bind("<Button-1>", lambda e: akcia())
+                lbl.bind("<Button-1>", lambda e: akcia())
+                return ramec
+
+            # Vzhľad podľa obrázka: bridlicová modrá / zelená / tmavosivá /
+            # bridlicová modrá; názov + skratka v zátvorke na druhom riadku.
+            # Bodky ●/○ ukazujú stav premietania – prepína ich
+            # _aktualizuj_velke_tlacidla (● = práve platí).
+            # Skryť má na popiske (Enter) podľa zadania – klávesa na
+            # skrytie zostáva Backspace, Enter patrí Premietnuť.
+            # Počiatočné bodky sú pre stav „nepremieta sa" (○ Premietnuť /
+            # ● Skryť); _aktualizuj ich hneď na konci buildera prepíše podľa
+            # skutočného stavu.
+            self.btn_predchadzajuca = vytvor_tlacidlo("← Predchádzajúca", "(-)", "#4A5B78", self._akcia_predchadzajuca_strofa)
+            self.btn_premietnut = vytvor_tlacidlo("○ Premietnuť", "(Enter)", "#2E9E4F", self._akcia_premietnut)
+            self.btn_skryt = vytvor_tlacidlo("● Skryť", "(Enter)", "#3D3D3D", self._akcia_skryt)
+            self.btn_dalsia = vytvor_tlacidlo("Ďalšia →", "(+)", "#4A5B78", self._akcia_dalsia_strofa)
+
+            for i, ramec in enumerate((self.btn_predchadzajuca, self.btn_premietnut, self.btn_skryt, self.btn_dalsia)):
+                ramec.grid(row=0, column=i, sticky="nsew", padx=2)
+            ram.columnconfigure(0, weight=1, uniform="velke")
+            ram.columnconfigure(1, weight=1, uniform="velke")
+            ram.columnconfigure(2, weight=1, uniform="velke")
+            ram.columnconfigure(3, weight=1, uniform="velke")
+            ram.rowconfigure(0, weight=1)
+
+            # Počiatočné stlmenie podľa aktuálneho stavu (prázdny štart = stlmené).
+            try:
+                self._aktualizuj_velke_tlacidla()
+            except Exception as e:
+                log_exception("_vytvor_velke_ovladanie_pas: aktualizuj zlyhalo", e)
+        except Exception as e:
+            log_exception("_vytvor_velke_ovladanie_pas", e)
+
     def zapni_projekciu(self):
         if not self.aktualne_strofy:
             return
@@ -16848,6 +17182,13 @@ class _ProjekciaMixin(_ControlAppBase):
                 self.set_projection_indicator(True)
             except Exception as e:
                 log_exception("zapni_projekciu: set_projection_indicator failed", e)
+
+            # Pás veľkých tlačidiel: stlmenie sa zapnutím nemení, ale
+            # aktualizuj pre istotu (zapnutie môže prísť aj inou cestou).
+            try:
+                self._aktualizuj_velke_tlacidla()
+            except Exception:
+                pass
 
         except Exception as e:
             # Zachytí akúkoľvek inú neočakávanú chybu v metóde
@@ -16881,6 +17222,13 @@ class _ProjekciaMixin(_ControlAppBase):
                     self.live_preview_label.place_forget()
             except Exception as e:
                 log_exception("vypni_projekciu: live_preview cleanup", e)
+
+            # Pás veľkých tlačidiel: obsah zostáva načítaný, stlmenie sa
+            # nemení – aktualizuj pre istotu (vypnutie môže prísť aj inou cestou).
+            try:
+                self._aktualizuj_velke_tlacidla()
+            except Exception:
+                pass
 
         except Exception as e:
             # Hlavný záchytný bod pre celú metódu
@@ -16980,6 +17328,12 @@ class _ProjekciaMixin(_ControlAppBase):
                 self.ulozit_nastavenia()
             except Exception as e:
                 log_exception("clear_screen: chyba pri ukladaní nastavení", e)
+
+            # Pás veľkých tlačidiel: obsah je preč → stlmiť.
+            try:
+                self._aktualizuj_velke_tlacidla()
+            except Exception as e:
+                log_exception("clear_screen: velke tlacidla zlyhali", e)
 
         except Exception as e:
             log_exception("clear_screen: kritické zlyhanie metódy", e)
@@ -18086,9 +18440,17 @@ class _HlavneOknoMixin(_ControlAppBase):
         self.strofa_label.config(state=tk.DISABLED)
         self.strofa_label.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 6))
 
+        # --- PÁS VEĽKÝCH TLAČIDIEL (skill: velke-ovladanie-pas) ---
+        # Pod panelom Aktuálna strofa, nad panelom obsahu.
+        try:
+            self._vytvor_velke_ovladanie_pas(pravy_stlpec)
+        except Exception as e:
+            log_exception("vytvorit_gui: pás veľkých tlačidiel zlyhal", e)
+
         # --- Panel obsah súboru ---
         panel_obsah = tk.Frame(pravy_stlpec, bg=UI_PANEL_BG, bd=0, highlightthickness=0, padx=20, pady=16)
         panel_obsah.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.panel_obsah_frame = panel_obsah
 
         scrollbar = ttk.Scrollbar(panel_obsah, orient="vertical", style="KinakDark.Vertical.TScrollbar")
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -18164,6 +18526,17 @@ class _HlavneOknoMixin(_ControlAppBase):
             self.aktualizovat_zarovanie_cisla_strofy()
         except Exception:
             pass
+
+        # Pás veľkých tlačidiel: po postavení GUI zosynchronizuj viditeľnosť
+        # podľa configu a stlmenie podľa aktuálneho stavu.
+        try:
+            self._aplikuj_velke_ovladanie_viditelnost()
+        except Exception as e:
+            log_exception("vytvorit_gui: velke ovladanie viditelnost zlyhala", e)
+        try:
+            self._aktualizuj_velke_tlacidla()
+        except Exception as e:
+            log_exception("vytvorit_gui: aktualizuj velke tlacidla zlyhalo", e)
         
               
     def aktualizovat_zarovanie_cisla_strofy(self):
@@ -18689,17 +19062,7 @@ UVODNA_MOZNOSTI = (
     ("posledne", "Naposledy použité piesne"),
     ("skratky", "Skratky (modlitby, pobožnosti, hymny – zoznam v súbore skratky.txt)"),
     ("poznamky", "Pracovné texty (tlačidlo na otvorenie)"),
-    ("klavesy", "Ovládanie kláves (pripomienka)"),
 )
-UVODNA_KLAVESY = (
-    ("+", "ďalšia strofa"),
-    ("\u2212", "predchádzajúca (aj šípky)"),
-    ("Enter", "zobraziť / skryť projekciu"),
-    ("\u232b", "zmaže číslo a vypne projekciu"),
-    ("Home", "späť na úvodnú obrazovku"),
-    ("Esc", "zavrieť okno / ukončiť"),
-)
-UVODNA_KLAVESY_V_RIADKU = 3   # pás klávesov sa zalamuje do riadkov po tomto počte položiek
 UVODNA_POSLEDNE_MAX = 8
 UVODNA_TICK_MS = 300
 UVODNA_ZAZNAM_ODKLAD_MS = 2500   # pieseň sa zapíše do histórie, až keď zostane vybraná
@@ -19396,12 +19759,6 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             )
             pozicia += 1
 
-        if self._uvodna_je_zapnuta("klavesy"):
-            try:
-                self._uvodna_pas_klaves(obal, riadok=(pozicia + 1) // 2)
-            except Exception as e:
-                log_exception("Úvodná obrazovka: pás kláves zlyhal", e)
-
     def _uvodna_karta_rychly_pristup(self, karta):
         self._uvodna_nadpis(karta, "Rýchly prístup")
         dnes_z, zajtra_z = self._uvodna_zalmy()
@@ -19576,22 +19933,6 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         self._uvodna_nadpis(karta, "Pracovné texty")
         self._uvodna_tlacidlo(karta, "Otvoriť Pracovné texty", self.otvorit_pomocnika, styl="terciarne").pack(fill=tk.X)
         return True
-
-    def _uvodna_pas_klaves(self, obal, riadok):
-        pas = tk.Frame(obal, bg=UVODNA_KARTA_BG, padx=14, pady=12)
-        pas.grid(row=riadok, column=0, columnspan=2, sticky="ew")
-        for i, (klaves, popis) in enumerate(UVODNA_KLAVESY):
-            r, c = divmod(i, UVODNA_KLAVESY_V_RIADKU)
-            skupina = tk.Frame(pas, bg=UVODNA_KARTA_BG)
-            skupina.grid(row=r, column=c, sticky="w", padx=(0, 28), pady=(0, 8) if r == 0 else 0)
-            tk.Label(
-                skupina, text=klaves, font=(self.font_family, 13, "bold"),
-                fg="#FFFFFF", bg="#3a3a3a", bd=1, relief=tk.RIDGE, padx=10, pady=2,
-            ).pack(side=tk.LEFT)
-            tk.Label(
-                skupina, text=popis, font=(self.font_family, 13),
-                fg="#f0f2f7", bg=UVODNA_KARTA_BG,
-            ).pack(side=tk.LEFT, padx=(8, 0))
 
 
 class _PomocnikSprievodcaMixin(_ControlAppBase):
@@ -20836,6 +21177,12 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             self._uvodna_aktualizuj_viditelnost()
         except Exception as e:
             log_exception("reset_ui: uvodna viditelnost zlyhala", e)
+
+        # Pás veľkých tlačidiel: všetko je prázdne → stlmiť.
+        try:
+            self._aktualizuj_velke_tlacidla()
+        except Exception as e:
+            log_exception("reset_ui: velke tlacidla zlyhali", e)
     
     # ==========================================================
     # LIVE PREVIEW – oddelenie debounce a exekúcie (oprava leak-u after_id)
@@ -21799,7 +22146,7 @@ class ControlApp(
         self.direktorium_label: tk.Label = cast(tk.Label, None)
         self.manual_entry: tk.Entry = cast(tk.Entry, None)
         self.song_combobox: ttk.Combobox = cast(ttk.Combobox, None)
-        self.song_folder_label: tk.Label = cast(tk.Label, None)
+        self.folder_label: tk.Label = cast(tk.Label, None)
         self.status_bar_frame: tk.Frame = cast(tk.Frame, None)
         self.status_bar_zaltár_label: tk.Label = cast(tk.Label, None)
         self.status_bar_btn_dnes: tk.Button | None = None
@@ -21810,9 +22157,21 @@ class ControlApp(
         self.preview_container: tk.Widget = cast(tk.Widget, None)
         self.filter_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
         self.subor_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
-        self.vyber_farbu_button: ttk.Button = cast(ttk.Button, None)
+        self.vyber_farbu_button: tk.Button = cast(tk.Button, None)
         self.obdobie_menu: tk.OptionMenu = cast(tk.OptionMenu, None)
         self.indikator_farby: tk.Canvas = cast(tk.Canvas, None)
+        # Pás veľkých tlačidiel (Predchádzajúca / Premietnuť / Skryť / Ďalšia).
+        self.velke_ovladanie_frame: tk.Frame | None = None
+        self.panel_obsah_frame: tk.Frame | None = None
+        # Pozor: btn_* držia vonkajší rámček (Frame) tlačidla, nie samotný Button –
+        # ten je vnútri rámčeka spolu s labelom skratky (pozri _vytvor_velke_ovladanie_pas).
+        self.btn_predchadzajuca: tk.Frame | None = None
+        self.btn_premietnut: tk.Frame | None = None
+        self.btn_skryt: tk.Frame | None = None
+        self.btn_dalsia: tk.Frame | None = None
+        self._velke_tlacidla: list = []
+        self._velke_tlacidla_aktivne: bool = True
+        self.zobrazit_velke_ovladanie: bool = False
 
         self.projection_window_root: tk.Toplevel = cast(tk.Toplevel, None)
         self.projection_window: ProjectionWindow = cast(ProjectionWindow, None)
@@ -22022,6 +22381,7 @@ class ControlApp(
         self.liturgical_year_var = tk.StringVar(self.master, value=vypocitaj_liturgicky_rok())
 
         self.zobrazit_direktorium_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_direktorium", False))
+        self.zobrazit_velke_ovladanie_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_velke_ovladanie", False))
         self.zobrazovat_live_preview_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_live_preview", True))
         self.cislo_strofy_v_strede_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("cislo_strofy_v_strede", True))
         self.zobrazovat_specialne_znaky_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True))
