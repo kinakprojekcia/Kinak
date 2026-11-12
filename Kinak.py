@@ -65,7 +65,7 @@ except ImportError:
 # ZÁKLADNÉ NASTAVENIA
 # ==========================================================
 
-KINAK_VERSION = "3.7"
+KINAK_VERSION = "3.8"
 KINAK_WEB_URL = "https://kinak.sk"    #"https://kinakprojekcia.github.io/Kinak/"
 KINAK_QR_BASE64 = """iVBORw0KGgoAAAANSUhEUgAAAhwAAAIcCAYAAAC9/nd8AABOsElEQVR4nO3daZMk13Xm+f+51z0il1qwFXaRFHdxl0iKiyhRlNQSpVG3uq27zcZkPTZv5iPMx5hPMP22bczGxrrN1Npaau2iuImkxA1cBa7YCFQBtWVmhPs9Z15c98gEQIHIQroQUfH8YIkCsjIjPCOXePLec8+x6K4FIiIiIhNKr/YFiIiIyO1PgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyuebVvoBX6v967Vtf7Uu4rfyf3/v6qd5+0x//qT/eTX88T3v9pzX1x7tun9/TWrfH57TW7et50039+ZqaVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtTe9Ff1rrNoth02crbPrHu27Xv+nfj1PPXpn687Vus2M2/evhtNbt58PUtMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5LZulspprVuv+22bNXBa6/b4TH096zY7Y92uZ2rr9vldt8dnavr5vFm0wiEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkNEtFXpGpZxls26yKdZsNMbWpZ7Wc1tTXc9rbX7frEXkltMIh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wCEiIiKTU+AQERGRyW38LBV5da3b7IZ1m5WwbrNsprZus410PS9t3a7ntNbt+rft+/20tMIhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5JpX+wJeqXWb5bHpTturf916+6/b18NpH5/TXv+6zZKY+uM9rXX7+jytdft6Pq11+/o8rU1//NeNVjhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZ3MbPUjmtdevVP7WpZwFMPSth3W5/alN/fa7b7JJ1+3i37etn3b4e1s2mX/+60QqHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik9u6WSqntemzEtbNpj+e6zab5rTWbXbJulm32Svr9v2uz6+8ElrhEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHKapSKvyLbN5pj64123x/O017Pp179ts2zWbRbMun2/r9v1bPpsF61wiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjnNUpFXZOrZCutm0z/eTZ9tcVqb/vna9OvfdOs2+2bTaYVDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyWmWyk+g2QQvbdNnc6zbrIqpr2fqx3/dvl9O+/Fu+uO/bp/fdXs8N/37d9NphUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJbd0slXWb5SG3t03/etu2WQ/rNhtl3a5n3WajnNa6zTpZt+uZmlY4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZxFdy1e7YsQERGR25tWOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRySlwiIiIyOQUOERERGRyChwiIiIyOQUOERERmZwCh4iIiExOgUNEREQmp8AhIiIik1PgEBERkckpcIiIiMjkFDhERERkcgocIiIiMjkFDhEREZmcAoeIiIhMToFDREREJqfAISIiIpNT4BAREZHJKXCIiIjI5BQ4REREZHIKHCIiIjI5BQ4RERGZnAKHiIiITE6BQ0RERCanwCEiIiKTU+AQERGRyf3/haLfJyAgMggAAAAASUVORK5CYII="""
 
@@ -3808,27 +3808,80 @@ LITURGICKE_OBDOBIA = {
     "Cezročné": "#80FF00"
 }
 
-# Zjemnené farby pre hlavné okno (nie projekciu) - ZJEDNOTENÉ s projekciou podľa Kinak_x.py
-# Pôvodne: #D47BC6 / #DCB862 / #8FD16A, teraz rovnaké ako LITURGICKE_OBDOBIA pre zhodu s Kinak_x.py
-LITURGICKE_OBDOBIA_JEMNE = {
-    "Adventné": "#FF80FF",
-    "Vianočné": "#FFCC33",
-    "Pôstne":   "#FF80FF",
-    "Veľkonočné": "#FFCC33",
-    "Cezročné": "#80FF00"
-}
-
 # Pevná modrá farba textu v projekcii pri aktívnom filtri "Večeradlo"
 # (voliteľné cez Nastavenia; svetlejší odtieň modrej, dobre čitateľný
 # na tmavom pozadí BACKGROUND_COLOR).
 VECERADLO_PROJEKCIA_MODRA = "#66B2FF"
 
-# Zadania vo vstupnom poli (po normalizácii: bez diakritiky, medzier, veľkosti písmen),
-# ktoré znamenajú oznam.txt. Platí presná zhoda – „ozna“ ani „oznamovanie“ to nie sú.
-OZNAM_VSTUPY = frozenset({"oznam", "oznamy"})
+# Zadanie vo vstupnom poli (po normalizácii: bez diakritiky, medzier, veľkosti písmen),
+# ktoré znamená oznam.txt. Platí presná zhoda – „ozna“ ani „oznamovanie“ to nie sú.
+OZNAM_VSTUPY = frozenset({"oznam"})
 # Pevná červená farba textu v projekcii pre oznam.txt
 # Vždy červená, aby oznam upútal pozornosť (neprehliadnuteľný na čiernom pozadí).
 OZNAM_PROJEKCIA_CERVENA = "#ff4444"
+
+# ==========================================================
+# PRAVÝ PÁS S IKONAMI (zvislý pás pri pravom okraji hlavného okna)
+# ==========================================================
+# Pás ide od spodného okraja hornej lišty až po stavový riadok (do neho nezasahuje).
+# Každá položka je jedna ikona; po kliknutí vykoná svoju akciu (pozri PAS_IKON_POLOZKY).
+# Ďalšiu ikonu pridáš jednoducho novým riadkom v PAS_IKON_POLOZKY.
+PAS_IKON_SIRKA = 60            # šírka pásu v pixeloch
+PAS_IKON_BG = "#1a1a1a"        # pozadie pásu (rovnaké ako horná lišta a stavový riadok)
+PAS_IKON_TLACIDLO = 44         # veľkosť štvorcovej ikony v pixeloch
+PAS_IKON_ODSTUP_HORE = 14      # odstup prvej ikony od horného okraja pásu (ako majú panely)
+PAS_IKON_MEDZERA = 10          # medzera medzi ikonami
+PAS_IKON_FG = "#c5c5d0"        # farba ikony v pokoji (svetlejšia, čitateľná aj pre starších organistov)
+PAS_IKON_FG_HOVER = "#FFFFFF"  # farba ikony pri nabehnutí myši
+PAS_IKON_FONT_VELKOST = 16     # veľkosť glyfu z fontu ikon
+PAS_IKON_NAHRADA_VELKOST = 18  # veľkosť náhradného emoji symbolu (ak font ikon chýba)
+PAS_IKON_OBNOVA_MS = 300       # ako často sa vyhodnocuje stav „aktívne“
+PAS_IKON_ODDELOVAC_BG = "#5c5c6e"  # oddeľovač skupín: výrazne svetlejší ako pozadie pásu #1a1a1a (pôvodný #2a2a2a bol skoro neviditeľný)
+PAS_IKON_ODDELOVAC_VYSKA = 2   # hrúbka čiary (pôvodne 1 px)
+PAS_IKON_ODDELOVAC_MEDZERA = 16  # medzera nad čiarou; pod čiarou je 6 + 10 (odstup ďalšej ikony) = tiež 16
+# Jednotná monochromatická sada ikon: Segoe Fluent Icons (Windows 11) alebo
+# Segoe MDL2 Assets (Windows 10/11) – obe majú rovnaké kódové body glyfov.
+# Ak žiadny z nich nie je k dispozícii, použije sa náhradný emoji symbol.
+PAS_IKON_FONTY_IKON = ("Segoe Fluent Icons", "Segoe MDL2 Assets")
+# Položky pásu, zhora nadol. Reťazec "-" vloží tenkú oddeľovaciu čiaru (skupiny ikon).
+#   glyph   – znak z fontu ikon (Segoe MDL2 Assets / Segoe Fluent Icons)
+#   nahrada – emoji, ak font ikon nie je dostupný
+#   popis   – tooltip
+#   akcia   – ("subor", kód)            načíta súbor kód.txt ako zadanie do vstupného poľa
+#             ("upravit_subor", kód)     otvorí kód.txt priamo v predvolenom editore (ako Upraviť zoznam)
+#             ("skratky_okno", None)     otvorí samostatné okno Skratky
+#             ("skratky_veceradlo_okno", None)  otvorí samostatné okno Skratky – Večeradlo
+#   akcent  – farba ikony a rámika v stave „aktívne“
+#   aktivny – kľúč stavu pre _pas_ikon_je_aktivna() (alebo None = ikona nemá stav)
+# Skupiny v páse: 1) Oznam (načítať + upraviť), 2) Čítania + Vešpery, 3) Skratky, Skratky – Večeradlo.
+PAS_IKON_POLOZKY = (
+    {"glyph": "\uE789", "nahrada": "📢",
+     "popis": "Oznam\nNačíta oznam.txt",
+     "akcia": ("subor", "oznam"),
+     "akcent": OZNAM_PROJEKCIA_CERVENA, "aktivny": "oznam_nacitany"},
+    {"glyph": "\uE70F", "nahrada": "📝",
+     "popis": "Upraviť oznam\nOtvorí oznam.txt \nv predvolenom editore",
+     "akcia": ("upravit_subor", "oznam"),
+     "akcent": MODRA_OKRAJ_HOVER, "aktivny": None},
+    "-",
+    {"glyph": "\uE736", "nahrada": "📖",
+     "popis": "Čítania\nNačíta citania.txt",
+     "akcia": ("subor", "citania"),
+     "akcent": MODRA_OKRAJ_HOVER, "aktivny": "citania_nacitane"},
+    {"glyph": "\uEC4F", "nahrada": "🎵",
+     "popis": "Vešpery\nNačíta vespery.txt",
+     "akcia": ("subor", "vespery"),
+     "akcent": MODRA_OKRAJ_HOVER, "aktivny": "vespery_nacitane"},
+    "-",
+    {"glyph": "\uE8A4", "nahrada": "📋",
+     "popis": "Skratky\nOtvorí panel so skratkami",
+     "akcia": ("skratky_okno", None),
+     "akcent": MODRA_OKRAJ_HOVER, "aktivny": "skratky_okno"},
+    {"glyph": "\uE734", "nahrada": "⭐",
+     "popis": "Skratky – Večeradlo\nOtvorí panel so skratkami Večeradla",
+     "akcia": ("skratky_veceradlo_okno", None),
+     "akcent": MODRA_OKRAJ_HOVER, "aktivny": "skratky_veceradlo_okno"},
+)
 
 # Neutrálny sivý rámik vstupného poľa (mimo oznamu)
 RAMIK_VSTUPU_NEUTRALNY = "#4a4a4a"
@@ -3864,12 +3917,15 @@ DEFAULT_CONFIG = {
     "zobrazit_direktorium": False,
     # Úvodná obrazovka (obsah hlavného okna, kým nie je vybraná pieseň).
     # Predvolene je zapnutá úvodná obrazovka a karty „Rýchly prístup“ a „Skratky“.
-    # Tieto hodnoty platia pri prvom spustení AJ po tlačidle „Obnoviť predvolené“.
+    # Karta „Skratky – Večeradlo“ je predvolene VYPNUTÁ – zapne sa v Nastaveniach
+    # → Úvodná obrazovka. Tieto hodnoty platia pri prvom spustení AJ po tlačidle
+    # „Obnoviť predvolené“.
     "uvodna_zapnute": True,
     "uvodna_rychly_pristup": True,
     "uvodna_odporucane": False,
     "uvodna_posledne": False,
     "uvodna_skratky": True,
+    "uvodna_skratky_veceradlo": False,
     "uvodna_poznamky": False,
     "posledne_piesne": [],
     # Aktívna databáza čísel piesní v direktóriu: "A" (predvolená, čísla
@@ -3914,6 +3970,8 @@ DEFAULT_CONFIG = {
     # Pás veľkých tlačidiel pod panelom Aktuálna strofa
     # (Predchádzajúca / Premietnuť / Skryť / Ďalšia). Predvolene vypnutý.
     "zobrazit_velke_ovladanie": False,
+    # Zvislý pás s ikonami pri pravom okraji okna (zatiaľ Oznam). Predvolene zapnutý.
+    "zobrazit_pas_ikon": True,
 }
 
 # FONT_SIZE je predvolená hodnota; ControlApp spravuje aktuálny stav
@@ -7729,8 +7787,6 @@ class ProjectionWindow:
             pady=(0, self.bottom_margin)
         )
 
-        self.current_color = "#121212"
-
         # maximalizácia na cieľový monitor
         self.move_and_maximize()
 
@@ -9346,16 +9402,22 @@ class SlavnostiApp:
         self.notes_visible = not self.notes_visible
 
 
+# O koľko pixelov vyššie sa zobrazí bublina s vlavo=True (ikony pravého pásu) oproti pôvodnej polohe pod kurzorom.
+TOOLTIP_VLAVO_POSUN_HORE = 20
+
 class Tooltip:
     # Tooltip zobrazí krátky popis pri prechode myšou nad widgetom.
     # Zobrazí sa s miernym oneskorením pri kurzore, dlhší text zalomí a
     # väzby Enter/Leave pridáva cez add="+", takže neprepíše existujúce
     # (napr. zvýraznenie tlačidiel pri prechode myšou).
-    def __init__(self, widget, text, wraplength=380, delay=450):
+    # vlavo=True: bublina sa zobrazí naľavo od kurzora (pre ikony pri pravom okraji okna,
+    # kde by sa napravo orezala alebo vyšla mimo obrazovky).
+    def __init__(self, widget, text, wraplength=380, delay=450, vlavo=False):
         self.widget = widget
         self.text = text
         self.wraplength = wraplength
         self.delay = delay
+        self.vlavo = vlavo
         self.tipwindow = None
         self._after_id = None
         self._x = None
@@ -9396,6 +9458,8 @@ class Tooltip:
             y = self.widget.winfo_rooty() + 30
         self.tipwindow = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(True)
+        if self.vlavo:
+            tw.withdraw()   # kým nepoznáme šírku bubliny, nezobrazuj ju (bez poskoku zprava doľava)
         tw.wm_geometry(f"+{x}+{y}")
 
         label = tk.Label(
@@ -9411,6 +9475,20 @@ class Tooltip:
             font=(safe_font_name, 11)
         )
         label.pack()
+
+        if self.vlavo:
+            try:
+                tw.update_idletasks()
+                sirka = tw.winfo_reqwidth()
+                if self._x is not None:
+                    x_vlavo = self._x - 14 - sirka
+                else:
+                    x_vlavo = self.widget.winfo_rootx() - 6 - sirka
+                # Bublina naľavo sedí o niečo vyššie než pri kurzore (menej „zvisla“ dole).
+                tw.wm_geometry(f"+{max(0, x_vlavo)}+{max(0, y - TOOLTIP_VLAVO_POSUN_HORE)}")
+            except Exception as e:
+                log_exception("Tooltip: umiestnenie vľavo zlyhalo", e)
+            tw.deiconify()
 
     def hide(self, event=None):
         self._zrus_plan()
@@ -9554,7 +9632,6 @@ if TYPE_CHECKING:
         obdobie_subory: Any = None
         obdobie_var: Any = None
         obsah_suboru_text: Any = None
-        original_projection_text: Any = None
         pomocnik_font_size: Any = None
         pomocnik_height: Any = None
         pomocnik_last_tab: Any = None
@@ -9605,7 +9682,6 @@ if TYPE_CHECKING:
         _filter_view_var: Any = None
         _subor_view_var: Any = None
         subor_var: Any = None
-        subory_zoznam: Any = None
         text_color_var: Any = None
         uvodna_vars: Any = None
         _combo_popup: Any = None
@@ -9633,6 +9709,11 @@ if TYPE_CHECKING:
         btn_skryt: Any = None
         btn_dalsia: Any = None
         checkbox_velke_ovladanie: Any = None
+        zobrazit_pas_ikon: Any = None
+        zobrazit_pas_ikon_var: Any = None
+        checkbox_pas_ikon: Any = None
+        pas_ikon_frame: Any = None
+        hlavny_frame: Any = None
         _velke_tlacidla: Any = None
         _velke_tlacidla_aktivne: Any = None
         zoznam_piesni_data: Any = None
@@ -9779,6 +9860,11 @@ if TYPE_CHECKING:
         def _akcia_predchadzajuca_strofa(self, *args: Any, **kwargs: Any) -> Any: ...
         def _aktualizuj_velke_tlacidla(self, *args: Any, **kwargs: Any) -> Any: ...
         def _aplikuj_velke_ovladanie_viditelnost(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _aplikuj_pas_ikon_viditelnost(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _x_zivy_nahlad(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _spusti_ikonu_pasu(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _pas_ikon_obnov_stav(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _zaradi_status_bar(self, *args: Any, **kwargs: Any) -> Any: ...
         def _vytvor_velke_ovladanie_pas(self, *args: Any, **kwargs: Any) -> Any: ...
         def zatvorit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
         def ziskaj_aktualnu_a_celkovu(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9790,13 +9876,18 @@ if TYPE_CHECKING:
         def zobraz_rychly_sprievodca(self, *args: Any, **kwargs: Any) -> Any: ...
         def zobrazit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
         def zobrazit_o_aplikacii(self, *args: Any, **kwargs: Any) -> Any: ...
-        def on_song_selected(self, *args: Any, **kwargs: Any) -> Any: ...
-        def _uloz_geometriu_nastaveni(self, *args: Any, **kwargs: Any) -> Any: ...
-        def _on_mousewheel(self, *args: Any, **kwargs: Any) -> Any: ...
-        def _configure_canvas(self, *args: Any, **kwargs: Any) -> Any: ...
         def _farba_textu_pre_projekciu(self, *args: Any, **kwargs: Any) -> Any: ...
         def _text_je_oznam(self, *args: Any, **kwargs: Any) -> Any: ...
         def _je_nacitany_oznam(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _je_nacitany_subor(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _otvor_cestu_v_editore(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _otvor_skratky_okno(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _otvor_skratky_veceradlo_okno(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _uvodna_otvor(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _uvodna_pecat_suboru(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _uvodna_spusti(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _vyber_kategoriu(self, nazov: str) -> None: ...
+        def _status_bar_sprava_zrus(self, *_args: Any) -> None: ...
         def _aktualna_farba_textu(self, *args: Any, **kwargs: Any) -> Any: ...
         def _je_modre_veceradlo(self, *args: Any, **kwargs: Any) -> Any: ...
         def _zakladna_farba_textu(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -10047,6 +10138,10 @@ class _NastaveniaMixin(_ControlAppBase):
                 # Pás veľkých tlačidiel: predvolene vypnutý (False).
                 self.zobrazit_velke_ovladanie = bool(full_config.get("zobrazit_velke_ovladanie", DEFAULT_CONFIG.get("zobrazit_velke_ovladanie", False)))
                 set_safe("zobrazit_velke_ovladanie_var", self.zobrazit_velke_ovladanie)
+
+                # Pravý pás s ikonami: predvolene zapnutý (True).
+                self.zobrazit_pas_ikon = bool(full_config.get("zobrazit_pas_ikon", DEFAULT_CONFIG.get("zobrazit_pas_ikon", True)))
+                set_safe("zobrazit_pas_ikon_var", self.zobrazit_pas_ikon)
                 set_safe("cislo_strofy_v_strede_var", self.cislo_strofy_v_strede)
                 
                 self.zobrazovat_specialne_znaky = bool(full_config.get("zobrazovat_specialne_znaky", True))
@@ -10137,6 +10232,10 @@ class _NastaveniaMixin(_ControlAppBase):
                 self._aplikuj_velke_ovladanie_viditelnost()
             except Exception as e:
                 log_exception("nacitat_nastavenia: velke ovladanie viditelnost zlyhala", e)
+            try:
+                self._aplikuj_pas_ikon_viditelnost()
+            except Exception as e:
+                log_exception("nacitat_nastavenia: pas ikon viditelnost zlyhala", e)
                 
         finally:
             # Tento kód sa vykoná VŽDY, bez ohľadu na to, či vyššie nastala chyba alebo nie.
@@ -10178,6 +10277,7 @@ class _NastaveniaMixin(_ControlAppBase):
         self.fade_speed = self.fade_speed_var.get() if hasattr(self, "fade_speed_var") else "mierne rýchle"
         self.zobrazovat_live_preview = self.zobrazovat_live_preview_var.get() if hasattr(self, "zobrazovat_live_preview_var") else True
         self.zobrazit_velke_ovladanie = self.zobrazit_velke_ovladanie_var.get() if hasattr(self, "zobrazit_velke_ovladanie_var") else False
+        self.zobrazit_pas_ikon = self.zobrazit_pas_ikon_var.get() if hasattr(self, "zobrazit_pas_ikon_var") else True
         self.zobrazovat_specialne_znaky = self.zobrazovat_specialne_znaky_var.get() if hasattr(self, "zobrazovat_specialne_znaky_var") else True
         self.zobrazovat_znaky_chorov = self.zobrazovat_znaky_chorov_var.get() if hasattr(self, "zobrazovat_znaky_chorov_var") else True
         self.pouzit_modru_farbu_pri_veceradle = self.pouzit_modru_farbu_pri_veceradle_var.get() if hasattr(self, "pouzit_modru_farbu_pri_veceradle_var") else False
@@ -10205,6 +10305,7 @@ class _NastaveniaMixin(_ControlAppBase):
         config_attr_defaults = {
             "statusbar_tyzden_zaltara": DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", False),
             "zobrazit_velke_ovladanie": DEFAULT_CONFIG.get("zobrazit_velke_ovladanie", False),
+            "zobrazit_pas_ikon": DEFAULT_CONFIG.get("zobrazit_pas_ikon", True),
             "medzery_ovladanie": DEFAULT_CONFIG.get("medzery_ovladanie", 50),
             "statusbar_skratka_zalmu": True,
             "statusbar_jks_piesne": True,
@@ -10284,7 +10385,7 @@ class _NastaveniaMixin(_ControlAppBase):
 
     def _text_je_oznam(self, text) -> bool:
         """True, ak je vstupný text (po normalizácii diakritiky, medzier a veľkosti
-        písmen) presne „oznam“ alebo „oznamy“ (OZNAM_VSTUPY). Podreťazec nestačí -
+        písmen) presne „oznam“ (OZNAM_VSTUPY). Podreťazec nestačí -
         „ozna“ či „oznamovanie“ to nie sú."""
         try:
             return self.normalize_alnum(str(text or "")) in OZNAM_VSTUPY
@@ -10292,25 +10393,27 @@ class _NastaveniaMixin(_ControlAppBase):
             log_exception("_text_je_oznam: normalizácia zlyhala", e)
             return str(text or "").strip().lower() in OZNAM_VSTUPY
 
-    def _je_nacitany_oznam(self) -> bool:
-        """True, ak je práve NAČÍTANÝ súbor oznam.txt.
-
-        Jediný zdroj pravdy je skutočne načítaný súbor (nazov_piesne sa nastavuje až po
-        úspešnom načítaní; reset_ui / vyčistenie ho vynuluje). Nič sa tu neukladá do
-        príznaku, takže stav nemôže zostať zastaraný. Porovnáva sa presná zhoda názvu
-        súboru, nie podreťazec - pieseň s "oznam" v názve nezčervenie."""
+    def _je_nacitany_subor(self, kod: str) -> bool:
+        """True, ak je práve NAČÍTANÝ súbor `kod`.txt (oznam / citania / vespery...)."""
         try:
+            kod = str(kod or "").strip().lower()
+            if not kod:
+                return False
             nazov = str(getattr(self, "nazov_piesne", "") or "").strip().lower()
-            if nazov != "oznam":
+            if nazov != kod:
                 return False
             cesta = getattr(self, "aktualny_subor_cesta", None)
             if cesta is not None:
                 stem = cesta.stem if hasattr(cesta, "stem") else Path(str(cesta)).stem
-                return str(stem).strip().lower() == "oznam"
+                return str(stem).strip().lower() == kod
             return True
         except Exception as e:
-            log_exception("_je_nacitany_oznam: chyba pri vyhodnocovaní", e)
+            log_exception(f"_je_nacitany_subor: chyba pri vyhodnocovaní ({kod})", e)
             return False
+
+    def _je_nacitany_oznam(self) -> bool:
+        """True, ak je práve NAČÍTANÝ súbor oznam.txt (pôvodné API, deleguje)."""
+        return bool(self._je_nacitany_subor("oznam"))
 
     def _farba_textu_pre_projekciu(self, base_color: str) -> str:
         """
@@ -10509,6 +10612,7 @@ class _NastaveniaMixin(_ControlAppBase):
             "reserved_vertical_ratio": float(self.reserved_vertical_ratio),
             "zobrazit_direktorium": bool(self.zobrazit_direktorium),
             "zobrazit_velke_ovladanie": bool(getattr(self, "zobrazit_velke_ovladanie", False)),
+            "zobrazit_pas_ikon": bool(getattr(self, "zobrazit_pas_ikon", True)),
             "direktorium_verzia": getattr(self, "direktorium_verzia", "A"),
             "zobrazovat_live_preview": bool(self.zobrazovat_live_preview),
             "zobrazovat_specialne_znaky": bool(self.zobrazovat_specialne_znaky),
@@ -10643,6 +10747,11 @@ class _NastaveniaMixin(_ControlAppBase):
             self._aplikuj_velke_ovladanie_viditelnost()
         except Exception as e:
             log_exception("ulozit_nastavenia: velke ovladanie viditelnost zlyhala", e)
+        # Pravý pás s ikonami: rovnako sa prejaví hneď po prepnutí.
+        try:
+            self._aplikuj_pas_ikon_viditelnost()
+        except Exception as e:
+            log_exception("ulozit_nastavenia: pas ikon viditelnost zlyhala", e)
 
 
     # ==========================================================
@@ -11252,6 +11361,17 @@ class _NastaveniaMixin(_ControlAppBase):
         Tooltip(self.checkbox_velke_ovladanie,
                 "Skryje len pás tlačidiel pod panelom Aktuálna strofa. Klávesy + - Enter fungujú ďalej aj bez pásu.")
 
+        self.checkbox_pas_ikon = tmavy_check(
+            frame_basic_view,
+            "Zobraziť pravý pás s ikonami (Oznam, Pracovné texty)",
+            self.zobrazit_pas_ikon_var,
+            command=lambda: [self.ulozit_nastavenia(), self._aplikuj_pas_ikon_viditelnost()],
+        )
+        self.checkbox_pas_ikon.pack(anchor="w")
+        Tooltip(self.checkbox_pas_ikon,
+                "Zvislý pás pri pravom okraji hlavného okna s ikonami rýchleho prístupu: načítanie oznamu "
+                "a úprava oznamu v okne Pracovné texty. Oznam sa dá načítať aj zadaním „oznam“ do vstupného poľa.")
+
         # Medzery medzi strofami v texte ovládacieho okna (projekcia sa nemení)
         tk.Label(
             frame_basic_view, text="Medzery medzi riadkami", font=FONT, bg=bg, fg=fg, anchor="w"
@@ -11299,6 +11419,8 @@ class _NastaveniaMixin(_ControlAppBase):
                 "(Backspace), po klávese Home alebo tlačidle Home v hornej lište. "
                 "Nikdy sa nepremieta na plátno.")
         for _kluc, _popis in UVODNA_MOZNOSTI:
+            if _kluc in UVODNA_MOZNOSTI_SKRYTE:
+                continue
             tmavy_check(
                 frame_uvod,
                 _popis,
@@ -11727,6 +11849,16 @@ class _NastaveniaMixin(_ControlAppBase):
                 self._aplikuj_velke_ovladanie_viditelnost()
             except Exception as e:
                 log_exception("obnovit_nastavenia_v_gui: velke ovladanie viditelnost zlyhala", e)
+
+        # Pravý pás s ikonami
+        if hasattr(self, "zobrazit_pas_ikon_var"):
+            raw = self.config.get("zobrazit_pas_ikon", DEFAULT_CONFIG["zobrazit_pas_ikon"])
+            self.zobrazit_pas_ikon_var.set(bool(raw))
+            self.zobrazit_pas_ikon = bool(raw)
+            try:
+                self._aplikuj_pas_ikon_viditelnost()
+            except Exception as e:
+                log_exception("obnovit_nastavenia_v_gui: pas ikon viditelnost zlyhala", e)
 
         # Auto filter podľa Dnes
         if hasattr(self, "auto_filter_podla_dnes_var"):
@@ -13205,7 +13337,6 @@ class _StahovanieMixin(_ControlAppBase):
 
                 if vysledok.get("uspech") or (prerusene and vysledok.get("subory")):
                     try:
-                        self.subory_zoznam = self.ziskaj_zoznam_suborov()
                         self.filtrovat_subory(self.filter_var.get())
                     except Exception as e:
                         log_exception(f"{kontext}: obnova zoznamu zlyhala", e)
@@ -14759,7 +14890,6 @@ class _StahovanieMixin(_ControlAppBase):
                         zachovat=set(vysledok.get("stiahnute_datumy") or []),
                     )
                     try:
-                        self.subory_zoznam = self.ziskaj_zoznam_suborov()
                         self.filtrovat_subory(self.filter_var.get())
                     except Exception as e:
                         log_exception("aktualizovat_citania_7_dni_gui: obnova zoznamu zlyhala", e)
@@ -14793,7 +14923,7 @@ class _StahovanieMixin(_ControlAppBase):
                         "program automaticky použije offline cache.\n\n"
                         "Čítania z hlavného súboru načítate zadaním 'citania' alebo tlačidlom 'Čítania (dátum)' v paneli Rýchly prístup "
                         "na úvodnej obrazovke – dátum v názve tlačidla je dátum čítaní uložených v súbore citania.txt. "
-                        "Iný uložený deň vyberiete tlačidlom 'Offline čítania (archív)' vedľa neho (alebo tlačidlom '📂 Offline' v hornej lište) – "
+                        "Iný uložený deň vyberiete tlačidlom 'Offline čítania (archív)' vedľa neho (alebo tlačidlom 'Offline' v hornej lište) – "
                         "čítania sa načítajú rovnako a podľa potreby ich môžete doladiť pre projekciu v Pracovných textoch.\n\n"
                         "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pracovných textoch prázdny riadok. "
                         "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
@@ -15117,10 +15247,6 @@ class _PiesneSuboryMixin(_ControlAppBase):
         prefix_clean = self.normalize_alnum(prefix)
         if not prefix_clean:
             return None
-        # „oznamy“ je to isté ako „oznam“ (súbor oznam.txt)
-        if prefix_clean in OZNAM_VSTUPY:
-            prefix_clean = "oznam"
-
         # 2. Príprava cesty
         priečinok = self.song_folder_path
         if not priečinok.exists() or not priečinok.is_dir():
@@ -15456,7 +15582,6 @@ class _PiesneSuboryMixin(_ControlAppBase):
 
         # Vyčisti horný panel strofy
         try:
-            self.original_projection_text = ""
             self.strofa_label.config(state=tk.NORMAL)
             self.strofa_label.delete("1.0", tk.END)
             self.strofa_label.config(state=tk.DISABLED)
@@ -16046,6 +16171,20 @@ class _PiesneSuboryMixin(_ControlAppBase):
 
         self.aktualny_subor_cesta = hladany_subor_cesta
 
+        # Pečať pre watcher načítaného súboru z pásu (pozri
+        # _nacteny_pas_subor_aktualizuj). Ukladá sa PRED čítaním.
+        # Len pre oznam/citania/vespery – bežné piesne sa externe neupravujú.
+        try:
+            _kod_pas = str(nazov_suboru or "").strip().lower()
+            if _kod_pas in ("oznam", "citania", "vespery"):
+                self._nacteny_pas_nazov = _kod_pas
+                self._nacteny_pas_pecat = self._uvodna_pecat_suboru(hladany_subor_cesta)
+            else:
+                self._nacteny_pas_nazov = None
+                self._nacteny_pas_pecat = None
+        except Exception:
+            pass
+
         obsah = ""
         # --- Pathlib: Načítanie obsahu so zjednoteným kódovaním ---
         try:
@@ -16125,6 +16264,32 @@ class _PiesneSuboryMixin(_ControlAppBase):
                 self.set_projection_indicator(False)
             except Exception as e:
                 log_exception("Chyba pri resetovaní projekčného okna", e)
+            # LIVE PREVIEW: vyčistiť tiež, rovnako ako vypni_projekciu().
+            # Doteraz sa vyčistila len projekcia, ale náhľad si nechal
+            # text z predchádzajúcej piesne – zobraz_aktualnu_strofu
+            # ho pri vypnutej projekcii neaktualizuje. Platí pre každé
+            # načítanie bez projekcie, teda aj pre výber zo Skratiek.
+            try:
+                preview = getattr(self, "live_preview_label", None)
+                if preview is not None:
+                    try:
+                        if preview.winfo_exists():
+                            preview.config(text="")
+                    except tk.TclError:
+                        pass
+                container = getattr(self, "preview_container", None)
+                if container is not None:
+                    try:
+                        if container.winfo_exists() and container.winfo_ismapped():
+                            container.place_forget()
+                    except tk.TclError:
+                        pass
+                try:
+                    self._cancel_pending_live_preview()
+                except Exception:
+                    pass
+            except Exception as e:
+                log_exception("Chyba pri čistení Live Preview", e)
 
         # Označenie riadku v náhľade
         try:
@@ -17211,9 +17376,6 @@ class _ProjekciaMixin(_ControlAppBase):
             except Exception as e:
                 log_exception("vypni_projekciu: set_projection_indicator", e)
 
-            # reset uloženého textu projekcie
-            self.original_projection_text = ""
-
             # --- LIVE PREVIEW: úplne skryť ---
             try:
                 # OPRAVA: Zjednotený názov premennej na 'live_preview_label'
@@ -17299,7 +17461,6 @@ class _ProjekciaMixin(_ControlAppBase):
         try:
             self.is_text_visible = False
             self.aktualne_strofy = []
-            self.original_projection_text = ""
             self.nazov_piesne = ""
 
             # Vyčistenie textu a titulkov na projekcii
@@ -17823,10 +17984,287 @@ class _HlavneOknoMixin(_ControlAppBase):
             if 0 <= i < lb.size():
                 potvrd(lb.get(i))
             return "break"
-        self._combo_popup_klik = klik
         _popup, lb_zhody, _sb = self._combo_popup_vytvor()
         lb_zhody.bind("<Button-1>", klik)
         self._combo_popup_zatvor()
+
+    # ---------- Pravý pás s ikonami ----------
+
+    def _pas_ikon_font(self) -> str | None:
+        """Názov fontu ikon dostupného v systéme (Segoe Fluent Icons / Segoe MDL2 Assets),
+        alebo None, ak žiadny nie je nainštalovaný (vtedy sa použijú emoji náhrady)."""
+        if not hasattr(self, "_pas_ikon_font_cache"):
+            nazov = None
+            try:
+                dostupne = set(tkfont.families(self.master))
+                for kandidat in PAS_IKON_FONTY_IKON:
+                    if kandidat in dostupne:
+                        nazov = kandidat
+                        break
+            except Exception as e:
+                log_exception("_pas_ikon_font: zistenie fontov zlyhalo", e)
+            self._pas_ikon_font_cache = nazov
+        return self._pas_ikon_font_cache
+
+    def _vytvor_pas_ikon(self) -> tk.Frame:
+        """Postaví zvislý pás pri pravom okraji okna s ikonami z PAS_IKON_POLOZKY.
+        Pás sa iba vytvorí (nezobrazí) – zobrazenie rieši _aplikuj_pas_ikon_viditelnost()."""
+        pas = tk.Frame(self.master, bg=PAS_IKON_BG, width=PAS_IKON_SIRKA, bd=0, highlightthickness=0)
+        pas.pack_propagate(False)
+        self.pas_ikon_frame = pas
+        self._pas_ikon_zaznamy = []
+
+        # tenká deliaca čiara na ľavom okraji pásu (rovnaká ako nad stavovým riadkom)
+        tk.Frame(pas, bg=UI_BTN_BG, width=1).pack(side=tk.LEFT, fill=tk.Y)
+        obsah = tk.Frame(pas, bg=PAS_IKON_BG)
+        obsah.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        font_ikon = self._pas_ikon_font()
+        prva = True
+        for polozka in PAS_IKON_POLOZKY:
+            odstup = (PAS_IKON_ODSTUP_HORE if prva else PAS_IKON_MEDZERA, 0)
+            if polozka == "-":
+                # oddeľovač skupín ikon: plná šírka tlačidla, 2 px,
+                # svetlejšia farba a väčšia medzera, aby bol na tmavom
+                # pozadí naozaj vidieť.
+                if not prva:
+                    tk.Frame(obsah, bg=PAS_IKON_ODDELOVAC_BG, width=PAS_IKON_TLACIDLO, height=PAS_IKON_ODDELOVAC_VYSKA).pack(
+                        side=tk.TOP, pady=(PAS_IKON_ODDELOVAC_MEDZERA, 6))
+                continue
+            prva = False
+
+            # Rámik s 1 px okrajom (highlightthickness sa pri tk.Button na Windows
+            # nevykresľuje spoľahlivo, preto okraj tvorí vonkajší Frame).
+            okraj = tk.Frame(obsah, bg=MENU_BTN_BORDER, width=PAS_IKON_TLACIDLO, height=PAS_IKON_TLACIDLO)
+            okraj.pack_propagate(False)
+            okraj.pack(side=tk.TOP, pady=odstup)
+            if font_ikon:
+                text, font = polozka["glyph"], (font_ikon, PAS_IKON_FONT_VELKOST)
+            else:
+                text, font = polozka["nahrada"], (self.font_family, PAS_IKON_NAHRADA_VELKOST)
+            btn = tk.Button(
+                okraj, text=text, font=font,
+                fg=PAS_IKON_FG, bg=UI_BTN_BG,
+                activeforeground=polozka["akcent"], activebackground=MENU_BTN_ACTIVE_BG,
+                relief="flat", bd=0, highlightthickness=0,
+                cursor="hand2", takefocus=0,
+                command=lambda a=polozka["akcia"]: self._spusti_ikonu_pasu(a),
+            )
+            btn.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
+
+            zaznam = {"btn": btn, "okraj": okraj, "polozka": polozka, "aktivna": False, "hover": False}
+            self._pas_ikon_zaznamy.append(zaznam)
+            # tk.Button na Windows pri nabehnutí myši „activebackground“ nepoužije,
+            # preto sa hover rieši ručne (rovnako ako pri tlačidlách stavového riadku).
+            btn.bind("<Enter>", lambda e, z=zaznam: self._pas_ikon_nastav_hover(z, True))
+            btn.bind("<Leave>", lambda e, z=zaznam: self._pas_ikon_nastav_hover(z, False))
+            try:
+                Tooltip(btn, polozka["popis"], vlavo=True)
+            except Exception as e:
+                log_exception("_vytvor_pas_ikon: tooltip zlyhal", e)
+
+        # priebežné vyhodnocovanie stavu „aktívne“ (načítaný oznam / čítania / vešpery, otvorené okno Skratky)
+        old_id = getattr(self, "_pas_ikon_after_id", None)
+        if old_id:
+            try:
+                self.master.after_cancel(old_id)
+            except Exception:
+                pass
+        self._pas_ikon_obnov_stav(opakuj=True)
+        return pas
+
+    def _pas_ikon_styl(self, zaznam: dict) -> None:
+        """Nastaví vzhľad ikony podľa stavu: pokoj / hover / aktívna."""
+        akcent = zaznam["polozka"]["akcent"]
+        if zaznam["aktivna"]:
+            fg, bg, okraj = akcent, MENU_BTN_ACTIVE_BG, akcent
+        elif zaznam["hover"]:
+            fg, bg, okraj = PAS_IKON_FG_HOVER, MENU_BTN_ACTIVE_BG, MODRA_OKRAJ_HOVER
+        else:
+            fg, bg, okraj = PAS_IKON_FG, UI_BTN_BG, MENU_BTN_BORDER
+        try:
+            zaznam["btn"].config(fg=fg, bg=bg)
+            zaznam["okraj"].config(bg=okraj)
+        except tk.TclError:
+            pass   # widget už neexistuje
+
+    def _pas_ikon_nastav_hover(self, zaznam: dict, hover: bool) -> None:
+        zaznam["hover"] = hover
+        self._pas_ikon_styl(zaznam)
+
+    def _pas_ikon_je_aktivna(self, kluc: str | None) -> bool:
+        """Vyhodnotí stav „aktívne“ ikony. Stav sa odvodzuje zo skutočného stavu aplikácie
+        (nie z príznaku), takže nemôže zostať zastaraný."""
+        if not kluc:
+            return False
+        if kluc == "oznam_nacitany":
+            return bool(self._je_nacitany_oznam())
+        if kluc == "citania_nacitane":
+            return bool(self._je_nacitany_subor("citania"))
+        if kluc == "vespery_nacitane":
+            return bool(self._je_nacitany_subor("vespery"))
+        if kluc == "skratky_okno":
+            return self._pas_ikon_okno_je_aktivne("_skratky_okno")
+        if kluc == "skratky_veceradlo_okno":
+            return self._pas_ikon_okno_je_aktivne("_skratky_veceradlo_okno")
+        return False
+
+    def _pas_ikon_okno_je_aktivne(self, nazov_atributu: str) -> bool:
+        """True, ak je dané okno (Skratky / Skratky – Večeradlo) práve otvorené."""
+        okno = getattr(self, nazov_atributu, None)
+        try:
+            if not okno or not okno.winfo_exists() or okno.state() == "withdrawn":
+                return False
+        except tk.TclError:
+            return False
+        return True
+
+    def _pas_ikon_obnov_stav(self, opakuj: bool = False) -> None:
+        """Prepočíta stav „aktívne“ všetkých ikon a prekreslí len tie, ktoré sa zmenili.
+        S opakuj=True sa naplánuje ďalšie vyhodnotenie (kým pás existuje)."""
+        pas = getattr(self, "pas_ikon_frame", None)
+        try:
+            if pas is None or not pas.winfo_exists():
+                return   # pás zanikol – slučka sa zastaví
+            if self._pas_ikon_zobrazeny():
+                for zaznam in getattr(self, "_pas_ikon_zaznamy", []):
+                    aktivna = self._pas_ikon_je_aktivna(zaznam["polozka"].get("aktivny"))
+                    if aktivna != zaznam["aktivna"]:
+                        zaznam["aktivna"] = aktivna
+                        self._pas_ikon_styl(zaznam)
+        except Exception as e:
+            log_exception("_pas_ikon_obnov_stav", e)
+        if opakuj:
+            try:
+                self._pas_ikon_after_id = self.master.after(
+                    PAS_IKON_OBNOVA_MS, lambda: self._pas_ikon_obnov_stav(opakuj=True))
+            except tk.TclError:
+                pass
+
+    def _pas_ikon_zobrazeny(self) -> bool:
+        """True, ak je pás zapnutý v Nastaveniach a existuje."""
+        pas = getattr(self, "pas_ikon_frame", None)
+        if pas is None or not getattr(self, "zobrazit_pas_ikon", True):
+            return False
+        try:
+            return bool(pas.winfo_exists())
+        except tk.TclError:
+            return False
+
+    def _zaradi_status_bar(self) -> None:
+        """Zobrazí stavový riadok na celú šírku okna a v poradí packu ho dá pred pás
+        (resp. pred hlavný obsah), aby pás nezasahoval vedľa neho."""
+        status = self.status_bar_frame
+        if status.winfo_manager() == "pack":
+            status.pack(side=tk.BOTTOM, fill=tk.X)   # už je zaradený – poradie sa nemení
+            return
+        for kotva in (getattr(self, "pas_ikon_frame", None), getattr(self, "hlavny_frame", None)):
+            try:
+                if kotva is not None and kotva.winfo_manager() == "pack":
+                    status.pack(side=tk.BOTTOM, fill=tk.X, before=kotva)
+                    return
+            except tk.TclError:
+                continue
+        status.pack(side=tk.BOTTOM, fill=tk.X)
+
+    def _x_zivy_nahlad(self) -> int:
+        """Vodorovný posun živého náhľadu od pravého okraja okna (pás ho nesmie prekrývať)."""
+        return -(14 + (PAS_IKON_SIRKA if self._pas_ikon_zobrazeny() else 0))
+
+    def _aplikuj_pas_ikon_viditelnost(self) -> None:
+        """Zobrazí alebo skryje pravý pás podľa Nastavenia (hneď, bez reštartu).
+
+        Pás končí nad stavovým riadkom (nezasahuje doň), preto musí v poradí packu
+        stáť ZA stavovým riadkom a PRED hlavným obsahom: horný panel, stavový
+        riadok, pás, hlavný obsah. Stavový riadok tak zostáva na celú šírku okna."""
+        try:
+            pas = getattr(self, "pas_ikon_frame", None)
+            hlavny = getattr(self, "hlavny_frame", None)
+            if pas is None or hlavny is None:
+                return   # GUI ešte nie je postavené
+            try:
+                if not pas.winfo_exists() or not hlavny.winfo_exists():
+                    return
+            except tk.TclError:
+                return
+
+            if getattr(self, "zobrazit_pas_ikon", True):
+                if pas.winfo_manager() != "pack":
+                    pas.pack(side=tk.RIGHT, fill=tk.Y, before=hlavny)
+                # Stavový riadok musí byť v poradí packu pred pásom, inak by pás
+                # zasahoval aj vedľa neho (po pack_forget/pack by skončil na konci).
+                status = getattr(self, "status_bar_frame", None)
+                if status is not None and status.winfo_manager() == "pack":
+                    status.pack_forget()
+                    status.pack(side=tk.BOTTOM, fill=tk.X, before=pas)
+            else:
+                if pas.winfo_manager() == "pack":
+                    pas.pack_forget()
+
+            # Živý náhľad (vpravo dole) sa posunie podľa toho, či pás zaberá miesto.
+            kontajner = getattr(self, "preview_container", None)
+            if kontajner is not None and kontajner.winfo_exists() and kontajner.winfo_manager() == "place":
+                kontajner.place_configure(x=self._x_zivy_nahlad())
+        except Exception as e:
+            log_exception("_aplikuj_pas_ikon_viditelnost", e)
+
+    def _spusti_ikonu_pasu(self, akcia: tuple) -> None:
+        """Vykoná akciu ikony pásu podľa záznamu v PAS_IKON_POLOZKY."""
+        try:
+            druh, hodnota = akcia
+            if druh == "subor":
+                self._otvor_ikonu_pasu(hodnota)
+            elif druh == "upravit_subor":
+                self._uprav_subor_pasu(hodnota)
+            elif druh == "skratky_okno":
+                self._otvor_skratky_okno()
+            elif druh == "skratky_veceradlo_okno":
+                self._otvor_skratky_veceradlo_okno()
+            else:
+                log_exception("_spusti_ikonu_pasu: neznáma akcia", ValueError(str(akcia)))
+        except Exception as e:
+            log_exception("_spusti_ikonu_pasu", e)
+        self._pas_ikon_obnov_stav()   # stav „aktívne“ sa prejaví hneď, nie až pri ďalšom cykle
+
+    def _otvor_ikonu_pasu(self, kod: str) -> None:
+        """Klik na ikonu pásu: načíta súbor `kod`.txt (napr. oznam.txt) ako keby
+        sa kód zadal do vstupného poľa. Ak súbor neexistuje, vysvetlí kde ho vytvoriť."""
+        try:
+            existuje = bool(self.najdi_subor_podla_prefixu(kod))
+        except Exception as e:
+            log_exception(f"_otvor_ikonu_pasu: hľadanie súboru {kod} zlyhalo", e)
+            existuje = True   # nech to rozhodne štandardné načítanie
+        if not existuje:
+            messagebox.showinfo(
+                "Kinak: Nenájdené",
+                f"Súbor „{kod}.txt“ neexistuje v priečinku piesní.\n\n"
+                "Vytvoriť ho môžeš v menu Pomoc → Pracovné texty."
+            )
+            return
+        self._uvodna_spusti(lambda: self._uvodna_otvor(kod))
+
+    def _uprav_subor_pasu(self, kod: str) -> None:
+        """Klik na ikonu „Upraviť ...“ v páse: otvorí `kod`.txt priamo
+        v predvolenom editore – analogicky ako „Upraviť zoznam (skratky.txt)“
+        otvára skratky.txt. Ak súbor ešte neexistuje, vytvorí prázdny.
+        """
+        try:
+            priecinok = getattr(self, "song_folder_path", None)
+            if priecinok is None:
+                messagebox.showinfo("Kinak: Upraviť", "Priečinok piesní nie je nastavený.")
+                return
+            cesta = Path(priecinok) / f"{kod}.txt"
+            if not cesta.exists():
+                try:
+                    cesta.parent.mkdir(parents=True, exist_ok=True)
+                    cesta.write_text("", encoding="utf-8")
+                except Exception as e:
+                    log_exception(f"_uprav_subor_pasu: vytvorenie {cesta} zlyhalo", e)
+                    messagebox.showinfo("Kinak: Upraviť", f"Súbor sa nepodarilo vytvoriť. Otvorte ho ručne:\n\n{cesta}")
+                    return
+            self._otvor_cestu_v_editore(cesta, str(kod).capitalize())
+        except Exception as e:
+            log_exception(f"_uprav_subor_pasu: chyba ({kod})", e)
 
     def vytvorit_gui(self):
         self.master.configure(bg=UI_WINDOW_BG)
@@ -17858,6 +18296,14 @@ class _HlavneOknoMixin(_ControlAppBase):
         self.status_bar_frame = tk.Frame(self.master, bg=UI_BAR_BG, height=40)
         self.status_bar_frame.pack_propagate(False)
         self.status_bar_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+        # --- PRAVÝ PÁS S IKONAMI ---
+        # Tu sa pás iba vytvorí; zobrazenie/skrytie (podľa Nastavenia) rieši
+        # _aplikuj_pas_ikon_viditelnost() na konci vytvorit_gui().
+        try:
+            self._vytvor_pas_ikon()
+        except Exception as e:
+            log_exception("vytvorit_gui: pravý pás s ikonami zlyhal", e)
 
         # tenká deliaca čiara nad stavovým riadkom
         tk.Frame(self.status_bar_frame, bg=UI_BTN_BG, height=1).pack(side=tk.TOP, fill=tk.X)
@@ -18138,7 +18584,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         # obrazovke sa po tom zobrazí úvod.
         uvod_btn = styl_toolbar_widget(tk.Button(
             buttons_frame,
-            text="🏠 Home",
+            text="Home",
             command=self.prejst_na_uvodnu_obrazovku,
             takefocus=0,
         ))
@@ -18173,7 +18619,7 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         liturgicke_nastroje_btn["menu"] = liturgicke_nastroje_menu
 
-        offline_btn = styl_toolbar_widget(tk.Button(buttons_frame, text="📂 Offline", command=self.open_offline_citania_prehladac))
+        offline_btn = styl_toolbar_widget(tk.Button(buttons_frame, text="Offline", command=self.open_offline_citania_prehladac))
         try:
             Tooltip(offline_btn, "Offline čítania (archív)\n(uložené podľa Nastavenia \n→ Umiestnenie súborov)")
         except Exception:
@@ -18193,6 +18639,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         # --- HLAVNÝ OBSAH ---
         hlavny_frame = tk.Frame(self.master, bg=UI_WINDOW_BG)
         hlavny_frame.pack(fill=tk.BOTH, expand=True)
+        self.hlavny_frame = hlavny_frame
 
         # 1. Panel výberu (Vľavo)
         frame_vyber = tk.Frame(hlavny_frame, width=310, bg=UI_WINDOW_BG)
@@ -18276,7 +18723,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         # Filtre a menu - HYBRID: chipy nad zoznamom + box odporúčaných
         self.filter_var = tk.StringVar(value=self.default_filter_var.get())
         self.subor_var = tk.StringVar(value=SUBOR_ZIADNY)
-        self.subory_zoznam = self.ziskaj_zoznam_suborov()
+        self.ziskaj_zoznam_suborov()   # výsledok sa nepoužíva; volanie len upozorní na neplatný priečinok piesní
 
         # --- Dve tlačidlá nad zoznamom: „Kategória“ (filter) a „Položka“ (výber) ---
         # Mriežka 3 : 2 s uniform => šírky sa nemenia podľa textu. Riadky: popisky,
@@ -18287,7 +18734,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         chips_frame.columnconfigure(1, weight=2, uniform="chip")
 
         popisok_font = (self.font_family, 9)
-        tk.Label(chips_frame, text="Kategória", font=popisok_font, fg="#8D99AD",
+        tk.Label(chips_frame, text="Kategória (filter)", font=popisok_font, fg="#8D99AD",
                  bg=UI_LEFT_PANEL_BG, anchor="w").grid(row=0, column=0, sticky="w", padx=(2, 0))
         tk.Label(chips_frame, text="Položka", font=popisok_font, fg="#8D99AD",
                  bg=UI_LEFT_PANEL_BG, anchor="w").grid(row=0, column=1, sticky="w", padx=(8, 0))
@@ -18346,11 +18793,15 @@ class _HlavneOknoMixin(_ControlAppBase):
         self.filter_menu.config(textvariable=self._filter_view_var)
         self.subor_menu.config(textvariable=self._subor_view_var)
         self.filter_var.trace_add("write", self._on_kategoria_zmena)
+        # Správa „Filter ostal na …“ v stavovom riadku zmizne po kliku na Kategóriu alebo po
+        # akejkoľvek zmene filtra. Handler nevracia "break", takže menu sa otvorí ako zvyčajne.
+        self.filter_var.trace_add("write", self._status_bar_sprava_zrus)
+        self.filter_menu.bind("<Button-1>", self._status_bar_sprava_zrus, add="+")
         self.subor_var.trace_add("write", self._on_polozka_zmena)
         self._on_kategoria_zmena()
 
         try:
-            Tooltip(self.filter_menu, "Kategória: skupina súborov\n(žalmy podľa obdobia, modlitby, zbierky piesní).")
+            Tooltip(self.filter_menu, "Kategória (filter): skupina súborov\n(žalmy podľa obdobia, modlitby, zbierky piesní).")
             Tooltip(self.subor_menu, "Položka: konkrétny žalm alebo modlitba\nz vybranej kategórie.")
         except Exception as e:
             log_exception("Tooltipy kategórie/položky zlyhali", e)
@@ -18484,7 +18935,7 @@ class _HlavneOknoMixin(_ControlAppBase):
             highlightthickness=1, highlightbackground="#3a3a3a", highlightcolor="#3a3a3a"
         )
         # y=-60 = nad status barom (40px) + rezerva, aby neprekrýval lištu
-        self.preview_container.place(relx=1.0, rely=1.0, x=-14, y=-60, anchor="se")
+        self.preview_container.place(relx=1.0, rely=1.0, x=self._x_zivy_nahlad(), y=-60, anchor="se")
         self.preview_container.pack_propagate(False)        
        
         # Ak pri štarte nie je náhľad povolený, okamžite ho schováme
@@ -18533,6 +18984,10 @@ class _HlavneOknoMixin(_ControlAppBase):
             self._aplikuj_velke_ovladanie_viditelnost()
         except Exception as e:
             log_exception("vytvorit_gui: velke ovladanie viditelnost zlyhala", e)
+        try:
+            self._aplikuj_pas_ikon_viditelnost()
+        except Exception as e:
+            log_exception("vytvorit_gui: pas ikon viditelnost zlyhala", e)
         try:
             self._aktualizuj_velke_tlacidla()
         except Exception as e:
@@ -18612,6 +19067,9 @@ class _HlavneOknoMixin(_ControlAppBase):
             self._status_bar_zalm_kody = kody
 
             zvysok_texty.extend(st["ostatne"])
+            sprava = getattr(self, "_status_bar_sprava_text", None)
+            if sprava:
+                zvysok_texty.append(sprava)   # správa o filtri (pozri _status_bar_sprava_zobraz)
             if zvysok_texty:
                 zvysok = sep_text.join(zvysok_texty)
                 # Ak pred textom stoja tlačidlá, pridaj oddeľovač; inak ľavý okraj ako predtým
@@ -18622,7 +19080,7 @@ class _HlavneOknoMixin(_ControlAppBase):
                 label.config(text="")
 
             if ma_tlacidlo or zvysok_texty:
-                self.status_bar_frame.pack(side=tk.BOTTOM, fill=tk.X)
+                self._zaradi_status_bar()
             else:
                 self.status_bar_frame.pack_forget()
         except Exception as e:
@@ -19061,12 +19519,24 @@ UVODNA_MOZNOSTI = (
     ("odporucane", "Odporúčané piesne k dnešnému žalmu"),
     ("posledne", "Naposledy použité piesne"),
     ("skratky", "Skratky (modlitby, pobožnosti, hymny – zoznam v súbore skratky.txt)"),
+    ("skratky_veceradlo", "Skratky – Večeradlo (zoznam v súbore skratky_veceradlo.txt)"),
     ("poznamky", "Pracovné texty (tlačidlo na otvorenie)"),
 )
+# Možnosti, ktoré zostávajú v kóde (premenné, ukladanie, karta), ale v Nastavenia → Úvodná
+# obrazovka sa nezobrazujú. Ich hodnota je vždy predvolená z DEFAULT_CONFIG (užívateľ ju
+# nemá ako zmeniť). Skratky – Večeradlo sa otvárajú ikonou v pravom páse a používajú sa zriedka.
+# Opätovné zobrazenie: kľúč z tohto tuple vyhodiť.
+UVODNA_MOZNOSTI_SKRYTE = ("skratky_veceradlo",)
 UVODNA_POSLEDNE_MAX = 8
 UVODNA_TICK_MS = 300
 UVODNA_ZAZNAM_ODKLAD_MS = 2500   # pieseň sa zapíše do histórie, až keď zostane vybraná
 UVODNA_KARTA_BG = "#202020"
+UVODNA_SKRATKY_MAX_VYSKA = 300  # max. výška zoznamu Skratiek, zvyšok sa posúva scrollbarom (cca 9-10 riadkov)
+SKRATKY_OKNO_MAX_VYSKA = 420  # výška posúvateľného zoznamu v samostatnom okne Skratky (väčšie ako karta na Home)
+# Hodnota pre filter_nazov: klik na skratku prepne filter na „predvolený“ (pri zapnutom
+# „Automaticky aktualizovať filter podľa Dnes“ na filter podľa dnešného žalmu, inak na
+# Nastavenia → Liturgia → Predvolený filter v ovládaní) – pozri _skratky_okno_cielovy_filter.
+SKRATKY_FILTER_PREDVOLENY = "__predvoleny__"
 UVODNA_NADPIS_FG = "#9aa3b8"
 UVODNA_TLACIDLO_BG = "#3F4F6A"
 UVODNA_TLACIDLO_ACTIVE = "#5A7090"
@@ -19112,10 +19582,52 @@ def uvodna_normalizuj_posledne(zoznam, nova=None, maximum=UVODNA_POSLEDNE_MAX):
 
 
 UVODNA_SKRATKY_SUBOR = "skratky.txt"
+UVODNA_SKRATKY_VECERADLO_SUBOR = "skratky_veceradlo.txt"
+UVODNA_SKRATKY_VECERADLO_UKAZKA = """# Pomôcka pre vedenie modlitby Večeradla s Pannou Máriou.
+# Každý riadok SKRATKA - Popis, riadok v hranatých
+# zátvorkách, napr. [RUŽENEC], začína novú skupinu, riadky s # sa preskočia.
+# Zmeny sa prejavia hneď po uložení súboru. Klik na skratku najprv prepne
+# filter na „Večeradlo“, aby sa načítala večeradlová verzia piesne/Večeradlo
+# (aj keď rovnaký kód existuje aj v hlavnom priečinku piesní).
+
+[VSTUPNÁ PIESEŇ - ľubovoľné číslo]
+62 - Duchu Svätý, príď z neba
+
+[VZÝVANIE DUCHA SVÄTÉHO]
+701 - Príď, Duchu Svätý... (3x)
+
+[RUŽENEC]
+710  -  radostný 
+720  -  svetla 
+730  -  bolestný 
+740  -  slávnostný
+
+[DOXOLÓGIA - vyber jednu možnosť]
+702 - Gloria Patri, et Filio...	
+712 - Gloria Patri, et Filio... (k Najsvätejšej sviatosti oltárnej)
+
+[MODLITBA NA ÚMYSEL SV. OTCA]
+703 - Otče náš, Zdravas' Mária, Sláva Otcu a záverečná prosba
+
+[ZASVÄTENIE SA NEPOŠKVRNENÉMU SRDCU - vyber jednu možnosť]
+704 - Panna Mária fatimská (+ hymna „Nepoškvrnené Srdce Márie“)
+714 - Celý som tvoj (+ hymna „Nepoškvrnené Srdce Márie“)
+724 - Mária, Matka moja (+ hymna „Nepoškvrnené Srdce Márie“)
+
+[MODLITBY OCHRANY, PRÍHOVORU A POKOJA - vyber jednu možnosť]
+705 - Modlitby
+706 - Modlitby (+ Pod tvoju ochranu)
+
+[ZÁVER (k Najsvätejšej sviatosti oltárnej)]
+SO - Ctime túto Sviatosť slávnu (+ Nech je zvelebený Boh)
+"""
 UVODNA_SKRATKY_UKAZKA = """# Skratky na úvodnej obrazovke (Nastavenia → Úvodná obrazovka → Skratky).
 # Každý riadok: SKRATKA - Popis. Skratka je to, čo by ste zadali do vstupného poľa.
 # Riadok v hranatých zátvorkách, napr. [Modlitby], začína novú skupinu.
 # Riadky začínajúce znakom # sa preskočia. Zmeny sa prejavia hneď po uložení súboru.
+# Klik na skratku najprv prepne filter na predvolený (Nastavenia → Liturgia → Predvolený filter
+# v ovládaní; pri zapnutom „Automaticky aktualizovať filter podľa Dnes“ na filter podľa dnešného
+# žalmu), až potom skratku otvorí.
 
 [Modlitby]
 KR - Krédo
@@ -19130,14 +19642,26 @@ KK - Modlitba zasvätenia
 SO - Ctíme túto Sviatosť
 LL - Loretánske litánie
 
-[Hymny]
+[Hymnusy]
+glória - Glória
+523a - Hymnus 523a
 526 - Teba, Bože, chválime (Te Deum)
 543 - Príď, Duchu Svätý, tvorivý (Veni Creator)
+
+[Obrad kropenia]
+484a - Hyzopom ma pokrop, Pane (Počas roka)
+484b - Zrel som vodu z pravej strany (Vo Veľkonočnom období)
+
+[Sekvencie]
+209b - Obeť svoju veľkonočnú (Veľkonočná sekvencia)
+217b - Duchu Svätý, príď z neba (Turíčna sekvencia)
+269b - Chváľ, Sione, Spasiteľa (Sekvencia na Božie Telo)
+607 - Sekvencia 607
 """
 
 
 def uvodna_parsuj_skratky(text):
-    """Rozparsuje text súboru skratky.txt.
+    """Rozparsuje text súboru so skratkami (skratky.txt / skratky_veceradlo.txt).
 
     Vráti zoznam skupín [(názov skupiny, [(skratka, popis), ...]), ...].
     Riadok „[Názov]“ začína skupinu, „SKRATKA - Popis“ je položka (oddeľovač
@@ -19171,7 +19695,7 @@ def uvodna_parsuj_skratky(text):
 
 
 def uvodna_nacitaj_skratky_zo_suboru(cesta):
-    """Načíta a rozparsuje skratky.txt; pri chybe vráti prázdny zoznam."""
+    """Načíta a rozparsuje súbor so skratkami; pri chybe vráti prázdny zoznam."""
     try:
         cesta = Path(cesta)
         try:
@@ -19180,7 +19704,7 @@ def uvodna_nacitaj_skratky_zo_suboru(cesta):
             text = cesta.read_text(encoding="cp1250", errors="replace")
         return uvodna_parsuj_skratky(text)
     except Exception as e:
-        log_exception("Úvodná obrazovka: načítanie skratky.txt zlyhalo", e)
+        log_exception(f"Úvodná obrazovka: načítanie {cesta} zlyhalo", e)
         return []
 
 
@@ -19213,6 +19737,11 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             if hasattr(self, "uvodna_zapnute_var"):
                 self.uvodna_zapnute_var.set(bool(cfg.get("uvodna_zapnute", DEFAULT_CONFIG.get("uvodna_zapnute", True))))
             for kluc, var in getattr(self, "uvodna_vars", {}).items():
+                if kluc in UVODNA_MOZNOSTI_SKRYTE:
+                    # Skrytá možnosť sa nedá zmeniť v Nastaveniach, preto platí vždy predvolená
+                    # hodnota (inak by v config.json uložené True nešlo vypnúť).
+                    var.set(bool(DEFAULT_CONFIG.get(f"uvodna_{kluc}", False)))
+                    continue
                 var.set(bool(cfg.get(f"uvodna_{kluc}", DEFAULT_CONFIG.get(f"uvodna_{kluc}", True))))
             self.posledne_piesne = uvodna_normalizuj_posledne(cfg.get("posledne_piesne", []))
         except Exception as e:
@@ -19406,18 +19935,22 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
 
     def _uvodna_citania_pecat(self):
         """Pečať obsahu, od ktorého závisí úvodná obrazovka:
-        (pečať citania.txt, pečať skratky.txt – len ak je karta Skratky zapnutá).
+        (pečať citania.txt, pečať skratky.txt – len ak je karta Skratky zapnutá,
+        pečať skratky_veceradlo.txt – len ak je karta Skratky – Večeradlo zapnutá).
 
         Slúži na zistenie, že sa citania.txt zmenil (stiahnutie, výber
         iného dňa z archívu, úprava v Pracovných textoch) alebo že sa upravil
-        skratky.txt, aj vtedy, keď sa nezmenil kalendárny deň. Porovnáva sa
-        v _uvodna_aktualizuj_viditelnost().
+        skratky.txt / skratky_veceradlo.txt, aj vtedy, keď sa nezmenil
+        kalendárny deň. Porovnáva sa v _uvodna_aktualizuj_viditelnost().
         """
         try:
             skratky = None
             if self._uvodna_je_zapnuta("skratky"):
                 skratky = self._uvodna_pecat_suboru(self._uvodna_skratky_cesta())
-            return (self._uvodna_pecat_suboru(self._uvodna_citania_cesta()), skratky)
+            skratky_veceradlo = None
+            if self._uvodna_je_zapnuta("skratky_veceradlo"):
+                skratky_veceradlo = self._uvodna_pecat_suboru(self._uvodna_skratky_cesta(UVODNA_SKRATKY_VECERADLO_SUBOR))
+            return (self._uvodna_pecat_suboru(self._uvodna_citania_cesta()), skratky, skratky_veceradlo)
         except Exception:
             return None
 
@@ -19572,9 +20105,44 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         except Exception as e:
             log_exception("Úvodná obrazovka: kontrola viditeľnosti zlyhala", e)
         try:
+            self._nacteny_pas_subor_aktualizuj()
+        except Exception as e:
+            log_exception("Načítaný pás: kontrola zmeny súboru zlyhala", e)
+        try:
+            self._skratky_okno_aktualizuj()
+        except Exception as e:
+            log_exception("Okno Skratky: kontrola zmeny súboru zlyhala", e)
+        try:
+            self._skratky_veceradlo_okno_aktualizuj()
+        except Exception as e:
+            log_exception("Okno Skratky – Večeradlo: kontrola zmeny súboru zlyhala", e)
+        try:
             self.master.after(UVODNA_TICK_MS, self._uvodna_tick)
         except Exception:
             pass
+
+    def _nacteny_pas_subor_aktualizuj(self) -> None:
+        """Ak sa načítaný súbor z pásu (oznam / citania / vespery) zmenil
+        na disku, znovu ho načítaj – analogicky ako sa panel Skratky
+        prebuduje po uložení skratky.txt. Volá sa z _uvodna_tick."""
+        try:
+            nazov = getattr(self, "_nacteny_pas_nazov", None)
+            ulozena = getattr(self, "_nacteny_pas_pecat", None)
+            if not nazov or ulozena is None:
+                return
+            if str(getattr(self, "nazov_piesne", "") or "").strip().lower() != nazov:
+                return
+            cesta = getattr(self, "aktualny_subor_cesta", None)
+            if cesta is None:
+                return
+            aktualna = self._uvodna_pecat_suboru(cesta)
+            if aktualna is None or aktualna == ulozena:
+                return
+            viditelne = bool(getattr(self, "is_text_visible", False))
+            self._nacteny_pas_pecat = aktualna
+            self.nacitat_piesne(nazov_suboru=nazov, zobrazit_na_projekcii=viditelne)
+        except Exception as e:
+            log_exception("_nacteny_pas_subor_aktualizuj: chyba", e)
 
     def _uvodna_aktualizuj_viditelnost(self):
         frame = self._uvodna_frame
@@ -19739,6 +20307,8 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             stavitelia.append(self._uvodna_karta_posledne)
         if self._uvodna_je_zapnuta("skratky"):
             stavitelia.append(self._uvodna_karta_skratky)
+        if self._uvodna_je_zapnuta("skratky_veceradlo"):
+            stavitelia.append(self._uvodna_karta_skratky_veceradlo)
         if self._uvodna_je_zapnuta("poznamky"):
             stavitelia.append(self._uvodna_karta_poznamky)
 
@@ -19860,33 +20430,35 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             ).grid(row=i // stlpcov, column=i % stlpcov, sticky="ew", padx=2, pady=2)
         return True
 
-    # ---------- karta „Skratky“ (zoznam zo súboru skratky.txt) ----------
-    def _uvodna_skratky_cesta(self):
-        """Cesta k skratky.txt v priečinku piesní, alebo None, ak priečinok nie je známy."""
+    # ---------- karty „Skratky“ / „Skratky – Večeradlo“ ----------
+    # Obe karty čítajú svoj súbor (skratky.txt / skratky_veceradlo.txt) tou istou
+    # logikou – líšia sa len názvom, súborom, ukážkou a (pri Večeradle) filtrom,
+    # na ktorý sa kliknutie prepne (pozri _uvodna_karta_skratky_vseobecna).
+    def _uvodna_skratky_cesta(self, subor=UVODNA_SKRATKY_SUBOR):
+        """Cesta k súboru so skratkami v priečinku piesní, alebo None, ak priečinok nie je známy."""
         try:
             priecinok = getattr(self, "song_folder_path", None)
             if priecinok is None:
                 return None
-            return Path(priecinok) / UVODNA_SKRATKY_SUBOR
+            return Path(priecinok) / subor
         except Exception:
             return None
 
-    def _uvodna_skratky_zabezpec_subor(self, cesta):
-        """Ak skratky.txt ešte neexistuje, vytvorí ho s ukážkovým zoznamom."""
+    def _uvodna_skratky_zabezpec_subor(self, cesta, ukazka=UVODNA_SKRATKY_UKAZKA):
+        """Ak súbor so skratkami ešte neexistuje, vytvorí ho s ukážkovým zoznamom."""
         try:
             if cesta is not None and not cesta.exists() and cesta.parent.is_dir():
-                _zapis_text_atomicky(cesta, UVODNA_SKRATKY_UKAZKA, encoding="utf-8")
+                _zapis_text_atomicky(cesta, ukazka, encoding="utf-8")
                 log_info(f"Úvodná obrazovka: vytvorený ukážkový {cesta}")
         except Exception as e:
-            log_exception("Úvodná obrazovka: vytvorenie skratky.txt zlyhalo", e)
+            log_exception(f"Úvodná obrazovka: vytvorenie {cesta} zlyhalo", e)
 
-    def _uvodna_uprav_skratky(self):
-        """Otvorí skratky.txt v predvolenom editore (Poznámkový blok a pod.)."""
-        cesta = self._uvodna_skratky_cesta()
-        if cesta is None:
-            messagebox.showinfo("Kinak: Skratky", "Priečinok piesní nie je nastavený.")
-            return
-        self._uvodna_skratky_zabezpec_subor(cesta)
+    def _otvor_cestu_v_editore(self, cesta, nazov):
+        """Otvorí súbor v predvolenom editore (Poznámkový blok a pod.).
+
+        Spoločná logika pre „Upraviť zoznam (skratky.txt)“ aj pre ikonu
+        „Upraviť oznam“ v bočnom páse.
+        """
         try:
             if sys.platform.startswith("win"):
                 os.startfile(str(cesta))  # type: ignore[attr-defined]
@@ -19894,38 +20466,414 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
                 import subprocess
                 subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(cesta)])
         except Exception as e:
-            log_exception("Úvodná obrazovka: otvorenie skratky.txt zlyhalo", e)
-            messagebox.showinfo(
-                "Kinak: Skratky",
-                f"Súbor sa nepodarilo otvoriť automaticky. Otvorte ho ručne:\n\n{cesta}",
-            )
+            log_exception(f"Otvorenie {cesta} v editore zlyhalo", e)
+            messagebox.showinfo(f"Kinak: {nazov}", f"Súbor sa nepodarilo otvoriť automaticky. Otvorte ho ručne:\n\n{cesta}")
 
-    def _uvodna_karta_skratky(self, karta):
-        cesta = self._uvodna_skratky_cesta()
+    def _uvodna_uprav_skratky(self, subor=UVODNA_SKRATKY_SUBOR, ukazka=UVODNA_SKRATKY_UKAZKA, nazov="Skratky"):
+        """Otvorí súbor so skratkami v predvolenom editore (Poznámkový blok a pod.)."""
+        cesta = self._uvodna_skratky_cesta(subor)
+        if cesta is None:
+            messagebox.showinfo(f"Kinak: {nazov}", "Priečinok piesní nie je nastavený.")
+            return
+        self._uvodna_skratky_zabezpec_subor(cesta, ukazka)
+        self._otvor_cestu_v_editore(cesta, nazov)
+
+    def _uvodna_uprav_skratky_veceradlo(self):
+        """Otvorí skratky_veceradlo.txt v predvolenom editore (Poznámkový blok a pod.)."""
+        self._uvodna_uprav_skratky(
+            UVODNA_SKRATKY_VECERADLO_SUBOR, UVODNA_SKRATKY_VECERADLO_UKAZKA, "Skratky – Večeradlo")
+
+    def _uvodna_karta_skratky(self, karta, po_otvoreni=None, max_vyska=None):
+        """Karta Skratky. Rovnaký obsah na Home aj v samostatnom okne Skratky."""
+        return self._uvodna_karta_skratky_vseobecna(
+            karta, nazov="Skratky", subor=UVODNA_SKRATKY_SUBOR,
+            ukazka=UVODNA_SKRATKY_UKAZKA, uprav_fn=self._uvodna_uprav_skratky,
+            filter_nazov=SKRATKY_FILTER_PREDVOLENY, po_otvoreni=po_otvoreni, max_vyska=max_vyska,
+        )
+
+    def _uvodna_karta_skratky_veceradlo(self, karta, po_otvoreni=None, max_vyska=None):
+        """Karta Skratky – Večeradlo. Rovnaký obsah ako karta Skratky, zo súboru skratky_veceradlo.txt."""
+        return self._uvodna_karta_skratky_vseobecna(
+            karta, nazov="Skratky – Večeradlo", subor=UVODNA_SKRATKY_VECERADLO_SUBOR,
+            ukazka=UVODNA_SKRATKY_VECERADLO_UKAZKA, uprav_fn=self._uvodna_uprav_skratky_veceradlo,
+            filter_nazov="Večeradlo", po_otvoreni=po_otvoreni, max_vyska=max_vyska,
+        )
+
+    def _uvodna_karta_skratky_vseobecna(self, karta, nazov, subor, ukazka, uprav_fn,
+                                        filter_nazov=None, po_otvoreni=None, max_vyska=None,
+                                        roztiahni_zoznam=False):
+        """Spoločná karta pre Skratky aj Skratky – Večeradlo (Home aj samostatné okno).
+
+        po_otvoreni – volá sa po otvorení skratky (okno ho použije
+            na svoje opätovné zdvihnutie navrch, aby ostalo otvorené;
+            na Home je None).
+        max_vyska – výška posúvateľnej časti (na Home UVODNA_SKRATKY_MAX_VYSKA,
+            v okne väčšia SKRATKY_OKNO_MAX_VYSKA).
+        roztiahni_zoznam – len v samostatnom okne: zoznam sa roztiahne na celú
+            výšku okna a tlačidlo „Upraviť zoznam“ ostane pri spodnom okraji.
+            Bez toho by mal zoznam natvrdo strop max_vyska a pri vyššom okne
+            (napr. 650 px) by pod tlačidlom ostávala prázdna medzera. Na Home
+            je False, tam strop platí.
+        filter_nazov – ak je zadaný (SKRATKY_FILTER_PREDVOLENY = predvolený filter
+            pre Skratky, „Večeradlo“ pre Skratky – Večeradlo), klik na skratku
+            najprv prepne filter naň, až potom skratku otvorí. Pri Večeradle
+            je to navyše nutné:
+            bez toho by sa pri kóde, ktorý existuje v hlavnom priečinku aj
+            v piesne/Večeradlo/ (napr. 016), načítala hlavná verzia, nie
+            večeradlová – vyhľadávanie totiž uprednostní priečinok Večeradlo
+            len pri aktívnom filtri „Večeradlo“ (pozri _priecinky_pre_hladanie).
+        """
+        if max_vyska is None:
+            max_vyska = UVODNA_SKRATKY_MAX_VYSKA
+        cesta = self._uvodna_skratky_cesta(subor)
         if cesta is None:
             return False
-        self._uvodna_skratky_zabezpec_subor(cesta)
+        self._uvodna_skratky_zabezpec_subor(cesta, ukazka)
         skupiny = uvodna_nacitaj_skratky_zo_suboru(cesta)
-        self._uvodna_nadpis(karta, "Skratky")
+        self._uvodna_nadpis(karta, nazov)
         if not skupiny:
             tk.Label(
-                karta, text=f"Zoznam je prázdny. Doplňte riadky do súboru {UVODNA_SKRATKY_SUBOR}.",
-                wraplength=360, justify=tk.LEFT, anchor="w",
+                karta, text=f"Zoznam je prázdny. Doplňte riadky do súboru {subor}.",
+                wraplength=430, justify=tk.LEFT, anchor="w",
                 font=(self.font_family, 11), fg="#c9cfdc", bg=UVODNA_KARTA_BG,
             ).pack(fill=tk.X)
-        for i, (nazov, polozky) in enumerate(skupiny):
-            if nazov:
-                tk.Label(
-                    karta, text=nazov, anchor="w",
-                    font=(self.font_family, 11, "bold"), fg="#c9cfdc", bg=UVODNA_KARTA_BG,
-                ).pack(fill=tk.X, pady=(0 if i == 0 else 8, 2))
-            for kod, popis in polozky:
-                self._uvodna_riadok(karta, kod, popis, lambda k=kod: self._uvodna_otvor(k))
-        self._uvodna_tlacidlo(
-            karta, f"Upraviť zoznam ({UVODNA_SKRATKY_SUBOR})", self._uvodna_uprav_skratky,
-            styl="terciarne", kompaktne=True,
-        ).pack(fill=tk.X, pady=(10, 0))
+        else:
+            scroll_obal = tk.Frame(karta, bg=UVODNA_KARTA_BG)
+            if roztiahni_zoznam:
+                scroll_obal.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+            else:
+                scroll_obal.pack(fill=tk.X, pady=(0, 10))
+            platno = tk.Canvas(scroll_obal, bg=UVODNA_KARTA_BG, highlightthickness=0, bd=0, height=max_vyska)
+            posuvnik = ttk.Scrollbar(scroll_obal, orient="vertical", command=platno.yview, style="KinakDark.Vertical.TScrollbar")
+            platno.configure(yscrollcommand=posuvnik.set)
+            posuvnik.pack(side=tk.RIGHT, fill=tk.Y)
+            platno.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            telo = tk.Frame(platno, bg=UVODNA_KARTA_BG)
+            telo_id = platno.create_window((0, 0), window=telo, anchor="nw")
+            telo.bind("<Configure>", lambda e: platno.configure(scrollregion=platno.bbox("all")))
+            platno.bind("<Configure>", lambda e: platno.itemconfig(telo_id, width=e.width))
+            def _koleso(e):
+                if getattr(e, "num", None) == 4:
+                    smer = -1
+                elif getattr(e, "num", None) == 5:
+                    smer = 1
+                else:
+                    smer = -1 if getattr(e, "delta", 0) > 0 else 1
+                platno.yview_scroll(smer, "units")
+                return "break"
+            def _naviaz_koleso(widget):
+                widget.bind("<MouseWheel>", _koleso)
+                widget.bind("<Button-4>", _koleso)
+                widget.bind("<Button-5>", _koleso)
+                for dieta in widget.winfo_children():
+                    _naviaz_koleso(dieta)
+            for i, (skupina_nazov, polozky) in enumerate(skupiny):
+                if skupina_nazov:
+                    tk.Label(telo, text=skupina_nazov, anchor="w", font=(self.font_family, 11, "bold"), fg="#c9cfdc", bg=UVODNA_KARTA_BG).pack(fill=tk.X, pady=(0 if i == 0 else 8, 2))
+                for kod, popis in polozky:
+                    def _otvor(k=kod):
+                        if filter_nazov is not None:
+                            try:
+                                cielovy = self._skratky_filter_pre_klik(filter_nazov)
+                                filter_var = getattr(self, "filter_var", None)
+                                if cielovy is not None and filter_var is not None and filter_var.get() != cielovy:
+                                    self._vyber_kategoriu(cielovy)
+                            except Exception as e:
+                                log_exception(f"Karta {nazov}: prepnutie filtra na {filter_nazov} zlyhalo", e)
+                        self._uvodna_otvor(k)
+                        if po_otvoreni is not None:
+                            po_otvoreni()
+                    self._uvodna_riadok(telo, kod, popis, _otvor)
+            if not roztiahni_zoznam:
+                # Len na Home: zoznam má strop max_vyska, zvyšok sa posúva.
+                # V okne sa výška nesmie orezávať – plátno sa roztiahne
+                # na voľné miesto v okne (pack expand=True vyššie) a tlačidlo
+                # „Upraviť zoznam“ ostane pri spodnom okraji.
+                try:
+                    telo.update_idletasks()
+                    platno.config(height=min(telo.winfo_reqheight(), max_vyska))
+                except Exception:
+                    pass
+            _naviaz_koleso(platno)
+            _naviaz_koleso(telo)
+        self._uvodna_tlacidlo(karta, f"Upraviť zoznam ({subor})", uprav_fn, styl="terciarne", kompaktne=True).pack(fill=tk.X, pady=(10, 0))
         return True
+
+    def _otvor_skratky_okno(self) -> None:
+        """Otvorí samostatné okno Skratky – rovnaký panel ako karta Skratky
+        na úvodnej obrazovke. Ak je okno už otvorené, len sa ukáže.
+        Klik na skratku načíta pieseň a okno OSTANE otvorené, aby sa
+        dala hneď vybrať ďalšia skratka. Zatvára sa krížikom.
+        """
+        self._otvor_skratky_okno_vseobecne(
+            prefix="skratky", nazov="Skratky", subor=UVODNA_SKRATKY_SUBOR,
+            ukazka=UVODNA_SKRATKY_UKAZKA, uprav_fn=self._uvodna_uprav_skratky,
+            filter_nazov=SKRATKY_FILTER_PREDVOLENY,
+        )
+
+    def _otvor_skratky_veceradlo_okno(self) -> None:
+        """Otvorí samostatné okno Skratky – Večeradlo – rovnaký panel ako karta
+        Skratky – Večeradlo na úvodnej obrazovke, zo súboru skratky_veceradlo.txt.
+        Inak sa správa ako okno Skratky (ostane otvorené, zatvára sa krížikom).
+        """
+        self._otvor_skratky_okno_vseobecne(
+            prefix="skratky_veceradlo", nazov="Skratky – Večeradlo",
+            subor=UVODNA_SKRATKY_VECERADLO_SUBOR, ukazka=UVODNA_SKRATKY_VECERADLO_UKAZKA,
+            uprav_fn=self._uvodna_uprav_skratky_veceradlo, filter_nazov="Večeradlo",
+        )
+
+    def _otvor_skratky_okno_vseobecne(self, prefix, nazov, subor, ukazka, uprav_fn,
+                                      filter_nazov=None) -> None:
+        """Spoločné otvorenie okna Skratky / Skratky – Večeradlo.
+
+        Stav okna sa drží v atribútoch _<prefix>_okno / _<prefix>_okno_obsah /
+        _<prefix>_okno_pecat, takže obe okná môžu byť otvorené naraz a navzájom
+        si neprepisujú obsah ani pečať súboru.
+        """
+        try:
+            okno = getattr(self, f"_{prefix}_okno", None)
+            if okno is not None:
+                try:
+                    if okno.winfo_exists():
+                        okno.deiconify()
+                        okno.lift()
+                        return
+                except tk.TclError:
+                    pass
+            okno = tk.Toplevel(self.master)
+            okno.transient(self.master)
+            okno.title(nazov)
+            okno.configure(bg="#1a1a1a")
+            okno.protocol("WM_DELETE_WINDOW",
+                          lambda: self._zatvorit_skratky_okno_vseobecne(prefix))
+            try:
+                sw, sh = self.master.winfo_screenwidth(), self.master.winfo_screenheight()
+                w, h = 600, 650
+                okno.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+            except Exception:
+                pass
+            setattr(self, f"_{prefix}_okno", okno)
+            obsah = tk.Frame(okno, bg=UVODNA_KARTA_BG, padx=14, pady=12)
+            obsah.pack(fill=tk.BOTH, expand=True)
+            setattr(self, f"_{prefix}_okno_obsah", obsah)
+            self._obnov_skratky_okno_vseobecne(prefix, nazov, subor, ukazka, uprav_fn, filter_nazov)
+        except Exception as e:
+            log_exception(f"_otvor_skratky_okno_vseobecne({prefix}): chyba", e)
+
+    def _obnov_skratky_okno_vseobecne(self, prefix, nazov, subor, ukazka, uprav_fn,
+                                      filter_nazov=None) -> None:
+        """Prebuduje obsah okna Skratky / Skratky – Večeradlo z aktuálneho súboru."""
+        try:
+            obsah = getattr(self, f"_{prefix}_okno_obsah", None)
+            if obsah is None:
+                return
+            try:
+                if not obsah.winfo_exists():
+                    return
+            except tk.TclError:
+                return
+            for w in list(obsah.winfo_children()):
+                w.destroy()
+            self._uvodna_karta_skratky_vseobecna(
+                obsah, nazov=nazov, subor=subor, ukazka=ukazka, uprav_fn=uprav_fn,
+                filter_nazov=filter_nazov,
+                po_otvoreni=lambda: self.master.after(
+                    10, lambda: self._skratky_okno_zdvihni_vseobecne(prefix)),
+                max_vyska=SKRATKY_OKNO_MAX_VYSKA,
+                roztiahni_zoznam=True,
+            )
+            try:
+                setattr(self, f"_{prefix}_okno_pecat",
+                        self._uvodna_pecat_suboru(self._uvodna_skratky_cesta(subor)))
+            except Exception:
+                setattr(self, f"_{prefix}_okno_pecat", None)
+        except Exception as e:
+            log_exception(f"_obnov_skratky_okno_vseobecne({prefix}): chyba", e)
+
+    def _skratky_okno_zdvihni_vseobecne(self, prefix) -> None:
+        """Po výbere skratky okno Skratky / Skratky – Večeradlo znova zdvihni navrch,
+        aby ostalo viditeľné a dala sa hneď vybrať ďalšia skratka – a kurzor vráť
+        do vstupného poľa v hlavnom okne.
+
+        Bez toho by lift() vzal fokus späť do okna so skratkami (aj keď
+        _uvodna_spusti už raz fokus do poľa vrátil), takže by sa po
+        výbere nedalo hneď písať číslo ďalšej piesne. Poradie je
+        dôležité: najprv lift, až potom fokus do poľa.
+        """
+        try:
+            okno = getattr(self, f"_{prefix}_okno", None)
+            if okno is None:
+                return
+            try:
+                if not okno.winfo_exists():
+                    return
+            except tk.TclError:
+                return
+            try:
+                okno.deiconify()
+            except Exception:
+                pass
+            try:
+                okno.lift()
+            except Exception:
+                pass
+        except Exception as e:
+            log_exception(f"_skratky_okno_zdvihni_vseobecne({prefix}): chyba", e)
+        # Kurzor späť do vstupného poľa – rovnakou bezpečnou cestou ako
+        # _uvodna_spusti, aby FocusIn nevymazal popis / direktorium.
+        try:
+            self._obnov_focus_manual_entry_bez_vymazania()
+        except Exception as e:
+            log_exception(f"_skratky_okno_zdvihni_vseobecne({prefix}): vrátenie fokusu zlyhalo", e)
+
+    def _zatvorit_skratky_okno_vseobecne(self, prefix) -> None:
+        try:
+            okno = getattr(self, f"_{prefix}_okno", None)
+            if okno is not None:
+                try:
+                    if okno.winfo_exists():
+                        okno.destroy()
+                except tk.TclError:
+                    pass
+        except Exception as e:
+            log_exception(f"_zatvorit_skratky_okno_vseobecne({prefix}): chyba", e)
+        setattr(self, f"_{prefix}_okno", None)
+        setattr(self, f"_{prefix}_okno_obsah", None)
+        setattr(self, f"_{prefix}_okno_pecat", None)
+        self._skratky_okno_obnov_predvoleny_filter(prefix)
+
+    def _skratky_filter_pre_klik(self, filter_nazov) -> str | None:
+        """Filter, na ktorý sa má prepnúť klik na skratku v karte.
+
+        Konkrétny názov (napr. „Večeradlo“) vráti bezo zmeny. SKRATKY_FILTER_PREDVOLENY sa
+        vyhodnotí v momente kliknutia (takže sleduje zmeny v Nastaveniach aj dnešný žalm):
+        filter podľa Dnes pri zapnutej automatike, inak predvolený filter. Prepína sa len
+        FILTER – súbor dnešného žalmu sa sem nenačíta, lebo sa hneď otvorí kliknutá skratka
+        (aplikovat_auto_filter_podla_dnes by ju po 150 ms prepísalo žalmom).
+        """
+        if filter_nazov == SKRATKY_FILTER_PREDVOLENY:
+            return self._skratky_okno_cielovy_filter()[0]
+        return filter_nazov
+
+    def _skratky_okno_cielovy_filter(self) -> tuple[str | None, bool]:
+        """Filter, na ktorý sa má ovládanie vrátiť po zatvorení okna skratiek.
+
+        Vracia (názov filtra, podľa_dnes). Pri zapnutom „Automaticky aktualizovať filter podľa
+        Dnes“ je to filter podľa dnešného žalmu (podľa_dnes=True); ak sa nedá zistiť (alebo je
+        automatika vypnutá), je to Nastavenia → Liturgia → Predvolený filter v ovládaní
+        (podľa_dnes=False). Ak sa nedá určiť žiadny platný filter, vracia (None, False).
+        """
+        auto_var = getattr(self, "auto_filter_podla_dnes_var", None)
+        if auto_var is not None:
+            auto = bool(auto_var.get())
+        else:
+            auto = bool(getattr(self, "auto_filter_podla_dnes", False))
+        if auto:
+            kod = self._ziskaj_kod_zalmu_pre_dnes()
+            vysledok = self._najdi_filter_pre_kod(kod) if kod else None
+            if vysledok:
+                return vysledok[0], True
+            log_info("_skratky_okno_cielovy_filter: filter podľa Dnes sa nepodarilo zistiť, použije sa predvolený")
+        default_var = getattr(self, "default_filter_var", None)
+        if default_var is None:
+            return None, False
+        predvoleny = default_var.get()
+        if predvoleny in getattr(self, "obdobie_subory", {}):
+            return predvoleny, False
+        return None, False
+
+    def _skratky_okno_obnov_predvoleny_filter(self, prefix) -> None:
+        """Po zatvorení okna Skratky / Skratky – Večeradlo vráti filter v ovládaní.
+
+        Cieľový filter určuje _skratky_okno_cielovy_filter (podľa Dnes pri zapnutej
+        automatike, inak predvolený). Filter podľa Dnes sa nastaví cez
+        aplikovat_auto_filter_podla_dnes (nastaví aj súbor žalmu), predvolený cez
+        _vyber_kategoriu.
+
+        Prepnutie filtra (filtrovat_subory) vymaže vstupné pole aj obsah súboru a vypne
+        projekciu. Preto sa pri bežiacej projekcii filter nemení – zatvorenie pomocného
+        okna nesmie prerušiť živé premietanie; užívateľ o tom dostane nenápadnú správu
+        v stavovom riadku. Ak je filter už správny, nerobí sa nič.
+        """
+        try:
+            filter_var = getattr(self, "filter_var", None)
+            if filter_var is None:
+                return
+            cielovy, podla_dnes = self._skratky_okno_cielovy_filter()
+            if cielovy is None or filter_var.get() == cielovy:
+                return
+            if getattr(self, "is_text_visible", False):
+                log_info(f"_skratky_okno_obnov_predvoleny_filter({prefix}): beží projekcia, filter sa nemení")
+                self._status_bar_sprava_zobraz(f"Filter ostal na „{filter_var.get()}“ (beží/bežala projekcia)")
+                return
+            if podla_dnes:
+                self.aplikovat_auto_filter_podla_dnes()
+            else:
+                self._vyber_kategoriu(cielovy)
+        except Exception as e:
+            log_exception(f"_skratky_okno_obnov_predvoleny_filter({prefix}): chyba", e)
+
+    def _status_bar_sprava_zobraz(self, text: str) -> None:
+        """Nenápadná správa v stavovom riadku (za Dnes / Zajtra / Mesačné žalmy).
+
+        Správa ostane, kým ju užívateľ nezruší: klikom na tlačidlo Kategória (filter) alebo
+        zmenou filtra (pozri _status_bar_sprava_zrus). Nič nevyžaduje potvrdenie a nezoberie
+        fokus, takže nevadí ani počas projekcie. Text sa pridáva v aktualizovat_status_bar,
+        takže prežije aj jeho prekreslenie (zmena nastavení, nový deň).
+        """
+        try:
+            self._status_bar_sprava_text = text
+            self.aktualizovat_status_bar()
+        except Exception as e:
+            log_exception("_status_bar_sprava_zobraz: chyba", e)
+
+    def _status_bar_sprava_zrus(self, *_args) -> None:
+        """Odstráni správu zo stavového riadku (ak nejaká je). Volá sa klikom na Kategóriu
+        aj trace-om pri zmene filtra, preto prijíma ľubovoľné argumenty."""
+        try:
+            if getattr(self, "_status_bar_sprava_text", None) is None:
+                return
+            self._status_bar_sprava_text = None
+            self.aktualizovat_status_bar()
+        except Exception as e:
+            log_exception("_status_bar_sprava_zrus: chyba", e)
+
+    def _skratky_okno_aktualizuj(self) -> None:
+        """Ak sa skratky.txt zmenil na disku, prebuduj aj otvorené okno Skratky."""
+        self._skratky_okno_aktualizuj_vseobecne(
+            "skratky", "Skratky", UVODNA_SKRATKY_SUBOR,
+            UVODNA_SKRATKY_UKAZKA, self._uvodna_uprav_skratky,
+            filter_nazov=SKRATKY_FILTER_PREDVOLENY,
+        )
+
+    def _skratky_veceradlo_okno_aktualizuj(self) -> None:
+        """Ak sa skratky_veceradlo.txt zmenil na disku, prebuduj aj otvorené okno Skratky – Večeradlo."""
+        self._skratky_okno_aktualizuj_vseobecne(
+            "skratky_veceradlo", "Skratky – Večeradlo", UVODNA_SKRATKY_VECERADLO_SUBOR,
+            UVODNA_SKRATKY_VECERADLO_UKAZKA, self._uvodna_uprav_skratky_veceradlo,
+            filter_nazov="Večeradlo",
+        )
+
+    def _skratky_okno_aktualizuj_vseobecne(self, prefix, nazov, subor, ukazka, uprav_fn,
+                                           filter_nazov=None) -> None:
+        """Ak sa súbor so skratkami zmenil na disku, prebuduj aj jeho otvorené okno."""
+        try:
+            okno = getattr(self, f"_{prefix}_okno", None)
+            if okno is None:
+                return
+            try:
+                if not okno.winfo_exists():
+                    return
+            except tk.TclError:
+                return
+            aktualna = self._uvodna_pecat_suboru(self._uvodna_skratky_cesta(subor))
+            if aktualna is None or aktualna == getattr(self, f"_{prefix}_okno_pecat", None):
+                return
+            self._obnov_skratky_okno_vseobecne(
+                prefix, nazov, subor, ukazka, uprav_fn, filter_nazov=filter_nazov,
+            )
+        except Exception as e:
+            log_exception(f"_skratky_okno_aktualizuj_vseobecne({prefix}): chyba", e)
 
     def _uvodna_karta_poznamky(self, karta):
         """Karta „Okno Pomocník“ – len tlačidlo na otvorenie okna Pomocník
@@ -20077,7 +21025,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         self.slavnosti_font_size = max(8, min(int(size), 40))
         self.ulozit_nastavenia(aktualizovat_label=False)
     
-    def otvorit_pomocnika(self):
+    def otvorit_pomocnika(self, zalozka: int | None = None):
+        """Otvorí okno Pracovné texty. Ak je zadané `zalozka` (1–7), otvorí sa na nej
+        (aj keď je okno už otvorené); inak sa použije naposledy zvolená záložka."""
         try:
             # bezpečný názov fontu pre Pylance
             safe_font_name: str = UI_FONT or FONT_NAME or "Arial"
@@ -20086,6 +21036,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             if okno and okno.winfo_exists():
                 okno.deiconify()
                 okno.lift()
+                prepni = getattr(self, "_pomocnik_show", None)
+                if zalozka is not None and prepni is not None:
+                    prepni(zalozka)
                 return
 
             # --- OKNO ---
@@ -20456,6 +21409,8 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
             for i in (1, 2, 3, 4, 5, 6, 7):
                 buttons[i].config(command=lambda i=i: show(i))
+            # Umožní prepnúť záložku aj zvonka (ikona v pravom páse hlavného okna).
+            self._pomocnik_show = show
 
             def apply_font_preserve_focus():
                 size = font_size.get()
@@ -20553,7 +21508,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             self.pomocnik_okno.bind("<Escape>", esc_handler)
             self.master.bind("<Escape>", lambda e: zatvorit_pomocnika_s_ulozenim(e))
 
-            last = self.pomocnik_last_tab or 1
+            last = zalozka if zalozka is not None else (self.pomocnik_last_tab or 1)
             #show(last if last != 5 else 1)
             show(last)
             self.pomocnik_okno.focus_set()
@@ -21250,7 +22205,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
 
         # 4. Zobrazenie kontajnera (ak bol skrytý)
         if not container.winfo_ismapped():
-            container.place(relx=1.0, rely=1.0, x=-14, y=-60, anchor="se")
+            container.place(relx=1.0, rely=1.0, x=self._x_zivy_nahlad(), y=-60, anchor="se")
 
         # 5. Rozmery kontajnera
         w = container.winfo_width()
@@ -21662,19 +22617,35 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• Časť názvu piesne alebo modlitby (napr. ruž → Ružencové bratstvo)\n"
                 "• Skratku žalmu (napr. 20C2)\n\n"
                 "Vstupné pole vyhľadáva podľa názvov .txt súborov.\n\n"
-                "● B) Vyhľadávanie cez filtre\n\n"
-                "• Na vyhľadávanie modlitieb slúžia 3 filtre: „Modlitby a iné“, „Ruženec“ a „Večeradlo“\n"
-                "• Na vyhľadávanie piesní pre mládež slúži filter „Mládež“\n"                
-                "• Ostatné filtre slúžia na vyhľadávanie žalmov\n\n"
-                
-                "Ak je aktívny filter „Večeradlo“, aplikácia najprv hľadá súbor v podpriečinku piesne/Večeradlo/; ak neexistuje, použije súbor z hlavného priečinka piesne/ vrátane podpriečinka Mládež.\n\n"
-                "Ak je aktívny filter „Mládež“, aplikácia najprv hľadá súbor v podpriečinku piesne/Mládež/; ak neexistuje, použije súbor z hlavného priečinka piesne/ vrátane podpriečinka Večeradlo.\n\n"
-                                
-                "● Poznámky k žalmom\n\n"
+                "V skratkách žalmov platí:\n"
                 "• A, B, C = liturgické roky (nedeľné žalmy)\n"
                 "• 1–6 = dni v týždni (pondelok–sobota)\n\n"
-                "Pri práci s Direktóriom stačí dvojklik na bunku — číslo piesne sa odošle do hlavného okna a okamžite sa načíta. "                
-                "Rovnako funguje aj okno Slávenia, kde sa odošle skratka príslušného slávenia.\n"                
+                "● B) Vyhľadávanie cez filtre – Kategória a Položka\n\n"
+                "Kategória vyberá skupinu, Položka konkrétny žalm, modlitbu alebo pieseň z tejto skupiny. "
+                "Pri kategóriách „Večeradlo“ a „Mládež“ sa piesne vyberajú v zozname hore; pri „Mládeži“ je tlačidlo Položka vypnuté. "
+                "Kategória sa v Nastaveniach a v správach označuje aj ako „filter“.\n\n"
+                "Kategórie sú v menu rozdelené do skupín:\n"
+                "• Žalmy\n"
+                "• Modlitby\n"
+                "• Zbierky\n\n"
+                "Príklad: chcete žalm 20C2. V menu Kategória zvoľte „Cezročné C2“ a v Položke vyberte 20C2.\n\n"
+                "● Rýchle cesty k žalmu\n\n"
+                "• Klik v stavovom riadku na tlačidlo Dnes: žalm ..., Zajtra: žalm ... alebo Mesačné žalmy prepne Kategóriu podľa kódu žalmu a hneď načíta aj Položku.\n"
+                "• Dvojklik v Direktóriu alebo v Sláveniach Kategóriu neprepína, len vloží kód do vstupného poľa a načíta ho ako pri ručnom zadaní.\n\n"
+                "● Kde sa súbor hľadá\n\n"
+                "Súbory, ktoré nepatria do žiadneho iného filtra ani medzi číslované piesne, sa sami objavia vo filtri „Modlitby a iné“. Stačí ich vložiť priamo do priečinka piesní.\n\n"
+                "Ak je aktívny filter „Večeradlo“, aplikácia najprv hľadá súbor v podpriečinku piesne/Večeradlo/; ak neexistuje, použije súbor z hlavného priečinka piesne/ vrátane podpriečinka Mládež.\n\n"
+                "Ak je aktívny filter „Mládež“, aplikácia najprv hľadá súbor v podpriečinku piesne/Mládež/; ak neexistuje, použije súbor z hlavného priečinka piesne/ vrátane podpriečinka Večeradlo.\n\n"
+                "● Pre pokročilých – automatické prepnutie Kategórie (Nastavenia → Liturgia)\n\n"
+                "Pri štarte vždy platí jedna automatika, vypnúť sa nedá, dá sa len vybrať ktorá:\n\n"
+                "• Vypnuté „Automaticky aktualizovať filter podľa Dnes“ = platí Predvolený filter v ovládaní, Nastavenia → Liturgia.\n"
+                "• Zapnuté „Automaticky aktualizovať filter podľa Dnes“ = platí filter podľa dnešného žalmu zo stavového riadku, napríklad 28C2 prepne na Cezročné C2. Predvolený filter sa pritom zneaktívni. Ak sa dnešný žalm nepodarí zistiť, použije sa Predvolený filter.\n\n"
+                "V pravom páse sú dve ikony pre skratky: „Skratky“ a „Skratky - Večeradlo“.\n\n"
+                "• Klik na skratku v „Skratkách“ prepne na predvolený filter alebo na filter podľa Dnes, podľa toho, ktorá automatika je zapnutá. Klik v „Skratkách - Večeradlo“ prepne na filter Večeradlo.\n"
+                "• Samotný klik na skratku filter prepne vždy, aj počas projekcie.\n"
+                "• Po zatvorení okien „Skratky“ a „Skratky - Večeradlo“ sa Kategória vráti na predvolený filter alebo na filter podľa Dnes, podľa toho, ktorá automatika je zapnutá.\n"
+                "• Ak pri tomto návrate beží projekcia, Kategória sa nezmení a v stavovom riadku sa ukáže správa Filter ostal na „...“ (beží/bežala projekcia).\n"
+
             )
 
             priprava_text = (
@@ -21723,7 +22694,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 
                 "● Ak sa čítania nenačítajú bez internetu\n\n"
                 "Čítania na daný deň treba aspoň raz stiahnuť. Najjednoduchšie je zvoliť Liturgické nástroje → "
-                "Stiahnuť čítania → Dnes + 7 dní (offline). Čo je uložené, uvidíte po kliknutí na tlačidlo 📂 Offline "
+                "Stiahnuť čítania → Dnes + 7 dní (offline). Čo je uložené, uvidíte po kliknutí na tlačidlo „Offline“ "
                 "v hornej lište. Ak je zoznam prázdny, čítania ešte stiahnuté nie sú. Skontrolujte aj, či je v „Nastavenia "
                 "záložka Pokročilé → Umiestnenie súborov“ správne vybraný priečinok piesní. Podrobnosti nájdete v záložke Čítania.\n\n"
                 "● Ak sa žalmy nezobrazujú správne\n\n"
@@ -21776,7 +22747,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "Po spustení aplikácie Kinak automaticky zobrazí dnešné čítania, ak je príslušný súbor k dispozícii.\n"
                 "Následne môžete v okne „Offline čítania (archív)“ vybrať minulé alebo budúce čítanie. Po výbere sa toto čítanie zobrazí.\n\n"
                 "● Offline čítania (archív)\n\n"
-                "Tlačidlom „📂 Offline“ v hornej lište (alebo tlačidlom „📂 Offline čítania (archív)“ v okne Stiahnuť čítania) "
+                "Tlačidlom „Offline“ v hornej lište (alebo tlačidlom „📂 Offline čítania (archív)“ v okne Stiahnuť čítania) "
                 "otvoríte zoznam dní, ktoré máte uložené. Dnešný deň je označený ★ DNES.\n\n"
                 "• Deň vyberte zo zoznamu a zobrazte ho dvojklikom, klávesom Enter alebo tlačidlom „Zobraziť vybraný deň“\n"
                 "• Tlačidlo „Dnes“ zobrazí dnešné čítania; ak v úložisku nie sú, Kinak ponúkne ich stiahnutie\n"
@@ -21941,7 +22912,7 @@ Rovnaká logika sa uplatňuje aj pri filtri „Mládež“.
                     ("Úprava textov", 12),
                     ("Priečinok piesní", 16),
                     ("Čítania", 9),
-                    ("Pomoc", 8),
+                    ("Problémy", 10),
                     ("Web", 6),
                 ],
                 medzera=8,
@@ -22172,6 +23143,10 @@ class ControlApp(
         self._velke_tlacidla: list = []
         self._velke_tlacidla_aktivne: bool = True
         self.zobrazit_velke_ovladanie: bool = False
+        # Pravý pás s ikonami (Oznam…).
+        self.pas_ikon_frame: tk.Frame | None = None
+        self.hlavny_frame: tk.Frame | None = None
+        self.zobrazit_pas_ikon: bool = DEFAULT_CONFIG.get("zobrazit_pas_ikon", True)
 
         self.projection_window_root: tk.Toplevel = cast(tk.Toplevel, None)
         self.projection_window: ProjectionWindow = cast(ProjectionWindow, None)
@@ -22382,6 +23357,7 @@ class ControlApp(
 
         self.zobrazit_direktorium_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_direktorium", False))
         self.zobrazit_velke_ovladanie_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_velke_ovladanie", False))
+        self.zobrazit_pas_ikon_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_pas_ikon", True))
         self.zobrazovat_live_preview_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_live_preview", True))
         self.cislo_strofy_v_strede_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("cislo_strofy_v_strede", True))
         self.zobrazovat_specialne_znaky_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True))
@@ -22403,7 +23379,6 @@ class ControlApp(
         self.aktualne_cislo_piesne = "000"
         self.aktualne_strofy = []
         self.aktualny_index_strofa = 0
-        self.original_projection_text = ""
         self.nazov_piesne = ""
         self.aktualny_subor_cesta = None
 
