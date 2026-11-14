@@ -17784,7 +17784,9 @@ class _KlavesoveSkratkyMixin(_ControlAppBase):
 
         # ďalšie skratky
         self.master.bind('<Escape>', self.potvrdit_ukoncenie)
-        self.master.bind('c', self.clear_screen)   
+        # 'c' je vypnuté: kláves zasahoval aj pri písaní do vyhľadávania piesní
+        # (mohol počas omše nechcene vypnúť projekciu).
+        # self.master.bind('c', self.clear_screen)
 
         # Home = späť na úvodnú obrazovku (zmaže pole, obsah aj výber a vypne projekciu,
         # rovnako ako Backspace pri zmazaní čísla). Zámerne iba bind na hlavné okno,
