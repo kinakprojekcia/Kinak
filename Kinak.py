@@ -3722,6 +3722,9 @@ COMBO_HLAVICKA = "Hľadať pieseň podľa čísla alebo názvu…"
 MENU_BTN_BG = "#1a1a1a"
 MENU_BTN_FG = "#e0e0e6"
 MENU_BTN_ACTIVE_BG = "#262626"
+# Hover tlačidiel v stavovom riadku = rovnaký odtieň ako horné tlačidlá (Home, Nastavenia…).
+STATUS_BTN_HOVER_BG = "#454545"
+STATUS_BTN_HOVER_FG = "#FFFFFF"
 MENU_BTN_BORDER = "#2a2a2a"
 
 # Paleta ovládacieho okna (podľa vzoru vzhľadu) – nemení farby projekcie.
@@ -3943,6 +3946,15 @@ DEFAULT_CONFIG = {
     "pomocnik_y": -1,
     "pomocnik_width": -1,
     "pomocnik_height": -1,
+    # Poloha a veľkosť samostatných okien Skratky a Skratky – Večeradlo (-1 = predvolené, na stred)
+    "skratky_okno_x": -1,
+    "skratky_okno_y": -1,
+    "skratky_okno_width": -1,
+    "skratky_okno_height": -1,
+    "skratky_veceradlo_okno_x": -1,
+    "skratky_veceradlo_okno_y": -1,
+    "skratky_veceradlo_okno_width": -1,
+    "skratky_veceradlo_okno_height": -1,
     "pomocnik_last_tab": 1,
     "zobrazovat_live_preview": False,
     "zobrazovat_specialne_znaky": True,
@@ -10198,6 +10210,13 @@ class _NastaveniaMixin(_ControlAppBase):
                 self.pomocnik_y = full_config.get("pomocnik_y", -1)
                 self.pomocnik_width = full_config.get("pomocnik_width", -1)
                 self.pomocnik_height = full_config.get("pomocnik_height", -1)
+                for _pref in ("skratky", "skratky_veceradlo"):
+                    for _k in ("x", "y", "width", "height"):
+                        try:
+                            _v = int(full_config.get(f"{_pref}_okno_{_k}", -1))
+                        except (TypeError, ValueError):
+                            _v = -1
+                        setattr(self, f"{_pref}_okno_{_k}", _v)
                 self.pomocnik_last_tab = max(0, min(full_config.get("pomocnik_last_tab", 0), 7))
 
                 # Hlavné okno – uložené rozmery a pozícia
@@ -10652,6 +10671,9 @@ class _NastaveniaMixin(_ControlAppBase):
             "pomocnik_y": int(self.pomocnik_y),
             "pomocnik_width": int(self.pomocnik_width),
             "pomocnik_height": int(self.pomocnik_height),
+            **{f"{_pref}_okno_{_k}": int(getattr(self, f"{_pref}_okno_{_k}", -1))
+               for _pref in ("skratky", "skratky_veceradlo")
+               for _k in ("x", "y", "width", "height")},
             "pomocnik_last_tab": int(self.pomocnik_last_tab),
             "main_window_x":      int(self.main_window_x),
             "main_window_y":      int(self.main_window_y),
@@ -11293,6 +11315,10 @@ class _NastaveniaMixin(_ControlAppBase):
         # --- Vizuálny oddeľovač pre modlitbové filtre aj v nastaveniach ---
         try:
             menu2 = self.default_filter_menu["menu"]
+            # Najprv oddeľovač pred „Večeradlo“ (za „Ruženec“), potom pred „Modlitby a iné“ –
+            # v tomto poradí, aby sa indexy nižšie v zozname neposunuli.
+            if "Večeradlo" in moznosti_subory:
+                menu2.insert_separator(moznosti_subory.index("Večeradlo"))
             if "Modlitby a iné" in moznosti_subory:
                 idx2 = moznosti_subory.index("Modlitby a iné")
                 menu2.insert_separator(idx2)
@@ -12839,15 +12865,15 @@ class _StahovanieMixin(_ControlAppBase):
         self.master.update_idletasks()
         mx = self.master.winfo_x() + self.master.winfo_width() // 2
         my = self.master.winfo_y() + self.master.winfo_height() // 2
-        dw, dh = 640, 520
+        dw, dh = 640, 560
         dialog.geometry(f"{dw}x{dh}+{mx - dw // 2}+{my - dh // 2}")
-        tk.Label(dialog, text="Offline čítania (archív)", bg="#121212", fg="#ffffff", font=(self.font_family, 14, "bold")).pack(pady=(16, 4))
-        tk.Label(dialog, text=f"Priečinok: {cache_dir}", bg="#121212", fg="#888888", font=(self.font_family, 8), wraplength=600).pack(pady=(0, 8))
+        tk.Label(dialog, text="Offline čítania (archív)", bg="#121212", fg="#ffffff", font=(self.font_family, 16, "bold")).pack(pady=(16, 10))
+        tk.Label(dialog, text=f"Priečinok: {cache_dir}", bg="#121212", fg="#888888", font=(self.font_family, 10), wraplength=600).pack(pady=(0, 8))
         frame_list = tk.Frame(dialog, bg="#121212")
         frame_list.pack(fill=tk.BOTH, expand=True, padx=12, pady=6)
         scrollbar = tk.Scrollbar(frame_list)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        listbox = tk.Listbox(frame_list, bg="#1e1e1e", fg="#ffffff", selectbackground="#2a5a8f", selectforeground="#ffffff", font=(self.font_family, 11), yscrollcommand=scrollbar.set, height=14)
+        listbox = tk.Listbox(frame_list, bg="#1e1e1e", fg="#ffffff", selectbackground="#2a5a8f", selectforeground="#ffffff", font=(self.font_family, 13), yscrollcommand=scrollbar.set, height=14)
         listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=listbox.yview)
         subory_info = []
@@ -12863,13 +12889,17 @@ class _StahovanieMixin(_ControlAppBase):
                             st = f.stat()
                             predch = najnovsie.get(datum)
                             if predch is None or st.st_mtime > predch[0]:
-                                najnovsie[datum] = (st.st_mtime, f, cd, st.st_size)
+                                # Ukladá sa len čas a cesta k súboru – veľkosť
+                                # ani priečinok sa v riadku nezobrazujú,
+                                # cesta je len hore v dialógu (Priečinok: ...).
+                                najnovsie[datum] = (st.st_mtime, f)
                         except Exception:
                             continue
-            for datum, (_mt, f, cd, velkost) in najnovsie.items():
+            for datum, (_mt, f) in najnovsie.items():
                 den_tyzdna = dni[datum.weekday()]
                 oznac = " ★ DNES" if datum == date.today() else ""
-                text = f"{datum.strftime('%d.%m.%Y')} ({den_tyzdna}){oznac} – {velkost//1024+1} kB [{cd.parent}]"
+                # Len dátum a deň – bez cesty a bez veľkosti súboru.
+                text = f"{datum.strftime('%d.%m.%Y')} ({den_tyzdna}){oznac}"
                 subory_info.append((datum, f, text))
             subory_info.sort(key=lambda x: x[0])
         except Exception as e:
@@ -12882,11 +12912,11 @@ class _StahovanieMixin(_ControlAppBase):
             for datum, cesta, text in subory_info:
                 listbox.insert(tk.END, text)
         info_var = tk.StringVar(value="Vyber deň a klikni Zobraziť")
-        tk.Label(dialog, textvariable=info_var, bg="#121212", fg="#bbbbbb", font=(self.font_family, 10), wraplength=420, justify=tk.CENTER).pack(pady=(8, 4))
+        tk.Label(dialog, textvariable=info_var, bg="#121212", fg="#bbbbbb", font=(self.font_family, 11), wraplength=420, justify=tk.CENTER).pack(pady=(8, 4))
         btn_frame = tk.Frame(dialog, bg="#121212")
         btn_frame.pack(pady=(6, 12))
-        btn_style = {"bg": "#262626", "fg": "#ffffff", "activebackground": "#2a2a2a", "activeforeground": "#ffffff", "font": (self.font_family, 11, "bold"), "relief": "flat", "bd": 0, "padx": 16, "pady": 8, "cursor": "hand2"}
-        btn_style_modry = {"bg": "#1e3a5f", "fg": "#ffffff", "activebackground": "#2a5a8f", "activeforeground": "#ffffff", "font": (self.font_family, 12, "bold"), "relief": "flat", "bd": 0, "padx": 20, "pady": 8, "cursor": "hand2"}
+        btn_style = {"bg": "#262626", "fg": "#ffffff", "activebackground": "#2a2a2a", "activeforeground": "#ffffff", "font": (self.font_family, 12, "bold"), "relief": "flat", "bd": 0, "padx": 16, "pady": 8, "cursor": "hand2"}
+        btn_style_modry = {"bg": "#1e3a5f", "fg": "#ffffff", "activebackground": "#2a5a8f", "activeforeground": "#ffffff", "font": (self.font_family, 13, "bold"), "relief": "flat", "bd": 0, "padx": 20, "pady": 8, "cursor": "hand2"}
         def zobraz_vybraty():
             sel = listbox.curselection()
             if not sel:
@@ -17841,7 +17871,10 @@ class _HlavneOknoMixin(_ControlAppBase):
             zvysok = [k for k in dostupne if k not in pouzite]
             if zvysok:
                 skupiny.append(("Ostatné", zvysok))
+            # Skupiny si pamätáme pre vlastné rozbaľovacie menu (_otvor_menu_kategorii).
+            self._kategorie_skupiny = [(n, list(k)) for n, k in skupiny if k]
             prva = True
+            nadpisy_label: set[str] = set()
             for nadpis, kategorie in skupiny:
                 if not kategorie:
                     continue
@@ -17849,21 +17882,156 @@ class _HlavneOknoMixin(_ControlAppBase):
                     menu.add_separator()
                 prva = False
                 # Nadpis sa pri prejdení myšou nesmie meniť a klik naň nesmie nič zvoliť.
-                # Nadpis je vypnutá položka s modrou farbou z menu-level
-                # `disabledforeground`; menu sa pri kliknutí nezatvorí (bez blikania).
+                # Nadpis je obyčajná položka s modrou farbou; menu sa pri kliknutí nezatvorí (bez blikania).
                 # Vypnutá položka: kliknutie ju neinvokuje, takže sa menu nezatvorí
                 # a nemusí sa znova otvárať (žiadne blikanie).
                 # Normálne AJ hover (active) farby sú rovnaké (modrý text na pozadí menu),
                 # aby sa nadpis pri prejdení myšou nijako nezmenil.
                 pozadie = menu.cget("bg")
-                menu.add_command(label=nadpis, state="disabled",
+                # Nadpis NIE JE vypnutý: vypnuté položky kreslí Windows vlastnou farbou a pri
+                # hoveri ju zmení. Obyčajná položka s rovnakou farbou textu aj pozadia v
+                # normálnom a aktívnom stave sa pri myši nijako nezmení. Klik na ňu sa
+                # blokuje nižšie (menu sa nezatvorí, nič sa nezvolí).
+                menu.add_command(label=nadpis,
                                  font=(self.font_family, KATEGORIE_NADPIS_VELKOST),
                                  foreground=KATEGORIE_NADPIS_FG, activeforeground=KATEGORIE_NADPIS_FG,
-                                 background=pozadie, activebackground=pozadie)
+                                 background=pozadie, activebackground=pozadie,
+                                 command=lambda: None)
+                nadpisy_label.add(nadpis)
                 for nazov in kategorie:
                     menu.add_command(label=nazov, command=lambda v=nazov: self._vyber_kategoriu(v))
         except Exception as e:
             log_exception("_zostav_menu_kategorii zlyhalo", e)
+
+    def _zatvor_menu_kategorii(self) -> None:
+        """Zatvorí vlastné rozbaľovacie menu „Kategória“ (ak je otvorené)."""
+        pop = getattr(self, "_kat_popup", None)
+        self._kat_popup = None
+        if pop is None:
+            return
+        try:
+            pop.grab_release()
+        except tk.TclError:
+            pass
+        try:
+            pop.destroy()
+        except tk.TclError:
+            pass
+
+    def _otvor_menu_kategorii(self, event=None):
+        """
+        Vlastné rozbaľovacie menu „Kategória“ s nadpismi skupín (Žalmy / Modlitby / Zbierky).
+
+        Natívne menu Windows sa po kliku vždy zatvorí, aj keď sa klikne na nadpis skupiny,
+        a nadpisy v ňom nejdú spoľahlivo zafarbiť. Vlastné okienko dá nad nadpismi plnú
+        kontrolu: nadpisy majú stále rovnakú farbu a klik na ne nerobí nič (menu ostane
+        otvorené). Zatvára sa výberom položky, klikom mimo, Esc alebo stratou fokusu.
+        """
+        try:
+            btn = self.filter_menu
+            if str(btn.cget("state")) == "disabled":
+                return "break"
+            if getattr(self, "_kat_popup", None) is not None:
+                if time.monotonic() - getattr(self, "_kat_popup_cas", 0.0) > 0.35:
+                    self._zatvor_menu_kategorii()
+                return "break"
+            skupiny = getattr(self, "_kategorie_skupiny", None) or []
+            if not skupiny:
+                return "break"
+
+            fam = self.font_family
+            pop = tk.Toplevel(btn)
+            pop.withdraw()
+            pop.overrideredirect(True)
+            pop.configure(bg=MENU_BTN_BORDER)
+            try:
+                pop.attributes("-topmost", True)
+            except tk.TclError:
+                pass
+            body = tk.Frame(pop, bg=MENU_BTN_BG)
+            body.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
+
+            polozky: list = []      # (label, názov kategórie) – len voliteľné položky
+            stav = {"i": -1}
+            aktivna_bg = "#454545"
+
+            def nastav_aktivnu(i: int) -> None:
+                if not (0 <= i < len(polozky)):
+                    return
+                stav["i"] = i
+                for j, (lb, _n) in enumerate(polozky):
+                    lb.config(bg=aktivna_bg if j == i else MENU_BTN_BG,
+                              fg="#FFFFFF" if j == i else MENU_BTN_FG)
+
+            def zvol(nazov: str) -> None:
+                self._zatvor_menu_kategorii()
+                self._vyber_kategoriu(nazov)
+
+            prva = True
+            for nadpis, kategorie in skupiny:
+                if not prva:
+                    tk.Frame(body, height=1, bg=MENU_BTN_BORDER).pack(fill=tk.X, pady=3)
+                prva = False
+                # Nadpis skupiny: žiadne bindy, žiadny hover – klik na neho nič nerobí.
+                tk.Label(body, text=nadpis, font=(fam, KATEGORIE_NADPIS_VELKOST),
+                         fg=KATEGORIE_NADPIS_FG, bg=MENU_BTN_BG, anchor="w",
+                         padx=10, pady=4).pack(fill=tk.X)
+                for nazov in kategorie:
+                    lb = tk.Label(body, text=nazov, font=(fam, 12), fg=MENU_BTN_FG,
+                                  bg=MENU_BTN_BG, anchor="w", padx=18, pady=4)
+                    lb.pack(fill=tk.X)
+                    idx = len(polozky)
+                    lb.bind("<Enter>", lambda _e, i=idx: nastav_aktivnu(i))
+                    lb.bind("<ButtonRelease-1>", lambda _e, n=nazov: zvol(n))
+                    polozky.append((lb, nazov))
+
+            # Klik mimo okienka ho zatvorí – rieši globálny handler nižšie (bez grabu myši,
+            # ktorý sa na Windowse pri stlačenom tlačidle správal nespoľahlivo: zoznam
+            # fungoval len kým sa tlačidlo držalo).
+            if not getattr(self, "_kat_popup_global_bind", False):
+                def _globalny_klik(e) -> None:
+                    p = getattr(self, "_kat_popup", None)
+                    if p is None:
+                        return
+                    if time.monotonic() - getattr(self, "_kat_popup_cas", 0.0) < 0.35:
+                        return
+                    try:
+                        w = str(e.widget)
+                        if w == str(self.filter_menu) or w == str(p) or w.startswith(str(p) + "."):
+                            return      # klik na tlačidlo rieši jeho vlastné prepínanie
+                    except Exception:
+                        return
+                    self._zatvor_menu_kategorii()
+                self.filter_menu.bind_all("<ButtonPress-1>", _globalny_klik, add="+")
+                self._kat_popup_global_bind = True
+
+            # Predvolene zvýrazni práve zvolenú kategóriu.
+            aktualna = self.filter_var.get()
+            nastav_aktivnu(next((i for i, (_l, n) in enumerate(polozky) if n == aktualna), 0))
+
+            # Umiestnenie pod tlačidlom (a v rámci obrazovky).
+            pop.update_idletasks()
+            w = max(pop.winfo_reqwidth(), btn.winfo_width())
+            h = pop.winfo_reqheight()
+            x = btn.winfo_rootx()
+            y = btn.winfo_rooty() + btn.winfo_height()
+            sw, sh = pop.winfo_screenwidth(), pop.winfo_screenheight()
+            if y + h > sh - 40:
+                y = max(0, sh - h - 40)
+            if x + w > sw:
+                x = max(0, sw - w)
+            pop.geometry(f"{w}x{h}+{x}+{y}")
+            pop.deiconify()
+            pop.lift()
+            pop.update_idletasks()
+            self._kat_popup = pop
+            self._kat_popup_cas = time.monotonic()
+            # Okienko nesmie brať fokus (inak by vstupné pole „stratilo“ fokus a spustilo
+            # svoje FocusOut obsluhy); bez focus_force aj bez grabu myši.
+        except Exception as e:
+            log_exception("_otvor_menu_kategorii zlyhalo", e)
+            self._zatvor_menu_kategorii()
+        return "break"
 
     def _vyber_kategoriu(self, nazov: str) -> None:
         """To isté, čo robí tk.OptionMenu pri výbere: nastaví premennú a zavolá filter."""
@@ -18559,15 +18727,15 @@ class _HlavneOknoMixin(_ControlAppBase):
                 text="",
                 font=(self.font_family, 14),
                 fg=UI_BTN_FG, bg=UI_BTN_BG,
-                activeforeground=UI_BTN_FG, activebackground=MENU_BTN_ACTIVE_BG,
+                activeforeground=STATUS_BTN_HOVER_FG, activebackground=STATUS_BTN_HOVER_BG,
                 relief="flat", bd=0, padx=12, pady=0,
                 highlightthickness=1,
                 highlightbackground=MENU_BTN_BORDER, highlightcolor=MODRA_OKRAJ_HOVER,
                 cursor="hand2", takefocus=0,
                 command=lambda: self.klik_status_bar_zalm(cmd_name),
             )
-            btn.bind("<Enter>", lambda e, b=btn: b.config(bg=MENU_BTN_ACTIVE_BG, highlightbackground=MODRA_OKRAJ_HOVER))
-            btn.bind("<Leave>", lambda e, b=btn: b.config(bg=UI_BTN_BG, highlightbackground=MENU_BTN_BORDER))
+            btn.bind("<Enter>", lambda e, b=btn: b.config(bg=STATUS_BTN_HOVER_BG, fg=STATUS_BTN_HOVER_FG, highlightbackground=MODRA_OKRAJ_HOVER))
+            btn.bind("<Leave>", lambda e, b=btn: b.config(bg=UI_BTN_BG, fg=UI_BTN_FG, highlightbackground=MENU_BTN_BORDER))
             return btn
 
         self.status_bar_btn_dnes = _vytvor_status_tlacidlo("dnes")
@@ -18813,7 +18981,10 @@ class _HlavneOknoMixin(_ControlAppBase):
                 padx=18,
                 pady=8
             )
-            widget.pack(side=tk.LEFT, padx=(0, 8))
+            # fill=Y: tk.Button a tk.Menubutton majú na Windows o pixel-dva rozdielnu výšku,
+            # čo je vidieť až pri hoveri (zmena farby). Roztiahnutie na výšku rámika
+            # (= najvyššie tlačidlo) ich zjednotí.
+            widget.pack(side=tk.LEFT, padx=(0, 8), fill=tk.Y)
             # tk.Button na Windows pri nabehnutí myši „activebackground“ nepoužije
             # (iba pri stlačení), preto sa hover rieši ručne. Menubutton ho
             # podporuje natívne, takže ho netreba meniť.
@@ -18947,7 +19118,7 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         self.manual_entry_hint = tk.Label(
             panel_vyber, text="Zadaj číslo alebo skratku, prípadne vyber skratku (položku) z menu nižšie.", font=(self.font_family, 11),
-            fg="#9a9aaa", bg=UI_LEFT_PANEL_BG, wraplength=273, justify=tk.LEFT, anchor="w"
+            fg="#C9D1DE", bg=UI_LEFT_PANEL_BG, wraplength=273, justify=tk.LEFT, anchor="w"
         )
         self.manual_entry_hint.pack(fill=tk.X, pady=(0, 14))
 
@@ -18976,10 +19147,12 @@ class _HlavneOknoMixin(_ControlAppBase):
         chips_frame.columnconfigure(0, weight=3, uniform="chip")
         chips_frame.columnconfigure(1, weight=2, uniform="chip")
 
-        popisok_font = (self.font_family, 9)
-        tk.Label(chips_frame, text="Kategória (filter)", font=popisok_font, fg="#8D99AD",
+        # Popisky nad tlačidlami: svetlejšia farba a väčšie písmo kvôli čitateľnosti
+        # (operátor v šere, starší používatelia).
+        popisok_font = (self.font_family, 11)
+        tk.Label(chips_frame, text="Kategória (filter)", font=popisok_font, fg="#C9D1DE",
                  bg=UI_LEFT_PANEL_BG, anchor="w").grid(row=0, column=0, sticky="w", padx=(2, 0))
-        tk.Label(chips_frame, text="Položka", font=popisok_font, fg="#8D99AD",
+        tk.Label(chips_frame, text="Položka", font=popisok_font, fg="#C9D1DE",
                  bg=UI_LEFT_PANEL_BG, anchor="w").grid(row=0, column=1, sticky="w", padx=(8, 0))
 
         self._subor_vypnuty = False
@@ -19003,8 +19176,8 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         # Pomocný popis pod tlačidlami (Večeradlo, Mládež): kde je výber piesne.
         self.kategoria_hint_label = tk.Label(
-            chips_frame, text=KATEGORIA_HINT_PIESEN_HORE, font=(self.font_family, 10),
-            fg="#AAB3C2", bg=UI_LEFT_PANEL_BG, anchor="w", justify=tk.LEFT,
+            chips_frame, text=KATEGORIA_HINT_PIESEN_HORE, font=(self.font_family, 11),
+            fg="#D5DBE6", bg=UI_LEFT_PANEL_BG, anchor="w", justify=tk.LEFT,
         )
         self.kategoria_hint_label.grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 0))
         self.kategoria_hint_label.grid_remove()
@@ -19043,6 +19216,8 @@ class _HlavneOknoMixin(_ControlAppBase):
         # akejkoľvek zmene filtra. Handler nevracia "break", takže menu sa otvorí ako zvyčajne.
         self.filter_var.trace_add("write", self._status_bar_sprava_zrus)
         self.filter_menu.bind("<Button-1>", self._status_bar_sprava_zrus, add="+")
+        # Vlastné rozbaľovacie menu namiesto natívneho (nadpisy skupín, klik na ne nič nerobí).
+        self.filter_menu.bind("<Button-1>", self._otvor_menu_kategorii, add="+")
         self.subor_var.trace_add("write", self._on_polozka_zmena)
         self._on_kategoria_zmena()
 
@@ -20466,8 +20641,11 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
         btn.bind("<ButtonRelease-1>", _nad)
         return okraj
 
-    def _uvodna_riadok(self, rodic, vlavo, vpravo, prikaz=None):
-        """Riadok „štítok + hodnota“; po kliknutí vykoná `prikaz` (ak je zadaný)."""
+    def _uvodna_riadok(self, rodic, vlavo, vpravo, prikaz=None, zalamuj=False):
+        """Riadok „štítok + hodnota“; po kliknutí vykoná `prikaz` (ak je zadaný).
+
+        zalamuj=True: dlhý text vpravo sa zalomí na viac riadkov podľa aktuálnej šírky
+        riadka (a pri zmene šírky okna sa zalomenie prispôsobí), namiesto orezania."""
         riadok = tk.Frame(rodic, bg=UVODNA_KARTA_BG, cursor="hand2" if prikaz else "")
         riadok.pack(fill=tk.X, pady=1)
         l1 = tk.Label(riadok, text=vlavo, width=11, anchor="w",
@@ -20476,6 +20654,21 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
                       font=(self.font_family, 12), fg="#e0e0e6", bg=UVODNA_KARTA_BG)
         l1.pack(side=tk.LEFT, padx=(6, 0), pady=4)
         l2.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 6), pady=4)
+        if zalamuj:
+            posledna_sirka = {"w": -1}
+
+            def _zalom(_e=None):
+                try:
+                    sirka = riadok.winfo_width()
+                    if sirka <= 1 or sirka == posledna_sirka["w"]:
+                        return      # zmena výšky (po zalomení) nesmie spustiť ďalšie zalamovanie
+                    posledna_sirka["w"] = sirka
+                    # šírka riadka − štítok − okraje (6 + 8 + 6) − malá rezerva
+                    volne = sirka - l1.winfo_reqwidth() - 6 - 8 - 6 - 4
+                    l2.config(wraplength=max(80, volne))
+                except tk.TclError:
+                    pass
+            riadok.bind("<Configure>", _zalom)
         if prikaz:
             def nad(_e=None, w=(riadok, l1, l2)):
                 for x in w:
@@ -20721,7 +20914,7 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
 
     def _uvodna_karta_skratky_vseobecna(self, karta, nazov, subor, ukazka, uprav_fn,
                                         filter_nazov=None, po_otvoreni=None, max_vyska=None,
-                                        roztiahni_zoznam=False):
+                                        roztiahni_zoznam=False, zobraz_nadpis=True):
         """Spoločná karta pre Skratky aj Skratky – Večeradlo (Home aj samostatné okno).
 
         po_otvoreni – volá sa po otvorení skratky (okno ho použije
@@ -20734,6 +20927,10 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             Bez toho by mal zoznam natvrdo strop max_vyska a pri vyššom okne
             (napr. 650 px) by pod tlačidlom ostávala prázdna medzera. Na Home
             je False, tam strop platí.
+        zobraz_nadpis – True na Home (karta nemá titulok okna, nadpis ju
+            identifikuje), False v samostatnom okne: tam už názov nesie
+            titulok okna (okno.title(nazov)) a vnútorný nadpis by ho len
+            duplikoval a zaberal zoznamu asi 26 px.
         filter_nazov – ak je zadaný (SKRATKY_FILTER_PREDVOLENY = predvolený filter
             pre Skratky, „Večeradlo“ pre Skratky – Večeradlo), klik na skratku
             najprv prepne filter naň, až potom skratku otvorí. Pri Večeradle
@@ -20750,7 +20947,8 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             return False
         self._uvodna_skratky_zabezpec_subor(cesta, ukazka)
         skupiny = uvodna_nacitaj_skratky_zo_suboru(cesta)
-        self._uvodna_nadpis(karta, nazov)
+        if zobraz_nadpis:
+            self._uvodna_nadpis(karta, nazov)
         if not skupiny:
             tk.Label(
                 karta, text=f"Zoznam je prázdny. Doplňte riadky do súboru {subor}.",
@@ -20789,7 +20987,39 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
                     _naviaz_koleso(dieta)
             for i, (skupina_nazov, polozky) in enumerate(skupiny):
                 if skupina_nazov:
-                    tk.Label(telo, text=skupina_nazov, anchor="w", font=(self.font_family, 11, "bold"), fg="#c9cfdc", bg=UVODNA_KARTA_BG).pack(fill=tk.X, pady=(0 if i == 0 else 8, 2))
+                    # Nadpis skupiny sa MUSÍ zalamovať ako riadky pod ním.
+                    # Predtým tu bol obyčajný Label bez wraplength, takže
+                    # dlhé nadpisy vo Večeradle (napr. „ZASVÄTENIE SA
+                    # NEPOŠKVRNENÉMU SRDCU - vyber jednu možnosť") sa pri
+                    # užšom okne odrezali vpravo („... vyber je...").
+                    # Riadky Skratky sú krátke („Modlitby", „Ruženec"), preto
+                    # sa to tam neprejavilo, ale tu áno.
+                    nadpis_skupiny = tk.Label(
+                        telo, text=skupina_nazov, anchor="w", justify=tk.LEFT,
+                        font=(self.font_family, 11, "bold"), fg="#c9cfdc",
+                        bg=UVODNA_KARTA_BG,
+                    )
+                    nadpis_skupiny.pack(fill=tk.X, pady=(0 if i == 0 else 8, 2))
+                    _posledna_sirka_skupiny = {"w": -1}
+
+                    def _zalom_skupiny(_e=None, _lbl=nadpis_skupiny,
+                                       _stav=_posledna_sirka_skupiny):
+                        try:
+                            sirka = _lbl.winfo_width()
+                            if sirka <= 1 or sirka == _stav["w"]:
+                                return  # zmena výšky po zalomení nesmie cyklovať
+                            _stav["w"] = sirka
+                            _lbl.config(wraplength=max(80, sirka - 4))
+                        except tk.TclError:
+                            pass
+
+                    nadpis_skupiny.bind("<Configure>", _zalom_skupiny)
+                    # Pre istotu prepočítať aj po vykreslení – ak by
+                    # <Configure> s finálnou šírkou neprišiel.
+                    try:
+                        nadpis_skupiny.after_idle(_zalom_skupiny)
+                    except tk.TclError:
+                        pass
                 for kod, popis in polozky:
                     def _otvor(k=kod):
                         if filter_nazov is not None:
@@ -20803,7 +21033,7 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
                         self._uvodna_otvor(k)
                         if po_otvoreni is not None:
                             po_otvoreni()
-                    self._uvodna_riadok(telo, kod, popis, _otvor)
+                    self._uvodna_riadok(telo, kod, popis, _otvor, zalamuj=True)
             if not roztiahni_zoznam:
                 # Len na Home: zoznam má strop max_vyska, zvyšok sa posúva.
                 # V okne sa výška nesmie orezávať – plátno sa roztiahne
@@ -20866,19 +21096,131 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
             okno.configure(bg="#1a1a1a")
             okno.protocol("WM_DELETE_WINDOW",
                           lambda: self._zatvorit_skratky_okno_vseobecne(prefix))
+            # Uloženú geometriu nastaviť hneď, ale NESMIE sa hneď ani
+            # zapamätávať: správca okien (Windows) okno pri prvom zobrazení
+            # ešte presúva na svoje predvolené miesto (typicky stred horného
+            # okraja) a budovanie obsahu (najmä dlhého zoznamu Skratiek)
+            # geometriu ešte prejednáva. Keby sa <Configure> naviazal už tu,
+            # prvé neusadené súradnice by sa uložili ako „nová poloha“ a
+            # pri ďalšom otvorení by okno už nebolo tam, kam ho používateľ
+            # odložil – veľkosť by sedela, poloha nie. Preto sa <Configure>
+            # naviaže až po vybudovaní obsahu a po opätovnom nastavení
+            # uloženej geometrie (pozri nižšie).
+            geom = self._skratky_okno_geometria(prefix)
             try:
-                sw, sh = self.master.winfo_screenwidth(), self.master.winfo_screenheight()
-                w, h = 600, 650
-                okno.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
-            except Exception:
-                pass
+                okno.geometry(geom)
+            except Exception as e:
+                log_exception(f"_otvor_skratky_okno_vseobecne({prefix}): geometria zlyhala", e)
             setattr(self, f"_{prefix}_okno", okno)
             obsah = tk.Frame(okno, bg=UVODNA_KARTA_BG, padx=14, pady=12)
             obsah.pack(fill=tk.BOTH, expand=True)
             setattr(self, f"_{prefix}_okno_obsah", obsah)
             self._obnov_skratky_okno_vseobecne(prefix, nazov, subor, ukazka, uprav_fn, filter_nazov)
+            # Obsah je vybudovaný – znova nastaviť uloženú geometriu, aby
+            # ju prejednávanie veľkosti obsahu neposunulo.
+            try:
+                okno.update_idletasks()
+                okno.geometry(geom)
+            except Exception as e:
+                log_exception(f"_otvor_skratky_okno_vseobecne({prefix}): opätovná geometria zlyhala", e)
+            # Až teraz začať polohu/veľkosť sledovať – okno je usadené.
+            self._skratky_okno_zapamataj_geometriu(okno, prefix)
+            # Jednorazovo po prvom zobrazení (<Map>) geometriu ešte raz
+            # nastaviť: správca okien ju môže pri mapovaní prepísať vlastným
+            # umiestnením. Pri ďalších zobrazeniach (deiconify po
+            # minimalizácii) sa už poloha neprepisuje – tú si riadi používateľ.
+            _map_stav = {"hotovo": False}
+
+            def _po_prvom_zobrazeni(event, _okno=okno, _geom=geom, _stav=_map_stav):
+                if _stav["hotovo"]:
+                    return
+                if event.widget is not _okno:
+                    return
+                _stav["hotovo"] = True
+                try:
+                    _okno.geometry(_geom)
+                except tk.TclError:
+                    pass
+
+            okno.bind("<Map>", _po_prvom_zobrazeni, add="+")
         except Exception as e:
             log_exception(f"_otvor_skratky_okno_vseobecne({prefix}): chyba", e)
+
+    def _skratky_okno_geometria(self, prefix, w_def: int = 600, h_def: int = 650) -> str:
+        """Geometria okna Skratky / Skratky – Večeradlo: uložená poloha a veľkosť z konfigurácie,
+        inak predvolená veľkosť na stred obrazovky. Uložená poloha mimo obrazovky
+        (napr. po odpojení monitora) sa nehádže na stred, len sa pritiahne na okraj,
+        aby okno ostalo dostupné a čo najbližšie k miestu, kam ho používateľ odložil."""
+        sw, sh = self.master.winfo_screenwidth(), self.master.winfo_screenheight()
+
+        def _i(k: str) -> int:
+            try:
+                return int(getattr(self, f"{prefix}_okno_{k}", -1))
+            except (TypeError, ValueError):
+                return -1
+
+        x, y, w, h = _i("x"), _i("y"), _i("width"), _i("height")
+        # Neplatná je len tá zložka, ktorá je neplatná: neplatná veľkosť
+        # (napr. prechodne malá pri otváraní) nesmie zahodiť aj platnú
+        # polohu – predtým sa pri w/h < 250 nastavilo x = y = -1 a okno
+        # pri ďalšom otvorení skočilo na stred, hoci polohu malo uloženú.
+        if w < 250:
+            w = w_def
+        if h < 250:
+            h = h_def
+        w = min(w, sw)
+        h = min(h, max(250, sh - 40))
+        # Poloha je uložená, len keď sú uložené OBE súradnice (-1 = neuložená).
+        # Polovičná poloha (x = -1, y = platné a naopak) je poškodený záznam,
+        # nie poloha – vtedy na stred. Inak sa poloha len pritiahne na okraj
+        # obrazovky, aby okno ostalo viditeľné, ale nepreskočilo na stred.
+        if x == -1 or y == -1:
+            x, y = (sw - w) // 2, (sh - h) // 2
+        else:
+            x = max(0, min(x, max(0, sw - 100)))
+            y = max(0, min(y, max(0, sh - 100)))
+        return f"{w}x{h}+{x}+{y}"
+
+    def _skratky_okno_zapamataj_geometriu(self, okno, prefix) -> None:
+        """Pri presune / zmene veľkosti okna Skratky uloží novú polohu a veľkosť do konfigurácie
+        (s oneskorením, rovnako ako okno Pracovné texty).
+
+        Ukladá sa len skutočný presun používateľom: udalosti pred zobrazením
+        okna (okno ešte nie je namapované, správca okien ho ešte presúva)
+        a prechodne malé rozmery pri otváraní sa ignorujú, aby neprepísali
+        uloženú polohu neusadenými súradnicami.
+        """
+        kluce = ("x", "y", "width", "height")
+
+        def _uloz(event) -> None:
+            if event.widget is not okno:
+                return
+            try:
+                if str(okno.state()) != "normal":
+                    return          # minimalizované okno má nezmyselné súradnice
+                if not okno.winfo_ismapped():
+                    return          # okno ešte nie je zobrazené – súradnice sú
+                                    # zatiaľ predvolené od správcu okien, nie od používateľa
+                nove = (okno.winfo_x(), okno.winfo_y(), okno.winfo_width(), okno.winfo_height())
+            except tk.TclError:
+                return
+            # Prechodne malé rozmery pri otváraní (< 250) nie sú zámer
+            # používateľa – nesmú sa uložiť (geometria by ich pri ďalšom
+            # otvorení vyhodnotila ako neplatné).
+            if nove[2] < 250 or nove[3] < 250 or nove[0] < -10000 or nove[1] < -10000:
+                return
+            stare = tuple(int(getattr(self, f"{prefix}_okno_{k}", -1)) for k in kluce)
+            if nove == stare:
+                return
+            for k, v in zip(kluce, nove):
+                setattr(self, f"{prefix}_okno_{k}", int(v))
+            self._naplanuj_debounced_zapis(
+                f"_{prefix}_okno_geom_after_id",
+                lambda: self.ulozit_nastavenia(aktualizovat_label=False),
+                f"uloz_poziciu okna {prefix}",
+            )
+
+        okno.bind("<Configure>", _uloz)
 
     def _obnov_skratky_okno_vseobecne(self, prefix, nazov, subor, ukazka, uprav_fn,
                                       filter_nazov=None) -> None:
@@ -20901,6 +21243,9 @@ class _UvodnaObrazovkaMixin(_ControlAppBase):
                     10, lambda: self._skratky_okno_zdvihni_vseobecne(prefix)),
                 max_vyska=SKRATKY_OKNO_MAX_VYSKA,
                 roztiahni_zoznam=True,
+                # V okne názov nesie titulok okna, vnútorný nadpis by ho
+                # len duplikoval a bral miesto zoznamu.
+                zobraz_nadpis=False,
             )
             try:
                 setattr(self, f"_{prefix}_okno_pecat",
@@ -23476,6 +23821,9 @@ class ControlApp(
         self.pomocnik_y = DEFAULT_CONFIG.get("pomocnik_y", -1)
         self.pomocnik_width = DEFAULT_CONFIG.get("pomocnik_width", -1)
         self.pomocnik_height = DEFAULT_CONFIG.get("pomocnik_height", -1)
+        for _pref in ("skratky", "skratky_veceradlo"):
+            for _k in ("x", "y", "width", "height"):
+                setattr(self, f"{_pref}_okno_{_k}", DEFAULT_CONFIG.get(f"{_pref}_okno_{_k}", -1))
         self.pomocnik_last_tab = DEFAULT_CONFIG.get("pomocnik_last_tab", 1)
 
         # Hodnoty ukladané do konfigurácie.
