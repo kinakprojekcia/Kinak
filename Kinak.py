@@ -3713,11 +3713,8 @@ KATEGORIA_HINT_PIESEN_HORE = "↑ Pieseň vyberieš v zozname hore"
 # Farba platí pre normálny aj hover stav (pozri _zostav_menu_kategorii).
 KATEGORIE_NADPIS_FG = "#7EB6FF"
 KATEGORIE_NADPIS_VELKOST = 11
-# True  = nadpisy skupín sú vypnuté položky: klik na ne nič nerobí a menu sa vôbec nezatvorí
-#         (žiadne blikanie), šípky ich preskakujú.
-# False = starý spôsob: nadpis je bežná položka, menu sa po kliknutí zatvorí a hneď znova otvorí
-#         (viditeľné bliknutie). Použi, ak by sa vypnuté nadpisy na tvojom systéme vykresľovali zle.
-KATEGORIE_NADPIS_NEAKTIVNY = True
+# Nadpisy skupín sú vždy vypnuté položky: klik na ne nič nerobí a menu sa vôbec nezatvorí
+# (žiadne blikanie), šípky ich preskakujú.
 SIPKA_MENU = "▾"   # šípka rozbaľovacieho zoznamu na tlačidlách (indicatoron=0 ju inak nezobrazí)
 COMBO_HLAVICKA = "Hľadať pieseň podľa čísla alebo názvu…"
 
@@ -3825,7 +3822,15 @@ OZNAM_PROJEKCIA_CERVENA = "#ff4444"
 # ==========================================================
 # Pás ide od spodného okraja hornej lišty až po stavový riadok (do neho nezasahuje).
 # Každá položka je jedna ikona; po kliknutí vykoná svoju akciu (pozri PAS_IKON_POLOZKY).
-# Ďalšiu ikonu pridáš jednoducho novým riadkom v PAS_IKON_POLOZKY.
+# Nový riadok v PAS_IKON_POLOZKY sám nestačí: _vytvor_pas_ikon() a _spusti_ikonu_pasu()
+# sú generické, ale stav „aktívne“ a pečiatka načítaného súboru nie sú odvodené z tabuľky.
+# Pre novú ikonu treba aj:
+#   - novú vetvu v _pas_ikon_je_aktivna() pre kľúč v poli „aktivny“ (inak ikona nikdy
+#     nebude zvýraznená ako aktívna; None znamená bez stavu),
+#   - ak ikona načíta súbor ("subor", nový_kod) a má sa zvýrazniť aj pri načítanom
+#     súbore, aj záznam pre nový_kod v nacitat_piesne() (pečiatka _nacteny_pas_*),
+#   - ak ikona používa novú akciu (nie "subor" / "upravit_subor" / "skratky_okno" /
+#     "skratky_veceradlo_okno"), aj novú vetvu v _spusti_ikonu_pasu().
 PAS_IKON_SIRKA = 60            # šírka pásu v pixeloch
 PAS_IKON_BG = "#1a1a1a"        # pozadie pásu (rovnaké ako horná lišta a stavový riadok)
 PAS_IKON_TLACIDLO = 44         # veľkosť štvorcovej ikony v pixeloch
@@ -3852,7 +3857,8 @@ PAS_IKON_FONTY_IKON = ("Segoe Fluent Icons", "Segoe MDL2 Assets")
 #             ("skratky_okno", None)     otvorí samostatné okno Skratky
 #             ("skratky_veceradlo_okno", None)  otvorí samostatné okno Skratky – Večeradlo
 #   akcent  – farba ikony a rámika v stave „aktívne“
-#   aktivny – kľúč stavu pre _pas_ikon_je_aktivna() (alebo None = ikona nemá stav)
+#   aktivny – kľúč stavu pre _pas_ikon_je_aktivna() (alebo None = ikona nemá stav);
+#             každý použitý kľúč musí mať v _pas_ikon_je_aktivna() vlastnú vetvu
 # Skupiny v páse: 1) Oznam (načítať + upraviť), 2) Čítania + Vešpery, 3) Skratky, Skratky – Večeradlo.
 PAS_IKON_POLOZKY = (
     {"glyph": "\uE789", "nahrada": "📢",
@@ -9551,8 +9557,14 @@ if TYPE_CHECKING:
         _slavnosti_geom_after_id: Any = None
         _slavnosti_open: Any = None
         _startup_after_ids: Any = None
+        _tmavy_slider_trace_ids: dict[str, str] | None = None
+        _default_filter_trace_id: str | None = None
+        _auto_filter_trace_id: str | None = None
         _strofa_test_font: Any = None
         _suppress_vymazat: Any = None
+        _suppress_vymazat_drzi: Any = None
+        _suppress_vymazat_do: Any = None
+        _suppress_vymazat_after_id: Any = None
         _vespery_lock: Any = None
         _wizard_monitor_combo: Any = None
         about_font_size: Any = None
@@ -9734,6 +9746,10 @@ if TYPE_CHECKING:
         def _naplanuj_debounced_zapis(self, *args: Any, **kwargs: Any) -> Any: ...
         def _normalize(self, *args: Any, **kwargs: Any) -> Any: ...
         def _obnov_focus_manual_entry_bez_vymazania(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _potlac_vymazavanie(self, ms: int | None = None) -> None: ...
+        def _uvolni_drzanie_potlacenia_vymazavania(self) -> None: ...
+        def _uvolni_potlacenie_vymazavania(self) -> None: ...
+        def _prepocitaj_potlacenie_vymazavania(self) -> None: ...
         def _on_scheduled_live_preview(self, *args: Any, **kwargs: Any) -> Any: ...
         def _otvor_prehliadaciu_pomocku(self, *args: Any, **kwargs: Any) -> Any: ...
         def _postav_uvodnu_obrazovku(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9771,6 +9787,7 @@ if TYPE_CHECKING:
         def aktualizovat_cezrocne_tyzdenne_refreny_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def _pouzi_offline_citania(self, *args: Any, **kwargs: Any) -> Any: ...
         def _obnov_zastarane_citania(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _obnov_zoznam_piesni(self, *args: Any, **kwargs: Any) -> Any: ...
         def _obnov_zoznam_suborov_podla_aktualneho_filtra(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_citania_gui(self, *args: Any, **kwargs: Any) -> Any: ...
         def aktualizovat_direktorium_label(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -9864,12 +9881,16 @@ if TYPE_CHECKING:
         def _x_zivy_nahlad(self, *args: Any, **kwargs: Any) -> Any: ...
         def _spusti_ikonu_pasu(self, *args: Any, **kwargs: Any) -> Any: ...
         def _pas_ikon_obnov_stav(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _pas_ikon_spusti_obnovu(self) -> None: ...
+        def _pas_ikon_zastav_obnovu(self) -> None: ...
+        def _najdi_subor_pasu(self, kod: str) -> Path | None: ...
         def _zaradi_status_bar(self, *args: Any, **kwargs: Any) -> Any: ...
         def _vytvor_velke_ovladanie_pas(self, *args: Any, **kwargs: Any) -> Any: ...
         def zatvorit_nastavenia(self, *args: Any, **kwargs: Any) -> Any: ...
         def ziskaj_aktualnu_a_celkovu(self, *args: Any, **kwargs: Any) -> Any: ...
         def ziskaj_zoznam_suborov(self, *args: Any, **kwargs: Any) -> Any: ...
         def zmenit_priecinok_piesni(self, *args: Any, **kwargs: Any) -> Any: ...
+        def _skontroluj_priecinok_piesni(self) -> None: ...
         def zmenit_rezim_farby(self, *args: Any, **kwargs: Any) -> Any: ...
         def zobraz_aktualnu_strofu(self, *args: Any, **kwargs: Any) -> Any: ...
         def zobraz_info_rezervy(self, *args: Any, **kwargs: Any) -> Any: ...
@@ -10140,7 +10161,7 @@ class _NastaveniaMixin(_ControlAppBase):
                 set_safe("zobrazit_velke_ovladanie_var", self.zobrazit_velke_ovladanie)
 
                 # Pravý pás s ikonami: predvolene zapnutý (True).
-                self.zobrazit_pas_ikon = bool(full_config.get("zobrazit_pas_ikon", DEFAULT_CONFIG.get("zobrazit_pas_ikon", True)))
+                self.zobrazit_pas_ikon = bool(full_config.get("zobrazit_pas_ikon", DEFAULT_CONFIG["zobrazit_pas_ikon"]))
                 set_safe("zobrazit_pas_ikon_var", self.zobrazit_pas_ikon)
                 set_safe("cislo_strofy_v_strede_var", self.cislo_strofy_v_strede)
                 
@@ -10277,7 +10298,7 @@ class _NastaveniaMixin(_ControlAppBase):
         self.fade_speed = self.fade_speed_var.get() if hasattr(self, "fade_speed_var") else "mierne rýchle"
         self.zobrazovat_live_preview = self.zobrazovat_live_preview_var.get() if hasattr(self, "zobrazovat_live_preview_var") else True
         self.zobrazit_velke_ovladanie = self.zobrazit_velke_ovladanie_var.get() if hasattr(self, "zobrazit_velke_ovladanie_var") else False
-        self.zobrazit_pas_ikon = self.zobrazit_pas_ikon_var.get() if hasattr(self, "zobrazit_pas_ikon_var") else True
+        self.zobrazit_pas_ikon = self.zobrazit_pas_ikon_var.get() if hasattr(self, "zobrazit_pas_ikon_var") else DEFAULT_CONFIG["zobrazit_pas_ikon"]
         self.zobrazovat_specialne_znaky = self.zobrazovat_specialne_znaky_var.get() if hasattr(self, "zobrazovat_specialne_znaky_var") else True
         self.zobrazovat_znaky_chorov = self.zobrazovat_znaky_chorov_var.get() if hasattr(self, "zobrazovat_znaky_chorov_var") else True
         self.pouzit_modru_farbu_pri_veceradle = self.pouzit_modru_farbu_pri_veceradle_var.get() if hasattr(self, "pouzit_modru_farbu_pri_veceradle_var") else False
@@ -10305,7 +10326,7 @@ class _NastaveniaMixin(_ControlAppBase):
         config_attr_defaults = {
             "statusbar_tyzden_zaltara": DEFAULT_CONFIG.get("statusbar_tyzden_zaltara", False),
             "zobrazit_velke_ovladanie": DEFAULT_CONFIG.get("zobrazit_velke_ovladanie", False),
-            "zobrazit_pas_ikon": DEFAULT_CONFIG.get("zobrazit_pas_ikon", True),
+            "zobrazit_pas_ikon": DEFAULT_CONFIG["zobrazit_pas_ikon"],
             "medzery_ovladanie": DEFAULT_CONFIG.get("medzery_ovladanie", 50),
             "statusbar_skratka_zalmu": True,
             "statusbar_jks_piesne": True,
@@ -10612,7 +10633,7 @@ class _NastaveniaMixin(_ControlAppBase):
             "reserved_vertical_ratio": float(self.reserved_vertical_ratio),
             "zobrazit_direktorium": bool(self.zobrazit_direktorium),
             "zobrazit_velke_ovladanie": bool(getattr(self, "zobrazit_velke_ovladanie", False)),
-            "zobrazit_pas_ikon": bool(getattr(self, "zobrazit_pas_ikon", True)),
+            "zobrazit_pas_ikon": bool(getattr(self, "zobrazit_pas_ikon", DEFAULT_CONFIG["zobrazit_pas_ikon"])),
             "direktorium_verzia": getattr(self, "direktorium_verzia", "A"),
             "zobrazovat_live_preview": bool(self.zobrazovat_live_preview),
             "zobrazovat_specialne_znaky": bool(self.zobrazovat_specialne_znaky),
@@ -11068,11 +11089,27 @@ class _NastaveniaMixin(_ControlAppBase):
 
             def _obnov(*_):
                 try:
+                    if not hodnota.winfo_exists():
+                        return   # okno Nastavení už je zničené, label neexistuje
                     hodnota.config(text=formát.format(premenna.get()))
                 except (tk.TclError, ValueError):
                     pass
 
-            premenna.trace_add("write", _obnov)
+            # Rovnaké nabaľovanie ako pri default_filter_var: slider sa stavia
+            # pri každom otvorení Nastavení, ale `premenna` je premenná aplikácie.
+            # Starý trace najprv odstráň, inak by po N otvoreniach bežalo N handlerov.
+            _slider_trace = getattr(self, "_tmavy_slider_trace_ids", None)
+            if _slider_trace is None:
+                _slider_trace = {}
+                self._tmavy_slider_trace_ids = _slider_trace
+            _kluc_slider = str(premenna)
+            _stary_slider = _slider_trace.get(_kluc_slider)
+            if _stary_slider:
+                try:
+                    premenna.trace_remove("write", _stary_slider)
+                except Exception:
+                    pass
+            _slider_trace[_kluc_slider] = premenna.trace_add("write", _obnov)
             _obnov()
             sc = tk.Scale(
                 riadok, orient=tk.HORIZONTAL, showvalue=False,
@@ -11264,6 +11301,16 @@ class _NastaveniaMixin(_ControlAppBase):
 
         # Funkcia na (de)aktiváciu predvoleného filtra podľa checkboxu Automaticky...
         def _aktualizuj_stav_predvoleneho_filtra(*_args):
+            # Ak je okno Nastavení zatvorené, menu neexistuje. Starý trace
+            # (z predchádzajúceho otvorenia) nesmie siahať na zničené menu
+            # a plniť log výnimkami – ticho skonči.
+            try:
+                if self.settings_window is None or not self.settings_window.winfo_exists():
+                    return
+                if self.default_filter_menu is None or not self.default_filter_menu.winfo_exists():
+                    return
+            except tk.TclError:
+                return
             try:
                 zapnute = bool(self.auto_filter_podla_dnes_var.get())
             except Exception:
@@ -11294,11 +11341,22 @@ class _NastaveniaMixin(_ControlAppBase):
             except Exception as e:
                 log_exception("_aktualizuj_stav_predvoleneho_filtra", e)
 
-        # Trace teraz ukladá nastavenia a zároveň okamžite aktualizuje zoznam piesní
-        self.default_filter_var.trace_add("write", lambda *a: [
-            self.ulozit_nastavenia(),
-            self.filtrovat_subory(self.filter_var.get())
-        ])
+        # Zmena predvoleného filtra len UKLADÁ nastavenia. Nesmie meniť
+        # aktuálny filter ani mazať načítaný obsah: predvolený filter sa
+        # prejaví až pri štarte / obnovení predvoleného filtra, nie tým,
+        # že by sa znova prefiltrilo podľa AKTUÁLNEHO filtra (filter_var).
+        # Trace sa registruje najviac raz: starý najprv odstráň, inak by
+        # sa po N otvoreniach Nastavení ukladalo N-krát (premenná je
+        # premenná aplikácie, okno sa pri každom otvorení stavia nanovo
+        # a trace_remove predtým v súbore nebol).
+        _stary_default = getattr(self, "_default_filter_trace_id", None)
+        if _stary_default:
+            try:
+                self.default_filter_var.trace_remove("write", _stary_default)
+            except Exception:
+                pass
+        self._default_filter_trace_id = self.default_filter_var.trace_add(
+            "write", lambda *a: self.ulozit_nastavenia())
 
         # --- NOVÉ: Automaticky aktualizovať filter podľa Dnes ---
         self.checkbox_auto_filter_dnes = tmavy_check(
@@ -11311,9 +11369,18 @@ class _NastaveniaMixin(_ControlAppBase):
         Tooltip(self.checkbox_auto_filter_dnes,
                 "Pri štarte nastaví filter podľa žalmu zo stavového riadku (napr. Cezročné C2 → 28C2).")
 
-        # Inicializácia stavu po vytvorení + reakcia na zmenu var
+        # Inicializácia stavu po vytvorení + reakcia na zmenu var.
+        # Rovnako ako pri default_filter_var: starý trace najprv odstráň,
+        # inak by po N otvoreniach Nastavení bežalo N handlerov.
         try:
-            self.auto_filter_podla_dnes_var.trace_add("write", lambda *_a: _aktualizuj_stav_predvoleneho_filtra())
+            _stary_auto = getattr(self, "_auto_filter_trace_id", None)
+            if _stary_auto:
+                try:
+                    self.auto_filter_podla_dnes_var.trace_remove("write", _stary_auto)
+                except Exception:
+                    pass
+            self._auto_filter_trace_id = self.auto_filter_podla_dnes_var.trace_add(
+                "write", lambda *_a: _aktualizuj_stav_predvoleneho_filtra())
         except Exception:
             pass
         # zavolaj hneď po vytvorení checkboxu
@@ -11363,14 +11430,16 @@ class _NastaveniaMixin(_ControlAppBase):
 
         self.checkbox_pas_ikon = tmavy_check(
             frame_basic_view,
-            "Zobraziť pravý pás s ikonami (Oznam, Pracovné texty)",
+            "Zobraziť pravý pás s ikonami (Oznam, Upraviť oznam, Čítania, Vešpery, Skratky, Skratky – Večeradlo)",
             self.zobrazit_pas_ikon_var,
             command=lambda: [self.ulozit_nastavenia(), self._aplikuj_pas_ikon_viditelnost()],
         )
         self.checkbox_pas_ikon.pack(anchor="w")
         Tooltip(self.checkbox_pas_ikon,
-                "Zvislý pás pri pravom okraji hlavného okna s ikonami rýchleho prístupu: načítanie oznamu "
-                "a úprava oznamu v okne Pracovné texty. Oznam sa dá načítať aj zadaním „oznam“ do vstupného poľa.")
+                "Zvislý pás pri pravom okraji hlavného okna s ikonami rýchleho prístupu: načítanie a úprava "
+                "oznamu, načítanie čítaní a vešpier a otvorenie panelov Skratky a Skratky – Večeradlo. "
+                "Oznam, čítania a vešpery sa dajú načítať aj zadaním „oznam“, „citania“ alebo „vespery“ "
+                "do vstupného poľa.")
 
         # Medzery medzi strofami v texte ovládacieho okna (projekcia sa nemení)
         tk.Label(
@@ -11435,7 +11504,7 @@ class _NastaveniaMixin(_ControlAppBase):
             frame_checks,
             "Zobraziť odporúčané piesne z JKS pod rozbaľovacím filtrom pri výbere žalmu",
             self.zobrazit_direktorium_var,
-            command=lambda: [self.ulozit_nastavenia(), self.aktualizovat_direktorium_label(), self.filtrovat_subory(self.filter_var.get())],
+            command=lambda: [self.ulozit_nastavenia(), self.aktualizovat_direktorium_label(), self._obnov_zoznam_piesni(self.filter_var.get())],
         )
         self.checkbox_direktorium.pack(anchor="w")
 
@@ -11690,6 +11759,10 @@ class _NastaveniaMixin(_ControlAppBase):
                 self.settings_window.destroy()
                 # DÔLEŽITÉ: Nastavíme na None, aby sme predišli AttributeError nabudúce
                 self.settings_window = None 
+                # Rovnako vynuluj menu predvoleného filtra, inak by v ňom
+                # ostal odkaz na zničený widget (trace handlery ho potom
+                # nesmú použiť – pozri guard v _aktualizuj_stav...).
+                self.default_filter_menu = None
         except Exception as e:
             log_exception("zatvorit_nastavenia: destroy failed, skúšam withdraw", e)
             try:
@@ -12008,7 +12081,7 @@ class _NastaveniaMixin(_ControlAppBase):
         z Nastavení) namiesto filter_var (aktuálne zvolená Kategória
         v hlavnom okne). Výsledkom bol rozpad: čip Kategórie ukazoval
         napr. „Večeradlo“, ale zoznam patril predvolenému filtru, lebo
-        filtrovat_subory() filter_var sama nenastavuje.
+        _obnov_zoznam_piesni() filter_var sama nenastavuje.
 
         Fallback (prázdny filter, napr. po TclError pri zatváraní):
         menu sa prebuduje zo všetkých súborov v priečinku.
@@ -12021,7 +12094,7 @@ class _NastaveniaMixin(_ControlAppBase):
             aktualny_filter = None
         try:
             if aktualny_filter:
-                self.filtrovat_subory(aktualny_filter)
+                self._obnov_zoznam_piesni(aktualny_filter)
             else:
                 subory = self.ziskaj_zoznam_suborov()
                 menu = self.subor_menu["menu"]
@@ -12029,7 +12102,8 @@ class _NastaveniaMixin(_ControlAppBase):
                 for subor in subory:
                     menu.add_command(
                         label=subor,
-                        command=lambda value=subor: self.subor_var.set(value)
+                        # Rovnako ako v _obnov_zoznam_piesni: len set() by pieseň nenačítal.
+                        command=lambda value=subor: self.nacitat_podla_menu(value)
                     )
         except Exception as e:
             log_exception("_obnov_zoznam_suborov_podla_aktualneho_filtra: obnovenie zoznamu súborov zlyhalo", e)
@@ -13337,7 +13411,7 @@ class _StahovanieMixin(_ControlAppBase):
 
                 if vysledok.get("uspech") or (prerusene and vysledok.get("subory")):
                     try:
-                        self.filtrovat_subory(self.filter_var.get())
+                        self._obnov_zoznam_piesni(self.filter_var.get())
                     except Exception as e:
                         log_exception(f"{kontext}: obnova zoznamu zlyhala", e)
 
@@ -14890,7 +14964,7 @@ class _StahovanieMixin(_ControlAppBase):
                         zachovat=set(vysledok.get("stiahnute_datumy") or []),
                     )
                     try:
-                        self.filtrovat_subory(self.filter_var.get())
+                        self._obnov_zoznam_piesni(self.filter_var.get())
                     except Exception as e:
                         log_exception("aktualizovat_citania_7_dni_gui: obnova zoznamu zlyhala", e)
 
@@ -15546,7 +15620,171 @@ class _PiesneSuboryMixin(_ControlAppBase):
         self.aktualizuj_popis(nazov_bez_ext)
         self._aktualizuj_direktorium_pre_subor(nazov_bez_ext)                
                                 
+    def _obnov_zoznam_piesni(self, vybrane_obdobie):
+        """Obnoví len Zoznam piesní (combobox) a menu Položka pre danú kategóriu.
+
+        Na rozdiel od filtrovat_subory() NIČ nemaže a NIČ nevypína:
+        necháva vstupné pole, panely Obsah / Strofa / Názov, popis aj
+        direktorium a bežiacu projekciu nedotknuté. Výber v comboboxe
+        aj v menu Položka sa zachová, ak po obnove stále existuje;
+        ak už neexistuje (napr. súbor bol zmazaný), padne na hlavičku
+        resp. na SUBOR_ZIADNY.
+
+        Používajú ju miesta, ktoré potrebujú len obnoviť zoznam:
+        dokončené sťahovanie, prepnutie JKS checkboxu a
+        _obnov_zoznam_suborov_podla_aktualneho_filtra().
+        """
+        # Predchádzajúci výber si zapamätaj PRED prebudovaním hodnôt,
+        # inak by sa po nastavení nových values nedal obnoviť.
+        predosly_vyber_piesne = None
+        try:
+            if hasattr(self, "song_combobox") and self.song_combobox is not None:
+                predosly_vyber_piesne = self.song_combobox.get()
+        except Exception:
+            predosly_vyber_piesne = None
+        predosla_polozka = None
+        try:
+            predosla_polozka = self.subor_var.get()
+        except Exception:
+            predosla_polozka = None
+
+        def _obnov_vyber_comboboxu():
+            """Po prebudovaní values vráť predchádzajúci výber, ak ešte existuje.
+
+            Inak padni na hlavičku (index 0), ako robilo pôvodné
+            filtrovat_subory() pri každej obnove.
+            """
+            try:
+                if hasattr(self, "song_combobox") and self.song_combobox is not None:
+                    if predosly_vyber_piesne in self.cele_hodnoty_comboboxu:
+                        self.song_combobox.current(
+                            self.cele_hodnoty_comboboxu.index(predosly_vyber_piesne)
+                        )
+                    else:
+                        self.song_combobox.current(0)
+            except Exception as e:
+                log_exception("_obnov_zoznam_piesni: obnova vyberu comboboxu", e)
+
+        def _napln_combobox(priecinok, styl, tucne, log_kontext, log_styl):
+            """Jediné miesto, ktoré plní combobox Zoznam piesní.
+
+            Načíta piesne z priečinka, postaví values s hlavičkou,
+            vráti predchádzajúci výber a nastaví štýl/font. Pri chybe
+            zaloguje a nastaví prázdny zoznam s hlavičkou, aby po
+            obnove nezostal starý zoznam z iného filtra.
+            """
+            try:
+                self.zoznam_piesni_data = self.nacitaj_piesne_do_zoznamu_z_priecinka(priecinok)
+                self.cele_hodnoty_comboboxu = [header_text] + [
+                    f"{num} - {title}" for num, title in self.zoznam_piesni_data
+                ]
+                if hasattr(self, "song_combobox") and self.song_combobox is not None:
+                    self.song_combobox["values"] = self.cele_hodnoty_comboboxu
+                    _obnov_vyber_comboboxu()
+                    try:
+                        self.song_combobox.configure(style=styl)
+                        if tucne:
+                            self.song_combobox.configure(font=(self.font_family, 12, "bold"))
+                        else:
+                            self.song_combobox.configure(font=(self.font_family, 12))
+                    except Exception as e:
+                        log_exception(log_styl, e)
+            except Exception as e:
+                log_exception(log_kontext, e)
+                # Fallback: radšej prázdny zoznam s hlavičkou ako starý zoznam z iného filtra
+                self.zoznam_piesni_data = []
+                self.cele_hodnoty_comboboxu = [header_text]
+                if hasattr(self, "song_combobox") and self.song_combobox is not None:
+                    self.song_combobox["values"] = self.cele_hodnoty_comboboxu
+                    self.song_combobox.current(0)
+
+        # Znovu načítaj zoznam súborov
+        try:
+            kody = self.obdobie_subory.get(vybrane_obdobie, [])
+
+            # Hlavička pre Zoznam piesní
+            if vybrane_obdobie == "Večeradlo":
+                header_text = "Večeradlo"
+            elif vybrane_obdobie == "Mládež":
+                header_text = "Mládež"
+            else:
+                header_text = COMBO_HLAVICKA
+
+            if vybrane_obdobie == "Večeradlo":
+                subory = self._ziskaj_subory_vecheradlo()
+                # Podľa nastavenia: ak je zapnutá modrá farba pre Večeradlo, nechaj modrú, inak biela (#e0e0e6)
+                pouzit_modru = False
+                try:
+                    pouzit_modru = bool(self.pouzit_modru_farbu_pri_veceradle_var.get() if hasattr(self, 'pouzit_modru_farbu_pri_veceradle_var') else getattr(self, 'pouzit_modru_farbu_pri_veceradle', False))
+                except Exception:
+                    pouzit_modru = False
+                # Modrá + tučné - ponechané podľa nastavenia, inak biela odtieň #e0e0e6, rovnako ako Mládež
+                _napln_combobox(
+                    self._priecinok_vecheradlo(),
+                    "Blue.TCombobox" if pouzit_modru else "Big.TCombobox",
+                    True,
+                    "_obnov_zoznam_piesni: aktualizacia Zoznamu piesni pre Večeradlo",
+                    "_obnov_zoznam_piesni: blue/white config Večeradlo",
+                )
+            elif vybrane_obdobie == "Mládež":
+                # Filter Mládež: menu Položka zostáva zámerne prázdne (tlačidlo je
+                # zároveň vypnuté cez KATEGORIE_BEZ_POLOZIEK), combobox sa naplní
+                # z piesne/Mládež/ analogicky ako Večeradlo.
+                subory = []
+                # Biela (#e0e0e6) + tučné – rovnako ako pri ostatných filtroch
+                _napln_combobox(
+                    self._priecinok_mladez(),
+                    "Mladez.TCombobox",
+                    True,
+                    "_obnov_zoznam_piesni: aktualizacia Zoznamu piesni pre Mládež",
+                    "_obnov_zoznam_piesni: normal config Mládež",
+                )
+            else:
+                # Modlitby a iné (kody is None) aj všetky ostatné filtre:
+                # combobox sa plní rovnako, líši sa len zdroj pre menu Položka.
+                subory = self._ziskaj_nezaradene_subory() if kody is None else kody
+                _napln_combobox(
+                    self.song_folder_path,
+                    "Big.TCombobox",
+                    False,
+                    "_obnov_zoznam_piesni: obnova Zoznamu piesni",
+                    "_obnov_zoznam_piesni: normal config",
+                )
+
+            # Naplň menu súborov
+            menu = self.subor_menu["menu"]
+            menu.delete(0, "end")
+            for subor in subory:
+                menu.add_command(
+                    label=subor,
+                    command=lambda value=subor: self.nacitat_podla_menu(value)
+                )
+
+            # Zachovaj výber Položky, ak po obnove stále existuje.
+            # Inak padni na SUBOR_ZIADNY (napr. súbor bol zmazaný).
+            try:
+                if predosla_polozka not in subory:
+                    self.subor_var.set(SUBOR_ZIADNY)
+            except Exception as e:
+                log_exception("_obnov_zoznam_piesni: obnova vyberu Polozky", e)
+        except Exception as e:
+            log_exception("_obnov_zoznam_piesni: menu update", e)
+
+
     def filtrovat_subory(self, vybrane_obdobie):
+        """Zmena kategórie: reset ovládania + obnova zoznamu piesní.
+        
+        Vymaže vstupné pole, panely Obsah / Strofa / Názov, popis
+        aj direktorium, vypne bežiacu projekciu a resetuje výber
+        (combobox na hlavičku, Položka na SUBOR_ZIADNY). Samotné
+        prebudovanie comboboxu a menu robí _obnov_zoznam_piesni().
+        
+        Volajú ju len miesta, kde sa kategória naozaj mení (OptionMenu
+        Kategória, _vyber_kategoriu, _nastav_filter_a_subor, init).
+        Miesta, ktoré potrebujú len obnoviť zoznam, volajú priamo
+        _obnov_zoznam_piesni() – inak by sťahovanie / JKS / zmena
+        priečinka počas živého premietania premietanie vyplo.
+        """
         # Zatvor živý zoznam zhôd pod poľom na hľadanie piesní
         try:
             self._combo_popup_zatvor()
@@ -15594,117 +15832,21 @@ class _PiesneSuboryMixin(_ControlAppBase):
         except Exception as e:
             log_exception("filtrovat_subory: nazov_label config", e)
 
-        # Znovu načítaj zoznam súborov
+        # Obnova zoznamu piesní (combobox + menu Položka).
+        self._obnov_zoznam_piesni(vybrane_obdobie)
+        
+        # Reset výberu po obnove – pri zmene kategórie starý výber neplatí.
+        # (Pôvodne to robila obnovovacia časť priamo: current(0) + SUBOR_ZIADNY.)
         try:
-            kody = self.obdobie_subory.get(vybrane_obdobie, [])
-
-            # Hlavička pre Zoznam piesní
-            if vybrane_obdobie == "Večeradlo":
-                header_text = "Večeradlo"
-            elif vybrane_obdobie == "Mládež":
-                header_text = "Mládež"
-            else:
-                header_text = COMBO_HLAVICKA
-
-            if vybrane_obdobie == "Večeradlo":
-                subory = self._ziskaj_subory_vecheradlo()
-                try:
-                    priecinok_vecheradlo = self._priecinok_vecheradlo()
-                    self.zoznam_piesni_data = self.nacitaj_piesne_do_zoznamu_z_priecinka(priecinok_vecheradlo)
-                    self.cele_hodnoty_comboboxu = [header_text] + [
-                        f"{num} - {title}" for num, title in self.zoznam_piesni_data
-                    ]
-                    if hasattr(self, "song_combobox") and self.song_combobox is not None:
-                        self.song_combobox["values"] = self.cele_hodnoty_comboboxu
-                        self.song_combobox.current(0)
-                        try:
-                            # Podľa nastavenia: ak je zapnutá modrá farba pre Večeradlo, nechaj modrú, inak biela (#e0e0e6)
-                            pouzit_modru = False
-                            try:
-                                pouzit_modru = bool(self.pouzit_modru_farbu_pri_veceradle_var.get() if hasattr(self, 'pouzit_modru_farbu_pri_veceradle_var') else getattr(self, 'pouzit_modru_farbu_pri_veceradle', False))
-                            except Exception:
-                                pouzit_modru = False
-                            if pouzit_modru:
-                                # Modrá + tučné - ponechané podľa nastavenia
-                                self.song_combobox.configure(style="Blue.TCombobox")
-                            else:
-                                # Biela odtieň #e0e0e6 – rovnako ako Mládež
-                                self.song_combobox.configure(style="Big.TCombobox")
-                            self.song_combobox.configure(font=(self.font_family, 12, "bold"))
-                        except Exception as e:
-                            log_exception("filtrovat_subory: blue/white config Večeradlo", e)
-                except Exception as e:
-                    log_exception("filtrovat_subory: aktualizacia Zoznamu piesni pre Večeradlo", e)
-            elif vybrane_obdobie == "Mládež":
-                # Filter Mládež: menu zostáva prázdne, combobox sa naplní z piesne/Mládež/
-                # analogicky ako Večeradlo – text Mládež v oranžovej farbe
-                subory = self._ziskaj_subory_mladez()
-                try:
-                    priecinok_mladez = self._priecinok_mladez()
-                    self.zoznam_piesni_data = self.nacitaj_piesne_do_zoznamu_z_priecinka(priecinok_mladez)
-                    self.cele_hodnoty_comboboxu = [header_text] + [
-                        f"{num} - {title}" for num, title in self.zoznam_piesni_data
-                    ]
-                    if hasattr(self, "song_combobox") and self.song_combobox is not None:
-                        self.song_combobox["values"] = self.cele_hodnoty_comboboxu
-                        self.song_combobox.current(0)
-                        try:
-                            # Oranžová + tučné – analogicky ako modrá pri Večeradle
-                            self.song_combobox.configure(style="Orange.TCombobox")
-                            self.song_combobox.configure(font=(self.font_family, 12, "bold"))
-                        except Exception as e:
-                            log_exception("filtrovat_subory: normal config Mládež", e)
-                except Exception as e:
-                    log_exception("filtrovat_subory: aktualizacia Zoznamu piesni pre Mládež", e)
-            elif kody is None:
-                subory = self._ziskaj_nezaradene_subory()
-                try:
-                    self.zoznam_piesni_data = self.nacitaj_piesne_do_zoznamu_z_priecinka(self.song_folder_path)
-                    self.cele_hodnoty_comboboxu = [header_text] + [
-                        f"{num} - {title}" for num, title in self.zoznam_piesni_data
-                    ]
-                    if hasattr(self, "song_combobox") and self.song_combobox is not None:
-                        self.song_combobox["values"] = self.cele_hodnoty_comboboxu
-                        self.song_combobox.current(0)
-                        try:
-                            self.song_combobox.configure(style="Big.TCombobox")
-                            self.song_combobox.configure(font=(self.font_family, 12))
-                        except Exception as e:
-                            log_exception("filtrovat_subory: normal config", e)
-                except Exception as e:
-                    log_exception("filtrovat_subory: obnova Zoznamu piesni pre nezaradene", e)
-            else:
-                subory = kody
-                try:
-                    self.zoznam_piesni_data = self.nacitaj_piesne_do_zoznamu_z_priecinka(self.song_folder_path)
-                    self.cele_hodnoty_comboboxu = [header_text] + [
-                        f"{num} - {title}" for num, title in self.zoznam_piesni_data
-                    ]
-                    if hasattr(self, "song_combobox") and self.song_combobox is not None:
-                        self.song_combobox["values"] = self.cele_hodnoty_comboboxu
-                        self.song_combobox.current(0)
-                        try:
-                            self.song_combobox.configure(style="Big.TCombobox")
-                            self.song_combobox.configure(font=(self.font_family, 12))
-                        except Exception as e:
-                            log_exception("filtrovat_subory: normal config", e)
-                except Exception as e:
-                    log_exception("filtrovat_subory: obnova Zoznamu piesni", e)
-
-            # Naplň menu súborov
-            menu = self.subor_menu["menu"]
-            menu.delete(0, "end")
-            for subor in subory:
-                menu.add_command(
-                    label=subor,
-                    command=lambda value=subor: self.nacitat_podla_menu(value)
-                )
-
-            # Resetuj výber súboru v menu
+            if hasattr(self, "song_combobox") and self.song_combobox is not None:
+                self.song_combobox.current(0)
+        except Exception as e:
+            log_exception("filtrovat_subory: reset comboboxu", e)
+        try:
             self.subor_var.set(SUBOR_ZIADNY)
         except Exception as e:
-            log_exception("filtrovat_subory: menu update", e)
-
+            log_exception("filtrovat_subory: reset vyberu suboru", e)
+        
         # Prepočítaj farbu textu pre projekciu / Live Preview – zohľadní
         # prípadné zapnutie voľby "modrá farba pri filtri Večeradlo"
         # (pozri _farba_textu_pre_projekciu), keďže sa práve zmenil filter.
@@ -15758,7 +15900,37 @@ class _PiesneSuboryMixin(_ControlAppBase):
         # Vrátime abecedne zoradený zoznam (case-insensitive)
         # s.lower() zabezpečí, že "A" a "a" budú pri sebe
         return sorted(subory, key=lambda s: s.lower())
-    
+
+    def _skontroluj_priecinok_piesni(self) -> None:
+        """Len upozorní na neplatný alebo prázdny priečinok piesní.
+
+        Ľahká náhrada za volanie ziskaj_zoznam_suborov() so zahodeným
+        výsledkom: nekopíruje a netriedi celý zoznam súborov, len overí
+        existenciu priečinka a či obsahuje aspoň jeden .txt súbor.
+        Rovnaké hlášky ako v ziskaj_zoznam_suborov(), aby sa správanie
+        pri štarte GUI nezmenilo.
+        """
+        cesta_str = self.song_folder_path if self.song_folder_path else "."
+        priecinok = Path(cesta_str)
+        if not priecinok.exists() or not priecinok.is_dir():
+            messagebox.showinfo(
+                "Kinak: Vyberte priečinok piesní",
+                f"Priečinok s piesňami neexistuje alebo je neplatný:\n{priecinok}\n\n"
+                "Vyberte priečinok piesní v Nastaveniach."
+            )
+            return
+        try:
+            ma_subor = any(f.is_file() for f in priecinok.glob("*.txt"))
+        except Exception as e:
+            log_exception("Chyba pri kontrole priečinka piesní", e)
+            return
+        if not ma_subor:
+            messagebox.showinfo(
+                "Kinak: Žiadne piesne",
+                f"V priečinku sa nenašli žiadne súbory .txt.\n\n"
+                "Skontrolujte zvolený priečinok v časti Nastavenia záložka Pokročilé → Umiestnenie súborov.\n\n"
+                f"Aktuálne nastavená cesta:\n{priecinok.resolve()}"
+            )
 
     def _ziskaj_nezaradene_subory(self) -> list[str]:
         """
@@ -15807,8 +15979,12 @@ class _PiesneSuboryMixin(_ControlAppBase):
                     continue
 
                 # Výnimka: Ruženec sa už zobrazuje vo vlastnom filtri,
-                # preto ho nechceme v Modlitby a iné
-                if any(norm.startswith(p) for p in _ruzenec_prefixy):
+                # preto ho nechceme v Modlitby a iné.
+                # POZOR: nesmie to byť holý startswith(p) – ten by vylúčil
+                # aj bežné súbory ako "Pondelok", "Stretnutie", "Sobotná".
+                # Povolené je len: prefix + "ruzenec", prefix + číslica,
+                # alebo prefix na konci názvu.
+                if any(re.match(r"^" + re.escape(p) + r"(ruzenec|\d|$)", norm) for p in _ruzenec_prefixy):
                     continue
 
                 # Vylúčiť ak stem začína niektorým zaradeným prefixom
@@ -15914,17 +16090,6 @@ class _PiesneSuboryMixin(_ControlAppBase):
 
         return subory
 
-    def _ziskaj_subory_mladez(self) -> list[str]:
-        """
-        Vráti prázdny zoznam – požiadavka je, aby pri filtri "Mládež"
-        zostalo rozbaľovacie menu (self.subor_menu) prázdne.
-
-        Combobox so zoznamom piesní (self.song_combobox) sa napĺňa
-        samostatne v filtrovat_subory() z priečinka piesne/Mládež/
-        cez nacitaj_piesne_do_zoznamu_z_priecinka().
-        """
-        return []
-
     def nacitat_podla_menu(self, vybrany_subor):
         """
         Načíta pieseň na základe výberu z menu (kalendára) a aktualizuje UI.
@@ -15998,9 +16163,8 @@ class _PiesneSuboryMixin(_ControlAppBase):
 
             # 7. Vrátenie fokusu do vyhľadávacieho poľa
             try:
-                self._suppress_vymazat = True
+                self._potlac_vymazavanie(150)
                 self.master.after_idle(lambda: self.manual_entry.focus_set())
-                self.master.after(150, lambda: setattr(self, "_suppress_vymazat", False))
             except Exception as e:
                 log_exception("nacitat_podla_menu: chyba pri obnove fokusu", e)
 
@@ -16027,7 +16191,7 @@ class _PiesneSuboryMixin(_ControlAppBase):
 
         Samotný `focus_set()` vyvolá na manual_entry udalosť <FocusIn>, na
         ktorú je naviazaná `vymazat_subor_menu` – tá by inak hneď vynulovala
-        subor_var na "—" a vyčistila popis_label aj direktorium_label, ktoré
+        subor_var na SUBOR_ZIADNY ("Vybrať…") a vyčistila popis_label aj direktorium_label, ktoré
         sme práve pred zatvorením okna korektne nastavili (napr. "Žalmy
         pre..." alebo odporúčanie z direktória). Rovnako ako v
         `nacitat_podla_menu` preto na chvíľu potlačíme `vymazat_subor_menu`
@@ -16035,11 +16199,72 @@ class _PiesneSuboryMixin(_ControlAppBase):
         """
         if not self.master.winfo_exists():
             return
+        # Okno pomocníka je zatvorené: koniec „držania“ (pozri
+        # _otvor_prehliadaciu_pomocku) a potlačenie ešte 150 ms, kým dobehne
+        # FocusIn z focus_set().
+        self._uvolni_drzanie_potlacenia_vymazavania()
+        self._potlac_vymazavanie(150)
+        self.manual_entry.focus_set()
+
+    # ---------- Potlačenie vymazat_subor_menu: JEDEN evidovaný mechanizmus ----------
+    # Príznak _suppress_vymazat (číta ho vymazat_subor_menu) predtým nastavovalo a
+    # uvoľňovalo viacero miest vlastnými neevidovanými časovačmi (nacitat_podla_menu,
+    # návrat fokusu, auto filter...). Kratší časovač tak vedel príznak uvoľniť skôr,
+    # než skončilo dlhšie potlačenie. Teraz sa príznak odvodzuje z jedného stavu:
+    #   _suppress_vymazat_do   – koniec časového potlačenia (monotonic), berie sa MAXIMUM,
+    #   _suppress_vymazat_drzi – potlačenie bez limitu (kým je otvorené okno pomocníka),
+    #   _suppress_vymazat_after_id – jediný časovač, ktorý príznak uvoľní.
+
+    def _potlac_vymazavanie(self, ms: int | None = None) -> None:
+        """Zapne potlačenie vymazat_subor_menu.
+
+        ms = číslo: potlačenie platí ešte aspoň `ms` milisekúnd od teraz. Už platné,
+                    dlhšie potlačenie sa nikdy nekráti.
+        ms = None:  potlačenie drží, kým ho neuvoľní
+                    _uvolni_drzanie_potlacenia_vymazavania().
+        """
+        if ms is None:
+            self._suppress_vymazat_drzi = True
+        else:
+            koniec = time.monotonic() + max(0, ms) / 1000.0
+            if koniec > getattr(self, "_suppress_vymazat_do", 0.0):
+                self._suppress_vymazat_do = koniec
+        self._prepocitaj_potlacenie_vymazavania()
+
+    def _uvolni_drzanie_potlacenia_vymazavania(self) -> None:
+        """Ukončí potlačenie „bez limitu“ (časové potlačenie ďalej dobieha samo)."""
+        self._suppress_vymazat_drzi = False
+        self._prepocitaj_potlacenie_vymazavania()
+
+    def _uvolni_potlacenie_vymazavania(self) -> None:
+        """Okamžite zruší ČASOVÉ potlačenie (nie „držanie“ pre otvorené okno)."""
+        self._suppress_vymazat_do = 0.0
+        self._prepocitaj_potlacenie_vymazavania()
+
+    def _prepocitaj_potlacenie_vymazavania(self) -> None:
+        """Odvodí príznak _suppress_vymazat zo stavu a podľa potreby naplánuje
+        (jediný) časovač, ktorý ho uvoľní po skončení časového potlačenia."""
+        stary = getattr(self, "_suppress_vymazat_after_id", None)
+        if stary is not None:
+            try:
+                self.master.after_cancel(stary)
+            except Exception:
+                pass
+            self._suppress_vymazat_after_id = None
+        if getattr(self, "_suppress_vymazat_drzi", False):
+            self._suppress_vymazat = True
+            return
+        zostava = getattr(self, "_suppress_vymazat_do", 0.0) - time.monotonic()
+        if zostava <= 0:
+            self._suppress_vymazat = False
+            return
         self._suppress_vymazat = True
         try:
-            self.manual_entry.focus_set()
-        finally:
-            self.master.after(150, lambda: setattr(self, "_suppress_vymazat", False))
+            self._suppress_vymazat_after_id = self.master.after(
+                int(zostava * 1000) + 1, self._prepocitaj_potlacenie_vymazavania)
+        except Exception as e:   # okno zaniká
+            self._suppress_vymazat = False
+            log_exception("_prepocitaj_potlacenie_vymazavania: plánovanie zlyhalo", e)
     
     def _aktualizuj_direktorium_pre_subor(self, nazov_bez_ext):
         """
@@ -17603,11 +17828,10 @@ class _HlavneOknoMixin(_ControlAppBase):
             # Aktívna (hover) položka by inak dostala 1 px 3D rámik (activeborderwidth=1),
             # ktorý je vidieť aj na nadpisoch skupín. Hover ostáva len ako plná farba.
             menu.config(activeborderwidth=0)
-            if KATEGORIE_NADPIS_NEAKTIVNY:
-                # Farba textu vypnutých položiek je vlastnosťou celého menu (nie položky).
-                # Vypnuté sú v tomto menu iba nadpisy skupín, takže sa farba nadpisu pri
-                # prejdení myšou nemení a Tk nekreslí „vyrazený“ biely text.
-                menu.config(disabledforeground=KATEGORIE_NADPIS_FG)
+            # Farba textu vypnutých položiek je vlastnosťou celého menu (nie položky).
+            # Vypnuté sú v tomto menu iba nadpisy skupín, takže sa farba nadpisu pri
+            # prejdení myšou nemení a Tk nekreslí „vyrazený“ biely text.
+            menu.config(disabledforeground=KATEGORIE_NADPIS_FG)
             dostupne = list(self.obdobie_subory.keys())
             pouzite: set[str] = set()
             skupiny = [(n, [k for k in kategorie if k in dostupne]) for n, kategorie in KATEGORIE_SKUPINY]
@@ -17623,46 +17847,21 @@ class _HlavneOknoMixin(_ControlAppBase):
                     menu.add_separator()
                 prva = False
                 # Nadpis sa pri prejdení myšou nesmie meniť a klik naň nesmie nič zvoliť.
-                # KATEGORIE_NADPIS_NEAKTIVNY = True: nadpis je vypnutá položka s modrou farbou
-                # z menu-level `disabledforeground`; menu sa pri kliknutí nezatvorí (bez blikania).
-                # False (záloha): nadpis je bežná položka s rovnakou normálnou aj hover farbou.
-                # Tk Menu sa pri kliknutí na command položku vždy zatvorí,
-                # preto ho _znova_otvor_menu_kategorii hneď znova otvorí (bliknutie).
+                # Nadpis je vypnutá položka s modrou farbou z menu-level
+                # `disabledforeground`; menu sa pri kliknutí nezatvorí (bez blikania).
+                # Vypnutá položka: kliknutie ju neinvokuje, takže sa menu nezatvorí
+                # a nemusí sa znova otvárať (žiadne blikanie).
+                # Normálne AJ hover (active) farby sú rovnaké (modrý text na pozadí menu),
+                # aby sa nadpis pri prejdení myšou nijako nezmenil.
                 pozadie = menu.cget("bg")
-                if KATEGORIE_NADPIS_NEAKTIVNY:
-                    # Vypnutá položka: kliknutie ju neinvokuje, takže sa menu nezatvorí
-                    # a nemusí sa znova otvárať (žiadne blikanie).
-                    # Normálne AJ hover (active) farby sú rovnaké (modrý text na pozadí menu),
-                    # aby sa nadpis pri prejdení myšou nijako nezmenil.
-                    menu.add_command(label=nadpis, state="disabled",
-                                     font=(self.font_family, KATEGORIE_NADPIS_VELKOST),
-                                     foreground=KATEGORIE_NADPIS_FG, activeforeground=KATEGORIE_NADPIS_FG,
-                                     background=pozadie, activebackground=pozadie)
-                else:
-                    menu.add_command(label=nadpis, command=self._znova_otvor_menu_kategorii,
-                                     font=(self.font_family, KATEGORIE_NADPIS_VELKOST),
-                                     foreground=KATEGORIE_NADPIS_FG, activeforeground=KATEGORIE_NADPIS_FG,
-                                     background=pozadie, activebackground=pozadie)
+                menu.add_command(label=nadpis, state="disabled",
+                                 font=(self.font_family, KATEGORIE_NADPIS_VELKOST),
+                                 foreground=KATEGORIE_NADPIS_FG, activeforeground=KATEGORIE_NADPIS_FG,
+                                 background=pozadie, activebackground=pozadie)
                 for nazov in kategorie:
                     menu.add_command(label=nazov, command=lambda v=nazov: self._vyber_kategoriu(v))
         except Exception as e:
             log_exception("_zostav_menu_kategorii zlyhalo", e)
-
-    def _znova_otvor_menu_kategorii(self) -> None:
-        """Klik na modrý nadpis skupiny (Žalmy / Modlitby / Zbierky / Ostatné).
-
-        Nič nevyberie a menu Kategória ostane otvorené, aby si používateľ
-        mohol hneď kliknúť na položku pod nadpisom bez znovootvárania menu.
-        """
-        try:
-            menu = self.filter_menu["menu"]
-            x = self.filter_menu.winfo_rootx()
-            y = self.filter_menu.winfo_rooty() + self.filter_menu.winfo_height()
-            # Menu sa práve zatvára, preto ho otvoríme až po dokončení
-            # zatvárania, inak by sa post() stratil.
-            self.master.after(10, lambda: menu.post(x, y) if menu.winfo_exists() else None)
-        except Exception as e:
-            log_exception("_znova_otvor_menu_kategorii zlyhalo", e)
 
     def _vyber_kategoriu(self, nazov: str) -> None:
         """To isté, čo robí tk.OptionMenu pri výbere: nastaví premennú a zavolá filter."""
@@ -18063,14 +18262,9 @@ class _HlavneOknoMixin(_ControlAppBase):
             except Exception as e:
                 log_exception("_vytvor_pas_ikon: tooltip zlyhal", e)
 
-        # priebežné vyhodnocovanie stavu „aktívne“ (načítaný oznam / čítania / vešpery, otvorené okno Skratky)
-        old_id = getattr(self, "_pas_ikon_after_id", None)
-        if old_id:
-            try:
-                self.master.after_cancel(old_id)
-            except Exception:
-                pass
-        self._pas_ikon_obnov_stav(opakuj=True)
+        # priebežné vyhodnocovanie stavu „aktívne“ (načítaný oznam / čítania / vešpery, otvorené okno Skratky);
+        # beží len ak je pás zapnutý, inak ho spustí až _aplikuj_pas_ikon_viditelnost()
+        self._pas_ikon_spusti_obnovu()
         return pas
 
     def _pas_ikon_styl(self, zaznam: dict) -> None:
@@ -18119,19 +18313,36 @@ class _HlavneOknoMixin(_ControlAppBase):
             return False
         return True
 
+    def _pas_ikon_zastav_obnovu(self) -> None:
+        """Zruší naplánované vyhodnotenie stavu ikon (ak nejaké čaká)."""
+        old_id = getattr(self, "_pas_ikon_after_id", None)
+        if old_id:
+            try:
+                self.master.after_cancel(old_id)
+            except Exception:
+                pass
+        self._pas_ikon_after_id = None
+
+    def _pas_ikon_spusti_obnovu(self) -> None:
+        """(Znovu) spustí priebežné vyhodnocovanie stavu ikon: starú slučku zruší a stav
+        vyhodnotí HNEĎ (nie až o 300 ms). Ak je pás vypnutý, slučka sa nerozbehne."""
+        self._pas_ikon_zastav_obnovu()
+        self._pas_ikon_obnov_stav(opakuj=True)
+
     def _pas_ikon_obnov_stav(self, opakuj: bool = False) -> None:
         """Prepočíta stav „aktívne“ všetkých ikon a prekreslí len tie, ktoré sa zmenili.
-        S opakuj=True sa naplánuje ďalšie vyhodnotenie (kým pás existuje)."""
+        S opakuj=True sa naplánuje ďalšie vyhodnotenie (kým pás existuje a je zapnutý)."""
         pas = getattr(self, "pas_ikon_frame", None)
         try:
             if pas is None or not pas.winfo_exists():
                 return   # pás zanikol – slučka sa zastaví
-            if self._pas_ikon_zobrazeny():
-                for zaznam in getattr(self, "_pas_ikon_zaznamy", []):
-                    aktivna = self._pas_ikon_je_aktivna(zaznam["polozka"].get("aktivny"))
-                    if aktivna != zaznam["aktivna"]:
-                        zaznam["aktivna"] = aktivna
-                        self._pas_ikon_styl(zaznam)
+            if not self._pas_ikon_zobrazeny():
+                return   # pás je vypnutý – slučka sa zastaví, znova ju spustí _aplikuj_pas_ikon_viditelnost
+            for zaznam in getattr(self, "_pas_ikon_zaznamy", []):
+                aktivna = self._pas_ikon_je_aktivna(zaznam["polozka"].get("aktivny"))
+                if aktivna != zaznam["aktivna"]:
+                    zaznam["aktivna"] = aktivna
+                    self._pas_ikon_styl(zaznam)
         except Exception as e:
             log_exception("_pas_ikon_obnov_stav", e)
         if opakuj:
@@ -18144,7 +18355,7 @@ class _HlavneOknoMixin(_ControlAppBase):
     def _pas_ikon_zobrazeny(self) -> bool:
         """True, ak je pás zapnutý v Nastaveniach a existuje."""
         pas = getattr(self, "pas_ikon_frame", None)
-        if pas is None or not getattr(self, "zobrazit_pas_ikon", True):
+        if pas is None or not getattr(self, "zobrazit_pas_ikon", DEFAULT_CONFIG["zobrazit_pas_ikon"]):
             return False
         try:
             return bool(pas.winfo_exists())
@@ -18176,7 +18387,15 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         Pás končí nad stavovým riadkom (nezasahuje doň), preto musí v poradí packu
         stáť ZA stavovým riadkom a PRED hlavným obsahom: horný panel, stavový
-        riadok, pás, hlavný obsah. Stavový riadok tak zostáva na celú šírku okna."""
+        riadok, pás, hlavný obsah. Stavový riadok tak zostáva na celú šírku okna.
+
+        Poradie vzniká samo: pás sa vkladá `before=hlavny`, stavový riadok je v poradí
+        už pred hlavným obsahom (a po skrytí/zobrazení ho _zaradi_status_bar() vždy
+        zaradí pred pás). Stavový riadok sa tu preto NEprepakúva – predtým sa pri
+        každom prepnutí zbytočne odpojil a znova pripojil, čo bolo vidieť ako bliknutie.
+
+        Vyhodnocovanie stavu ikon beží len kým je pás zapnutý: pri zobrazení sa spustí
+        (stav sa vyhodnotí hneď), pri skrytí sa zastaví."""
         try:
             pas = getattr(self, "pas_ikon_frame", None)
             hlavny = getattr(self, "hlavny_frame", None)
@@ -18188,18 +18407,14 @@ class _HlavneOknoMixin(_ControlAppBase):
             except tk.TclError:
                 return
 
-            if getattr(self, "zobrazit_pas_ikon", True):
+            if getattr(self, "zobrazit_pas_ikon", DEFAULT_CONFIG["zobrazit_pas_ikon"]):
                 if pas.winfo_manager() != "pack":
                     pas.pack(side=tk.RIGHT, fill=tk.Y, before=hlavny)
-                # Stavový riadok musí byť v poradí packu pred pásom, inak by pás
-                # zasahoval aj vedľa neho (po pack_forget/pack by skončil na konci).
-                status = getattr(self, "status_bar_frame", None)
-                if status is not None and status.winfo_manager() == "pack":
-                    status.pack_forget()
-                    status.pack(side=tk.BOTTOM, fill=tk.X, before=pas)
+                self._pas_ikon_spusti_obnovu()
             else:
                 if pas.winfo_manager() == "pack":
                     pas.pack_forget()
+                self._pas_ikon_zastav_obnovu()
 
             # Živý náhľad (vpravo dole) sa posunie podľa toho, či pás zaberá miesto.
             kontajner = getattr(self, "preview_container", None)
@@ -18226,11 +18441,25 @@ class _HlavneOknoMixin(_ControlAppBase):
             log_exception("_spusti_ikonu_pasu", e)
         self._pas_ikon_obnov_stav()   # stav „aktívne“ sa prejaví hneď, nie až pri ďalšom cykle
 
+    def _najdi_subor_pasu(self, kod: str) -> Path | None:
+        """Nájde súbor `kod`.txt PRESNE tak, ako ho nájde načítanie
+        (najdi_subor_podla_prefixu: normalizovaný názov, priečinky podľa aktívneho
+        filtra). Ikona „načítať“ aj ikona „upraviť“ tak pracujú s TÝM ISTÝM súborom.
+        Vracia None, ak súbor neexistuje."""
+        priecinok = getattr(self, "song_folder_path", None)
+        if priecinok is None:
+            return None
+        relativna = self.najdi_subor_podla_prefixu(kod)
+        if not relativna:
+            return None
+        cesta = Path(priecinok) / relativna
+        return cesta if cesta.is_file() else None
+
     def _otvor_ikonu_pasu(self, kod: str) -> None:
         """Klik na ikonu pásu: načíta súbor `kod`.txt (napr. oznam.txt) ako keby
         sa kód zadal do vstupného poľa. Ak súbor neexistuje, vysvetlí kde ho vytvoriť."""
         try:
-            existuje = bool(self.najdi_subor_podla_prefixu(kod))
+            existuje = self._najdi_subor_pasu(kod) is not None
         except Exception as e:
             log_exception(f"_otvor_ikonu_pasu: hľadanie súboru {kod} zlyhalo", e)
             existuje = True   # nech to rozhodne štandardné načítanie
@@ -18244,17 +18473,28 @@ class _HlavneOknoMixin(_ControlAppBase):
         self._uvodna_spusti(lambda: self._uvodna_otvor(kod))
 
     def _uprav_subor_pasu(self, kod: str) -> None:
-        """Klik na ikonu „Upraviť ...“ v páse: otvorí `kod`.txt priamo
-        v predvolenom editore – analogicky ako „Upraviť zoznam (skratky.txt)“
-        otvára skratky.txt. Ak súbor ešte neexistuje, vytvorí prázdny.
+        """Klik na ikonu „Upraviť ...“ v páse: otvorí `kod`.txt v predvolenom editore –
+        analogicky ako „Upraviť zoznam (skratky.txt)“ otvára skratky.txt.
+
+        Súbor sa hľadá rovnako ako pri načítaní (_najdi_subor_pasu), takže sa upravuje
+        presne ten súbor, ktorý ikona „načítať“ zobrazuje. Ak súbor ešte neexistuje,
+        aplikácia sa najprv opýta, či ho má vytvoriť (predtým ho potichu vytvorila prázdny).
         """
         try:
             priecinok = getattr(self, "song_folder_path", None)
             if priecinok is None:
                 messagebox.showinfo("Kinak: Upraviť", "Priečinok piesní nie je nastavený.")
                 return
-            cesta = Path(priecinok) / f"{kod}.txt"
+            cesta = self._najdi_subor_pasu(kod)
+            if cesta is None:
+                cesta = Path(priecinok) / f"{kod}.txt"
             if not cesta.exists():
+                if not messagebox.askyesno(
+                    "Kinak: Upraviť",
+                    f"Súbor „{kod}.txt“ zatiaľ neexistuje v priečinku piesní.\n\n"
+                    f"Vytvoriť prázdny súbor a otvoriť ho v editore?\n\n{cesta}"
+                ):
+                    return
                 try:
                     cesta.parent.mkdir(parents=True, exist_ok=True)
                     cesta.write_text("", encoding="utf-8")
@@ -18371,7 +18611,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         _combo_text_farby = {
             "Big.TCombobox": MENU_BTN_FG,
             "Blue.TCombobox": "#1E90FF",
-            "Orange.TCombobox": MLADEZ_COMBOBOX_FARBA,
+            "Mladez.TCombobox": MLADEZ_COMBOBOX_FARBA,
         }
         for _combo_styl, _combo_fg in _combo_text_farby.items():
             try:
@@ -18413,10 +18653,11 @@ class _HlavneOknoMixin(_ControlAppBase):
         except Exception:
             pass
 
-        # --- NOVÝ ŠTÝL pre filter Mládež – teplá oranžová, analogicky k modrej pre Večeradlo ---
-        style.configure("Orange.TCombobox", padding=5, foreground=MLADEZ_COMBOBOX_FARBA, font=(self.font_family, 12, "bold"))
+        # --- ŠTÝL pre filter Mládež: biela (#e0e0e6), rovnako ako ostatné filtre ---
+        # Názov štýlu zámerne neobsahuje farbu "Orange": farba je biela, oranžová bola len pôvodná.
+        style.configure("Mladez.TCombobox", padding=5, foreground=MLADEZ_COMBOBOX_FARBA, font=(self.font_family, 12, "bold"))
         try:
-            style.map("Orange.TCombobox", foreground=[("readonly", MLADEZ_COMBOBOX_FARBA), ("!readonly", MLADEZ_COMBOBOX_FARBA), ("focus", MLADEZ_COMBOBOX_FARBA)])
+            style.map("Mladez.TCombobox", foreground=[("readonly", MLADEZ_COMBOBOX_FARBA), ("!readonly", MLADEZ_COMBOBOX_FARBA), ("focus", MLADEZ_COMBOBOX_FARBA)])
         except Exception:
             pass
 
@@ -18723,7 +18964,7 @@ class _HlavneOknoMixin(_ControlAppBase):
         # Filtre a menu - HYBRID: chipy nad zoznamom + box odporúčaných
         self.filter_var = tk.StringVar(value=self.default_filter_var.get())
         self.subor_var = tk.StringVar(value=SUBOR_ZIADNY)
-        self.ziskaj_zoznam_suborov()   # výsledok sa nepoužíva; volanie len upozorní na neplatný priečinok piesní
+        self._skontroluj_priecinok_piesni()  # len upozorní na neplatný/prázdny priečinok, bez skenovania celého zoznamu
 
         # --- Dve tlačidlá nad zoznamom: „Kategória“ (filter) a „Položka“ (výber) ---
         # Mriežka 3 : 2 s uniform => šírky sa nemenia podľa textu. Riadky: popisky,
@@ -18741,7 +18982,10 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         self._subor_vypnuty = False
 
-        self.filter_menu = tk.OptionMenu(chips_frame, self.filter_var, *list(self.obdobie_subory.keys()), command=self.filtrovat_subory)
+        # Placeholder položka: skutočné položky aj commandy postaví hneď
+        # _zostav_menu_kategorii() (skupiny + _vyber_kategoriu), takže tu
+        # neposielame zoznam kľúčov ani command, ktoré by sa hneď zahodili.
+        self.filter_menu = tk.OptionMenu(chips_frame, self.filter_var, self.filter_var.get())
         self.filter_menu.config(font=(self.font_family, 13, "bold"), width=14, bd=0, relief="flat")
         stylizuj_optionmenu_tmavo(self.filter_menu)
         self.filter_menu.config(indicatoron=0, anchor="center", highlightthickness=1, pady=8, padx=4)
@@ -19106,44 +19350,129 @@ class _HlavneOknoMixin(_ControlAppBase):
 
         Ak sa pre kód nenájde filter v modrých tlačidlách, načíta sa ako pri
         ručnom zadaní kódu do vyhľadávacieho poľa.
+
+        Samotné nájdenie filtra a nastavenie robí _aplikuj_kod_zalmu().
+        """
+        # Klik používateľa: stačí jedno opakovanie po 200 ms, príznak sa uvoľní po 400 ms.
+        return self._aplikuj_kod_zalmu(
+            kod, oneskorenia_ms=(200,), uvolnit_po_ms=400,
+            manual_fallback=True, log_prefix="nastav_zalm_podla_kodu")
+
+    def _aplikuj_kod_zalmu(
+        self,
+        kod: str,
+        oneskorenia_ms: tuple[int, ...],
+        uvolnit_po_ms: int,
+        *,
+        manual_fallback: bool,
+        log_prefix: str,
+    ) -> bool:
+        """Jediné miesto pre „nájdi filter pre kód -> nastav filter -> filtruj -> načítaj -> reapply“.
+
+        Používajú ho nastav_zalm_podla_kodu aj aplikovat_auto_filter_podla_dnes.
+        Líšia sa len parametrami, nie sekvenciou:
+          - manual_fallback=True (klik na žalm): ak sa filter nenájde, kód sa načíta
+            ako pri ručnom zadaní cez nacitat_z_okna_pomocok().
+          - manual_fallback=False (automatika podľa Dnes): ak sa filter nenájde,
+            vráti sa False a nič sa nenačíta.
+        Samotnú sekvenciu nastav -> filtruj -> načítaj -> reapply robí _nastav_filter_a_subor().
         """
         vysledok = self._najdi_filter_pre_kod(kod)
         if not vysledok:
-            log_info(f"nastav_zalm_podla_kodu: filter pre kód {kod} nenájdený, načítavam ručne")
-            try:
-                self.nacitat_z_okna_pomocok(kod)
-                return True
-            except Exception as e:
-                log_exception("nastav_zalm_podla_kodu: ručné načítanie zlyhalo", e)
-                return False
+            if manual_fallback:
+                log_info(f"{log_prefix}: filter pre kód {kod} nenájdený, načítavam ručne")
+                try:
+                    self.nacitat_z_okna_pomocok(kod)
+                    return True
+                except Exception as e:
+                    log_exception(f"{log_prefix}: ručné načítanie zlyhalo", e)
+                    return False
+            log_info(f"{log_prefix}: filter pre kód {kod} nenájdený")
+            return False
 
         filter_name, kod_real = vysledok
+        if not manual_fallback:
+            log_info(f"{log_prefix}: nastavujem {filter_name} -> {kod_real}")
+        return self._nastav_filter_a_subor(
+            filter_name, kod_real, oneskorenia_ms=oneskorenia_ms, uvolnit_po_ms=uvolnit_po_ms)
 
-        # Potlač vymazávanie výberu (FocusIn na manual_entry -> vymazat_subor_menu)
-        self._suppress_vymazat = True
+    def _zrus_naplanovane_reapply(self) -> None:
+        """Zruší ešte nevykonané opakovania z _nastav_filter_a_subor. Nový výber tak
+        nikdy nezdedí časovače z predchádzajúceho, ktoré by ho mohli prepísať."""
+        for after_id in getattr(self, "_filter_reapply_after_ids", ()):
+            try:
+                self.master.after_cancel(after_id)
+            except Exception:
+                pass
+        self._filter_reapply_after_ids = []
+
+    def _nastav_filter_a_subor(
+        self,
+        filter_name: str,
+        kod_real: str,
+        oneskorenia_ms: tuple[int, ...] = (150, 400, 800),
+        uvolnit_po_ms: int = 900,
+    ) -> bool:
+        """Spoločné nastavenie „Kategória + Položka“ a načítanie súboru.
+
+        Používa ho _aplikuj_kod_zalmu (a cez neho aplikovat_auto_filter_podla_dnes
+        aj nastav_zalm_podla_kodu; predtým mali každý vlastnú, rozdielnu kópiu tejto sekvencie).
+
+        1) potlačí vymazat_subor_menu (FocusIn na manual_entry by inak výber zmazal),
+        2) nastaví filter, prefiltruje súbory a načíta súbor,
+        3) po `oneskorenia_ms` skontroluje, či výber niečo nevynulovalo, a ak áno, nastaví
+           ho znova. Ak sa zmenil FILTER, filtrovat_subory() vymaže obsah aj výber, preto
+           sa súbor vždy znova NAČÍTA (nie iba nastaví v menu),
+        4) potlačenie platí aspoň `uvolnit_po_ms` (_potlac_vymazavanie): uvoľňuje ho
+           jediný evidovaný časovač a žiadne kratšie potlačenie z iného miesta (napr.
+           150 ms z nacitat_podla_menu) ho už nemôže uvoľniť predčasne. Opakovania
+           sú tiež evidované a nové volanie zruší predchádzajúce.
+        """
+        self._zrus_naplanovane_reapply()
+        self._potlac_vymazavanie(uvolnit_po_ms)
+
         try:
             self.filter_var.set(filter_name)
+        except Exception as e:
+            log_exception("_nastav_filter_a_subor: filter_var.set zlyhalo", e)
+            self._uvolni_potlacenie_vymazavania()
+            return False
+
+        try:
             self.filtrovat_subory(filter_name)
+        except Exception as e:
+            log_exception("_nastav_filter_a_subor: filtrovat_subory zlyhalo", e)
+
+        try:
             self.nacitat_podla_menu(kod_real)
             self.subor_var.set(kod_real)
-
-            def _reapply():
-                try:
-                    if self.filter_var.get() != filter_name:
-                        self.filter_var.set(filter_name)
-                        self.filtrovat_subory(filter_name)
-                    if self.subor_var.get() != kod_real:
-                        self.subor_var.set(kod_real)
-                except Exception as e:
-                    log_exception("nastav_zalm_podla_kodu: _reapply zlyhalo", e)
-
-            self.master.after(200, _reapply)
-            self.master.after(400, lambda: setattr(self, "_suppress_vymazat", False))
-            return True
         except Exception as e:
-            log_exception("nastav_zalm_podla_kodu: chyba", e)
-            self._suppress_vymazat = False
+            log_exception("_nastav_filter_a_subor: nacitat_podla_menu zlyhalo", e)
+            self._uvolni_potlacenie_vymazavania()
             return False
+
+        def _reapply():
+            try:
+                filter_zmeneny = self.filter_var.get() != filter_name
+                if filter_zmeneny:
+                    self.filter_var.set(filter_name)
+                    self.filtrovat_subory(filter_name)
+                # Po zmene filtra je výber aj obsah vynulovaný -> súbor treba načítať znova.
+                if filter_zmeneny or self.subor_var.get() != kod_real:
+                    self.nacitat_podla_menu(kod_real)
+                    self.subor_var.set(kod_real)
+            except Exception as e:
+                log_exception("_nastav_filter_a_subor: _reapply zlyhalo", e)
+
+        after_ids = []
+        try:
+            for ms in oneskorenia_ms:
+                after_ids.append(self.master.after(ms, _reapply))
+        except Exception as e:
+            log_exception("_nastav_filter_a_subor: plánovanie časovačov zlyhalo", e)
+            self._uvolni_potlacenie_vymazavania()
+        self._filter_reapply_after_ids = after_ids
+        return True
 
     # ------------------------------------------------------------------
     # AUTO FILTER PODĽA DNES – nové metódy
@@ -19151,53 +19480,22 @@ class _HlavneOknoMixin(_ControlAppBase):
     def _ziskaj_kod_zalmu_pre_dnes(self) -> str | None:
         """Získa skratku žalmu pre dnešný deň.
 
-        1) Pokúsi sa vyparsovať text stavového riadku (položka „Dnes: žalm XXX“),
-           ak je stavový riadok už vytvorený a obsahuje túto informáciu.
-        2) Fallback: priamo vypočíta kód liturgickej časti pre date.today()
-           cez vypocitaj_kod_liturgickej_casti() + format_skratku_liturgickej_casti(),
-           čo je presne to, čo zostav_text_status_baru() používa pre „Dnes:“.
+        Priamy výpočet pre date.today() cez zostav_status_bar_struktura() –
+        presne ten istý výpočet, aký stavový riadok používa pre „Dnes:“.
+
+        Zámerne sa tu NIČ neparsuje z widgetu stavového riadku ani z jeho
+        textu: label sa sám neprekreslí, takže po polnoci by parsovanie
+        vrátilo včerajší kód a na priamy výpočet by sa to nikdy nedostalo.
 
         Vracia napr. „28C2“, „1AD“, „2VN“, „1L“ alebo None pri chybe.
         """
         try:
-            # 1) Pokus o parsovanie zo stavového riadku
-            label = getattr(self, "status_bar_zaltár_label", None)
-            if label is not None:
-                try:
-                    txt = label.cget("text") if label.winfo_exists() else ""
-                    btn_d = getattr(self, "status_bar_btn_dnes", None)
-                    if btn_d is not None:
-                        txt = f"{btn_d.cget('text')} {txt}"
-                except Exception:
-                    txt = ""
-                if txt and "Dnes:" in txt:
-                    # Príklad textu: "  Dnes: žalm 28C2   |   Zajtra: žalm 29C2 ..."
-                    m = re.search(r"Dnes:\s*žalm\s+([A-Za-z0-9]+)", txt, re.IGNORECASE)
-                    if m:
-                        kod = m.group(1).strip()
-                        if kod:
-                            log_info(f"_ziskaj_kod_zalmu_pre_dnes: parsované zo status baru = {kod}")
-                            return kod
-                # Tiež skús priamo zostav_text_status_baru bez widgetu (ak label ešte nemá text)
-                try:
-                    txt2 = zostav_text_status_baru(date.today(), True, False, None, None)
-                    m2 = re.search(r"Dnes:\s*žalm\s+([A-Za-z0-9]+)", txt2, re.IGNORECASE)
-                    if m2:
-                        kod2 = m2.group(1).strip()
-                        if kod2:
-                            log_info(f"_ziskaj_kod_zalmu_pre_dnes: parsované zo zostav_text_status_baru = {kod2}")
-                            return kod2
-                except Exception:
-                    pass
-        except Exception as e:
-            log_exception("_ziskaj_kod_zalmu_pre_dnes: parsovanie status baru zlyhalo", e)
-
-        # 2) Priamy výpočet – vždy funguje
-        try:
-            dnes = date.today()
-            kod_lit = vypocitaj_kod_liturgickej_casti(dnes)
-            skratka = format_skratku_liturgickej_casti(kod_lit, dnes)
-            log_info(f"_ziskaj_kod_zalmu_pre_dnes: vypočítané = {skratka} (kod_lit={kod_lit})")
+            dnes_info = zostav_status_bar_struktura(date.today()).get("dnes")
+            if not dnes_info:
+                log_info("_ziskaj_kod_zalmu_pre_dnes: pre dnešný deň nie je žalm")
+                return None
+            skratka = dnes_info[0]
+            log_info(f"_ziskaj_kod_zalmu_pre_dnes: vypočítané = {skratka}")
             return skratka
         except Exception as e:
             log_exception("_ziskaj_kod_zalmu_pre_dnes: výpočet zlyhal", e)
@@ -19224,8 +19522,16 @@ class _HlavneOknoMixin(_ControlAppBase):
                 for k in kody:
                     if k.upper() == kod_upper:
                         return filter_name, k  # vráť originálny tvar z tabuľky (napr. "28C2")
-            # Tiež skús normalizovanú zhodu pre istotu
-            # (už pokryté vyššie, ale necháme fallback)
+            # Normalizovaná zhoda (bez diakritiky, medzier a interpunkcie):
+            # pokryje tvary, ktoré sa líšia len zápisom, napr. "28C2" vs "28 C2".
+            kod_norm = self.normalize_alnum(kod_upper)
+            if kod_norm:
+                for filter_name, kody in self.obdobie_subory.items():
+                    if kody is None:
+                        continue
+                    for k in kody:
+                        if self.normalize_alnum(k) == kod_norm:
+                            return filter_name, k
 
             # Špeciálny fallback pre cezročné týždne: ak kód je typu \d+C[12] a filter existuje
             m = re.fullmatch(r"(\d+)C([12])", kod_upper)
@@ -19246,8 +19552,7 @@ class _HlavneOknoMixin(_ControlAppBase):
                 if "Mesačné" in self.obdobie_subory:
                     return "Mesačné", kod_upper
 
-            # Pre ostatné kódy (napr. AD, VI, P, VN, TS, atď.) už by priame hľadanie malo stačiť,
-            # ale pre istotu skúsime ešte raz prejsť s normalizáciou
+            # Nič sa nenašlo ani priamou, ani normalizovanou zhodou, ani fallbackmi.
             return None
         except Exception as e:
             log_exception("_najdi_filter_pre_kod: chyba", e)
@@ -19257,19 +19562,16 @@ class _HlavneOknoMixin(_ControlAppBase):
         """Aplikuje automatický filter podľa dnešného žalmu, ak je voľba zapnutá.
 
         Logika podľa zadania:
-        - Pri štarte aplikácie sa načíta stavový riadok, z položky Dnes: sa vyberie aktuálny žalm
+        - Pri štarte aplikácie sa z dnešného dňa určí aktuálny žalm
           (napr. Dnes: žalm 28C2).
-        - Modré tlačidlá sa automaticky nastavia tak, aby obsahovali výber: Cezročné2 → 28C2
+        - Modré tlačidlá sa automaticky nastavia tak, aby obsahovali výber: Cezročné C2 → 28C2
 
         V praxi:
         - filter_var = "Cezročné C2" (alebo iný podľa kódu)
         - subor_var = "28C2" a zavolá sa nacitat_podla_menu, aby sa načítal súbor
 
-        Oprava pre bug "nastaví a hneď vráti":
-        - FocusIn na manual_entry viaže vymazat_subor_menu(), ktorý maže subor_var na "—".
-          Startup focus (300ms) preto po prvom auto-filteri (200ms) výber zmazal.
-        - Teraz potláčame vymazávanie cez _suppress_vymazat a opätovne nastavujeme
-          filter+subor po krátkom oneskorení, aby prežil aj neskoršie focus eventy.
+        Samotné nastavenie (vrátane ochrany pred FocusIn -> vymazat_subor_menu, ktorý
+        maže subor_var) robí spoločná _aplikuj_kod_zalmu() (a v nej _nastav_filter_a_subor()).
 
         Vracia True pri úspechu, False ak je vypnuté alebo zlyhalo.
         """
@@ -19293,97 +19595,13 @@ class _HlavneOknoMixin(_ControlAppBase):
                 log_info("aplikovat_auto_filter_podla_dnes: nepodarilo sa získať kód žalmu")
                 return False
 
-            vysledok = self._najdi_filter_pre_kod(kod)
-            if not vysledok:
-                log_info(f"aplikovat_auto_filter_podla_dnes: filter pre kód {kod} nenájdený")
-                return False
-
-            filter_name, kod_real = vysledok
-            log_info(f"aplikovat_auto_filter_podla_dnes: nastavujem {filter_name} -> {kod_real}")
-
-            # Potlač vymazávania počas nastavovania (FocusIn -> vymazat_subor_menu)
-            try:
-                self._suppress_vymazat = True
-            except Exception:
-                pass
-
-            # 1) Nastav filter (modré tlačidlo – filter)
-            try:
-                self.filter_var.set(filter_name)
-            except Exception as e:
-                log_exception("aplikovat_auto_filter_podla_dnes: filter_var.set zlyhalo", e)
-                try:
-                    self._suppress_vymazat = False
-                except Exception:
-                    pass
-                return False
-
-            # 2) Prefiltruj súbory
-            try:
-                self.filtrovat_subory(filter_name)
-            except Exception as e:
-                log_exception("aplikovat_auto_filter_podla_dnes: filtrovat_subory zlyhalo", e)
-
-            # 3) Nastav konkrétny súbor (modré tlačidlo – súbor)
-            try:
-                self.nacitat_podla_menu(kod_real)
-                try:
-                    self.subor_var.set(kod_real)
-                except Exception:
-                    pass
-                log_info(f"aplikovat_auto_filter_podla_dnes: úspešne nastavené {filter_name} -> {kod_real}")
-
-                # Zabezpeč, aby sa výber udržal aj po neskorších FocusIn eventoch:
-                # po 150ms, 400ms a 800ms znovu nastavíme filter+subor, ak by ho niečo
-                # medzičasom vynulovalo (startup focus 300ms, manual_entry bindings).
-                def _reapply():
-                    try:
-                        # Ak je filter_var stále iný ako požadovaný, vráť ho
-                        cur_f = self.filter_var.get() if hasattr(self, "filter_var") else None
-                        if cur_f != filter_name:
-                            try:
-                                self.filter_var.set(filter_name)
-                                self.filtrovat_subory(filter_name)
-                            except Exception:
-                                pass
-                        cur_s = self.subor_var.get() if hasattr(self, "subor_var") else None
-                        # SUBOR_ZIADNY = "—"
-                        if cur_s != kod_real:
-                            try:
-                                self.nacitat_podla_menu(kod_real)
-                                self.subor_var.set(kod_real)
-                            except Exception:
-                                pass
-                    except Exception as e:
-                        log_exception("_reapply v auto_filter zlyhalo", e)
-
-                try:
-                    self.master.after(150, _reapply)
-                    self.master.after(400, _reapply)
-                    self.master.after(800, _reapply)
-                    # Uvoľni potlačenie až po poslednom reapply
-                    self.master.after(900, lambda: setattr(self, "_suppress_vymazat", False))
-                except Exception:
-                    try:
-                        self._suppress_vymazat = False
-                    except Exception:
-                        pass
-
-                return True
-            except Exception as e:
-                log_exception("aplikovat_auto_filter_podla_dnes: nacitat_podla_menu zlyhalo", e)
-                try:
-                    self._suppress_vymazat = False
-                except Exception:
-                    pass
-                return False
-
+            # Po 150, 400 a 800 ms sa výber v prípade potreby znova nastaví (startup focus,
+            # manual_entry bindings), príznak _suppress_vymazat sa uvoľní po 900 ms.
+            return self._aplikuj_kod_zalmu(
+                kod, oneskorenia_ms=(150, 400, 800), uvolnit_po_ms=900,
+                manual_fallback=False, log_prefix="aplikovat_auto_filter_podla_dnes")
         except Exception as e:
             log_exception("aplikovat_auto_filter_podla_dnes: kritická chyba", e)
-            try:
-                self._suppress_vymazat = False
-            except Exception:
-                pass
             return False
 
 
@@ -20914,7 +21132,9 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
         # vlastný, už chránený focus_set() o 100 ms nižšie. Bez tohto by sa
         # odporúčané piesne (direktorium_label) aj popis_label v tej medzere
         # stihli vymazať.
-        self._suppress_vymazat = True
+        # Bez limitu: drží, kým ho po zatvorení okna uvoľní
+        # _obnov_focus_manual_entry_bez_vymazania() (volá sa vo `finally` nižšie).
+        self._potlac_vymazavanie()
         try:
             saved_w = int(getattr(self, width_attr))
             saved_h = int(getattr(self, height_attr))
@@ -20988,7 +21208,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 log_exception("nastav_verziu_direktoria: prekreslenie úvodnej obrazovky zlyhalo", e)
 
             # FIX: Po otvorení okna Direktória sa volá reset_ui(), ktorý vymaže
-            # direktorium_label a nastaví subor_var na "—". V tom stave nechceme
+            # direktorium_label a nastaví subor_var na SUBOR_ZIADNY ("Vybrať…"). V tom stave nechceme
             # znovu načítavať odporúčané piesne tlačidlom Verzia A/B.
             try:
                 if not self.direktorium_label.cget("text").strip():
@@ -23146,7 +23366,7 @@ class ControlApp(
         # Pravý pás s ikonami (Oznam…).
         self.pas_ikon_frame: tk.Frame | None = None
         self.hlavny_frame: tk.Frame | None = None
-        self.zobrazit_pas_ikon: bool = DEFAULT_CONFIG.get("zobrazit_pas_ikon", True)
+        self.zobrazit_pas_ikon: bool = DEFAULT_CONFIG["zobrazit_pas_ikon"]
 
         self.projection_window_root: tk.Toplevel = cast(tk.Toplevel, None)
         self.projection_window: ProjectionWindow = cast(ProjectionWindow, None)
@@ -23174,6 +23394,9 @@ class ControlApp(
         self._direktorium_open = False
         self._slavnosti_open = False
         self._suppress_vymazat = False
+        self._suppress_vymazat_drzi = False
+        self._suppress_vymazat_do = 0.0
+        self._suppress_vymazat_after_id = None
         self._live_preview_updating = False
         self._preview_test_font = None
         self._strofa_test_font = None
@@ -23357,7 +23580,7 @@ class ControlApp(
 
         self.zobrazit_direktorium_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_direktorium", False))
         self.zobrazit_velke_ovladanie_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_velke_ovladanie", False))
-        self.zobrazit_pas_ikon_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazit_pas_ikon", True))
+        self.zobrazit_pas_ikon_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG["zobrazit_pas_ikon"])
         self.zobrazovat_live_preview_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_live_preview", True))
         self.cislo_strofy_v_strede_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("cislo_strofy_v_strede", True))
         self.zobrazovat_specialne_znaky_var = tk.BooleanVar(self.master, value=DEFAULT_CONFIG.get("zobrazovat_specialne_znaky", True))
@@ -23409,14 +23632,18 @@ class ControlApp(
             # Modlitebník Večeradlo – vlastný podpriečinok "Večeradlo" vo
             # vnútri priečinka piesní. Zoznam sa počíta dynamicky (rovnako
             # ako pri "Modlitby a iné") vo funkcii _ziskaj_subory_vecheradlo().
-            # Vďaka tomu môžete do priečinka piesne/Večeradlo/ voľne pridávať
-            # ďalšie modlitby AJ piesne bez zásahu do kódu – stačí .txt súbor.
+            # POZOR, dve rôzne miesta majú rôzne pravidlá:
+            # - Combobox "Zoznam piesní" berie VŠETKY .txt súbory z priečinka,
+            #   takže sem môžete voľne pridávať modlitby AJ piesne – stačí .txt súbor.
+            # - Menu "Položka" berie LEN súbory s 3-4-miestnym číselným prefixom
+            #   700 a vyšším (pozri _ziskaj_subory_vecheradlo). Súbor bez prefixu
+            #   alebo s číslom pod 700 sa do Položky nedostane.
             # Poradie v menu = abecedné poradie súborov, preto sa oplatí
-            # súbory pomenovať s číselným prefixom, napr.:
-            #   "01 - Úvodná modlitba.txt"
-            #   "02 - Modlitba k Duchu Svätému.txt"
-            #   "03 - Pieseň - Príď, Duchu Svätý.txt"
-            #   "04 - Sv. ruženec - Radostný ruženec.txt"
+            # súbory pre Položku pomenovať s číselným prefixom 700+, napr.:
+            #   "700 - Úvodná modlitba.txt"
+            #   "701 - Modlitba k Duchu Svätému.txt"
+            #   "702 - Pieseň - Príď, Duchu Svätý.txt"
+            #   "703 - Sv. ruženec - Radostný ruženec.txt"
             #   ...
             "Večeradlo": None,
 
@@ -23556,50 +23783,18 @@ class ControlApp(
         # Vyčistenie starých offline čítaní (ponechá sa včerajšok a novšie)
         vycisti_stare_offline_citania(self.song_folder_path)
 
-        # Automatický filter podľa Dnes (ak je zapnutý v Nastaveniach)
-        # POZN.: Pôvodná verzia volala auto-filter po 200ms, ale startup focus
-        # (300ms) viazaný na <FocusIn> -> vymazat_subor_menu() hneď potom vynuloval
-        # subor_var na "—", takže modré tlačidlá sa nastavili a hneď vrátili.
-        # Oprava: auto-filter spúšťame AŽ PO focus callbacku (600-700ms) a s potlačeným
-        # vymazávaním, aby FocusIn nezmazal výber.
+        # Automatický filter podľa Dnes (ak je zapnutý v Nastaveniach).
+        # Spúšťa sa JEDNOU naplánovanou akciou až po startup focus callbackoch
+        # (300 ms focus, 600 ms náhľad), aby <FocusIn> -> vymazat_subor_menu()
+        # výber hneď nevynuloval. Ochranu pred neskoršími focus udalosťami
+        # (opakované nastavenie filtra + súboru a potlačenie _suppress_vymazat)
+        # rieši _nastav_filter_a_subor() samo, preto netreba ďalšie spúšťanie.
+        # Pôvodne sa auto-filter volal trikrát (hneď, po 700 a po 1200 ms) a každý
+        # beh si plánoval vlastné časovače, ktoré sa prekrývali a príznak
+        # _suppress_vymazat uvoľnili predčasne.
         try:
             if getattr(self, "auto_filter_podla_dnes", False):
-                try:
-                    # Potlačíme vymazat_subor_menu počas celej startup fázy
-                    self._suppress_vymazat = True
-                except Exception:
-                    pass
-
-                def _auto_startup_wrapper():
-                    try:
-                        self._suppress_vymazat = True
-                    except Exception:
-                        pass
-                    try:
-                        self.aplikovat_auto_filter_podla_dnes()
-                    finally:
-                        # Uvoľníme potlačenie až po 600ms, aby stihli dobehnúť aj ďalšie focus eventy
-                        try:
-                            self.master.after(600, lambda: setattr(self, "_suppress_vymazat", False))
-                        except Exception:
-                            try:
-                                setattr(self, "_suppress_vymazat", False)
-                            except Exception:
-                                pass
-
-                try:
-                    # 700ms = po _STARTUP_FOCUS_DELAY_MS (300) a _STARTUP_PREVIEW_DELAY_MS (600)
-                    # takže focus už prebehol a my ho prepíšeme
-                    self.master.after(700, _auto_startup_wrapper)
-                    # Bezpečnostná druhá aplikácia po 1200ms (ak by niečo medzičasom resetlo)
-                    self.master.after(1200, _auto_startup_wrapper)
-                except Exception:
-                    pass
-                # Okamžitý pokus pre testy / rýchly štart (bez GUI), nevadí ak ho neskôr prepíše after
-                try:
-                    self.aplikovat_auto_filter_podla_dnes()
-                except Exception:
-                    pass
+                self.master.after(700, self.aplikovat_auto_filter_podla_dnes)
         except Exception as e:
             try:
                 log_exception("ControlApp.__init__: auto filter pri štarte zlyhal", e)
