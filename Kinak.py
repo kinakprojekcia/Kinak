@@ -6675,11 +6675,6 @@ def _vycisti_text_lc_kbs(text):
     text = re.sub(r'\)(\w)', r') \1', text)   # (slovo2)slovo3 → (slovo2) slovo3
     text = re.sub(r'(\w)#', r'\1 #', text)    # slovo3# → slovo3 #
 
-    # 3b. Oprava chýbajúcich medzier okolo zátvoriek a pred '#'
-    text = re.sub(r'(\w)\(', r'\1 (', text)   # slovo1(slovo2) → slovo1 (slovo2)
-    text = re.sub(r'\)(\w)', r') \1', text)   # (slovo2)slovo3 → (slovo2) slovo3
-    text = re.sub(r'(\w)#', r'\1 #', text)    # slovo3# → slovo3 #  
-   
     # 4. Normalizácia prázdnych riadkov
     text = re.sub(r'\n\s*\n+', '\n\n', text)
 
@@ -14535,7 +14530,7 @@ class _StahovanieMixin(_ControlAppBase):
                 "Kinak: Hotovo",
                 "Čítania boli upravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
                 "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pracovných textoch.\n\n"
-                "Tip v Pracovných textoch: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
+                "Tip: Ak je na obrazovke príliš veľa textu, vložte prázdny riadok v časti Pomoc → Pracovné texty → Citania. "
                 "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
             )
         try:
@@ -14807,7 +14802,7 @@ class _StahovanieMixin(_ControlAppBase):
                     f"Súbor: {vystup_cesta.name}\n\n"
                     "Čítania boli pripravené pre projekciu. Môžete ich otvoriť priamo v aplikácii Kinak "
                     "(do vstupného poľa zadajte 'citania') alebo ich podľa potreby ďalej doladiť pre projekciu v Pracovných textoch.\n\n"
-                    "Tip v Pracovných textoch: ak je na jednej obrazovke príliš veľa textu, vložte doň voľný riadok. "
+                    "Tip: Ak je na obrazovke príliš veľa textu, vložte prázdny riadok v časti Pomoc → Pracovné texty → Citania. "
                     "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
                 )
             else:
@@ -15026,10 +15021,10 @@ class _StahovanieMixin(_ControlAppBase):
                         "Teraz môžete používať čítania aj bez internetu – ak sťahovanie zlyhá, "
                         "program automaticky použije offline cache.\n\n"
                         "Čítania z hlavného súboru načítate zadaním 'citania' alebo tlačidlom 'Čítania (dátum)' v paneli Rýchly prístup "
-                        "na úvodnej obrazovke – dátum v názve tlačidla je dátum čítaní uložených v súbore citania.txt. "
+                        "na úvodnej obrazovke – dátum v názve tlačidla je dátum čítaní uložených v súbore citania.txt. \n\n"
                         "Iný uložený deň vyberiete tlačidlom 'Offline čítania (archív)' vedľa neho (alebo tlačidlom 'Offline' v hornej lište) – "
                         "čítania sa načítajú rovnako a podľa potreby ich môžete doladiť pre projekciu v Pracovných textoch.\n\n"
-                        "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pracovných textoch prázdny riadok. "
+                        "Tip: Ak je na obrazovke príliš veľa textu, vložte prázdny riadok v časti Pomoc → Pracovné texty → Citania. "
                         "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný."
                     )
                 elif vysledok.get("zrusene"):
@@ -22031,25 +22026,22 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             ).pack(side="left")
 
             def reset_okna():
-                # Šírka 980px pokryje najdlhšie riadky záložky Skratky žalmov bez zalomovania
-                # a zároveň 7 záložiek (1 Poznámky, 2 Poznámky, Večeradlo, Citania, Vespery, Oznam, Skratky)
-                # + ovládanie zoom (+ - Reset) v hlavičke.
-                # Ostatné záložky majú wrap="word" → zalamujú sa aj pri užšom okne.
-                self.pomocnik_width = 920
-                self.pomocnik_height = int(sh * 0.8)   
-
-                self.pomocnik_x = sw - self.pomocnik_width - 20
-                self.pomocnik_y = int(sh * 0.15)
-
                 if self.pomocnik_okno is None or not self.pomocnik_okno.winfo_exists():
                     return
 
-                self.pomocnik_okno.geometry(
-                    f"{self.pomocnik_width}x{self.pomocnik_height}+{self.pomocnik_x}+{self.pomocnik_y}"
-                )
-
                 font_size.set(13)
                 apply_font_preserve_focus()
+                self.pomocnik_okno.update_idletasks()
+                header_width = top_panel.winfo_reqwidth() + zoom_panel.winfo_reqwidth() + 35
+                width = max(920, header_width)
+                height = int(sh * 0.8)
+                x = max(0, min(sw - width - 20, sw - 20))
+                y = int(sh * 0.15)
+                self.pomocnik_width = width
+                self.pomocnik_height = height
+                self.pomocnik_x = x
+                self.pomocnik_y = y
+                self.pomocnik_okno.geometry(f"{width}x{height}+{x}+{y}")
 
             tk.Button(
                 zoom_panel,
@@ -22255,10 +22247,22 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
             "• MÍNUS (-)\t\tPredchádzajúca strofa (možno použiť aj šípku ←)\n"
             "• ENTER\t\tAktivovať projekciu (skryť/zobraziť text)\n"
             "• ESC\t\tZavrieť okno / Zavrieť program\n\n"                
-            "• BACKSPACE - Maže číslo piesne a zároveň okamžite vypína projekciu. Keď je pole už prázdne, vráti úvodnú obrazovku (vymaže pole, obsah aj výber).\n\n"
-            "• HOME - RESET na jeden stisk: vypne projekciu, vymaže pole, obsah aj výber a ukáže úvodnú obrazovku. To isté, čo Backspace pri prázdnom poli, len hneď. (V hľadacom poli hore neplatí, tam posúva kurzor.)\n\n"
+            "• BACKSPACE - Zmaže znak v aktívnom vstupnom poli (číslo piesne, skratku žalmu alebo modlitby) a vypne projekciu. Keď je pole už prázdne, vráti úvodnú obrazovku.\n\n"
+            "• HOME - RESET jedným stlačením: vypne projekciu, vymaže aktuálny výber aj obsah poľa a zobrazí úvodnú obrazovku. Funguje ako Backspace pri prázdnom poli, len okamžite. V hornom vyhľadávacom poli HOME naďalej posúva kurzor.\n\n"
         )
-        txt1.insert("end", navod_text)
+        # Názvy kláves zvýrazníme samostatným tučným štýlom, aby sa dali
+        # rýchlo nájsť aj v dlhších vysvetleniach.
+        klavesy = ("PLUS (+)", "MÍNUS (-)", "ENTER", "ESC", "BACKSPACE", "HOME")
+        txt1.tag_config("klavesa", font=(safe_font_name, 12, "bold"), foreground="#8fc7ff")
+        for riadok in navod_text.splitlines(keepends=True):
+            nazov = next((k for k in klavesy if riadok.startswith("• " + k)), None)
+            if nazov:
+                prefix = "• "
+                txt1.insert("end", prefix)
+                txt1.insert("end", nazov, "klavesa")
+                txt1.insert("end", riadok[len(prefix) + len(nazov):])
+            else:
+                txt1.insert("end", riadok)
         txt1.tag_config("nadpis", font=(safe_font_name, 16, "bold"), foreground="white")
         txt1.config(state="disabled")
 
@@ -23320,7 +23324,7 @@ class _PomocnikSprievodcaMixin(_ControlAppBase):
                 "• Tlačidlo „Dnes“ zobrazí dnešné čítania; ak v úložisku nie sú, Kinak ponúkne ich stiahnutie\n"
                 "• Zobrazený deň sa načíta ako citania.txt, takže ho môžete podľa potreby doladiť pre projekciu "
                 "v Pracovných textoch (menu Pomoc → Pracovné texty)\n\n"
-                "Tip: ak je na jednej obrazovke príliš veľa textu, vložte v Pracovných textoch prázdny riadok. "
+                "Tip: Ak je na obrazovke príliš veľa textu, vložte prázdny riadok v časti Pomoc → Pracovné texty → Citania. "
                 "Hustý text sa tak rozdelí na dve obrazovky a bude lepšie čitateľný.\n\n"
                 "● Kde sú čítania uložené\n\n"
                 "Offline čítania sa ukladajú do priečinka piesne/offline_citania/, teda do priečinka, ktorý máte v "
@@ -23544,22 +23548,18 @@ Rovnaká logika sa uplatňuje aj pri filtri „Mládež“.
             ).pack(side="left")
 
             def reset_okna():
-                self.about_window_height = 650
-
-                if self.about_window is not None and self.about_window.winfo_exists():
-                    # Zisti skutočne potrebnú šírku hlavičky (karty + zoom panel s tlačidlom Reset),
-                    # aby okno po resete bolo len tak široké, aby bolo vidno celé tlačidlo Reset.
-                    self.about_window.update_idletasks()
-                    potrebna_sirka = header.winfo_reqwidth() + 30
-                    self.about_window_width = max(potrebna_sirka, 500)
-
-                    reset_x = max(0, self.about_window.winfo_screenwidth() - self.about_window_width - 30)
-                    self.about_window.geometry(f"{self.about_window_width}x{self.about_window_height}+{reset_x}+30")
-                else:
-                    self.about_window_width = 1050
+                if self.about_window is None or not self.about_window.winfo_exists():
+                    return
 
                 font_size.set(DEFAULT_CONFIG.get("about_font_size", 12))
                 apply_font_preserve_focus()
+                self.about_window.update_idletasks()
+                width = max(500, header.winfo_reqwidth() + 30)
+                height = 650
+                x = max(0, self.about_window.winfo_screenwidth() - width - 30)
+                self.about_window_width = width
+                self.about_window_height = height
+                self.about_window.geometry(f"{width}x{height}+{x}+30")
 
             tk.Button(
                 zoom_panel,
